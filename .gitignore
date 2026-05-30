@@ -1,0 +1,63 @@
+# Root .gitignore for monorepo
+
+# Node modules
+node_modules/
+.pnpm/
+
+# Monorepo / workspace
+apps/**/node_modules/
+backend/**/node_modules/
+packages/**/node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+apps/**/dist/
+apps/**/build/
+backend/**/dist/
+backend/**/build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Dependency directories
+.cache/
+.parcel-cache/
+
+# Vite / Next / framework caches
+.vite/
+.next/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Editor caches
+.eslintcache
+
+# Misc
+*.tgz
+*.zip
+*.log
+
+# Ignore local VS Code workspace storage
+.vscode/.history
