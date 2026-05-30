@@ -111,7 +111,8 @@ export async function disconnectSerial(
       await connection.port.close();
     }
   } catch (error) {
-    console.error("Error disconnecting:", error);
+    // port may already be closed — safe to ignore
+    void error;
   }
 }
 
