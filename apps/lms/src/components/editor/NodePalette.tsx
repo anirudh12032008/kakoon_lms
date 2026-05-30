@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "./nodes";
+import { useCustomNodes, type CustomNodeTemplate } from "@/lib/customNodes";
 
 function SearchIcon() {
   return (
@@ -37,6 +38,32 @@ function NodeItem({ node }: { node: NodeDef }) {
       <span className="text-[15px] text-[#d4d4d8] group-hover:text-white transition-colors font-medium truncate">
         {node.label}
       </span>
+    </div>
+  );
+}
+
+function CustomNodeItem({ node }: { node: CustomNodeTemplate }) {
+  const onDragStart = useCallback((e: React.DragEvent) => {
+    e.dataTransfer.setData("application/reactflow-custom-node", JSON.stringify(node));
+    e.dataTransfer.effectAllowed = "move";
+  }, [node]);
+
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      data-custom-node-id={node.id}
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-grab active:cursor-grabbing select-none transition-colors hover:bg-[#1a1a20] group"
+    >
+      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: node.previewDot }} />
+      <div className="min-w-0 flex-1">
+        <span className="block text-[15px] text-[#d4d4d8] group-hover:text-white transition-colors font-medium truncate">
+          {node.label}
+        </span>
+        <span className="block text-[10px] uppercase tracking-[0.16em] text-[#52525b] truncate">
+          {node.sourceType}
+        </span>
+      </div>
     </div>
   );
 }
@@ -86,12 +113,22 @@ export function NodePalette({
   allowedNodeTypes?: string[];
 }) {
   const [search, setSearch] = useState("");
+  const { customNodes } = useCustomNodes();
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(() => {
     const firstAllowed = NODE_CATEGORIES.find((category) => !allowedCategories || allowedCategories.includes(category.id));
     return firstAllowed?.id ?? null;
   });
   const allowedCategorySet = useMemo(() => allowedCategories ? new Set(allowedCategories) : null, [allowedCategories]);
   const allowedNodeTypeSet = useMemo(() => allowedNodeTypes ? new Set(allowedNodeTypes) : null, [allowedNodeTypes]);
+
+  const visibleCustomNodes = useMemo(() => {
+    const trimmedSearch = search.trim().toLowerCase();
+    return customNodes.filter((node) => {
+      if (allowedNodeTypeSet && !allowedNodeTypeSet.has(node.sourceType)) return false;
+      if (!trimmedSearch) return true;
+      return node.label.toLowerCase().includes(trimmedSearch) || node.sourceType.toLowerCase().includes(trimmedSearch);
+    });
+  }, [customNodes, search, allowedNodeTypeSet]);
 
   const filtered = search.trim()
     ? NODE_CATEGORIES.map((cat) => ({
@@ -135,6 +172,21 @@ export function NodePalette({
             />
           );
         })}
+        <div className="mt-2 rounded-xl border border-[#1f1f23] bg-[#0f0f12] px-2 py-2">
+          <div className="flex items-center justify-between px-1 py-1.5">
+            <span className="text-sm font-semibold text-white">Custom Nodes</span>
+            <span className="text-[10px] uppercase tracking-[0.18em] text-[#52525b]">Saved presets</span>
+          </div>
+          <div className="mt-1 grid grid-cols-1 gap-1">
+            {visibleCustomNodes.length > 0 ? (
+              visibleCustomNodes.map((node) => <CustomNodeItem key={node.id} node={node} />)
+            ) : (
+              <div className="px-3 py-3 text-xs text-[#6b7280]">
+                Save any node to reuse it here.
+              </div>
+            )}
+          </div>
+        </div>
         <div className="h-px bg-[#1f1f23] my-2" />
       </div>
     </div>

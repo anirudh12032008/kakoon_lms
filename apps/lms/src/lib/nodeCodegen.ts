@@ -154,6 +154,10 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
       return edge ? edge.target : null;
     };
 
+    if (d.disabled) {
+      return generateChain(getNextNodeId(), indentLevel);
+    }
+
     switch (node.type) {
       // ─── General ──────────────────────────────────────────────────────────
       case "print":

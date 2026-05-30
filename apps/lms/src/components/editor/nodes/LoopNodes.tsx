@@ -7,6 +7,7 @@ import {
   NumberInput,
   useNodeField,
   makeHandleStyle,
+  NodeToggleButton,
   COLORS,
 } from "./BaseNode";
 
@@ -43,6 +44,7 @@ function ScissorsIcon() {
 export function ForeverLoopNode() {
   const color = COLORS.cyan;
   const hs = makeHandleStyle(color);
+  const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   return (
     <div
       className="relative flex flex-col items-center justify-center gap-2 animate-fade-in"
@@ -52,8 +54,11 @@ export function ForeverLoopNode() {
         borderRadius: "22px",
         background: "#111113",
         border: `2.5px solid ${color}`,
+        opacity: disabled ? 0.55 : 1,
+        filter: disabled ? "saturate(0.6)" : "none",
       }}
     >
+      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <div className="text-sm font-bold text-white">Forever Loop</div>
       <div style={{ color }}><RefreshIcon /></div>
@@ -103,6 +108,7 @@ export function RepeatNode() {
 export function BreakNode() {
   const color = COLORS.yellow;
   const hs = makeHandleStyle(color);
+  const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   return (
     <div
       className="relative flex flex-col items-center justify-center animate-fade-in"
@@ -112,8 +118,11 @@ export function BreakNode() {
         borderRadius: "50%",
         background: "#111113",
         border: `3px solid ${color}`,
+        opacity: disabled ? 0.55 : 1,
+        filter: disabled ? "saturate(0.6)" : "none",
       }}
     >
+      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <div className="text-sm font-bold text-white mb-2">Break</div>
       <div className="w-3/4 border-t border-[#2a2a30] mb-2" />

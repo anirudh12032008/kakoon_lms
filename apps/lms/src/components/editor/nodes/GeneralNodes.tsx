@@ -6,6 +6,7 @@ import {
   TextInput,
   useNodeField,
   makeHandleStyle,
+  NodeToggleButton,
   COLORS,
 } from "./BaseNode";
 
@@ -49,6 +50,7 @@ export function VariableNode() {
 // ─── Sleep (circular) ─────────────────────────────────────────────────────────
 export function SleepNode() {
   const [seconds, setSeconds] = useNodeField<number>("seconds", 1);
+  const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   const color = "#ec4899";
   const hs = makeHandleStyle(color);
   return (
@@ -60,8 +62,11 @@ export function SleepNode() {
         borderRadius: "50%",
         background: "#111113",
         border: `3px solid ${color}`,
+        opacity: disabled ? 0.55 : 1,
+        filter: disabled ? "saturate(0.6)" : "none",
       }}
     >
+      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <div className="text-sm font-bold text-white mb-2">Sleep</div>
       <div className="w-3/4 border-t border-[#2a2a30] mb-2" />

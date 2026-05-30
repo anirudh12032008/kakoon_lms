@@ -1,5 +1,7 @@
 import { type ReactNode, useCallback, useState } from "react";
 import { Handle, Position, useNodeId, useReactFlow, useStore } from "@xyflow/react";
+import { PlusCircle } from "lucide-react";
+import { saveCustomNodeFromNode } from "@/lib/customNodes";
 
 function TrashIcon() {
   return (
@@ -18,9 +20,34 @@ function DuplicateIcon() {
   );
 }
 
+export function NodeToggleButton({
+  value,
+  onChange,
+  className = "",
+}: {
+  value: boolean;
+  onChange: (nextValue: boolean) => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={value ? "Enable node" : "Disable node"}
+      aria-pressed={value}
+      onClick={(e) => {
+        e.stopPropagation();
+        onChange(!value);
+      }}
+      className={`nodrag inline-flex h-5 w-9 items-center rounded-full border border-[#2d2d35] p-0.5 transition-colors ${value ? "bg-[#7c3aed]" : "bg-[#3f3f46]"} ${className}`}
+    >
+      <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${value ? "translate-x-4" : "translate-x-0"}`} />
+    </button>
+  );
+}
+
 function SelectionToolbar() {
   const nodeId = useNodeId();
-  const { setNodes, setEdges } = useReactFlow();
+  const { getNode, setNodes, setEdges } = useReactFlow();
 
   const isSelected = useStore(
     useCallback(
@@ -37,11 +64,30 @@ function SelectionToolbar() {
 
   if (!nodeId || !isSelected) return null;
 
+  const handleSaveAsCustomNode = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const node = getNode(nodeId);
+    if (!node) return;
+    const defaultLabel = typeof node.data?.label === "string" && node.data.label.trim()
+      ? node.data.label.trim()
+      : node.type ?? "Custom Node";
+    const savedLabel = window.prompt("Name this custom node", defaultLabel)?.trim();
+    if (!savedLabel) return;
+    saveCustomNodeFromNode(node, savedLabel);
+  };
+
   return (
     <div
       className="absolute flex items-center gap-1.5 px-2 py-1.5 rounded-lg border border-[#2d2d35] shadow-2xl z-50 nodrag select-none"
       style={{ top: -46, right: 0, background: "#18181b" }}
     >
+      <button
+        onClick={handleSaveAsCustomNode}
+        className="text-[#9ca3af] hover:text-violet-300 transition-colors p-1 rounded hover:bg-[#27272a]"
+        title="Save as Custom Node"
+      >
+        <PlusCircle className="w-4 h-4" />
+      </button>
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -254,13 +300,15 @@ export function BaseNode({
   circular?: boolean; width?: string;
 }) {
   const hs = makeHandleStyle(color);
+  const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
 
   if (circular) {
     return (
       <div className="relative flex flex-col items-center justify-center"
-        style={{ width: "130px", height: "130px", borderRadius: "50%", background: "#111113", border: `3px solid ${color}` }}
+        style={{ width: "130px", height: "130px", borderRadius: "50%", background: "#111113", border: `3px solid ${color}`, opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
       >
         <SelectionToolbar />
+        <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
         {hasTopHandle && <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />}
         <div className="text-sm font-bold text-white mb-2">{title}</div>
         <div className="w-3/4 border-t border-[#2a2a30] mb-2" />
@@ -273,15 +321,16 @@ export function BaseNode({
 
   return (
     <div className="relative overflow-visible rounded-xl shadow-2xl"
-      style={{ width, background: "#111113", border: "1px solid #222228", minWidth: "160px" }}
+      style={{ width, background: "#111113", border: "1px solid #222228", minWidth: "160px", opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
     >
       <SelectionToolbar />
+      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
       {hasTopHandle && <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />}
       {hasBottomHandle && <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />}
       {hasLeftHandle && <Handle type="target" position={Position.Left} id="left" style={{ ...hs, left: -7 }} />}
       {hasRightHandle && <Handle type="source" position={Position.Right} id="right" style={{ ...hs, right: -7 }} />}
 
-      <div className="flex items-center justify-between px-3 py-2"
+      <div className="flex items-center justify-between px-3 py-2 pr-14"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
         <span className="text-sm font-bold text-white leading-none">{title}</span>
@@ -299,15 +348,17 @@ export function LoopNode({
   hasRightHandle?: boolean; width?: string;
 }) {
   const hs = makeHandleStyle(color);
+  const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   return (
     <div className="relative overflow-visible"
-      style={{ width, background: "#111113", border: `2.5px solid ${color}`, borderRadius: "18px" }}
+      style={{ width, background: "#111113", border: `2.5px solid ${color}`, borderRadius: "18px", opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
     >
       <SelectionToolbar />
+      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       {hasRightHandle && <Handle type="source" position={Position.Right} id="body" style={{ ...hs, right: -7 }} />}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-4 py-3 pr-14">
         <span className="text-sm font-bold text-white">{title}</span>
         {icon && <span style={{ color }}>{icon}</span>}
       </div>
@@ -324,16 +375,18 @@ export function LoopNode({
 export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
   const color = "#008cff";
   const hs = { width: 12, height: 12, background: "#111113", border: "2.5px solid #3f3f46", borderRadius: "50%", zIndex: 10 };
+  const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   return (
     <div className="relative overflow-visible rounded-xl shadow-2xl"
-      style={{ width: "260px", background: "#111113", border: "1px solid #222228" }}
+      style={{ width: "260px", background: "#111113", border: "1px solid #222228", opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
     >
       <SelectionToolbar />
+      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       <Handle type="source" position={Position.Left} id="false" style={{ ...hs, left: -7, top: "calc(50% + 16px)" }} />
       <Handle type="source" position={Position.Right} id="true" style={{ ...hs, right: -7, top: "calc(50% + 16px)" }} />
-      <div className="flex items-center justify-between px-4 py-2"
+      <div className="flex items-center justify-between px-4 py-2 pr-14"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
         <span className="text-sm font-bold text-white tracking-wide">If-Else</span>
