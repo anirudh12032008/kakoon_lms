@@ -4,13 +4,17 @@ import { useSerialConnection } from "@/lib/useSerial";
 import {
   Play, Loader2, Code2, Trash2, Blocks, PanelLeftClose, X,
   Usb, Circle, ChevronDown, SplitSquareHorizontal, Pencil, Lock,
-  Upload, Wifi, Cpu, HardDrive,
+  Upload, Wifi, Cpu, HardDrive, Package, Palette, Activity, Zap,
 } from "lucide-react";
 import type { Node, Edge } from "@xyflow/react";
 import { TutorialsDashboard } from "@/components/editor/TutorialsDashboard";
 import { TutorialHelper } from "@/components/editor/TutorialHelper";
 import { type Tutorial } from "@/lib/tutorials";
 import type { EditorLaunchContext } from "@/config/editorLaunch";
+import { LibraryManager } from "@/components/editor/LibraryManager";
+import { DesignerHub } from "@/components/editor/DesignerHub";
+import { FirmwareFlasher } from "@/components/editor/FirmwareFlasher";
+import { IMUVisualizerPanel, SensorVizPanel, RadarPanel } from "@/components/editor/DataViz";
 
 export type LessonContext = EditorLaunchContext;
 
@@ -113,6 +117,14 @@ export default function EditorPage({ launchContext, onBackToDashboard, onComplet
     allowedCategories: launchContext?.allowedCategories,
     allowedNodeTypes: launchContext?.allowedNodeTypes,
   }), [launchContext]);
+
+  // ─── Feature Panel State ──────────────────────────────────────────────────
+  const [showLibraryManager, setShowLibraryManager] = useState(false);
+  const [showDesignerHub, setShowDesignerHub] = useState(false);
+  const [showFirmwareFlasher, setShowFirmwareFlasher] = useState(false);
+  const [showIMUViz, setShowIMUViz] = useState(false);
+  const [showSensorViz, setShowSensorViz] = useState(false);
+  const [showRadarViz, setShowRadarViz] = useState(false);
 
   // ─── Tutorial State ───────────────────────────────────────────────────────
   const [showTutorialsCatalog, setShowTutorialsCatalog] = useState(false);
@@ -221,6 +233,33 @@ export default function EditorPage({ launchContext, onBackToDashboard, onComplet
   }, [isDragging, dragOffset]);
 
   useEffect(() => { logsEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs]);
+
+  // ─── Library file upload (for LibraryManager) ─────────────────────────────
+  const uploadLibFile = useCallback(async (
+    filename: string, content: string, onProgress: (p: number) => void
+  ): Promise<boolean> => {
+    if (!isConnected) { addLog("⚠️ Not connected"); return false; }
+    addLog(`📦 Installing ${filename}…`);
+    onProgress(10);
+    try {
+      // Reuse the same upload mechanism but targeting a named file
+      const code = `
+import os
+_f = open('${filename.replace(/'/g, "\\'")}', 'w')
+_f.write(${JSON.stringify(content)})
+_f.close()
+print('LIB_OK:${filename}')
+`;
+      onProgress(30);
+      const ok = await sendCode(code);
+      onProgress(100);
+      if (ok) addLog(`✅ ${filename} installed to ESP32`);
+      return ok;
+    } catch {
+      addLog(`❌ Failed to install ${filename}`);
+      return false;
+    }
+  }, [isConnected, addLog, sendCode]);
 
   // ─── Run / Upload ─────────────────────────────────────────────────────────
   const getCurrentCode = useCallback(() => {
@@ -414,6 +453,86 @@ export default function EditorPage({ launchContext, onBackToDashboard, onComplet
           </button>
         </div>
       </header>
+
+      {/* ── Feature Toolbar ──────────────────────────────────────────────────── */}
+      <div className="flex h-9 shrink-0 items-center gap-1 border-b border-[#1a1a20] bg-[#0a0a0d] px-3 overflow-x-auto">
+        {/* Designer Hub */}
+        <button
+          onClick={() => setShowDesignerHub(true)}
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+            showDesignerHub ? "bg-fuchsia-500/20 text-fuchsia-400 border border-fuchsia-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-fuchsia-400"
+          }`}
+          title="OLED, NeoPixel & LED Matrix designers"
+        >
+          <Palette className="h-3.5 w-3.5" />
+          <span>Designers</span>
+        </button>
+
+        <div className="h-4 w-px bg-[#2a2a32] mx-0.5" />
+
+        {/* Visualize submenu */}
+        <span className="text-[10px] text-zinc-600 uppercase tracking-wider font-bold px-1">Visualize</span>
+        <button
+          onClick={() => setShowIMUViz((v) => !v)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+            showIMUViz ? "bg-violet-500/20 text-violet-400 border border-violet-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-violet-400"
+          }`}
+          title="MPU6050 IMU live plot"
+        >
+          <Activity className="h-3.5 w-3.5" />
+          IMU
+        </button>
+        <button
+          onClick={() => setShowSensorViz((v) => !v)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+            showSensorViz ? "bg-green-500/20 text-green-400 border border-green-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-green-400"
+          }`}
+          title="Sensor gauges & timelines"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M12 2a10 10 0 1 0 10 10" /><path d="M12 6v6l4 2"/>
+          </svg>
+          Sensors
+        </button>
+        <button
+          onClick={() => setShowRadarViz((v) => !v)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+            showRadarViz ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-cyan-400"
+          }`}
+          title="Ultrasonic radar polar plot"
+        >
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="12" x2="19" y2="5"/><circle cx="12" cy="12" r="3"/>
+          </svg>
+          Radar
+        </button>
+
+        <div className="h-4 w-px bg-[#2a2a32] mx-0.5" />
+
+        {/* Library Manager */}
+        <button
+          onClick={() => setShowLibraryManager(true)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+            showLibraryManager ? "bg-violet-500/20 text-violet-400 border border-violet-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-violet-400"
+          }`}
+          title="Install MicroPython libraries"
+        >
+          <Package className="h-3.5 w-3.5" />
+          Libraries
+        </button>
+
+        {/* Firmware Flash */}
+        <button
+          onClick={() => setShowFirmwareFlasher(true)}
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+            showFirmwareFlasher ? "bg-blue-500/20 text-blue-400 border border-blue-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-blue-400"
+          }`}
+          title="Flash MicroPython firmware"
+        >
+          <Zap className="h-3.5 w-3.5" />
+          Flash Firmware
+        </button>
+      </div>
 
       {/* ── Main Content ────────────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden relative">
@@ -729,6 +848,36 @@ export default function EditorPage({ launchContext, onBackToDashboard, onComplet
             Clear Canvas
           </button>
         </div>
+      )}
+
+      {/* ── Feature Modals ────────────────────────────────────────────────────── */}
+      {showLibraryManager && (
+        <LibraryManager
+          code={isEditing ? editableCode : generatedCode}
+          isConnected={isConnected}
+          onUploadFile={uploadLibFile}
+          onClose={() => setShowLibraryManager(false)}
+        />
+      )}
+
+      {showDesignerHub && (
+        <DesignerHub onClose={() => setShowDesignerHub(false)} />
+      )}
+
+      {showFirmwareFlasher && (
+        <FirmwareFlasher onClose={() => setShowFirmwareFlasher(false)} />
+      )}
+
+      {showIMUViz && (
+        <IMUVisualizerPanel logs={logs} onClose={() => setShowIMUViz(false)} />
+      )}
+
+      {showSensorViz && (
+        <SensorVizPanel logs={logs} onClose={() => setShowSensorViz(false)} />
+      )}
+
+      {showRadarViz && (
+        <RadarPanel logs={logs} onClose={() => setShowRadarViz(false)} />
       )}
     </div>
   );
