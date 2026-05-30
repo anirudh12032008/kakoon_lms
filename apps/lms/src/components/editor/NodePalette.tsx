@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "./nodes";
 
 function SearchIcon() {
@@ -42,10 +42,15 @@ function NodeItem({ node }: { node: NodeDef }) {
 }
 
 function CategorySection({
-  category, isOpen, onToggle,
+  category, isOpen, onToggle, allowedNodeTypes,
 }: {
   category: NodeCategory; isOpen: boolean; onToggle: () => void;
+  allowedNodeTypes?: Set<string>;
 }) {
+  const visibleNodes = allowedNodeTypes ? category.nodes.filter((node) => allowedNodeTypes.has(node.type)) : category.nodes;
+
+  if (visibleNodes.length === 0) return null;
+
   return (
     <div>
       <button
@@ -62,7 +67,7 @@ function CategorySection({
 
       {isOpen && (
         <div className="grid grid-cols-2 gap-2 mt-1 px-1">
-          {category.nodes.map((node) => (
+          {visibleNodes.map((node) => (
             <NodeItem key={node.type} node={node} />
           ))}
         </div>
@@ -71,16 +76,30 @@ function CategorySection({
   );
 }
 
-export function NodePalette({ width = 280 }: { width?: number }) {
+export function NodePalette({
+  width = 280,
+  allowedCategories,
+  allowedNodeTypes,
+}: {
+  width?: number;
+  allowedCategories?: string[];
+  allowedNodeTypes?: string[];
+}) {
   const [search, setSearch] = useState("");
-  const [openCategoryId, setOpenCategoryId] = useState<string | null>("general");
+  const [openCategoryId, setOpenCategoryId] = useState<string | null>(() => {
+    const firstAllowed = NODE_CATEGORIES.find((category) => !allowedCategories || allowedCategories.includes(category.id));
+    return firstAllowed?.id ?? null;
+  });
+  const allowedCategorySet = useMemo(() => allowedCategories ? new Set(allowedCategories) : null, [allowedCategories]);
+  const allowedNodeTypeSet = useMemo(() => allowedNodeTypes ? new Set(allowedNodeTypes) : null, [allowedNodeTypes]);
 
   const filtered = search.trim()
     ? NODE_CATEGORIES.map((cat) => ({
         ...cat,
         nodes: cat.nodes.filter((n) => n.label.toLowerCase().includes(search.toLowerCase())),
       })).filter((cat) => cat.nodes.length > 0)
-    : NODE_CATEGORIES;
+        .filter((cat) => !allowedCategorySet || allowedCategorySet.has(cat.id))
+    : NODE_CATEGORIES.filter((cat) => !allowedCategorySet || allowedCategorySet.has(cat.id));
 
   return (
     <div
@@ -112,6 +131,7 @@ export function NodePalette({ width = 280 }: { width?: number }) {
               category={cat}
               isOpen={isOpen}
               onToggle={() => setOpenCategoryId(openCategoryId === cat.id ? null : cat.id)}
+              allowedNodeTypes={allowedNodeTypeSet ?? undefined}
             />
           );
         })}

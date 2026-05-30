@@ -37,6 +37,8 @@ interface NodeCanvasProps {
   onCodeChange?: (code: string) => void;
   onFlowChange?: (nodes: Node[], edges: Edge[]) => void;
   className?: string;
+  allowedCategories?: string[];
+  allowedNodeTypes?: string[];
 }
 
 let nodeIdCounter = 1;
@@ -45,6 +47,7 @@ const getId = () => `node_${nodeIdCounter++}`;
 function NodeCanvasInner({
   onCodeChange,
   onFlowChange,
+  allowedNodeTypes,
   canvasRef,
 }: NodeCanvasProps & { canvasRef: React.Ref<NodeCanvasRef> }) {
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -83,9 +86,10 @@ function NodeCanvasInner({
     e.preventDefault();
     const nodeType = e.dataTransfer.getData("application/reactflow-nodetype");
     if (!nodeType) return;
+    if (allowedNodeTypes && !allowedNodeTypes.includes(nodeType)) return;
     const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
     setNodes((nds) => nds.concat({ id: getId(), type: nodeType, position, data: { label: nodeType } }));
-  }, [screenToFlowPosition]);
+  }, [allowedNodeTypes, screenToFlowPosition]);
 
   useImperativeHandle(canvasRef, () => ({
     getCode: () => generatePythonFromFlow(nodes, edges),
@@ -126,7 +130,7 @@ function NodeCanvasInner({
 }
 
 export const NodeCanvas = forwardRef<NodeCanvasRef, NodeCanvasProps>(
-  function NodeCanvas({ onCodeChange, onFlowChange, className = "" }, ref) {
+  function NodeCanvas({ onCodeChange, onFlowChange, className = "", allowedCategories, allowedNodeTypes }, ref) {
     const [sidebarWidth, setSidebarWidth] = useState(280);
     const isResizing = useRef(false);
 
@@ -154,13 +158,13 @@ export const NodeCanvas = forwardRef<NodeCanvasRef, NodeCanvasProps>(
     return (
       <ReactFlowProvider>
         <div className={`flex h-full w-full ${className}`}>
-          <NodePaletteWrapper width={sidebarWidth} />
+          <NodePaletteWrapper width={sidebarWidth} allowedCategories={allowedCategories} allowedNodeTypes={allowedNodeTypes} />
           <div
             onMouseDown={startResizing}
             className="w-1 hover:w-1.5 bg-[#1f1f23] hover:bg-[#7c3aed]/50 active:bg-[#7c3aed] cursor-col-resize transition-all flex-shrink-0 z-50"
             style={{ marginRight: "-2px", marginLeft: "-2px" }}
           />
-          <NodeCanvasInner onCodeChange={onCodeChange} onFlowChange={onFlowChange} canvasRef={ref} />
+          <NodeCanvasInner onCodeChange={onCodeChange} onFlowChange={onFlowChange} allowedNodeTypes={allowedNodeTypes} canvasRef={ref} />
         </div>
       </ReactFlowProvider>
     );

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { NodeCanvas, type NodeCanvasRef } from "@/components/editor/NodeCanvas";
 import { useSerialConnection } from "@/lib/useSerial";
 import {
@@ -10,19 +10,13 @@ import type { Node, Edge } from "@xyflow/react";
 import { TutorialsDashboard } from "@/components/editor/TutorialsDashboard";
 import { TutorialHelper } from "@/components/editor/TutorialHelper";
 import { type Tutorial } from "@/lib/tutorials";
+import type { EditorLaunchContext } from "@/config/editorLaunch";
 
-// ─── Future LMS integration props ────────────────────────────────────────────
-export interface LessonContext {
-  kitId?: string;
-  stepId?: string;
-  challengeId?: string;
-  objective?: string;
-  availableSensors?: string[];
-  mode?: "guided" | "challenge" | "sandbox";
-}
+export type LessonContext = EditorLaunchContext;
 
 interface EditorPageProps {
-  lessonContext?: LessonContext;
+  launchContext?: EditorLaunchContext;
+  onBackToDashboard?: () => void;
   onComplete?: (codeSnapshot: string) => void;
 }
 
@@ -86,7 +80,7 @@ function getLogColor(log: string): string {
 }
 
 // ─── Main EditorPage ──────────────────────────────────────────────────────────
-export default function EditorPage({ lessonContext: _lessonContext, onComplete: _onComplete }: EditorPageProps) {
+export default function EditorPage({ launchContext, onBackToDashboard, onComplete: _onComplete }: EditorPageProps) {
   const canvasRef = useRef<NodeCanvasRef>(null);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -94,7 +88,7 @@ export default function EditorPage({ lessonContext: _lessonContext, onComplete: 
   const [generatedCode, setGeneratedCode] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("split");
+  const [viewMode, setViewMode] = useState<ViewMode>(launchContext?.mode === "challenge" ? "code" : "split");
   const [showTerminal, setShowTerminal] = useState(false);
   const [terminalPosition, setTerminalPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -112,6 +106,13 @@ export default function EditorPage({ lessonContext: _lessonContext, onComplete: 
   const [isLoadingDraft, setIsLoadingDraft] = useState(true);
   const [activeFlowNodes, setActiveFlowNodes] = useState<Node[]>([]);
   const [activeFlowEdges, setActiveFlowEdges] = useState<Edge[]>([]);
+  const launchRestrictions = useMemo(() => ({
+    title: launchContext?.title ?? "Full Workspace",
+    description: launchContext?.description ?? "All blocks are available.",
+    launchType: launchContext?.launchType ?? "mode",
+    allowedCategories: launchContext?.allowedCategories,
+    allowedNodeTypes: launchContext?.allowedNodeTypes,
+  }), [launchContext]);
 
   // ─── Tutorial State ───────────────────────────────────────────────────────
   const [showTutorialsCatalog, setShowTutorialsCatalog] = useState(false);
@@ -343,6 +344,14 @@ export default function EditorPage({ lessonContext: _lessonContext, onComplete: 
           <span className="text-sm font-semibold text-white hidden sm:inline">Kakoon</span>
         </div>
 
+        <div className="hidden min-w-0 flex-1 items-center justify-center px-2 md:flex">
+          <div className="flex max-w-[42rem] items-center gap-3 rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs text-white/70">
+            <span className="rounded-full bg-white/10 px-2 py-1 uppercase tracking-[0.24em] text-white/50">{launchRestrictions.launchType}</span>
+            <span className="truncate font-medium text-white">{launchRestrictions.title}</span>
+            <span className="truncate text-white/45">{launchContext?.description ?? launchRestrictions.description}</span>
+          </div>
+        </div>
+
         {/* View Mode Toggle */}
         <div className="flex items-center">
           <div className="flex rounded-full bg-[#1a1a1f] p-1">
@@ -375,6 +384,16 @@ export default function EditorPage({ lessonContext: _lessonContext, onComplete: 
 
         {/* Right controls */}
         <div className="flex items-center gap-2">
+          {onBackToDashboard && (
+            <button
+              onClick={onBackToDashboard}
+              className="hidden h-8 items-center gap-2 rounded-md border border-white/10 bg-white/[0.03] px-3 text-xs text-white/75 hover:bg-white/[0.08] md:flex"
+            >
+              <Blocks className="h-3.5 w-3.5" />
+              Dashboard
+            </button>
+          )}
+
           <div className="hidden md:flex items-center gap-2 rounded-md bg-[#1a1a1f] px-3 py-1.5">
             <span className="text-xs text-zinc-400">Kakoon Editor</span>
           </div>
@@ -408,6 +427,8 @@ export default function EditorPage({ lessonContext: _lessonContext, onComplete: 
               ref={canvasRef}
               onCodeChange={setGeneratedCode}
               onFlowChange={(nds, eds) => { setActiveFlowNodes(nds); setActiveFlowEdges(eds); }}
+              allowedCategories={launchRestrictions.allowedCategories}
+              allowedNodeTypes={launchRestrictions.allowedNodeTypes}
             />
           )}
         </div>

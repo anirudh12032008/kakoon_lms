@@ -1,7 +1,33 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import type { EditorLaunchContext } from "./config/editorLaunch";
+
+const EditorLaunchDashboard = lazy(() => import("./components/editor/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard })));
 const EditorPage = lazy(() => import("./pages/editor/EditorPage"));
 
+const LAUNCH_STORAGE_KEY = "kakoon-editor-launch-context";
+
 export default function App() {
+  const [launchContext, setLaunchContext] = useState<EditorLaunchContext | null>(() => {
+    try {
+      const saved = localStorage.getItem(LAUNCH_STORAGE_KEY);
+      return saved ? JSON.parse(saved) as EditorLaunchContext : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (launchContext) {
+        localStorage.setItem(LAUNCH_STORAGE_KEY, JSON.stringify(launchContext));
+      } else {
+        localStorage.removeItem(LAUNCH_STORAGE_KEY);
+      }
+    } catch {
+      // Ignore storage errors in private browsing or locked-down browsers.
+    }
+  }, [launchContext]);
+
   return (
     <Suspense
       fallback={
@@ -11,7 +37,14 @@ export default function App() {
         </div>
       }
     >
-      <EditorPage />
+      {launchContext ? (
+        <EditorPage
+          launchContext={launchContext}
+          onBackToDashboard={() => setLaunchContext(null)}
+        />
+      ) : (
+        <EditorLaunchDashboard onLaunch={setLaunchContext} />
+      )}
     </Suspense>
   );
 }
