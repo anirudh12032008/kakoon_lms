@@ -21,6 +21,7 @@ export function useSerialConnection() {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const responseCallbackRef = useRef<((data: string) => void) | null>(null);
   const responseBufferRef = useRef<string>("");
@@ -64,6 +65,8 @@ export function useSerialConnection() {
             if (line.trim()) {
               addLog(`📥 ${line}`);
               responseCallbackRef.current?.(line);
+              // MicroPython REPL prompt means program finished
+              if (line.includes(">>>")) setIsRunning(false);
             }
           }
         }
@@ -110,10 +113,25 @@ export function useSerialConnection() {
     }
     try {
       await sendCodeToESP32(connectionRef.current.writer!, code);
+      setIsRunning(true);
       return true;
     } catch (err: any) {
       addLog(`❌ Send failed: ${err?.message ?? err}`);
       return false;
+    }
+  }, [addLog]);
+
+  const stopCode = useCallback(async (): Promise<void> => {
+    const writer = connectionRef.current.writer;
+    if (!writer) return;
+    try {
+      // Ctrl+C twice — interrupts any running MicroPython script
+      const encoder = new TextEncoder();
+      await writer.write(encoder.encode("\x03\x03"));
+      setIsRunning(false);
+      addLog("⛔ Stopped — sent Ctrl+C");
+    } catch (err: any) {
+      addLog(`❌ Stop failed: ${err?.message ?? err}`);
     }
   }, [addLog]);
 
@@ -156,9 +174,9 @@ export function useSerialConnection() {
   }, [sendCode]);
 
   return {
-    isConnected, isConnecting, isSupported,
+    isConnected, isConnecting, isSupported, isRunning,
     connect, connectWifi, disconnect,
-    sendCode, sendCommand, sendPythonCode, uploadCode,
+    sendCode, stopCode, sendCommand, sendPythonCode, uploadCode,
     logs, addLog, clearLogs,
   };
 }

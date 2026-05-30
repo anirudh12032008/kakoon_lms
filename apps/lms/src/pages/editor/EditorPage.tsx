@@ -58,9 +58,9 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
   // ── Serial ──────────────────────────────────────────────────────────────────
   const {
-    isConnected, isConnecting, isSupported,
+    isConnected, isConnecting, isSupported, isRunning,
     connect, connectWifi, disconnect,
-    sendCode, uploadCode,
+    sendCode, stopCode, uploadCode,
     logs, addLog, clearLogs,
   } = useSerialConnection();
 
@@ -130,6 +130,10 @@ print('LIB_OK:${filename}')
     setIsSending(false);
     if (success) addLog("🚀 Code sent to ESP32!");
   }, [getCurrentCode, isConnected, sendCode, addLog]);
+
+  const handleStop = useCallback(async () => {
+    await stopCode();
+  }, [stopCode]);
 
   const handleUpload = useCallback(async () => {
     const code = getCurrentCode();
@@ -236,8 +240,10 @@ print('LIB_OK:${filename}')
         setWifiSubnet={wifi.setWifiSubnet}
         isUploading={isUploading}
         isSending={isSending}
+        isRunning={isRunning}
         onUpload={handleUpload}
         onRun={handleRun}
+        onStop={handleStop}
         onOpenFileManager={() => setShowLibraryManager(true)}
         onOpenFirmwareFlasher={() => setShowFirmwareFlasher(true)}
       />
@@ -301,7 +307,10 @@ print('LIB_OK:${filename}')
       )}
 
       {showDesignerHub && (
-        <DesignerHub onClose={() => setShowDesignerHub(false)} />
+        <DesignerHub
+          onClose={() => setShowDesignerHub(false)}
+          onAddNode={(type, data) => { canvasRef.current?.addNode(type, data); setShowDesignerHub(false); }}
+        />
       )}
 
       {showFirmwareFlasher && (

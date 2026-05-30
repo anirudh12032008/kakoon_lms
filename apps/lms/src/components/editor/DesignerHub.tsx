@@ -9,7 +9,15 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Copy, Play, Pause, Plus } from "lucide-react";
+import { X, Copy, Play, Pause, Plus, PlusCircle } from "lucide-react";
+
+// Convert DesignerHub flat pixel array (length W×H, values 0/1) to
+// boolean[][] (rows × cols) for the OLED node's staticPixels / animFrames field.
+function flatToNodePixels(flat: number[], w: number, h: number): boolean[][] {
+  return Array.from({ length: h }, (_, r) =>
+    Array.from({ length: w }, (_, c) => flat[r * w + c] !== 0)
+  );
+}
 
 // ─── Shared ────────────────────────────────────────────────────────────────────
 function copyText(s: string) { navigator.clipboard.writeText(s).catch(() => {}); }
@@ -32,8 +40,437 @@ function Tab({ label, icon, active, onClick }: TabProps) {
 const OLED_W = 128, OLED_H = 64, SCALE = 5;
 
 type OLEDTool = "pen" | "eraser" | "line" | "rect" | "circle" | "fill";
+type DitherMode = "none" | "floyd" | "ordered";
+type ScaleMode  = "fit"  | "fill"  | "stretch";
 
 interface OLEDDesign { id: string; name: string; frames: number[][]; fps: number; }
+
+// ─── Image processing helpers ──────────────────────────────────────────────────
+function applyBC(lum: number, brightness: number, contrast: number): number {
+  lum = ((lum / 255 - 0.5) * contrast + 0.5) * 255 + brightness;
+  return Math.max(0, Math.min(255, lum));
+}
+
+function floydSteinberg(grays: Float32Array, w: number, h: number): number[] {
+  const buf = new Float32Array(grays);
+  const out = new Array(w * h).fill(0);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = y * w + x;
+      const old = buf[i];
+      const nv  = old < 128 ? 0 : 255;
+      out[i] = nv === 0 ? 1 : 0;
+      const err = old - nv;
+      if (x + 1 < w)               buf[i + 1]     += err * 7 / 16;
+      if (y + 1 < h) {
+        if (x > 0)                  buf[i + w - 1] += err * 3 / 16;
+                                    buf[i + w]     += err * 5 / 16;
+        if (x + 1 < w)             buf[i + w + 1] += err * 1 / 16;
+      }
+    }
+  }
+  return out;
+}
+
+const BAYER4 = [0,8,2,10, 12,4,14,6, 3,11,1,9, 15,7,13,5].map(v => v * 17);
+
+function pixelsFromImageData(
+  data: ImageData,
+  opts: { threshold: number; brightness: number; contrast: number; invert: boolean; dither: DitherMode }
+): number[] {
+  const { threshold, brightness, contrast, invert, dither } = opts;
+  const grays = new Float32Array(OLED_W * OLED_H);
+  for (let i = 0; i < OLED_W * OLED_H; i++) {
+    const r = data.data[i * 4], g = data.data[i * 4 + 1], b = data.data[i * 4 + 2];
+    grays[i] = applyBC(0.299 * r + 0.587 * g + 0.114 * b, brightness, contrast);
+  }
+  let bits: number[];
+  if (dither === "floyd") {
+    bits = floydSteinberg(grays, OLED_W, OLED_H);
+  } else if (dither === "ordered") {
+    bits = Array.from(grays).map((v, i) => {
+      const bv = BAYER4[(Math.floor(i / OLED_W) % 4) * 4 + (i % OLED_W) % 4];
+      return v < bv ? 1 : 0;
+    });
+  } else {
+    bits = Array.from(grays).map(v => v < threshold ? 1 : 0);
+  }
+  return invert ? bits.map(v => v ^ 1) : bits;
+}
+
+function drawSourceToCanvas(
+  ctx: CanvasRenderingContext2D,
+  src: HTMLImageElement | HTMLVideoElement,
+  scaleMode: ScaleMode
+) {
+  const sw = src instanceof HTMLImageElement ? src.naturalWidth  : (src as HTMLVideoElement).videoWidth;
+  const sh = src instanceof HTMLImageElement ? src.naturalHeight : (src as HTMLVideoElement).videoHeight;
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0, 0, OLED_W, OLED_H);
+  if (!sw || !sh) return;
+  if (scaleMode === "stretch") {
+    ctx.drawImage(src, 0, 0, OLED_W, OLED_H);
+  } else if (scaleMode === "fit") {
+    const s = Math.min(OLED_W / sw, OLED_H / sh);
+    ctx.drawImage(src, (OLED_W - sw * s) / 2, (OLED_H - sh * s) / 2, sw * s, sh * s);
+  } else { // fill
+    const s = Math.max(OLED_W / sw, OLED_H / sh);
+    ctx.drawImage(src, (OLED_W - sw * s) / 2, (OLED_H - sh * s) / 2, sw * s, sh * s);
+  }
+}
+
+// ─── MediaImporter component ───────────────────────────────────────────────────
+interface ImportOpts {
+  threshold: number; brightness: number; contrast: number;
+  invert: boolean; dither: DitherMode; scaleMode: ScaleMode;
+  fps: number; maxFrames: number;
+  videoStart: number; videoEnd: number;
+}
+
+const DEFAULT_IMPORT_OPTS: ImportOpts = {
+  threshold: 128, brightness: 0, contrast: 1.2,
+  invert: false, dither: "floyd", scaleMode: "fit",
+  fps: 10, maxFrames: 48,
+  videoStart: 0, videoEnd: 0,
+};
+
+interface MediaImporterProps {
+  onApply: (frames: number[][], fps: number) => void;
+  onClose: () => void;
+}
+
+function MediaImporter({ onApply, onClose }: MediaImporterProps) {
+  const [opts, setOpts] = useState<ImportOpts>(DEFAULT_IMPORT_OPTS);
+  const [status, setStatus] = useState<"idle" | "processing" | "done" | "error">("idle");
+  const [statusMsg, setStatusMsg] = useState("");
+  const [preview, setPreview] = useState<number[] | null>(null);   // first frame pixels
+  const [frames, setFrames] = useState<number[][]>([]);
+  const [fileType, setFileType] = useState<"image" | "gif" | "video" | null>(null);
+  const [fileName, setFileName] = useState("");
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef  = useRef<HTMLInputElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
+
+  const setOpt = <K extends keyof ImportOpts>(k: K, v: ImportOpts[K]) =>
+    setOpts(o => ({ ...o, [k]: v }));
+
+  // Re-process when opts change and we have a source loaded
+  const srcRef = useRef<HTMLImageElement | HTMLVideoElement | null>(null);
+
+  const renderPreview = useCallback((px: number[]) => {
+    const pc = previewCanvasRef.current;
+    if (!pc) return;
+    const ctx = pc.getContext("2d")!;
+    const img = ctx.createImageData(OLED_W, OLED_H);
+    for (let i = 0; i < OLED_W * OLED_H; i++) {
+      const v = px[i] ? 0 : 255;
+      img.data[i * 4] = v; img.data[i * 4 + 1] = v;
+      img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+  }, []);
+
+  const processSource = useCallback(async (src: HTMLImageElement | HTMLVideoElement, type: "image" | "gif" | "video") => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext("2d")!;
+
+    if (type === "image" || type === "gif") {
+      // For still image OR single-frame GIF: capture immediately
+      drawSourceToCanvas(ctx, src, opts.scaleMode);
+      const data = ctx.getImageData(0, 0, OLED_W, OLED_H);
+      const px = pixelsFromImageData(data, opts);
+      renderPreview(px);
+      setPreview(px);
+
+      if (type === "gif") {
+        // Capture multiple frames from animated GIF by interval sampling
+        setStatusMsg("Capturing GIF frames…");
+        const captured: number[][] = [];
+        const interval = Math.round(1000 / opts.fps);
+        let lastHash = "";
+        await new Promise<void>(res => {
+          const id = setInterval(() => {
+            drawSourceToCanvas(ctx, src, opts.scaleMode);
+            const d = ctx.getImageData(0, 0, OLED_W, OLED_H);
+            const p = pixelsFromImageData(d, opts);
+            // Simple hash: sample 32 pixels evenly
+            const hash = Array.from({ length: 32 }, (_, i) => p[Math.floor(i * OLED_W * OLED_H / 32)]).join("");
+            if (hash !== lastHash) { captured.push(p); lastHash = hash; }
+            if (captured.length >= opts.maxFrames) { clearInterval(id); res(); }
+          }, interval);
+          // Stop after 4 seconds max
+          setTimeout(() => { clearInterval(id); res(); }, 4000);
+        });
+        const result = captured.length > 0 ? captured : [px];
+        setFrames(result);
+        setStatusMsg(`✅ ${result.length} frame${result.length !== 1 ? "s" : ""} captured`);
+        renderPreview(result[0]);
+      } else {
+        setFrames([px]);
+        setStatusMsg("✅ Image converted");
+      }
+    } else {
+      // VIDEO: seek to each timestamp
+      const video = src as HTMLVideoElement;
+      const start = opts.videoStart || 0;
+      const end   = opts.videoEnd > start ? opts.videoEnd : video.duration;
+      const duration = end - start;
+      const total = Math.min(opts.maxFrames, Math.ceil(duration * opts.fps));
+      const captured: number[][] = [];
+
+      setStatusMsg(`Extracting ${total} frames…`);
+      for (let i = 0; i < total; i++) {
+        video.currentTime = start + (i / opts.fps);
+        await new Promise<void>(res => { video.onseeked = () => res(); });
+        drawSourceToCanvas(ctx, video, opts.scaleMode);
+        const d = ctx.getImageData(0, 0, OLED_W, OLED_H);
+        captured.push(pixelsFromImageData(d, opts));
+        if (i === 0) { renderPreview(captured[0]); }
+        setStatusMsg(`Extracting frame ${i + 1} / ${total}…`);
+      }
+      setFrames(captured);
+      setStatusMsg(`✅ ${captured.length} frames extracted`);
+      if (captured.length > 0) renderPreview(captured[0]);
+    }
+    setStatus("done");
+  }, [opts, renderPreview]);
+
+  const loadFile = useCallback(async (file: File) => {
+    setStatus("processing");
+    setFrames([]); setPreview(null);
+    setFileName(file.name);
+
+    const isGif   = file.type === "image/gif";
+    const isVideo = file.type.startsWith("video/");
+    const type: "image" | "gif" | "video" = isVideo ? "video" : isGif ? "gif" : "image";
+    setFileType(type);
+
+    const url = URL.createObjectURL(file);
+
+    if (type === "video") {
+      const video = document.createElement("video");
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.preload = "metadata";
+      video.src = url;
+      srcRef.current = video;
+      video.onloadedmetadata = () => {
+        setVideoDuration(video.duration);
+        setOpt("videoEnd", Math.round(video.duration * 10) / 10);
+        processSource(video, "video");
+      };
+      video.onerror = () => { setStatus("error"); setStatusMsg("Could not load video"); };
+    } else {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      srcRef.current = img;
+      img.onload = () => processSource(img, type);
+      img.onerror = () => { setStatus("error"); setStatusMsg("Could not load image"); };
+      img.src = url;
+    }
+  }, [processSource]);
+
+  // Re-process when options change and source is available
+  useEffect(() => {
+    if (srcRef.current && fileType) {
+      processSource(srcRef.current, fileType);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opts.threshold, opts.brightness, opts.contrast, opts.invert, opts.dither, opts.scaleMode]);
+
+  const SLIDER = "w-full h-1.5 rounded-full accent-violet-500";
+  const OPT_LABEL = "text-[9px] text-zinc-500 uppercase tracking-wider font-bold";
+  const BADGE = (active: boolean) =>
+    `px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
+      active ? "bg-violet-500/20 border-violet-500/50 text-violet-300"
+             : "border-[#2a2a32] text-zinc-500 hover:border-zinc-600"
+    }`;
+
+  return (
+    <div className="flex flex-col gap-3 h-full">
+      {/* Drop zone */}
+      <div
+        className={`rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
+          dragOver ? "border-violet-400 bg-violet-500/10" : "border-[#2d2d35] bg-[#0c0c10] hover:border-zinc-600"
+        }`}
+        onClick={() => fileRef.current?.click()}
+        onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={e => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f); }}
+      >
+        <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden"
+          onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); }} />
+        {fileName
+          ? <p className="text-xs font-semibold text-zinc-300">{fileName}</p>
+          : <>
+              <p className="text-2xl mb-1">📷</p>
+              <p className="text-xs font-semibold text-zinc-300">Drop image, GIF, or video here</p>
+              <p className="text-[10px] text-zinc-600 mt-0.5">PNG · JPG · GIF · MP4 · WebM</p>
+            </>
+        }
+      </div>
+
+      {/* Hidden processing canvas */}
+      <canvas ref={canvasRef} width={OLED_W} height={OLED_H} className="hidden" />
+
+      <div className="flex gap-3 flex-1 min-h-0 overflow-y-auto">
+        {/* Options */}
+        <div className="flex flex-col gap-2.5 w-48 flex-shrink-0">
+          {/* Scale */}
+          <div>
+            <p className={OPT_LABEL + " mb-1"}>Scale Mode</p>
+            <div className="flex gap-1">
+              {(["fit","fill","stretch"] as ScaleMode[]).map(m => (
+                <span key={m} className={BADGE(opts.scaleMode === m)} onClick={() => setOpt("scaleMode", m)}>
+                  {m}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Dither */}
+          <div>
+            <p className={OPT_LABEL + " mb-1"}>Dithering</p>
+            <div className="flex gap-1 flex-wrap">
+              {([["none","Off"],["floyd","Floyd"],["ordered","Ordered"]] as [DitherMode,string][]).map(([m,l]) => (
+                <span key={m} className={BADGE(opts.dither === m)} onClick={() => setOpt("dither", m)}>{l}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Threshold (only shown when dither = none) */}
+          {opts.dither === "none" && (
+            <div>
+              <div className="flex justify-between mb-1">
+                <p className={OPT_LABEL}>Threshold</p>
+                <span className="text-[9px] font-mono text-violet-400">{opts.threshold}</span>
+              </div>
+              <input type="range" min={0} max={255} value={opts.threshold}
+                onChange={e => setOpt("threshold", +e.target.value)} className={SLIDER} />
+            </div>
+          )}
+
+          {/* Brightness */}
+          <div>
+            <div className="flex justify-between mb-1">
+              <p className={OPT_LABEL}>Brightness</p>
+              <span className="text-[9px] font-mono text-violet-400">{opts.brightness > 0 ? "+" : ""}{opts.brightness}</span>
+            </div>
+            <input type="range" min={-128} max={128} value={opts.brightness}
+              onChange={e => setOpt("brightness", +e.target.value)} className={SLIDER} />
+          </div>
+
+          {/* Contrast */}
+          <div>
+            <div className="flex justify-between mb-1">
+              <p className={OPT_LABEL}>Contrast</p>
+              <span className="text-[9px] font-mono text-violet-400">{opts.contrast.toFixed(1)}×</span>
+            </div>
+            <input type="range" min={0.1} max={4} step={0.1} value={opts.contrast}
+              onChange={e => setOpt("contrast", +e.target.value)} className={SLIDER} />
+          </div>
+
+          {/* Invert */}
+          <div className="flex items-center justify-between">
+            <p className={OPT_LABEL}>Invert</p>
+            <button onClick={() => setOpt("invert", !opts.invert)}
+              className={`w-8 h-4 rounded-full transition-all relative ${opts.invert ? "bg-violet-500" : "bg-[#2a2a32]"}`}>
+              <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${opts.invert ? "left-4" : "left-0.5"}`} />
+            </button>
+          </div>
+
+          {/* GIF/Video controls */}
+          {(fileType === "gif" || fileType === "video") && (
+            <>
+              <div className="h-px bg-[#2a2a32]" />
+              <div>
+                <div className="flex justify-between mb-1">
+                  <p className={OPT_LABEL}>Capture FPS</p>
+                  <span className="text-[9px] font-mono text-violet-400">{opts.fps}</span>
+                </div>
+                <input type="range" min={1} max={24} value={opts.fps}
+                  onChange={e => setOpt("fps", +e.target.value)} className={SLIDER} />
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <p className={OPT_LABEL}>Max Frames</p>
+                  <span className="text-[9px] font-mono text-violet-400">{opts.maxFrames}</span>
+                </div>
+                <input type="range" min={1} max={120} value={opts.maxFrames}
+                  onChange={e => setOpt("maxFrames", +e.target.value)} className={SLIDER} />
+              </div>
+              {fileType === "video" && videoDuration > 0 && (
+                <>
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <p className={OPT_LABEL}>Start (s)</p>
+                      <span className="text-[9px] font-mono text-violet-400">{opts.videoStart.toFixed(1)}</span>
+                    </div>
+                    <input type="range" min={0} max={Math.max(0, videoDuration - 0.1)} step={0.1}
+                      value={opts.videoStart} onChange={e => setOpt("videoStart", +e.target.value)} className={SLIDER} />
+                  </div>
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <p className={OPT_LABEL}>End (s)</p>
+                      <span className="text-[9px] font-mono text-violet-400">{opts.videoEnd.toFixed(1)}</span>
+                    </div>
+                    <input type="range" min={opts.videoStart + 0.1} max={videoDuration} step={0.1}
+                      value={opts.videoEnd} onChange={e => setOpt("videoEnd", +e.target.value)} className={SLIDER} />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Preview */}
+        <div className="flex-1 flex flex-col gap-2 min-w-0">
+          <p className={OPT_LABEL}>Preview — 128×64 OLED</p>
+          <div className="rounded-xl border border-[#2a2a32] bg-black overflow-hidden flex items-center justify-center"
+            style={{ aspectRatio: "2/1" }}>
+            {status === "processing"
+              ? <div className="text-[10px] text-zinc-500 flex flex-col items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                  <span>{statusMsg || "Processing…"}</span>
+                </div>
+              : preview
+                ? <canvas ref={previewCanvasRef} width={OLED_W} height={OLED_H}
+                    style={{ width: "100%", imageRendering: "pixelated" }} />
+                : <div className="text-[10px] text-zinc-700">Upload a file to see preview</div>
+            }
+          </div>
+          {/* Status */}
+          {statusMsg && status !== "processing" && (
+            <p className={`text-[10px] font-semibold ${status === "done" ? "text-green-400" : "text-red-400"}`}>
+              {statusMsg}
+            </p>
+          )}
+          {frames.length > 1 && (
+            <p className="text-[10px] text-zinc-500">
+              {frames.length} frames · {opts.fps} fps · ~{(frames.length / opts.fps).toFixed(1)}s loop
+            </p>
+          )}
+          {/* Apply button */}
+          <button
+            onClick={() => { if (frames.length > 0) { onApply(frames, opts.fps); onClose(); } }}
+            disabled={frames.length === 0 || status === "processing"}
+            className="mt-auto w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-xs font-bold disabled:opacity-40 disabled:cursor-not-allowed hover:from-violet-600 hover:to-fuchsia-600 transition-all"
+          >
+            <PlusCircle className="w-3.5 h-3.5" />
+            {frames.length > 1
+              ? `Apply ${frames.length} Frames to Designer`
+              : "Apply to Designer"}
+          </button>
+          <button onClick={onClose} className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors text-center">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const OLED_PRESETS: { name: string; pixels: number[] }[] = [
   { name: "Smiley 😊", pixels: (() => {
@@ -90,30 +527,39 @@ function oledToBytearray(frame: number[]): string {
 }
 
 function generateOLEDCode(design: OLEDDesign): string {
+  const name = design.name.toLowerCase().replace(/\W+/g, "_");
+  const header = `# OLED — ${design.name}
+from machine import SoftI2C, Pin
+import ssd1306, framebuf
+i2c = SoftI2C(scl=Pin(36), sda=Pin(35))
+oled = ssd1306.SSD1306_I2C(128, 64, i2c)
+`;
+
   if (design.frames.length === 1) {
-    const name = design.name.toLowerCase().replace(/\W+/g, "_");
-    return `# OLED Design: ${design.name}
+    return `${header}
 _buf_${name} = bytearray(b"${oledToBytearray(design.frames[0])}")
 _fb_${name} = framebuf.FrameBuffer(_buf_${name}, 128, 64, framebuf.MONO_HLSB)
 oled.fill(0)
 oled.blit(_fb_${name}, 0, 0)
 oled.show()`;
   }
-  const name = design.name.toLowerCase().replace(/\W+/g, "_");
-  const lines = [`# OLED Animation: ${design.name} (${design.frames.length} frames @ ${design.fps} fps)`,
+
+  const lines = [header,
+    `import time`,
     `_frames_${name} = [`];
   design.frames.forEach((f, i) => {
     lines.push(`    bytearray(b"${oledToBytearray(f)}"),  # frame ${i}`);
   });
   lines.push(`]`);
-  lines.push(`for _buf in _frames_${name}:`);
-  lines.push(`    _fb = framebuf.FrameBuffer(_buf, 128, 64, framebuf.MONO_HLSB)`);
-  lines.push(`    oled.fill(0); oled.blit(_fb, 0, 0); oled.show()`);
-  lines.push(`    time.sleep(${(1000 / design.fps / 1000).toFixed(3)})`);
+  lines.push(`while True:`);
+  lines.push(`    for _buf in _frames_${name}:`);
+  lines.push(`        _fb = framebuf.FrameBuffer(_buf, 128, 64, framebuf.MONO_HLSB)`);
+  lines.push(`        oled.fill(0); oled.blit(_fb, 0, 0); oled.show()`);
+  lines.push(`        time.sleep_ms(${Math.round(1000 / design.fps)})`);
   return lines.join("\n");
 }
 
-function OLEDDesigner() {
+function OLEDDesigner({ onAddNode }: { onAddNode?: (type: string, data: Record<string, unknown>) => void }) {
   const [frames, setFrames] = useState<number[][]>([new Array(OLED_W * OLED_H).fill(0)]);
   const [curFrame, setCurFrame] = useState(0);
   const [tool, setTool] = useState<OLEDTool>("pen");
@@ -123,6 +569,8 @@ function OLEDDesigner() {
   const [lineStart, setLineStart] = useState<[number, number] | null>(null);
   const [playing, setPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [addedToCanvas, setAddedToCanvas] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [playFrame, setPlayFrame] = useState(0);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -333,6 +781,18 @@ function OLEDDesigner() {
             className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32] hover:border-green-500/30 transition-all">
             <Plus className="w-2.5 h-2.5" />Add
           </button>
+
+          {/* Import Media */}
+          <button
+            onClick={() => setShowImport(v => !v)}
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+              showImport
+                ? "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40"
+                : "text-zinc-500 border-[#2a2a32] hover:text-fuchsia-400 hover:border-fuchsia-500/30"
+            }`}>
+            📷 Import
+          </button>
+
           {frames.length > 1 && (
             <button onClick={() => setPlaying(!playing)}
               className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold transition-all ${
@@ -342,6 +802,20 @@ function OLEDDesigner() {
             </button>
           )}
         </div>
+
+        {/* Import Media Panel */}
+        {showImport && (
+          <div className="border-b border-[#1a1a20] bg-[#08080b] p-4 max-h-[380px] overflow-y-auto">
+            <MediaImporter
+              onApply={(importedFrames, importedFps) => {
+                setFrames(importedFrames);
+                setFps(importedFps);
+                setCurFrame(0);
+              }}
+              onClose={() => setShowImport(false)}
+            />
+          </div>
+        )}
 
         {/* Canvas */}
         <div className="flex-1 flex items-center justify-center p-4 overflow-auto">
@@ -373,6 +847,30 @@ function OLEDDesigner() {
         <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono text-green-400 leading-relaxed bg-[#050507]">
           {code}
         </pre>
+        {onAddNode && (
+          <div className="px-3 py-2.5 border-t border-[#1a1a20]">
+            <button
+              onClick={() => {
+                const nodePixels = frames.map(f => flatToNodePixels(f, OLED_W, OLED_H));
+                if (frames.length > 1) {
+                  onAddNode("oled_display", { animFrames: nodePixels, fps, line1: "", line2: "" });
+                } else {
+                  onAddNode("oled_display", { staticPixels: nodePixels[0], line1: "", line2: "" });
+                }
+                setAddedToCanvas(true);
+                setTimeout(() => setAddedToCanvas(false), 2000);
+              }}
+              className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all border ${
+                addedToCanvas
+                  ? "bg-green-500/20 border-green-500/40 text-green-400"
+                  : "bg-violet-500/15 border-violet-500/40 text-violet-400 hover:bg-violet-500/25"
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -417,7 +915,7 @@ function buildEffectFrames(id: string, count: number): RGB[][] {
       return Array.from({ length: count }, (_, head) =>
         Array.from({ length: count }, (__, i) => {
           const d = (i - head + count) % count;
-          const b = Math.max(0, 255 - d * 40);
+          const b = Math.round(Math.max(0, 255 - d * 40));
           return [b, b, b] as RGB;
         }));
     case "twinkle": {
@@ -432,7 +930,7 @@ function buildEffectFrames(id: string, count: number): RGB[][] {
       return Array.from({ length: 20 }, (_, f) =>
         Array.from({ length: count }, (__, i) => {
           const heat = Math.max(0, 200 - i * 8 + (Math.sin(f * 0.7 + i * 0.3) * 40));
-          return [Math.min(255, heat * 2), Math.min(255, Math.max(0, heat - 100) * 3), 0] as RGB;
+          return [Math.min(255, Math.round(heat * 2)), Math.min(255, Math.round(Math.max(0, heat - 100) * 3)), 0] as RGB;
         }));
     case "ocean":
       return Array.from({ length: 20 }, (_, f) =>
@@ -446,32 +944,35 @@ function buildEffectFrames(id: string, count: number): RGB[][] {
 
 function generateNeoPixelCode(ledCount: number, dataPin: number, frames: RGB[][], fps: number, name: string): string {
   const safeName = name.toLowerCase().replace(/\W+/g, "_");
+  const header = `# NeoPixel — ${name}
+from machine import Pin
+import neopixel
+_np_${safeName} = neopixel.NeoPixel(Pin(${dataPin}), ${ledCount})`;
+
   if (frames.length === 1) {
     const colors = frames[0].map((c) => `(${c.join(",")})`).join(", ");
-    return `# NeoPixel: ${name}
-import neopixel
-_np_${safeName} = neopixel.NeoPixel(machine.Pin(${dataPin}), ${ledCount})
+    return `${header}
 _colors = [${colors}]
 for i, rgb in enumerate(_colors):
     _np_${safeName}[i] = rgb
 _np_${safeName}.write()`;
   }
-  const lines = [`# NeoPixel Animation: ${name} (${frames.length} frames @ ${fps} fps)`,
-    `import neopixel, time`,
-    `_np_${safeName} = neopixel.NeoPixel(machine.Pin(${dataPin}), ${ledCount})`,
+  const lines = [header,
+    `import time`,
     `_frames_${safeName} = [`];
   frames.forEach((f) => {
     lines.push(`    [${f.map((c) => `(${c.join(",")})`).join(", ")}],`);
   });
   lines.push(`]`);
-  lines.push(`for _frame in _frames_${safeName}:`);
-  lines.push(`    for _i, _rgb in enumerate(_frame): _np_${safeName}[_i] = _rgb`);
-  lines.push(`    _np_${safeName}.write()`);
-  lines.push(`    time.sleep(${(1000 / fps / 1000).toFixed(3)})`);
+  lines.push(`while True:`);
+  lines.push(`    for _frame in _frames_${safeName}:`);
+  lines.push(`        for _i, _rgb in enumerate(_frame): _np_${safeName}[_i] = _rgb`);
+  lines.push(`        _np_${safeName}.write()`);
+  lines.push(`        time.sleep_ms(${Math.round(1000 / fps)})`);
   return lines.join("\n");
 }
 
-function NeoPixelDesigner() {
+function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, data: Record<string, unknown>) => void }) {
   const [ledCount, setLedCount] = useState(12);
   const [dataPin, setDataPin] = useState(48);
   const [mode, setMode] = useState<"strip" | "grid">("strip");
@@ -486,6 +987,7 @@ function NeoPixelDesigner() {
   const [playFrame, setPlayFrame] = useState(0);
   const [designName, setDesignName] = useState("MyEffect");
   const [copied, setCopied] = useState(false);
+  const [addedToCanvas, setAddedToCanvas] = useState(false);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const effectiveLedCount = mode === "grid" ? gridRows * gridCols : ledCount;
@@ -681,6 +1183,32 @@ function NeoPixelDesigner() {
           style={{ color: `rgb(${selectedColor.join(",")})` }}>
           {code}
         </pre>
+        {onAddNode && (
+          <div className="px-3 py-2.5 border-t border-[#1a1a20]">
+            <button
+              onClick={() => {
+                onAddNode("neopixel_designer", {
+                  pin: dataPin,
+                  ledCount: effectiveLedCount,
+                  fps,
+                  frames,
+                  effectName: designName,
+                  mode,
+                });
+                setAddedToCanvas(true);
+                setTimeout(() => setAddedToCanvas(false), 2000);
+              }}
+              className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all border ${
+                addedToCanvas
+                  ? "bg-green-500/20 border-green-500/40 text-green-400"
+                  : "bg-violet-500/15 border-violet-500/40 text-violet-400 hover:bg-violet-500/25"
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -775,11 +1303,15 @@ function buildMatrixAnim(id: string, modules: number): number[][] {
 
 function generateMatrixCode(frames: number[][], modules: number, fps: number, name: string): string {
   const W = modules * 8;
-  const lines = [`# MAX7219 Matrix: ${name}`,
-    `# ${modules} module(s), ${W}×8 pixels, ${fps} fps`,
-    `from max7219 import Matrix8x8`,
-    `import spi, time`,
-    `_mat = Matrix8x8(spi, cs, ${modules})`,
+  // Board SPI wiring for MAX7219: sck=11, mosi=10, miso=12, cs=13
+  const lines = [
+    `# MAX7219 Matrix — ${name} (${modules} module${modules > 1 ? "s" : ""}, ${W}×8, ${fps} fps)`,
+    `from machine import SPI, Pin`,
+    `import max7219, time`,
+    `_spi = SPI(1, baudrate=10_000_000, polarity=0, phase=0, sck=Pin(11), mosi=Pin(10), miso=Pin(12))`,
+    `_cs  = Pin(13, Pin.OUT)`,
+    `_mat = max7219.Matrix8x8(_spi, _cs, ${modules})`,
+    `_mat.brightness(8)`,
     `_frames = [`];
   frames.slice(0, 60).forEach((f) => {
     const rows = Array.from({ length: 8 }, (_, r) => {
@@ -787,16 +1319,19 @@ function generateMatrixCode(frames: number[][], modules: number, fps: number, na
       for (let c = 0; c < W; c++) if (f[r * W + c]) byte |= (1 << c);
       return byte;
     });
-    lines.push(`    [${rows.join(", ")}],`);
+    lines.push(`    bytes([${rows.join(", ")}]),`);
   });
   lines.push(`]`);
-  lines.push(`for _row_data in _frames:`);
-  lines.push(`    for _r, _b in enumerate(_row_data): _mat.row(_r, _b)`);
-  lines.push(`    time.sleep(${(1000 / fps / 1000).toFixed(3)})`);
+  lines.push(`while True:`);
+  lines.push(`    for _f in _frames:`);
+  lines.push(`        _mat.fill(0)`);
+  lines.push(`        for _r in range(8): _mat.row(_r, _f[_r])`);
+  lines.push(`        _mat.show()`);
+  lines.push(`        time.sleep_ms(${Math.round(1000 / fps)})`);
   return lines.join("\n");
 }
 
-function MatrixDesigner() {
+function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data: Record<string, unknown>) => void }) {
   const [modules, setModules] = useState(1);
   const [frames, setFrames] = useState<number[][]>([new Array(64).fill(0)]);
   const [curFrame, setCurFrame] = useState(0);
@@ -807,6 +1342,7 @@ function MatrixDesigner() {
   const [scrollText, setScrollText] = useState("KAKOON ");
   const [designName, setDesignName] = useState("MatrixAnim");
   const [copied, setCopied] = useState(false);
+  const [addedToCanvas, setAddedToCanvas] = useState(false);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const W = modules * 8;
@@ -958,15 +1494,37 @@ function MatrixDesigner() {
         <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono text-amber-400 leading-relaxed bg-[#050507]">
           {code}
         </pre>
+        {onAddNode && (
+          <div className="px-3 py-2.5 border-t border-[#1a1a20]">
+            <button
+              onClick={() => {
+                onAddNode("max7219", { modules, width: modules, height: 1 });
+                setAddedToCanvas(true);
+                setTimeout(() => setAddedToCanvas(false), 2000);
+              }}
+              className={`w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[10px] font-bold transition-all border ${
+                addedToCanvas
+                  ? "bg-green-500/20 border-green-500/40 text-green-400"
+                  : "bg-violet-500/15 border-violet-500/40 text-violet-400 hover:bg-violet-500/25"
+              }`}
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ─── DesignerHub Modal ─────────────────────────────────────────────────────────
-interface DesignerHubProps { onClose: () => void; }
+interface DesignerHubProps {
+  onClose: () => void;
+  onAddNode?: (type: string, data: Record<string, unknown>) => void;
+}
 
-export function DesignerHub({ onClose }: DesignerHubProps) {
+export function DesignerHub({ onClose, onAddNode }: DesignerHubProps) {
   const [activeTab, setActiveTab] = useState<"oled" | "neopixel" | "matrix">("oled");
 
   return createPortal(
@@ -997,9 +1555,9 @@ export function DesignerHub({ onClose }: DesignerHubProps) {
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === "oled" && <OLEDDesigner />}
-          {activeTab === "neopixel" && <NeoPixelDesigner />}
-          {activeTab === "matrix" && <MatrixDesigner />}
+          {activeTab === "oled" && <OLEDDesigner onAddNode={onAddNode} />}
+          {activeTab === "neopixel" && <NeoPixelDesigner onAddNode={onAddNode} />}
+          {activeTab === "matrix" && <MatrixDesigner onAddNode={onAddNode} />}
         </div>
       </div>
     </div>,

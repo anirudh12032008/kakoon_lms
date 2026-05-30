@@ -1,6 +1,6 @@
 import {
   PanelLeftClose, Circle, Usb, Wifi, ChevronDown,
-  Loader2, Upload, HardDrive, Cpu, Play,
+  Loader2, Upload, HardDrive, Cpu, Play, Square,
 } from "lucide-react";
 
 interface EditorStatusBarProps {
@@ -30,8 +30,10 @@ interface EditorStatusBarProps {
   // Actions
   isUploading: boolean;
   isSending: boolean;
+  isRunning: boolean;
   onUpload: () => void;
   onRun: () => void;
+  onStop: () => void;
   onOpenFileManager: () => void;
   onOpenFirmwareFlasher: () => void;
 }
@@ -42,7 +44,7 @@ export function EditorStatusBar({
   onConnect, onDisconnect, onConnectWifi,
   showWifiInput, setShowWifiInput, setConnectionMode,
   wifiSsid, setWifiSsid, wifiPassword, setWifiPassword, wifiSubnet, setWifiSubnet,
-  isUploading, isSending, onUpload, onRun, onOpenFileManager, onOpenFirmwareFlasher,
+  isUploading, isSending, isRunning, onUpload, onRun, onStop, onOpenFileManager, onOpenFirmwareFlasher,
 }: EditorStatusBarProps) {
   return (
     <footer className="flex h-12 shrink-0 items-center justify-between border-t border-[#1f1f23] bg-[#0c0c0f] px-3 gap-1">
@@ -187,6 +189,18 @@ export function EditorStatusBar({
           <Cpu className="h-3.5 w-3.5" />
           <span className="hidden md:inline">Flash</span>
         </button>
+
+        {/* Stop — visible only when code is actively running */}
+        {isRunning && (
+          <button
+            onClick={onStop}
+            className="flex h-8 items-center gap-2 rounded-md border border-red-500/60 bg-red-500/15 px-3 text-xs font-medium text-red-400 hover:bg-red-500/25 transition-all animate-pulse"
+            title="Stop running program (Ctrl+C)"
+          >
+            <Square className="h-3.5 w-3.5 fill-red-400" />
+            <span className="hidden sm:inline">Stop</span>
+          </button>
+        )}
 
         <button
           onClick={onRun}

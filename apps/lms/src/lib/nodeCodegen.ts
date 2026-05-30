@@ -1,6 +1,30 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Node, Edge } from "@xyflow/react";
 
+// ─── OLED pixel → MONO_HLSB bytes ─────────────────────────────────────────────
+// The node stores pixels as boolean[][] with storedH rows (typically 32 for a
+// 128×64 display). Each stored row doubles to fill the real OLED height.
+function oledPixelsToMonoHLSB(pixels: boolean[][], oledW: number, oledH: number): Uint8Array {
+  const storedH = pixels.length || 1;
+  const bytesPerRow = Math.ceil(oledW / 8);
+  const buf = new Uint8Array(bytesPerRow * oledH);
+  for (let oledRow = 0; oledRow < oledH; oledRow++) {
+    const srcRow = Math.min(Math.floor((oledRow / oledH) * storedH), storedH - 1);
+    const row = pixels[srcRow] ?? [];
+    for (let col = 0; col < oledW; col++) {
+      if (row[col]) {
+        const byteIdx = oledRow * bytesPerRow + Math.floor(col / 8);
+        buf[byteIdx] |= (1 << (7 - (col % 8))); // MONO_HLSB: MSB = leftmost pixel
+      }
+    }
+  }
+  return buf;
+}
+
+function bytesToPyHex(buf: Uint8Array): string {
+  return Array.from(buf).map(b => `\\x${b.toString(16).padStart(2, "0")}`).join("");
+}
+
 /**
  * Robust Graph Traversal Code Generator for Kakoon CodeLab.
  * Walks the connected flow starting from root nodes (unconnected/entry points),
@@ -41,31 +65,43 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
   const LOOP_TYPES = ["forever_loop", "for_loop", "while_loop", "repeat"];
 
   /**
-   * Returns the lines for the body of a loop node.
+   * Returns the lines for the body of a loop / if-else node.
    *
    * Strategy (in order):
-   * 1. If a "body" handle edge exists, follow that chain — explicit wiring wins.
-   * 2. Otherwise, collect every directly-connected node that has a Y position
-   *    greater than the loop node (i.e. drawn below it), sort them by Y, and
-   *    use the topmost one as the body entry — so just connecting nodes below
-   *    the loop with any edge "just works" without a special body handle.
+   * 1. If one or more "body" handle edges exist, follow each chain in Y order.
+   * 2. Otherwise, collect EVERY directly-connected node below the loop (by Y),
+   *    sort them by Y, and generate each one's chain independently — so you can
+   *    wire multiple nodes into a loop and they all appear in the body.
    */
   function getLoopBodyLines(loopId: string, indentLevel: number): string[] {
-    // 1. Explicit body handle
-    const bodyEdge = edges.find((e) => e.source === loopId && e.sourceHandle === "body");
-    if (bodyEdge) return generateChain(bodyEdge.target, indentLevel);
+    // 1. Explicit body handle edges (support multiple wires from "body")
+    const bodyEdges = edges.filter((e) => e.source === loopId && e.sourceHandle === "body");
+    if (bodyEdges.length > 0) {
+      const result: string[] = [];
+      const targets = bodyEdges
+        .map((e) => nodeMap.get(e.target))
+        .filter((n): n is Node => !!n)
+        .sort((a, b) => a.position.y - b.position.y);
+      for (const t of targets) result.push(...generateChain(t.id, indentLevel));
+      return result;
+    }
 
-    // 2. Fall back: any directly connected node below the loop node by Y
+    // 2. Fall back: every directly-connected node below the loop node by Y
     const loopNode = nodeMap.get(loopId);
     if (!loopNode) return [];
     const connectedBelow = edges
-      .filter((e) => e.source === loopId && e.sourceHandle !== "body")
+      .filter((e) => e.source === loopId)
       .map((e) => nodeMap.get(e.target))
       .filter((n): n is Node => !!n && n.position.y > loopNode.position.y)
       .sort((a, b) => a.position.y - b.position.y);
 
     if (connectedBelow.length === 0) return [];
-    return generateChain(connectedBelow[0].id, indentLevel);
+    // Generate each top-level body node independently so ALL of them are included
+    const result: string[] = [];
+    for (const bodyNode of connectedBelow) {
+      result.push(...generateChain(bodyNode.id, indentLevel));
+    }
+    return result;
   }
 
   function generateChain(nodeId: string | null, indentLevel: number): string[] {
@@ -80,12 +116,31 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
     const indent = "    ".repeat(indentLevel);
     const chunkLines: string[] = [];
 
-    // Helper to get connected target of a specific handle ID
+    // Helper to get connected target of a specific handle ID (first match)
     const getTargetForHandle = (handleId: string) => {
       const edge = edges.find(
         (e) => e.source === nodeId && e.sourceHandle === handleId
       );
       return edge ? edge.target : null;
+    };
+
+    // Helper to get ALL connected targets for a handle, sorted by Y position
+    const getAllTargetsForHandle = (handleId: string): string[] => {
+      return edges
+        .filter((e) => e.source === nodeId && e.sourceHandle === handleId)
+        .map((e) => nodeMap.get(e.target))
+        .filter((n): n is Node => !!n)
+        .sort((a, b) => a.position.y - b.position.y)
+        .map((n) => n.id);
+    };
+
+    // Helper to generate lines for multiple branch targets
+    const getBranchLines = (handleId: string, indentLvl: number): string[] => {
+      const targets = getAllTargetsForHandle(handleId);
+      if (targets.length === 0) return [];
+      const result: string[] = [];
+      for (const tid of targets) result.push(...generateChain(tid, indentLvl));
+      return result;
     };
 
     // Helper to get next sequential statement connected to standard bottom handle.
@@ -158,7 +213,7 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
       case "neopixel_led":
         imports.add("from machine import Pin");
         imports.add("import neopixel");
-        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? 45}), 1)`);
+        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? 48}), 1)`);
         {
           const c = d.color ?? "#ff0000";
           const r = parseInt(c.slice(1, 3), 16);
@@ -172,13 +227,41 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
       case "neopixel_rgb":
         imports.add("from machine import Pin");
         imports.add("import neopixel");
-        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? 45}), 1)`);
+        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? 48}), 1)`);
         {
           const br = (d.brightness ?? 50) / 100;
           chunkLines.push(`${indent}np[0] = (${Math.round((d.red ?? 255) * br)}, ${Math.round((d.green ?? 0) * br)}, ${Math.round((d.blue ?? 0) * br)})`);
           chunkLines.push(`${indent}np.write()`);
         }
         break;
+
+      case "neopixel_designer": {
+        imports.add("from machine import Pin");
+        imports.add("import neopixel, time");
+        const npPin = d.pin ?? 48;
+        const npCount = d.ledCount ?? 8;
+        const npFps = d.fps ?? 10;
+        const npFrames = d.frames as number[][][] | undefined;
+        setupLines.push(`np = neopixel.NeoPixel(Pin(${npPin}), ${npCount})`);
+        const clampRGB = (v: number) => Math.max(0, Math.min(255, Math.round(v)));
+        if (npFrames && npFrames.length > 1) {
+          const framesStr = npFrames
+            .map(f => `    [${f.map((rgb: number[]) => `(${clampRGB(rgb[0])},${clampRGB(rgb[1])},${clampRGB(rgb[2])})`).join(",")}]`)
+            .join(",\n");
+          setupLines.push(`_np_frames = [\n${framesStr}\n]`);
+          chunkLines.push(`${indent}for _f in _np_frames:`);
+          chunkLines.push(`${indent}    for _i, _rgb in enumerate(_f): np[_i] = _rgb`);
+          chunkLines.push(`${indent}    np.write()`);
+          chunkLines.push(`${indent}    time.sleep_ms(${Math.round(1000 / npFps)})`);
+        } else if (npFrames && npFrames.length === 1) {
+          for (let i = 0; i < npFrames[0].length && i < npCount; i++) {
+            const [r, g, b] = npFrames[0][i];
+            chunkLines.push(`${indent}np[${i}] = (${clampRGB(r)},${clampRGB(g)},${clampRGB(b)})`);
+          }
+          chunkLines.push(`${indent}np.write()`);
+        }
+        break;
+      }
 
       // ─── Loops ─────────────────────────────────────────────────────────────
       case "forever_loop":
@@ -217,23 +300,13 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
       case "if_else":
         chunkLines.push(`${indent}if ${d.left ?? ""} ${d.op ?? "=="} ${d.right ?? 0}:`);
         {
-          const trueId = getTargetForHandle("true");
-          const trueLines = generateChain(trueId, indentLevel + 1);
-          if (trueLines.length > 0) {
-            chunkLines.push(...trueLines);
-          } else {
-            chunkLines.push(`${indent}    pass`);
-          }
+          const trueLines = getBranchLines("true", indentLevel + 1);
+          chunkLines.push(...(trueLines.length > 0 ? trueLines : [`${indent}    pass`]));
         }
         chunkLines.push(`${indent}else:`);
         {
-          const falseId = getTargetForHandle("false");
-          const falseLines = generateChain(falseId, indentLevel + 1);
-          if (falseLines.length > 0) {
-            chunkLines.push(...falseLines);
-          } else {
-            chunkLines.push(`${indent}    pass`);
-          }
+          const falseLines = getBranchLines("false", indentLevel + 1);
+          chunkLines.push(...(falseLines.length > 0 ? falseLines : [`${indent}    pass`]));
         }
         break;
 
@@ -306,15 +379,56 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
         break;
 
       // ─── Display ───────────────────────────────────────────────────────────
-      case "oled_display":
-        imports.add("from machine import I2C, Pin");
-        imports.add("import ssd1306");
-        setupLines.push(`i2c = I2C(0, scl=Pin(${d.sck ?? 47}), sda=Pin(${d.sda ?? 48}))`);
-        setupLines.push(`oled = ssd1306.SSD1306_I2C(128, 64, i2c)`);
-        if (d.clearScreen) chunkLines.push(`${indent}oled.fill(0)`);
-        chunkLines.push(`${indent}oled.text(${d.text ?? "'Hello world'"}, ${d.left ?? 0}, ${d.top ?? 0})`);
-        chunkLines.push(`${indent}oled.show()`);
+      case "oled_display": {
+        // d.driver: false = SH1106 (default), true = SSD1306
+        const useSSD = d.driver === true;
+        const dLib   = useSSD ? "ssd1306" : "sh1106";
+        const dClass = useSSD ? "SSD1306_I2C" : "SH1106_I2C";
+        const [oledW, oledH] = d.resolution === "128x32" ? [128, 32] : [128, 64];
+
+        imports.add("from machine import SoftI2C, Pin");
+        imports.add(`import ${dLib}`);
+        setupLines.push(`i2c = SoftI2C(scl=Pin(${d.sck ?? 36}), sda=Pin(${d.sda ?? 35}))`);
+        setupLines.push(`oled = ${dLib}.${dClass}(${oledW}, ${oledH}, i2c)`);
+
+        // Always clear before drawing
+        chunkLines.push(`${indent}oled.fill(0)`);
+
+        // Static pixel art (drawn in the node's OLED designer)
+        const staticPixels = d.staticPixels as boolean[][] | undefined;
+        if (staticPixels && staticPixels.some(row => row.some(v => v))) {
+          imports.add("import framebuf");
+          const hexStr = bytesToPyHex(oledPixelsToMonoHLSB(staticPixels, oledW, oledH));
+          chunkLines.push(`${indent}_fb = framebuf.FrameBuffer(bytearray(b'${hexStr}'), ${oledW}, ${oledH}, framebuf.MONO_HLSB)`);
+          chunkLines.push(`${indent}oled.blit(_fb, 0, 0)`);
+        }
+
+        // Animation frames
+        const animFrames = d.animFrames as boolean[][][] | undefined;
+        if (animFrames && animFrames.length > 1) {
+          imports.add("import framebuf");
+          imports.add("import time");
+          const framesStr = animFrames.map(f => {
+            const hex = bytesToPyHex(oledPixelsToMonoHLSB(f, oledW, oledH));
+            return `b'${hex}'`;
+          }).join(", ");
+          const fps = typeof d.fps === "number" ? d.fps : 10;
+          const delayMs = Math.round(1000 / fps);
+          setupLines.push(`_oled_frames = [${framesStr}]`);
+          chunkLines.push(`${indent}for _fd in _oled_frames:`);
+          chunkLines.push(`${indent}    _fb = framebuf.FrameBuffer(bytearray(_fd), ${oledW}, ${oledH}, framebuf.MONO_HLSB)`);
+          chunkLines.push(`${indent}    oled.fill(0); oled.blit(_fb, 0, 0); oled.show()`);
+          chunkLines.push(`${indent}    time.sleep_ms(${delayMs})`);
+        } else {
+          // Text lines
+          const line1 = typeof d.line1 === "string" ? d.line1 : "";
+          const line2 = typeof d.line2 === "string" ? d.line2 : "";
+          if (line1) chunkLines.push(`${indent}oled.text(${JSON.stringify(line1)}, 0, 0)`);
+          if (line2) chunkLines.push(`${indent}oled.text(${JSON.stringify(line2)}, 0, 12)`);
+          chunkLines.push(`${indent}oled.show()`);
+        }
         break;
+      }
       case "seven_seg":
         imports.add("import tm1637");
         imports.add("from machine import Pin");
@@ -327,18 +441,15 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
 def rotate_servo(pin_num, angle):
     global servos
     if pin_num not in servos:
-        pwm = PWM(Pin(pin_num))
-        pwm.freq(50)
+        pwm = PWM(Pin(pin_num, Pin.OUT), freq=50)
         servos[pin_num] = pwm
     pwm = servos[pin_num]
-
-    angle = int(angle)
-    angle = max(0, min(180, angle))
-    duty = int((angle / 180) * 102 + 26)
-    pwm.duty(duty)`);
+    angle = max(0, min(180, int(angle)))
+    us = 600 + (angle / 180) * 1800
+    pwm.duty_u16(int(us / 20000 * 65535))`);
         {
           const angleVal = d.angle ?? 90;
-          chunkLines.push(`${indent}rotate_servo(${d.pin ?? 4}, ${angleVal})`);
+          chunkLines.push(`${indent}rotate_servo(${d.pin ?? 21}, ${angleVal})`);
         }
         break;
       case "servo_motor_advance":
@@ -348,18 +459,15 @@ def rotate_servo(pin_num, angle):
 def rotate_servo(pin_num, angle):
     global servos
     if pin_num not in servos:
-        pwm = PWM(Pin(pin_num))
-        pwm.freq(50)
+        pwm = PWM(Pin(pin_num, Pin.OUT), freq=50)
         servos[pin_num] = pwm
     pwm = servos[pin_num]
-
-    angle = int(angle)
-    angle = max(0, min(180, angle))
-    duty = int((angle / 180) * 102 + 26)
-    pwm.duty(duty)`);
+    angle = max(0, min(180, int(angle)))
+    us = 600 + (angle / 180) * 1800
+    pwm.duty_u16(int(us / 20000 * 65535))`);
         chunkLines.push(`${indent}# Sweep from ${d.startAngle ?? 0} to ${d.endAngle ?? 90} at speed ${d.speed ?? 50}`);
         chunkLines.push(`${indent}for angle in range(${d.startAngle ?? 0}, ${d.endAngle ?? 90}, ${Math.max(1, Math.round((d.speed ?? 50) / 10))}):`);
-        chunkLines.push(`${indent}    rotate_servo(${d.pin ?? 4}, angle)`);
+        chunkLines.push(`${indent}    rotate_servo(${d.pin ?? 21}, angle)`);
         chunkLines.push(`${indent}    time.sleep_ms(${Math.max(10, 100 - (d.speed ?? 50))})`);
         break;
       case "l298n_motor":
@@ -415,7 +523,7 @@ def rotate_servo(pin_num, angle):
       case "rgb_led_matrix":
         imports.add("import neopixel");
         imports.add("from machine import Pin");
-        setupLines.push(`rgb_matrix = neopixel.NeoPixel(Pin(${d.pin ?? 45}), ${d.ledCount ?? 16})`);
+        setupLines.push(`rgb_matrix = neopixel.NeoPixel(Pin(${d.pin ?? 48}), ${d.ledCount ?? 16})`);
         chunkLines.push(`${indent}# Pattern: ${d.pattern ?? "Chase"} on ${d.ledCount ?? 16} LEDs`);
         chunkLines.push(`${indent}for i in range(len(rgb_matrix)):`);
         chunkLines.push(`${indent}    rgb_matrix[i] = (${Math.round((d.brightness ?? 128))}, 0, 0)`);
@@ -428,63 +536,119 @@ def rotate_servo(pin_num, angle):
         break;
 
       // ─── New Motor Nodes ───────────────────────────────────────────────────
-      case "dc_motor_single":
+      case "dc_motor_single": {
+        // DRV8833: one PWM pin + one DIR pin per motor channel
+        // Board MOTOR_PORTS: L1(pwm=15,dir=16), L2(pwm=37,dir=38), R1(pwm=45,dir=46), R2(pwm=17,dir=18)
         imports.add("from machine import Pin, PWM");
-        setupLines.push(`dc_in1 = Pin(${d.in1 ?? 13}, Pin.OUT)`);
-        setupLines.push(`dc_in2 = Pin(${d.in2 ?? 14}, Pin.OUT)`);
-        setupLines.push(`dc_en = PWM(Pin(${d.enPin ?? 12}), freq=1000)`);
+        const motorPortMap: Record<string, { pwm: number; dir: number }> = {
+          L1: { pwm: 15, dir: 16 }, L2: { pwm: 37, dir: 38 },
+          R1: { pwm: 45, dir: 46 }, R2: { pwm: 17, dir: 18 },
+        };
+        const mKey = (d.motorPort as string) ?? "L1";
+        const mp = motorPortMap[mKey] ?? motorPortMap["L1"];
+        setupLines.push(`drv_pwm_${mKey} = PWM(Pin(${mp.pwm}, Pin.OUT), freq=40000)`);
+        setupLines.push(`drv_dir_${mKey} = Pin(${mp.dir}, Pin.OUT)`);
         {
           const dir = d.direction ?? "Forward";
-          const speedDuty = Math.round(((d.speed ?? 50) / 100) * 1023);
+          const speed = d.speed ?? 50;
+          const duty = Math.round((speed / 100) * 65535);
+          const rduty = 65535 - duty;
           if (dir === "Forward") {
-            chunkLines.push(`${indent}dc_in1.value(1); dc_in2.value(0); dc_en.duty(${speedDuty})`);
+            chunkLines.push(`${indent}drv_dir_${mKey}.value(0); drv_pwm_${mKey}.duty_u16(${duty})`);
           } else if (dir === "Reverse") {
-            chunkLines.push(`${indent}dc_in1.value(0); dc_in2.value(1); dc_en.duty(${speedDuty})`);
+            chunkLines.push(`${indent}drv_dir_${mKey}.value(1); drv_pwm_${mKey}.duty_u16(${rduty})`);
           } else if (dir === "Brake") {
-            chunkLines.push(`${indent}dc_in1.value(1); dc_in2.value(1); dc_en.duty(0)`);
+            chunkLines.push(`${indent}drv_dir_${mKey}.value(0); drv_pwm_${mKey}.duty_u16(0)  # Brake`);
           } else {
-            chunkLines.push(`${indent}dc_in1.value(0); dc_in2.value(0); dc_en.duty(0)  # Coast`);
+            chunkLines.push(`${indent}drv_dir_${mKey}.value(0); drv_pwm_${mKey}.duty_u16(0)  # Coast`);
           }
         }
         break;
+      }
 
       // ─── New Motor / Servo Nodes ───────────────────────────────────────────
-      case "servo_controller":
+      case "servo_controller": {
         imports.add("from machine import Pin, PWM");
-        setupLines.push(`sc_pwm_${d.pin ?? 4} = PWM(Pin(${d.pin ?? 4}), freq=50)`);
-        {
-          const pulseMin = d.pulseMin ?? 500;
-          const pulseMax = d.pulseMax ?? 2500;
-          if (d.mode === "sweep") {
-            chunkLines.push(`${indent}import time`);
-            chunkLines.push(`${indent}for _a in range(${d.sweepMin ?? 0}, ${d.sweepMax ?? 180}, 1):`);
-            chunkLines.push(`${indent}    _duty = int(${pulseMin} + (_a / 180) * (${pulseMax} - ${pulseMin}))`);
-            chunkLines.push(`${indent}    sc_pwm_${d.pin ?? 4}.duty_ns(_duty * 1000)`);
-            chunkLines.push(`${indent}    time.sleep_ms(${Math.round((d.sweepPeriod ?? 1000) / 180)})`);
-          } else {
-            chunkLines.push(`${indent}sc_pwm_${d.pin ?? 4}.duty_ns(int((${d.angle ?? 90}/180)*(${pulseMax}-${pulseMin})+${pulseMin})*1000)`);
+        const scPin = d.pin ?? 21;
+        const pulseMin = d.pulseMin ?? 600;
+        const pulseMax = d.pulseMax ?? 2400;
+        setupLines.push(`sc_pwm_${scPin} = PWM(Pin(${scPin}, Pin.OUT), freq=50)`);
+        if (d.mode === "sweep") {
+          imports.add("import time");
+          chunkLines.push(`${indent}for _a in range(${d.sweepMin ?? 0}, ${d.sweepMax ?? 180}, 1):`);
+          chunkLines.push(`${indent}    _us = ${pulseMin} + (_a / 180) * (${pulseMax} - ${pulseMin})`);
+          chunkLines.push(`${indent}    sc_pwm_${scPin}.duty_u16(int(_us / 20000 * 65535))`);
+          chunkLines.push(`${indent}    time.sleep_ms(${Math.round((d.sweepPeriod ?? 1000) / 180)})`);
+        } else {
+          const us = pulseMin + ((d.angle ?? 90) / 180) * (pulseMax - pulseMin);
+          chunkLines.push(`${indent}sc_pwm_${scPin}.duty_u16(${Math.round((us / 20000) * 65535)})  # ${d.angle ?? 90}°`);
+        }
+        break;
+      }
+      case "multi_motor_controller": {
+        // DRV8833 dual H-bridge — matches board wiring (same as reference hardware)
+        imports.add("from machine import Pin, PWM");
+        // Board motor ports: L1(pwm=15,dir=16), L2(pwm=37,dir=38), R1(pwm=45,dir=46), R2(pwm=17,dir=18)
+        setupLines.push(`# DRV8833 motor driver setup
+_motor_ports = {
+    'L1': (PWM(Pin(15, Pin.OUT), freq=40000), Pin(16, Pin.OUT)),
+    'L2': (PWM(Pin(37, Pin.OUT), freq=40000), Pin(38, Pin.OUT)),
+    'R1': (PWM(Pin(45, Pin.OUT), freq=40000), Pin(46, Pin.OUT)),
+    'R2': (PWM(Pin(17, Pin.OUT), freq=40000), Pin(18, Pin.OUT)),
+}
+def _drv_set(port, speed, forward=True):
+    pwm, dir_pin = _motor_ports[port]
+    dir_pin.value(0 if forward else 1)
+    duty = int(abs(speed) / 100 * 65535)
+    pwm.duty_u16(duty if forward else 65535 - duty)`);
+        if (d.syncMode) {
+          const spd = d.l1speed ?? d.m1speed ?? 50;
+          const fwd = (d.l1dir ?? d.m1dir ?? "Forward") === "Forward";
+          chunkLines.push(`${indent}# All motors synced — speed ${spd}% ${fwd ? "forward" : "reverse"}`);
+          for (const port of ["L1", "L2", "R1", "R2"]) {
+            chunkLines.push(`${indent}_drv_set('${port}', ${spd}, ${fwd})`);
+          }
+        } else if (d.pairMode) {
+          const lSpd = d.leftSpeed ?? 50; const lFwd = (d.leftDir ?? "Forward") === "Forward";
+          const rSpd = d.rightSpeed ?? 50; const rFwd = (d.rightDir ?? "Forward") === "Forward";
+          chunkLines.push(`${indent}# Left motors: ${lSpd}% ${lFwd ? "fwd" : "rev"}  Right: ${rSpd}% ${rFwd ? "fwd" : "rev"}`);
+          chunkLines.push(`${indent}_drv_set('L1', ${lSpd}, ${lFwd}); _drv_set('L2', ${lSpd}, ${lFwd})`);
+          chunkLines.push(`${indent}_drv_set('R1', ${rSpd}, ${rFwd}); _drv_set('R2', ${rSpd}, ${rFwd})`);
+        } else {
+          const ports = ["L1", "L2", "R1", "R2"] as const;
+          const speeds = [d.l1speed ?? 50, d.l2speed ?? 50, d.r1speed ?? 50, d.r2speed ?? 50];
+          const dirs   = [d.l1dir ?? "Forward", d.l2dir ?? "Forward", d.r1dir ?? "Forward", d.r2dir ?? "Forward"];
+          for (let i = 0; i < 4; i++) {
+            chunkLines.push(`${indent}_drv_set('${ports[i]}', ${speeds[i]}, ${dirs[i] === "Forward"})`);
           }
         }
         break;
-      case "multi_motor_controller":
-        imports.add("from machine import Pin, PWM");
-        chunkLines.push(`${indent}# Multi-Motor Controller (${d.syncMode ? "Sync" : "Independent"} mode)`);
-        if (d.syncMode) {
-          chunkLines.push(`${indent}# All motors mirror Motor 1: speed=${d.m1speed ?? 50}% dir=${d.m1dir ?? "Forward"}`);
-        } else {
-          chunkLines.push(`${indent}# M1: ${d.m1speed ?? 50}% ${d.m1dir ?? "Forward"}, M2: ${d.m2speed ?? 50}% ${d.m2dir ?? "Forward"}`);
-          chunkLines.push(`${indent}# M3: ${d.m3speed ?? 50}% ${d.m3dir ?? "Forward"}, M4: ${d.m4speed ?? 50}% ${d.m4dir ?? "Forward"}`);
-        }
-        break;
-      case "multi_servo_sequencer":
+      }
+      case "multi_servo_sequencer": {
         imports.add("from machine import Pin, PWM");
         imports.add("import time");
-        setupLines.push(`mss_servos = [PWM(Pin(${d.servo1pin ?? 4}), freq=50), PWM(Pin(${d.servo2pin ?? 5}), freq=50), PWM(Pin(${d.servo3pin ?? 6}), freq=50)]`);
-        chunkLines.push(`${indent}# Multi-Servo Sequencer — keyframe delay: ${d.keyframeDelay ?? 500}ms, loop: ${d.loop ?? true}`);
-        chunkLines.push(`${indent}for _servo in mss_servos:`);
-        chunkLines.push(`${indent}    _servo.duty_ns(int((90/180)*(2500-500)+500)*1000)  # center`);
-        chunkLines.push(`${indent}    time.sleep_ms(${d.keyframeDelay ?? 500})`);
+        // Board servo ports: S1=21, S2=47, S3=39, S4=40
+        const mssP1 = d.servo1pin ?? d.s1pin ?? 21;
+        const mssP2 = d.servo2pin ?? d.s2pin ?? 47;
+        const mssP3 = d.servo3pin ?? d.s3pin ?? 39;
+        setupLines.push(`mss_servos = [PWM(Pin(${mssP1}, Pin.OUT), freq=50), PWM(Pin(${mssP2}, Pin.OUT), freq=50), PWM(Pin(${mssP3}, Pin.OUT), freq=50)]`);
+        setupLines.push(`def _mss_angle(pwm, deg):
+    us = 600 + (max(0, min(180, deg)) / 180) * 1800
+    pwm.duty_u16(int(us / 20000 * 65535))`);
+        chunkLines.push(`${indent}# Multi-Servo Sequencer — keyframe delay: ${d.keyframeDelay ?? 500}ms`);
+        if (d.keyframes && Array.isArray(d.keyframes)) {
+          for (const kf of d.keyframes) {
+            for (let si = 0; si < Math.min(3, kf.angles?.length ?? 0); si++) {
+              chunkLines.push(`${indent}_mss_angle(mss_servos[${si}], ${kf.angles[si]})`);
+            }
+            chunkLines.push(`${indent}time.sleep_ms(${d.keyframeDelay ?? 500})`);
+          }
+        } else {
+          chunkLines.push(`${indent}for _s in mss_servos: _mss_angle(_s, 90)  # center all`);
+          chunkLines.push(`${indent}time.sleep_ms(${d.keyframeDelay ?? 500})`);
+        }
         break;
+      }
 
       // ─── Comms Nodes ───────────────────────────────────────────────────────
       case "ble_mode":

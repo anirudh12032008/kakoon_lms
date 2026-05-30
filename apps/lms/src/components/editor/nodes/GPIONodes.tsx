@@ -470,3 +470,71 @@ export function NeoPixelRGBNode() {
     </BaseNode>
   );
 }
+
+// ─── NeoPixel Designer Node ────────────────────────────────────────────────────
+// Created when "Add to Canvas" is clicked in the Designer Hub NeoPixel tab.
+// Stores the full frame/color data and shows a live LED preview in the node.
+type RGB = [number, number, number];
+
+export function NeoPixelDesignerNode() {
+  const [pin, _setPin]         = useNodeField<number>("pin", 48);
+  const [ledCount]             = useNodeField<number>("ledCount", 8);
+  const [fps]                  = useNodeField<number>("fps", 10);
+  const [frames]               = useNodeField<RGB[][]>("frames", []);
+  const [effectName]           = useNodeField<string>("effectName", "Custom");
+  const [mode]                 = useNodeField<string>("mode", "strip");
+
+  // Preview: show first frame colours as a mini LED strip
+  const firstFrame: RGB[] = frames[0] ?? [];
+  const displayCount = Math.min(firstFrame.length, 24);
+
+  return (
+    <BaseNode title="NeoPixel Designer" color={COLORS.violet} icon={<ChipIcon />} width="270px">
+      {/* Info bar */}
+      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">
+            GPIO {pin} · {ledCount} LED{ledCount !== 1 ? "s" : ""} · {mode}
+          </span>
+          <span className="text-[9px] font-mono text-violet-400">
+            {frames.length > 1 ? `${frames.length}f @ ${fps}fps` : "static"}
+          </span>
+        </div>
+        <div className="text-[10px] text-violet-300 font-semibold mt-0.5">{effectName}</div>
+      </div>
+
+      {/* LED preview strip */}
+      {firstFrame.length > 0 && (
+        <div className="mx-3 mb-2">
+          <div className="flex gap-0.5 flex-wrap">
+            {firstFrame.slice(0, displayCount).map((rgb, i) => (
+              <div
+                key={i}
+                className="rounded-full flex-shrink-0"
+                style={{
+                  width: mode === "strip" ? `${Math.min(20, Math.floor(240 / displayCount))}px` : "14px",
+                  height: mode === "strip" ? "12px" : "14px",
+                  background: `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`,
+                  boxShadow: (rgb[0] + rgb[1] + rgb[2]) > 30
+                    ? `0 0 4px rgb(${rgb[0]},${rgb[1]},${rgb[2]})`
+                    : "none",
+                  opacity: (rgb[0] + rgb[1] + rgb[2]) === 0 ? 0.15 : 1,
+                }}
+              />
+            ))}
+            {firstFrame.length > displayCount && (
+              <span className="text-[8px] text-zinc-600 self-center ml-1">+{firstFrame.length - displayCount}</span>
+            )}
+          </div>
+          {firstFrame.length === 0 && (
+            <div className="text-[10px] text-zinc-600 italic">No LED data</div>
+          )}
+        </div>
+      )}
+
+      <div className="px-3 pb-2 text-[9px] text-zinc-600 leading-relaxed">
+        Designed in Designer Hub — edit there to update
+      </div>
+    </BaseNode>
+  );
+}

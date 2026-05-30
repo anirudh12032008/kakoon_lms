@@ -4,7 +4,7 @@ import { PrintNode, VariableNode, SleepNode } from "./GeneralNodes";
 import {
   GPIOPinNode, PinWriteNode, PinReadNode, PWMNode, ADCNode,
   PushButtonNode, BuzzerToneNode, NeoPixelLEDNode, NeoPixelRGBNode,
-  RGBLEDMatrixNode, PWMOutputNode,
+  RGBLEDMatrixNode, PWMOutputNode, NeoPixelDesignerNode,
 } from "./GPIONodes";
 import { ForeverLoopNode, ForLoopNode, WhileLoopNode, RepeatNode, BreakNode } from "./LoopNodes";
 import { IfElseNode } from "./ConditionalNodes";
@@ -41,6 +41,7 @@ export const NODE_TYPES: NodeTypes = {
   buzzer_tone: BuzzerToneNode,
   neopixel_led: NeoPixelLEDNode,
   neopixel_rgb: NeoPixelRGBNode,
+  neopixel_designer: NeoPixelDesignerNode,
   rgb_led_matrix: RGBLEDMatrixNode,
   pwm_output: PWMOutputNode,
   forever_loop: ForeverLoopNode,
@@ -152,6 +153,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "buzzer_tone", label: "Buzzer Tone", color: "#22c55e", previewDot: "#22c55e" },
       { type: "neopixel_led", label: "NeoPixel LED", color: "#14b8a6", previewDot: "#14b8a6" },
       { type: "neopixel_rgb", label: "NeoPixel RGB (Advanced)", color: "#7c3aed", previewDot: "#7c3aed" },
+      { type: "neopixel_designer", label: "NeoPixel Designer", color: "#7c3aed", previewDot: "#7c3aed" },
       { type: "rgb_led_matrix", label: "RGB LED Matrix", color: "#14b8a6", previewDot: "#14b8a6" },
     ],
   },
