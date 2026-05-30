@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Package, Upload, CheckCircle, Loader2, AlertTriangle, Search, ChevronDown } from "lucide-react";
+import { X, Package, Upload, CheckCircle, Loader2, AlertTriangle, Search } from "lucide-react";
 import {
   LIBRARY_REGISTRY, getRequiredLibraries, CATEGORY_COLORS,
   type LibraryEntry,

@@ -296,6 +296,15 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
         chunkLines.push(`${indent}${d.varName ?? "ir_value"} = Pin(${d.pin ?? 4}, Pin.IN).value()`);
         break;
 
+      case "four_channel_touch":
+        imports.add("from machine import TouchPad, Pin");
+        chunkLines.push(`${indent}# Four channel touch sensor: ${d.t1 ?? "touch1"}, ${d.t2 ?? "touch2"}, ${d.t3 ?? "touch3"}, ${d.t4 ?? "touch4"}`);
+        chunkLines.push(`${indent}${d.t1 ?? "touch1"} = TouchPad(Pin(${d.pin1 ?? 4})).read()`);
+        chunkLines.push(`${indent}${d.t2 ?? "touch2"} = TouchPad(Pin(${d.pin2 ?? 5})).read()`);
+        chunkLines.push(`${indent}${d.t3 ?? "touch3"} = TouchPad(Pin(${d.pin3 ?? 6})).read()`);
+        chunkLines.push(`${indent}${d.t4 ?? "touch4"} = TouchPad(Pin(${d.pin4 ?? 7})).read()`);
+        break;
+
       // ─── Display ───────────────────────────────────────────────────────────
       case "oled_display":
         imports.add("from machine import I2C, Pin");
@@ -502,6 +511,85 @@ def rotate_servo(pin_num, angle):
           }
         }
         chunkLines.push(`${indent}${d.varName ?? "ip"} = wlan.ifconfig()[0]`);
+        break;
+
+      case "esp_now_receiver":
+        imports.add("import espnow");
+        imports.add("import network");
+        chunkLines.push(`${indent}# ESP NOW Receive from peer`);
+        chunkLines.push(`${indent}en = espnow.ESPNow()`);
+        chunkLines.push(`${indent}en.active(True)`);
+        chunkLines.push(`${indent}${d.varName ?? "espnow_msg"} = en.recv(1024)`);
+        break;
+
+      case "mqtt_node":
+        imports.add("import network");
+        imports.add("from umqtt.simple import MQTTClient");
+        chunkLines.push(`${indent}# MQTT node for topic ${d.topic ?? "sensors/data"}`);
+        chunkLines.push(`${indent}mqtt_client = MQTTClient("${d.clientId ?? "kakoon-client"}", "${d.broker ?? "broker.hivemq.com"}")`);
+        chunkLines.push(`${indent}mqtt_client.connect()`);
+        chunkLines.push(`${indent}mqtt_client.publish(b"${d.topic ?? "sensors/data"}", b"${d.payload ?? "hello"}")`);
+        break;
+
+      case "http_client":
+        imports.add("import urequests");
+        chunkLines.push(`${indent}${d.varName ?? "response"} = urequests.get("${d.url ?? "http://example.com"}").text`);
+        break;
+
+      case "serial_monitor":
+        chunkLines.push(`${indent}print(${d.value ?? "'Serial monitor output'"})`);
+        break;
+
+      case "timer_interval":
+        imports.add("import time");
+        chunkLines.push(`${indent}_last_tick = time.ticks_ms()`);
+        chunkLines.push(`${indent}if time.ticks_diff(time.ticks_ms(), _last_tick) >= ${d.interval ?? 1000}:`);
+        chunkLines.push(`${indent}    _last_tick = time.ticks_ms()`);
+        chunkLines.push(`${indent}    ${d.varName ?? "timer_fired"} = True`);
+        break;
+
+      case "variable_state":
+        chunkLines.push(`${indent}# Variable state tracker: ${d.name ?? "state"}`);
+        chunkLines.push(`${indent}${d.varName ?? "state"} = ${d.value ?? "None"}`);
+        break;
+
+      case "math_transform":
+        chunkLines.push(`${indent}${d.varName ?? "result"} = ${d.expression ?? "0"}`);
+        break;
+
+      case "deep_sleep":
+        imports.add("from machine import deepsleep");
+        chunkLines.push(`${indent}deepsleep(${d.durationMs ?? 1000})`);
+        break;
+
+      case "ota_update":
+        chunkLines.push(`${indent}# OTA update placeholder: ${d.url ?? "configure an update URL"}`);
+        break;
+
+      case "sd_card":
+        imports.add("from machine import SPI, Pin");
+        imports.add("import sdcard");
+        chunkLines.push(`${indent}# SD card mount on CS pin ${d.csPin ?? 5}`);
+        chunkLines.push(`${indent}spi = SPI(1, sck=Pin(${d.sck ?? 18}), mosi=Pin(${d.mosi ?? 23}), miso=Pin(${d.miso ?? 19}))`);
+        chunkLines.push(`${indent}sd = sdcard.SDCard(spi, Pin(${d.csPin ?? 5}))`);
+        break;
+
+      case "max7219":
+        imports.add("from machine import Pin, SPI");
+        imports.add("import max7219");
+        chunkLines.push(`${indent}# MAX7219 matrix: ${d.width ?? 8}x${d.height ?? 8}`);
+        chunkLines.push(`${indent}spi = SPI(1, baudrate=10000000, polarity=0, phase=0)`);
+        chunkLines.push(`${indent}display = max7219.Matrix8x8(spi, Pin(${d.csPin ?? 5}), ${d.width ?? 1}, ${d.height ?? 1})`);
+        break;
+
+      case "play_animation":
+        chunkLines.push(`${indent}# Play animation: ${d.animationName ?? "default"}`);
+        chunkLines.push(`${indent}# Animation frames should be supplied by the runtime or library layer.`);
+        break;
+
+      case "show_image":
+        chunkLines.push(`${indent}# Show image: ${d.imageName ?? "image"}`);
+        chunkLines.push(`${indent}# Image rendering is handled by the display library at runtime.`);
         break;
 
       // ─── Tool Nodes ────────────────────────────────────────────────────────

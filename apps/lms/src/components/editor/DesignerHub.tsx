@@ -9,7 +9,7 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { X, Copy, Download, Play, Pause, Plus, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, Copy, Play, Pause, Plus } from "lucide-react";
 
 // ─── Shared ────────────────────────────────────────────────────────────────────
 function copyText(s: string) { navigator.clipboard.writeText(s).catch(() => {}); }
@@ -687,7 +687,6 @@ function NeoPixelDesigner() {
 }
 
 // ─── Matrix Designer (MAX7219) ─────────────────────────────────────────────────
-const MAT_W = 8, MAT_H = 8;
 const FONT5: Record<string, number[]> = {
   " ":[0,0,0,0,0],"A":[126,17,17,17,126],"B":[127,73,73,73,54],"C":[62,65,65,65,34],
   "D":[127,65,65,34,28],"E":[127,73,73,73,65],"F":[127,9,9,9,1],"G":[62,65,73,73,122],
@@ -699,7 +698,7 @@ const FONT5: Record<string, number[]> = {
   "0":[62,81,73,69,62],"1":[0,66,127,64,0],"2":[66,97,81,73,70],"3":[33,65,69,75,49],
   "4":[24,20,18,127,16],"5":[39,69,69,69,57],"6":[60,74,73,73,48],"7":[1,113,9,5,3],
   "8":[54,73,73,73,54],"9":[6,73,73,41,30],"!":[0,0,95,0,0],".":[0,96,96,0,0],
-  ",":[0,80,48,0,0],"?":[2,1,81,9,6]," ":[0,0,0,0,0],
+  ",":[0,80,48,0,0],"?":[2,1,81,9,6],
 };
 
 function textToMatrixFrames(text: string, modules: number): number[][] {
