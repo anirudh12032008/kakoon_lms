@@ -1,0 +1,15 @@
+{
+  "name": "kakoon",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "backend/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/lms",
+    "build": "npm run build --workspace=apps/lms",
+    "dev:api": "pnpm --filter api dev",
+    "build:api": "pnpm --filter api build"
+  },
+  "packageManager": "pnpm@9.0.0"
+}

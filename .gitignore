@@ -6,17 +6,17 @@ node_modules/
 
 # Monorepo / workspace
 apps/**/node_modules/
-backend/**/node_modules/
+backend/api/node_modules/
 packages/**/node_modules/
-
+    
 # Build outputs
 dist/
 build/
 out/
 apps/**/dist/
 apps/**/build/
-backend/**/dist/
-backend/**/build/
+backend/api/dist/
+backend/api/build/
 
 # Logs
 logs/
