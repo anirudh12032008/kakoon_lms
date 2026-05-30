@@ -164,22 +164,16 @@ function Cube3D({ pitch, roll }: { pitch: number; roll: number }) {
   // Compute face normals to determine visibility & depth sort
   const faceMeta = faces.map(([idxs, color, label]) => {
     const [a,b,c] = idxs.map(i => { const [rx,ry,rz] = rot(...corners[i]); return [rx,ry,rz]; });
-    // Normal via cross product of two edges
+    // Compute only Z component of cross product (dot with camera direction)
     const ab = [b[0]-a[0], b[1]-a[1], b[2]-a[2]];
     const ac = [c[0]-a[0], c[1]-a[1], c[2]-a[2]];
-    const nx = ab[1]*ac[2] - ab[2]*ac[1];
-    const ny = ab[2]*ac[0] - ab[0]*ac[2];
     const nz = ab[0]*ac[1] - ab[1]*ac[0];
-    const dot = nz; // dot with camera direction (0,0,1)
+    const dot = nz;
     const depth = idxs.reduce((s, i) => { const [,,z] = rot(...corners[i]); return s + z; }, 0) / 4;
     return { idxs, color, label, visible: dot > 0, depth };
   });
 
   const sorted = [...faceMeta].sort((a, b) => a.depth - b.depth);
-
-  // Accent colors per face for neon glow effect
-  const faceAccents = ["#1a0a2e","#8b5cf6","#6d28d9","#7c3aed","#4c1d95","#6d28d9"];
-  const faceGlows   = ["none","#8b5cf6","none","#6d28d9","none","none"];
 
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
@@ -245,7 +239,6 @@ function Cube3D({ pitch, roll }: { pitch: number; roll: number }) {
 function ArtificialHorizon({ pitch, roll }: { pitch: number; roll: number }) {
   const W = 160, H = 90, CX = W/2, CY = H/2, R = 40;
   const clampedPitch = Math.max(-60, Math.min(60, pitch));
-  const rollRad = (roll * Math.PI) / 180;
   // Horizon line offset from center
   const horizonY = CY + (clampedPitch / 60) * R;
 

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useNodes } from "@xyflow/react";
 import {
   BaseNode,
@@ -12,10 +12,12 @@ import {
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
 const MOTOR_PORTS = {
-  L1: { pwm: 15, dir: 16, label: "L1 – Front Left"  },
-  L2: { pwm: 37, dir: 38, label: "L2 – Rear Left"   },
-  R1: { pwm: 45, dir: 46, label: "R1 – Front Right" },
-  R2: { pwm: 17, dir: 18, label: "R2 – Rear Right"  },
+  // Updated to match physical wiring: user-provided mapping
+  // 15,16 = left rear; 37,38 = right rear; 45,46 = left front; 17,18 = right front
+  L1: { pwm: 45, dir: 46, label: "L1 - Front Left"  },
+  L2: { pwm: 15, dir: 16, label: "L2 - Rear Left"   },
+  R1: { pwm: 17, dir: 18, label: "R1 - Front Right" },
+  R2: { pwm: 37, dir: 38, label: "R2 - Rear Right"  },
 } as const;
 
 const SERVO_PORTS = {
@@ -93,7 +95,7 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
   angle: number; onChange: (v: number) => void; min?: number; max?: number; color?: string;
 }) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [dragging, setDragging] = useState(false);
+  const dragging = useRef(false);
 
   const CX = 44, CY = 44, R = 34;
   const START_DEG = 225, TOTAL_DEG = 270;
@@ -115,6 +117,19 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
     onChange(Math.max(min, Math.min(max, v)));
   };
 
+  // Attach window-level listeners so fast mouse moves never escape to ReactFlow
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => { if (dragging.current) polarToValue(e.clientX, e.clientY); };
+    const onUp   = () => { dragging.current = false; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup",   onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup",   onUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [min, max]);
+
   const arcPath = (fromPct: number, toPct: number, c: string, w = 4) => {
     const a1 = ((START_DEG + fromPct * TOTAL_DEG) * Math.PI) / 180;
     const a2 = ((START_DEG + toPct * TOTAL_DEG) * Math.PI) / 180;
@@ -125,12 +140,9 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
   };
 
   return (
-    <div className="flex flex-col items-center gap-1 py-1">
-      <svg ref={svgRef} width={88} height={88} style={{ cursor: "crosshair", userSelect: "none" }}
-        onMouseDown={e => { e.stopPropagation(); setDragging(true); polarToValue(e.clientX, e.clientY); }}
-        onMouseMove={e => { if (dragging) polarToValue(e.clientX, e.clientY); }}
-        onMouseUp={() => setDragging(false)}
-        onMouseLeave={() => setDragging(false)}
+    <div className="nodrag flex flex-col items-center gap-1 py-1">
+      <svg ref={svgRef} width={88} height={88} style={{ cursor: "crosshair", userSelect: "none", touchAction: "none" }}
+        onMouseDown={e => { e.stopPropagation(); e.preventDefault(); dragging.current = true; polarToValue(e.clientX, e.clientY); }}
       >
         {arcPath(0, 1, "#2d2d35", 5)}
         {arcPath(0, pct, color, 5)}
@@ -154,7 +166,7 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
 function RobotArrow({ move }: { move: RobotMove }) {
   // Mini top-view robot diagram showing which wheels spin and which way
   const W = 80, H = 64;
-  const wheelColor = (side: "L" | "R", fwd: boolean | null) =>
+  const wheelColor = (fwd: boolean | null) =>
     fwd === null ? "#3f3f46" : fwd ? "#22c55e" : "#ef4444";
 
   type WheelState = { L: boolean | null; R: boolean | null };
@@ -183,11 +195,11 @@ function RobotArrow({ move }: { move: RobotMove }) {
         <rect x={32} y={27} width={16} height={11} rx={2} fill="#ef4444" opacity={0.7} />
       )}
       {/* Left wheels */}
-      <rect x={8} y={16} width={12} height={8} rx={2} fill={wheelColor("L", L)} />
-      <rect x={8} y={40} width={12} height={8} rx={2} fill={wheelColor("L", L)} />
+      <rect x={8} y={16} width={12} height={8} rx={2} fill={wheelColor(L)} />
+      <rect x={8} y={40} width={12} height={8} rx={2} fill={wheelColor(L)} />
       {/* Right wheels */}
-      <rect x={60} y={16} width={12} height={8} rx={2} fill={wheelColor("R", R)} />
-      <rect x={60} y={40} width={12} height={8} rx={2} fill={wheelColor("R", R)} />
+      <rect x={60} y={16} width={12} height={8} rx={2} fill={wheelColor(R)} />
+      <rect x={60} y={40} width={12} height={8} rx={2} fill={wheelColor(R)} />
       {/* Wheel direction arrows */}
       {L !== null && (
         <>
@@ -394,10 +406,10 @@ export function MultiMotorControllerNode() {
       <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
         <div className="flex gap-3 mt-0.5 flex-wrap">
-          <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">15/16</span></span>
-          <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">37/38</span></span>
-          <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">45/46</span></span>
-          <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">17/18</span></span>
+          <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">45/46</span></span>
+          <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">15/16</span></span>
+          <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">17/18</span></span>
+          <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">37/38</span></span>
         </div>
       </div>
     </BaseNode>

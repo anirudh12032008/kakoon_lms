@@ -62,10 +62,78 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
 
   // Board hardware pin maps (shared between codegen cases)
   const SERVO_PIN_MAP: Record<string, number> = { S1: 21, S2: 47, S3: 39, S4: 40 };
-  const MOTOR_PIN_MAP: Record<string, { pwm: number; dir: number }> = {
-    L1: { pwm: 15, dir: 16 }, L2: { pwm: 37, dir: 38 },
-    R1: { pwm: 45, dir: 46 }, R2: { pwm: 17, dir: 18 },
+
+  const SERVO_PORT_ORDER = ["S1", "S2", "S3", "S4"] as const;
+  const usedServoPorts = new Set<string>();
+  const markServoPort = (port: unknown) => {
+    if (typeof port === "string" && port in SERVO_PIN_MAP) {
+      usedServoPorts.add(port);
+    }
   };
+
+  for (const node of nodes) {
+    const d: any = node.data || {};
+    switch (node.type) {
+      case "servo_motor":
+      case "servo_motor_advance":
+      case "servo_controller":
+        markServoPort(d.servoPort ?? "S1");
+        break;
+      case "multi_servo_sequencer":
+        markServoPort(d.s1port ?? "S1");
+        markServoPort(d.s2port ?? "S2");
+        markServoPort(d.s3port ?? "S3");
+        break;
+    }
+  }
+
+  const buildServoHelperBlock = () => {
+    const servoLines = SERVO_PORT_ORDER.map((port) => {
+      const pin = SERVO_PIN_MAP[port];
+      const name = port.toLowerCase();
+      return usedServoPorts.has(port)
+        ? `${name} = Servo(${pin})`
+        : `_servo_pull_down(${pin})`;
+    }).join("\n");
+
+    return `# --- Servo class (600–2400 µs, 50 Hz) ---
+class Servo:
+    PERIOD = 20000
+    def __init__(self, pin, mn=600, mx=2400, lo=0, hi=180):
+        self._p = PWM(Pin(pin, Pin.OUT), freq=50)
+        self._mn, self._mx, self._lo, self._hi = mn, mx, lo, hi
+    def angle(self, deg):
+        deg = max(self._lo, min(self._hi, deg))
+        us  = self._mn + (self._mx - self._mn) * deg / 180
+        self._p.duty_u16(int(us / self.PERIOD * 65535))
+    def center(self):  self.angle(90)
+    def min_pos(self): self.angle(self._lo)
+    def max_pos(self): self.angle(self._hi)
+
+def _servo_pull_down(pin):
+    Pin(pin, Pin.IN, Pin.PULL_DOWN)
+
+${servoLines}`;
+  };
+
+  const DRV8833_HELPER = `# --- DRV8833 motors (1 PWM + 1 digital per motor) ---
+class DRV8833:
+    MAX = 65535
+    def __init__(self, a_pwm, a_dir, b_pwm, b_dir):
+        self.ap, self.ad, self.bp, self.bd = a_pwm, a_dir, b_pwm, b_dir
+    def throttle_a(self, t): self._drv(self.ap, self.ad, t)
+    def throttle_b(self, t): self._drv(self.bp, self.bd, t)
+    def stop_a(self): self.ad.value(0); self.ap.duty_u16(0)
+    def stop_b(self): self.bd.value(0); self.bp.duty_u16(0)
+    def _drv(self, pwm, d, t):
+        d.value(0 if t >= 0 else 1)
+        duty = int(abs(t) * self.MAX)
+        pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
+
+def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
+def _dp(pin): return Pin(pin, Pin.OUT)
+front = DRV8833(_mp(17), _dp(18), _mp(45), _dp(46))  # FR=a, FL=b (a=right front, b=left front)
+rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear, b=left rear)`;
 
   // Helper: emit a shared helper block only once per script
   const emitOnce = (key: string, code: string) => {
@@ -474,35 +542,27 @@ def _imu_read():
       // ─── Servo nodes ───────────────────────────────────────────────────────
       case "servo_motor": {
         imports.add("from machine import Pin, PWM");
-        emitOnce("servo_helper", `_sv_cache = {}
-def _sv_angle(pin_num, deg):
-    if pin_num not in _sv_cache:
-        _sv_cache[pin_num] = PWM(Pin(pin_num, Pin.OUT), freq=50)
-    us = 600 + (max(0, min(180, int(deg))) / 180) * 1800
-    _sv_cache[pin_num].duty_u16(int(us / 20000 * 65535))`);
-        const svPin1 = SERVO_PIN_MAP[(d.servoPort as string) ?? "S1"] ?? 21;
-        chunkLines.push(`${indent}_sv_angle(${svPin1}, ${d.angle ?? 90})  # ${d.servoPort ?? "S1"}`);
+        emitOnce("servo_class", buildServoHelperBlock());
+        const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
+        const sv1 = PORT_TO_SV[(d.servoPort as string) ?? "S1"] ?? "s1";
+        chunkLines.push(`${indent}${sv1}.angle(${d.angle ?? 90})  # ${d.servoPort ?? "S1"}`);
         break;
       }
       case "servo_motor_advance": {
         imports.add("from machine import Pin, PWM");
         imports.add("import time");
-        emitOnce("servo_helper", `_sv_cache = {}
-def _sv_angle(pin_num, deg):
-    if pin_num not in _sv_cache:
-        _sv_cache[pin_num] = PWM(Pin(pin_num, Pin.OUT), freq=50)
-    us = 600 + (max(0, min(180, int(deg))) / 180) * 1800
-    _sv_cache[pin_num].duty_u16(int(us / 20000 * 65535))`);
-        const svPin2   = SERVO_PIN_MAP[(d.servoPort as string) ?? "S1"] ?? 21;
-        const svStart  = d.startAngle ?? 0;
-        const svEnd    = d.endAngle ?? 90;
-        const svSteps  = Math.max(1, d.steps ?? 10);
-        const svDelay  = Math.max(5, Math.round(200 / (d.speed ?? 50) * 10));
-        const svStep   = Math.max(1, Math.round(Math.abs(svEnd - svStart) / svSteps));
-        const svDir    = svEnd >= svStart ? 1 : -1;
+        emitOnce("servo_class", buildServoHelperBlock());
+        const PORT_TO_SV2: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
+        const sv2     = PORT_TO_SV2[(d.servoPort as string) ?? "S1"] ?? "s1";
+        const svStart = d.startAngle ?? 0;
+        const svEnd   = d.endAngle ?? 90;
+        const svSteps = Math.max(1, d.steps ?? 10);
+        const svDelay = Math.max(5, Math.round(200 / (d.speed ?? 50) * 10));
+        const svStep  = Math.max(1, Math.round(Math.abs(svEnd - svStart) / svSteps));
+        const svDir   = svEnd >= svStart ? 1 : -1;
         chunkLines.push(`${indent}# Sweep ${d.servoPort ?? "S1"}: ${svStart}° → ${svEnd}°`);
         chunkLines.push(`${indent}for _a in range(${svStart}, ${svEnd + svDir}, ${svStep * svDir}):`);
-        chunkLines.push(`${indent}    _sv_angle(${svPin2}, _a)`);
+        chunkLines.push(`${indent}    ${sv2}.angle(_a)`);
         chunkLines.push(`${indent}    time.sleep_ms(${svDelay})`);
         break;
       }
@@ -572,8 +632,8 @@ def _sv_angle(pin_num, deg):
         pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
 def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
 def _dp(pin): return Pin(pin, Pin.OUT)
-front = DRV8833(_mp(45), _dp(46), _mp(15), _dp(16))  # FR=a, FL=b
-rear  = DRV8833(_mp(17), _dp(18), _mp(37), _dp(38))  # RR=a, RL=b`);
+    front = DRV8833(_mp(17), _dp(18), _mp(45), _dp(46))  # FR=a, FL=b (a=right front, b=left front)
+    rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear, b=left rear)`);
         const move = (d.move as string) ?? "forward";
         const t    = ((d.speed ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
         const ti   = (((d.speed ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
@@ -599,22 +659,7 @@ rear  = DRV8833(_mp(17), _dp(18), _mp(37), _dp(38))  # RR=a, RL=b`);
         // Maps node port keys (L1/L2/R1/R2) → DRV8833 object + method
         // L1=FL(front.b), L2=RL(rear.b), R1=FR(front.a), R2=RR(rear.a)
         imports.add("from machine import Pin, PWM");
-        emitOnce("drv8833_class", `class DRV8833:
-    MAX = 65535
-    def __init__(self, a_pwm, a_dir, b_pwm, b_dir):
-        self.ap, self.ad, self.bp, self.bd = a_pwm, a_dir, b_pwm, b_dir
-    def throttle_a(self, t): self._drv(self.ap, self.ad, t)
-    def throttle_b(self, t): self._drv(self.bp, self.bd, t)
-    def stop_a(self): self.ad.value(0); self.ap.duty_u16(0)
-    def stop_b(self): self.bd.value(0); self.bp.duty_u16(0)
-    def _drv(self, pwm, d, t):
-        d.value(0 if t >= 0 else 1)
-        duty = int(abs(t) * self.MAX)
-        pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
-def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
-def _dp(pin): return Pin(pin, Pin.OUT)
-front = DRV8833(_mp(45), _dp(46), _mp(15), _dp(16))  # FR=a, FL=b
-rear  = DRV8833(_mp(17), _dp(18), _mp(37), _dp(38))  # RR=a, RL=b`);
+        emitOnce("drv8833_class", DRV8833_HELPER);
         const portToDRV: Record<string, { obj: string; fn: string }> = {
           L1: { obj: "front", fn: "b" },  // FL
           L2: { obj: "rear",  fn: "b" },  // RL
@@ -636,14 +681,10 @@ rear  = DRV8833(_mp(17), _dp(18), _mp(37), _dp(38))  # RR=a, RL=b`);
       }
       case "servo_controller": {
         imports.add("from machine import Pin, PWM");
-        emitOnce("servo_helper", `_sv_cache = {}
-def _sv_angle(pin_num, deg):
-    if pin_num not in _sv_cache:
-        _sv_cache[pin_num] = PWM(Pin(pin_num, Pin.OUT), freq=50)
-    us = 600 + (max(0, min(180, int(deg))) / 180) * 1800
-    _sv_cache[pin_num].duty_u16(int(us / 20000 * 65535))`);
-        const scPort   = (d.servoPort as string) ?? "S1";
-        const scPin    = SERVO_PIN_MAP[scPort] ?? 21;
+        emitOnce("servo_class", buildServoHelperBlock());
+        const PORT_TO_SVC: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
+        const scPort = (d.servoPort as string) ?? "S1";
+        const scObj  = PORT_TO_SVC[scPort] ?? "s1";
         const pulseMin = d.pulseMin ?? 600;
         const pulseMax = d.pulseMax ?? 2400;
         if (d.mode === "sweep") {
@@ -651,44 +692,27 @@ def _sv_angle(pin_num, deg):
           const swMin = d.sweepMin ?? 0;
           const swMax = d.sweepMax ?? 180;
           const stepMs = Math.max(5, Math.round((d.sweepPeriod ?? 1000) / Math.abs(swMax - swMin)));
-          chunkLines.push(`${indent}# Servo sweep ${scPort}: ${swMin}° → ${swMax}°`);
+          chunkLines.push(`${indent}# Sweep ${scPort}: ${swMin}° → ${swMax}°`);
           chunkLines.push(`${indent}for _a in range(${swMin}, ${swMax + 1}, 1):`);
-          chunkLines.push(`${indent}    _us = ${pulseMin} + (_a / 180) * (${pulseMax} - ${pulseMin})`);
-          chunkLines.push(`${indent}    _sv_cache.get(${scPin}, __import__('machine').PWM(__import__('machine').Pin(${scPin}), freq=50)).duty_u16(int(_us / 20000 * 65535))`);
-          chunkLines.push(`${indent}    time.sleep_ms(${stepMs})`);
-          // Simpler: just use the helper
-          chunkLines.length -= 4;
-          chunkLines.push(`${indent}for _a in range(${swMin}, ${swMax + 1}, 1):`);
-          chunkLines.push(`${indent}    _sv_angle(${scPin}, _a)`);
+          chunkLines.push(`${indent}    ${scObj}.angle(_a)`);
           chunkLines.push(`${indent}    time.sleep_ms(${stepMs})`);
         } else if (d.mode === "continuous") {
           const spd = d.contSpeed ?? 50;
-          const angle = spd >= 0 ? 90 + Math.round(spd * 0.9) : 90 + Math.round(spd * 0.9);
-          chunkLines.push(`${indent}_sv_angle(${scPin}, ${Math.max(0, Math.min(180, angle))})  # continuous ${scPort} speed ${spd}%`);
+          const angle = Math.max(0, Math.min(180, 90 + Math.round(spd * 0.9)));
+          chunkLines.push(`${indent}${scObj}.angle(${angle})  # continuous ${scPort} speed ${spd}%`);
         } else {
-          const us = pulseMin + ((d.angle ?? 90) / 180) * (pulseMax - pulseMin);
-          chunkLines.push(`${indent}_sv_angle(${scPin}, ${d.angle ?? 90})  # ${scPort} → ${d.angle ?? 90}° (${Math.round(us)} µs)`);
+          const pulseRange = pulseMax - pulseMin;
+          // Create a custom Servo with user-defined pulse range if different from defaults
+          if (pulseMin !== 600 || pulseMax !== 2400) {
+            chunkLines.push(`${indent}${scObj} = Servo(${SERVO_PIN_MAP[scPort] ?? 21}, mn=${pulseMin}, mx=${pulseMax})`);
+          }
+          chunkLines.push(`${indent}${scObj}.angle(${d.angle ?? 90})  # ${scPort} → ${d.angle ?? 90}° (pulse ${Math.round(pulseMin + ((d.angle ?? 90) / 180) * pulseRange)} µs)`);
         }
         break;
       }
       case "multi_motor_controller": {
         imports.add("from machine import Pin, PWM");
-        emitOnce("drv8833_class", `class DRV8833:
-    MAX = 65535
-    def __init__(self, a_pwm, a_dir, b_pwm, b_dir):
-        self.ap, self.ad, self.bp, self.bd = a_pwm, a_dir, b_pwm, b_dir
-    def throttle_a(self, t): self._drv(self.ap, self.ad, t)
-    def throttle_b(self, t): self._drv(self.bp, self.bd, t)
-    def stop_a(self): self.ad.value(0); self.ap.duty_u16(0)
-    def stop_b(self): self.bd.value(0); self.bp.duty_u16(0)
-    def _drv(self, pwm, d, t):
-        d.value(0 if t >= 0 else 1)
-        duty = int(abs(t) * self.MAX)
-        pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
-def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
-def _dp(pin): return Pin(pin, Pin.OUT)
-front = DRV8833(_mp(45), _dp(46), _mp(15), _dp(16))  # FR=a, FL=b
-rear  = DRV8833(_mp(17), _dp(18), _mp(37), _dp(38))  # RR=a, RL=b`);
+        emitOnce("drv8833_class", DRV8833_HELPER);
         // Port → DRV8833 object + method: L1=FL(front.b), L2=RL(rear.b), R1=FR(front.a), R2=RR(rear.a)
         const portToDRVm: Record<string, { obj: string; fn: string }> = {
           L1: { obj: "front", fn: "b" },
@@ -725,29 +749,25 @@ rear  = DRV8833(_mp(17), _dp(18), _mp(37), _dp(38))  # RR=a, RL=b`);
       case "multi_servo_sequencer": {
         imports.add("from machine import Pin, PWM");
         imports.add("import time");
-        emitOnce("servo_helper", `_sv_cache = {}
-def _sv_angle(pin_num, deg):
-    if pin_num not in _sv_cache:
-        _sv_cache[pin_num] = PWM(Pin(pin_num, Pin.OUT), freq=50)
-    us = 600 + (max(0, min(180, int(deg))) / 180) * 1800
-    _sv_cache[pin_num].duty_u16(int(us / 20000 * 65535))`);
-        // Read port keys and look up actual pins
-        const mssPin1 = SERVO_PIN_MAP[(d.s1port as string) ?? "S1"] ?? 21;
-        const mssPin2 = SERVO_PIN_MAP[(d.s2port as string) ?? "S2"] ?? 47;
-        const mssPin3 = SERVO_PIN_MAP[(d.s3port as string) ?? "S3"] ?? 39;
-        emitOnce(`mss_pins_${mssPin1}_${mssPin2}_${mssPin3}`,
-          `_mss = [${mssPin1}, ${mssPin2}, ${mssPin3}]  # servo pins for sequencer`);
+        emitOnce("servo_class", buildServoHelperBlock());
+        // Map port names to servo object names
+        const PORT_TO_MSS: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
+        const mssObj1 = PORT_TO_MSS[(d.s1port as string) ?? "S1"] ?? "s1";
+        const mssObj2 = PORT_TO_MSS[(d.s2port as string) ?? "S2"] ?? "s2";
+        const mssObj3 = PORT_TO_MSS[(d.s3port as string) ?? "S3"] ?? "s3";
+        emitOnce(`mss_list_${mssObj1}_${mssObj2}_${mssObj3}`,
+          `_mss = [${mssObj1}, ${mssObj2}, ${mssObj3}]  # sequencer servos`);
         chunkLines.push(`${indent}# Multi-Servo Sequencer`);
         if (d.keyframes && Array.isArray(d.keyframes)) {
           for (const kf of d.keyframes) {
             const angles: number[] = kf.angles ?? [90, 90, 90];
             for (let si = 0; si < Math.min(3, angles.length); si++) {
-              chunkLines.push(`${indent}_sv_angle(_mss[${si}], ${angles[si]})`);
+              chunkLines.push(`${indent}_mss[${si}].angle(${angles[si]})`);
             }
             chunkLines.push(`${indent}time.sleep_ms(${d.keyframeDelay ?? 500})`);
           }
         } else {
-          chunkLines.push(`${indent}for _p in _mss: _sv_angle(_p, 90)  # center all`);
+          chunkLines.push(`${indent}for _sv in _mss: _sv.center()  # center all`);
           chunkLines.push(`${indent}time.sleep_ms(${d.keyframeDelay ?? 500})`);
         }
         break;
