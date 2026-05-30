@@ -116,14 +116,6 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
     const indent = "    ".repeat(indentLevel);
     const chunkLines: string[] = [];
 
-    // Helper to get connected target of a specific handle ID (first match)
-    const getTargetForHandle = (handleId: string) => {
-      const edge = edges.find(
-        (e) => e.source === nodeId && e.sourceHandle === handleId
-      );
-      return edge ? edge.target : null;
-    };
-
     // Helper to get ALL connected targets for a handle, sorted by Y position
     const getAllTargetsForHandle = (handleId: string): string[] => {
       return edges
