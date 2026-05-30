@@ -90,25 +90,51 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   }, []);
 
   // ── Library file upload ───────────────────────────────────────────────────────
+  // Writes the file in 200-byte chunks so the REPL paste buffer never overflows.
   const uploadLibFile = useCallback(async (
     filename: string, content: string, onProgress: (p: number) => void
   ): Promise<boolean> => {
     if (!isConnected) { addLog("⚠️ Not connected"); return false; }
+
+    // Guard: if the content looks like HTML (e.g. a 404 from the dev server),
+    // bail out immediately with a clear error rather than writing garbage to the board.
+    if (content.trimStart().startsWith("<!") || content.trimStart().startsWith("<html")) {
+      addLog(`❌ ${filename}: library file not found on server (got HTML instead of Python)`);
+      return false;
+    }
+
     addLog(`📦 Installing ${filename}…`);
-    onProgress(10);
+    onProgress(5);
+
     try {
-      const code = `
-import os
-_f = open('${filename.replace(/'/g, "\\'")}', 'w')
-_f.write(${JSON.stringify(content)})
-_f.close()
-print('LIB_OK:${filename}')
-`;
-      onProgress(30);
-      const ok = await sendCode(code);
+      // Create parent directory if needed (e.g. umqtt/simple.py → mkdir umqtt)
+      const dir = filename.includes("/") ? filename.split("/").slice(0, -1).join("/") : null;
+      const mkdirCode = dir
+        ? `try:\n import os\n os.mkdir('${dir}')\nexcept: pass\n`
+        : "";
+
+      // Open file for writing
+      const openCode = `${mkdirCode}import os\n_kf = open('${filename.replace(/'/g, "\\'")}', 'wb')\n`;
+      await sendCode(openCode);
+      onProgress(10);
+
+      // Chunk the content as escaped bytes, 200 chars of source per chunk
+      const CHUNK = 200;
+      const total = content.length;
+      for (let i = 0; i < total; i += CHUNK) {
+        const slice = content.slice(i, i + CHUNK);
+        // JSON.stringify gives us a safe escaped string literal including quotes
+        const chunkCode = `_kf.write(${JSON.stringify(slice)})\n`;
+        await sendCode(chunkCode);
+        onProgress(10 + Math.round((i / total) * 80));
+      }
+
+      // Close & confirm
+      const closeCode = `_kf.close()\nprint('LIB_OK:${filename}')\n`;
+      await sendCode(closeCode);
       onProgress(100);
-      if (ok) addLog(`✅ ${filename} installed to ESP32`);
-      return ok;
+      addLog(`✅ ${filename} installed to ESP32`);
+      return true;
     } catch {
       addLog(`❌ Failed to install ${filename}`);
       return false;

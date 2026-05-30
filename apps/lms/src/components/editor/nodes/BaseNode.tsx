@@ -1,7 +1,7 @@
 import { type ReactNode, useCallback, useState } from "react";
 import { Handle, Position, useNodeId, useReactFlow, useStore } from "@xyflow/react";
 import { PlusCircle } from "lucide-react";
-import { saveCustomNodeFromNode } from "@/lib/customNodes";
+import { saveCustomSubflowFromSelection } from "@/lib/customNodes";
 
 function TrashIcon() {
   return (
@@ -47,7 +47,7 @@ export function NodeToggleButton({
 
 function SelectionToolbar() {
   const nodeId = useNodeId();
-  const { getNode, setNodes, setEdges } = useReactFlow();
+  const { getNode, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
 
   const isSelected = useStore(
     useCallback(
@@ -71,9 +71,9 @@ function SelectionToolbar() {
     const defaultLabel = typeof node.data?.label === "string" && node.data.label.trim()
       ? node.data.label.trim()
       : node.type ?? "Custom Node";
-    const savedLabel = window.prompt("Name this custom node", defaultLabel)?.trim();
+    const savedLabel = window.prompt("Name this custom subflow", defaultLabel)?.trim();
     if (!savedLabel) return;
-    saveCustomNodeFromNode(node, savedLabel);
+    saveCustomSubflowFromSelection(node, getNodes(), getEdges(), savedLabel);
   };
 
   return (
@@ -84,7 +84,7 @@ function SelectionToolbar() {
       <button
         onClick={handleSaveAsCustomNode}
         className="text-[#9ca3af] hover:text-violet-300 transition-colors p-1 rounded hover:bg-[#27272a]"
-        title="Save as Custom Node"
+        title="Save as Custom Subflow"
       >
         <PlusCircle className="w-4 h-4" />
       </button>

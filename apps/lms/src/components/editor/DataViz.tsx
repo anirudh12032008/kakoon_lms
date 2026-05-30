@@ -110,15 +110,292 @@ interface IMUData {
   pitch: number; roll: number;
 }
 
+// ─── 3D Cube (pure SVG, isometric projection) ─────────────────────────────────
+function Cube3D({ pitch, roll }: { pitch: number; roll: number }) {
+  const W = 160, H = 160, CX = 80, CY = 80, S = 36;
+
+  // Convert degrees to radians
+  const pr = (pitch * Math.PI) / 180;
+  const rr = (roll  * Math.PI) / 180;
+  // Yaw fixed at small decorative angle so the cube looks nice at rest
+  const yr = 0.4;
+
+  // Rotate a 3D point by pitch(X), roll(Z), then a small yaw(Y)
+  const rot = (x: number, y: number, z: number): [number, number, number] => {
+    // Roll around Z
+    let x1 = x * Math.cos(rr) - y * Math.sin(rr);
+    let y1 = x * Math.sin(rr) + y * Math.cos(rr);
+    let z1 = z;
+    // Pitch around X
+    let y2 = y1 * Math.cos(pr) - z1 * Math.sin(pr);
+    let z2 = y1 * Math.sin(pr) + z1 * Math.cos(pr);
+    let x2 = x1;
+    // Yaw around Y
+    let x3 = x2 * Math.cos(yr) + z2 * Math.sin(yr);
+    let z3 = -x2 * Math.sin(yr) + z2 * Math.cos(yr);
+    let y3 = y2;
+    return [x3, y3, z3];
+  };
+
+  // Project 3D → 2D (simple perspective)
+  const proj = (x: number, y: number, z: number): [number, number] => {
+    const fov = 3.5;
+    const scale = fov / (fov + z / S);
+    return [CX + x * scale, CY - y * scale];
+  };
+
+  // 8 corners of the cube
+  const corners: [number,number,number][] = [
+    [-S,-S,-S],[ S,-S,-S],[ S, S,-S],[-S, S,-S],
+    [-S,-S, S],[ S,-S, S],[ S, S, S],[-S, S, S],
+  ];
+  const pts = corners.map(([x,y,z]) => { const [rx,ry,rz] = rot(x,y,z); return proj(rx,ry,rz); });
+
+  // Face definitions [corner indices, base color, label]
+  const faces: [number[], string, string][] = [
+    [[0,1,2,3], "#1a0a2e", ""],      // back
+    [[4,5,6,7], "#4c1d95", "TOP"],   // front (toward camera)
+    [[0,1,5,4], "#2d1060", ""],      // bottom
+    [[2,3,7,6], "#3b0f8c", ""],      // top
+    [[0,3,7,4], "#1e0a4a", "X"],     // left
+    [[1,2,6,5], "#311275", "Z"],     // right
+  ];
+
+  // Compute face normals to determine visibility & depth sort
+  const faceMeta = faces.map(([idxs, color, label]) => {
+    const [a,b,c] = idxs.map(i => { const [rx,ry,rz] = rot(...corners[i]); return [rx,ry,rz]; });
+    // Normal via cross product of two edges
+    const ab = [b[0]-a[0], b[1]-a[1], b[2]-a[2]];
+    const ac = [c[0]-a[0], c[1]-a[1], c[2]-a[2]];
+    const nx = ab[1]*ac[2] - ab[2]*ac[1];
+    const ny = ab[2]*ac[0] - ab[0]*ac[2];
+    const nz = ab[0]*ac[1] - ab[1]*ac[0];
+    const dot = nz; // dot with camera direction (0,0,1)
+    const depth = idxs.reduce((s, i) => { const [,,z] = rot(...corners[i]); return s + z; }, 0) / 4;
+    return { idxs, color, label, visible: dot > 0, depth };
+  });
+
+  const sorted = [...faceMeta].sort((a, b) => a.depth - b.depth);
+
+  // Accent colors per face for neon glow effect
+  const faceAccents = ["#1a0a2e","#8b5cf6","#6d28d9","#7c3aed","#4c1d95","#6d28d9"];
+  const faceGlows   = ["none","#8b5cf6","none","#6d28d9","none","none"];
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+      {/* Background glow */}
+      <defs>
+        <radialGradient id="cubeglow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#4c1d95" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#000" stopOpacity="0" />
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="blur" />
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <ellipse cx={CX} cy={CY+48} rx={44} ry={10} fill="url(#cubeglow)" opacity="0.5" />
+
+      {sorted.map(({ idxs, visible, label }, fi) => {
+        if (!visible) return null;
+        const poly = idxs.map(i => pts[i].join(",")).join(" ");
+        const center = idxs.reduce(([sx,sy],i) => [sx+pts[i][0]/4, sy+pts[i][1]/4], [0,0]);
+        const isFront = label === "TOP";
+        return (
+          <g key={fi}>
+            <polygon
+              points={poly}
+              fill={isFront ? "#2e1065" : "#130728"}
+              stroke={isFront ? "#8b5cf6" : "#3b1f6e"}
+              strokeWidth={isFront ? 1.5 : 0.8}
+              opacity={0.95}
+              style={isFront ? { filter: "drop-shadow(0 0 6px #8b5cf6)" } : undefined}
+            />
+            {/* Axis arrows on front face */}
+            {isFront && (
+              <>
+                <text x={center[0]-2} y={center[1]+4} textAnchor="middle"
+                  fill="#c4b5fd" fontSize="9" fontWeight="bold" fontFamily="monospace"
+                  style={{ filter: "drop-shadow(0 0 3px #8b5cf6)" }}>IMU</text>
+              </>
+            )}
+          </g>
+        );
+      })}
+
+      {/* Axis lines at origin */}
+      {([ ["#ef4444",[1,0,0]], ["#22c55e",[0,1,0]], ["#3b82f6",[0,0,1]] ] as [string,[number,number,number]][]).map(([col, dir], i) => {
+        const [rx0,ry0,rz0] = rot(0,0,0);
+        const [rx1,ry1,rz1] = rot(dir[0]*S*1.6, dir[1]*S*1.6, dir[2]*S*1.6);
+        const [x0,y0] = proj(rx0,ry0,rz0);
+        const [x1,y1] = proj(rx1,ry1,rz1);
+        const labels = ["X","Y","Z"];
+        return (
+          <g key={i}>
+            <line x1={x0} y1={y0} x2={x1} y2={y1} stroke={col} strokeWidth="1.5" strokeLinecap="round" opacity="0.8" />
+            <text x={x1} y={y1-3} textAnchor="middle" fill={col} fontSize="7" fontWeight="bold">{labels[i]}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ─── Artificial Horizon ────────────────────────────────────────────────────────
+function ArtificialHorizon({ pitch, roll }: { pitch: number; roll: number }) {
+  const W = 160, H = 90, CX = W/2, CY = H/2, R = 40;
+  const clampedPitch = Math.max(-60, Math.min(60, pitch));
+  const rollRad = (roll * Math.PI) / 180;
+  // Horizon line offset from center
+  const horizonY = CY + (clampedPitch / 60) * R;
+
+  // Sky / ground split via clipped rectangles rotated by roll
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ borderRadius: 8, overflow: "hidden" }}>
+      <defs>
+        <clipPath id="horizon-clip">
+          <circle cx={CX} cy={CY} r={R} />
+        </clipPath>
+        <radialGradient id="sky-grad" cx="50%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#1e3a8a" />
+          <stop offset="100%" stopColor="#0f172a" />
+        </radialGradient>
+        <radialGradient id="ground-grad" cx="50%" cy="70%" r="70%">
+          <stop offset="0%" stopColor="#7c2d12" />
+          <stop offset="100%" stopColor="#431407" />
+        </radialGradient>
+      </defs>
+
+      {/* Background circle */}
+      <circle cx={CX} cy={CY} r={R} fill="#0f0f14" stroke="#2d2d3a" strokeWidth="1" />
+
+      {/* Rotating ground/sky group */}
+      <g clipPath="url(#horizon-clip)">
+        <g style={{ transform: `rotate(${roll}deg)`, transformOrigin: `${CX}px ${CY}px` }}>
+          {/* Sky */}
+          <rect x={CX-R-4} y={CY-R-4} width={(R+4)*2} height={horizonY - (CY-R-4)} fill="url(#sky-grad)" />
+          {/* Ground */}
+          <rect x={CX-R-4} y={horizonY} width={(R+4)*2} height={(CY+R+4) - horizonY} fill="url(#ground-grad)" />
+          {/* Horizon line */}
+          <line x1={CX-R-4} y1={horizonY} x2={CX+R+4} y2={horizonY} stroke="#fbbf24" strokeWidth="1.5" opacity="0.9" />
+          {/* Pitch ladder marks */}
+          {[-20, -10, 10, 20].map(deg => {
+            const lineY = horizonY + (deg / 60) * R;
+            const lw = Math.abs(deg) === 20 ? 20 : 12;
+            return (
+              <g key={deg}>
+                <line x1={CX-lw} y1={lineY} x2={CX+lw} y2={lineY} stroke="#fbbf24" strokeWidth="0.8" opacity="0.5" />
+                <text x={CX-lw-4} y={lineY+3} textAnchor="end" fill="#fbbf24" fontSize="5" opacity="0.6">{deg > 0 ? "+":""}{deg}</text>
+              </g>
+            );
+          })}
+        </g>
+      </g>
+
+      {/* Fixed aircraft symbol */}
+      <g>
+        <line x1={CX-18} y1={CY} x2={CX-6} y2={CY} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
+        <line x1={CX+6}  y1={CY} x2={CX+18} y2={CY} stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" />
+        <circle cx={CX} cy={CY} r="2.5" fill="#fbbf24" />
+        <line x1={CX} y1={CY-4} x2={CX} y2={CY-10} stroke="#fbbf24" strokeWidth="1.5" />
+      </g>
+
+      {/* Roll arc indicator at top */}
+      <g style={{ transform: `rotate(${-roll}deg)`, transformOrigin: `${CX}px ${CY}px` }}>
+        <polygon points={`${CX},${CY-R+2} ${CX-3},${CY-R+8} ${CX+3},${CY-R+8}`} fill="#fbbf24" />
+      </g>
+
+      {/* Rim */}
+      <circle cx={CX} cy={CY} r={R} fill="none" stroke="#3d3d4e" strokeWidth="1.5" />
+
+      {/* Roll tick marks on rim */}
+      {[-60,-30,-10, 10,30,60].map(deg => {
+        const rad = (deg - 90) * Math.PI / 180;
+        const inner = R - 4, outer = R;
+        return (
+          <line key={deg}
+            x1={CX + inner*Math.cos(rad)} y1={CY + inner*Math.sin(rad)}
+            x2={CX + outer*Math.cos(rad)} y2={CY + outer*Math.sin(rad)}
+            stroke="#6b7280" strokeWidth="1" />
+        );
+      })}
+    </svg>
+  );
+}
+
+// ─── G-Force Ring ──────────────────────────────────────────────────────────────
+function GForceRing({ ax, ay, az }: { ax: number; ay: number; az: number }) {
+  const g = Math.sqrt(ax*ax + ay*ay + az*az);
+  const pct = Math.min(1, g / 3);
+  const R = 28, C = 36;
+  const color = g < 1.3 ? "#22c55e" : g < 2 ? "#f97316" : "#ef4444";
+  const toRad = (d: number) => (d - 90) * Math.PI / 180;
+  const arc = (deg: number) => [C + R*Math.cos(toRad(deg)), C + R*Math.sin(toRad(deg))];
+  const endDeg = pct * 360;
+  const [ex, ey] = arc(endDeg);
+  const [sx, sy] = arc(0);
+  const large = endDeg > 180 ? 1 : 0;
+  const pathD = endDeg >= 359.9
+    ? `M ${sx} ${sy} A ${R} ${R} 0 1 1 ${sx - 0.01} ${sy}`
+    : `M ${sx} ${sy} A ${R} ${R} 0 ${large} 1 ${ex} ${ey}`;
+  return (
+    <svg width={72} height={72} viewBox="0 0 72 72">
+      <circle cx={C} cy={C} r={R} fill="none" stroke="#1a1a24" strokeWidth="5" />
+      <path d={pathD} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round"
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }} />
+      <text x={C} y={C-3} textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" fontFamily="monospace">{g.toFixed(2)}</text>
+      <text x={C} y={C+8} textAnchor="middle" fill="#6b7280" fontSize="6" fontFamily="monospace">G-force</text>
+    </svg>
+  );
+}
+
+// ─── Motion Trail ──────────────────────────────────────────────────────────────
+function MotionTrail({ history }: { history: IMUData[] }) {
+  if (history.length < 2) return null;
+  const W = 140, H = 80, CX = W/2, CY = H/2;
+  const recent = history.slice(-40);
+  const pts = recent.map((h, i) => {
+    const x = CX + Math.max(-CX+4, Math.min(CX-4, h.roll * 0.8));
+    const y = CY + Math.max(-CY+4, Math.min(CY-4, -h.pitch * 0.6));
+    return { x, y, i, total: recent.length };
+  });
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+      <rect width={W} height={H} fill="#080810" rx={6} />
+      <line x1={CX} y1={4} x2={CX} y2={H-4} stroke="#1e1e2a" strokeWidth="0.5" />
+      <line x1={4} y1={CY} x2={W-4} y2={CY} stroke="#1e1e2a" strokeWidth="0.5" />
+      {/* Trail */}
+      {pts.slice(0, -1).map((p, i) => {
+        const next = pts[i+1];
+        const alpha = (i / pts.length) * 0.8;
+        return <line key={i} x1={p.x} y1={p.y} x2={next.x} y2={next.y}
+          stroke="#8b5cf6" strokeWidth="1.5" opacity={alpha} strokeLinecap="round" />;
+      })}
+      {/* Current position dot */}
+      {pts.length > 0 && (
+        <>
+          <circle cx={pts[pts.length-1].x} cy={pts[pts.length-1].y} r={5} fill="#8b5cf6"
+            style={{ filter: "drop-shadow(0 0 4px #8b5cf6)" }} />
+          <circle cx={pts[pts.length-1].x} cy={pts[pts.length-1].y} r={9} fill="none"
+            stroke="#8b5cf6" strokeWidth="1" opacity="0.3" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose: () => void }) {
   const [history, setHistory] = useState<IMUData[]>([]);
   const [latest, setLatest] = useState<IMUData | null>(null);
+  const [tab, setTab] = useState<"3d" | "horizon" | "graphs">("3d");
+
+  // Demo animation when no real data
+  const animRef = useRef<number>(0);
+  const [demo, setDemo] = useState<IMUData>({ ax:0, ay:0, az:1, gx:0, gy:0, gz:0, pitch:0, roll:0 });
+  const demoT = useRef(0);
 
   useEffect(() => {
-    const last = [...logs].reverse().find((l) => {
-      const raw = stripLogPrefix(l);
-      return raw.startsWith("MPU6050,");
-    });
+    const last = [...logs].reverse().find(l => stripLogPrefix(l).startsWith("MPU6050,"));
     if (!last) return;
     const raw = stripLogPrefix(last);
     const parts = raw.split(",");
@@ -126,102 +403,198 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
     const [, ax, ay, az, gx, gy, gz, pitch, roll] = parts.map((v, i) => i === 0 ? 0 : parseFloat(v));
     const entry: IMUData = { ax, ay, az, gx, gy, gz, pitch, roll };
     setLatest(entry);
-    setHistory((prev) => [...prev.slice(-(IMU_MAX - 1)), entry]);
+    setHistory(prev => [...prev.slice(-(IMU_MAX - 1)), entry]);
   }, [logs]);
 
-  const dir = (() => {
-    if (!latest) return { label: "—", pct: 0 };
-    const { pitch, roll } = latest;
-    if (Math.abs(pitch) < 10 && Math.abs(roll) < 10) return { label: "FLAT", pct: 0 };
-    if (Math.abs(pitch) > Math.abs(roll)) {
-      return pitch > 0
-        ? { label: "FORWARD ▲", pct: Math.min(100, Math.abs(pitch)) }
-        : { label: "BACKWARD ▼", pct: Math.min(100, Math.abs(pitch)) };
-    }
-    return roll > 0
-      ? { label: "RIGHT ▶", pct: Math.min(100, Math.abs(roll)) }
-      : { label: "LEFT ◀", pct: Math.min(100, Math.abs(roll)) };
-  })();
+  // Gentle idle animation when no live data
+  useEffect(() => {
+    if (latest) return;
+    const tick = () => {
+      demoT.current += 0.012;
+      const t = demoT.current;
+      setDemo({
+        ax: Math.sin(t * 0.7) * 0.3,
+        ay: Math.cos(t * 0.5) * 0.2,
+        az: 1 + Math.sin(t * 1.1) * 0.05,
+        gx: Math.sin(t * 1.3) * 15,
+        gy: Math.cos(t * 0.9) * 20,
+        gz: Math.sin(t * 0.6) * 10,
+        pitch: Math.sin(t * 0.4) * 18,
+        roll:  Math.cos(t * 0.3) * 22,
+      });
+      animRef.current = requestAnimationFrame(tick);
+    };
+    animRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [latest]);
 
-  const accelData = (key: keyof IMUData) => history.map((h) => h[key]);
+  const data = latest ?? demo;
+  const isLive = !!latest;
+
+  const gTotal = Math.sqrt(data.ax**2 + data.ay**2 + data.az**2);
+  const gyroTotal = Math.sqrt(data.gx**2 + data.gy**2 + data.gz**2);
 
   return (
     <PanelShell title="IMU Visualizer — MPU6050" icon={<Activity className="w-4 h-4" />}
-      color="#8b5cf6" onClose={onClose} initialPos={{ x: 24, y: 80 }} width={360}>
+      color="#8b5cf6" onClose={onClose} initialPos={{ x: 24, y: 80 }} width={400}>
+
+      {/* Live / Demo badge */}
+      <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#1a1a24]">
+        <div className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-green-400 shadow-[0_0_4px_#22c55e]" : "bg-amber-500"} animate-pulse`} />
+        <span className={`text-[9px] font-bold ${isLive ? "text-green-400" : "text-amber-500"}`}>
+          {isLive ? "LIVE DATA" : "DEMO MODE"}
+        </span>
+        {!isLive && <span className="text-[9px] text-zinc-600">→ run MPU6050 code to see real data</span>}
+
+        {/* Tab switcher */}
+        <div className="ml-auto flex gap-1">
+          {(["3d","horizon","graphs"] as const).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                tab === t ? "border-violet-500/60 bg-violet-500/15 text-violet-300" : "border-[#2d2d35] text-zinc-500 hover:text-zinc-300"
+              }`}>
+              {t === "3d" ? "3D" : t === "horizon" ? "AH" : "≈"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="p-3 space-y-3">
-        {/* Orientation ball */}
-        <div className="flex items-center gap-3">
-          <div className="relative w-20 h-20 flex-shrink-0">
-            <svg viewBox="-40 -40 80 80" width="80" height="80">
-              <circle cx="0" cy="0" r="36" fill="#111118" stroke="#2a2a32" strokeWidth="1" />
-              {/* rings */}
-              {[24, 16, 8].map((r) => <circle key={r} cx="0" cy="0" r={r} fill="none" stroke="#2a2a32" strokeWidth="0.5" />)}
-              <line x1="-36" y1="0" x2="36" y2="0" stroke="#2a2a32" strokeWidth="0.5" />
-              <line x1="0" y1="-36" x2="0" y2="36" stroke="#2a2a32" strokeWidth="0.5" />
-              {/* pitch/roll dot */}
-              {latest && (
-                <circle
-                  cx={Math.max(-30, Math.min(30, latest.roll * 0.4))}
-                  cy={Math.max(-30, Math.min(30, -latest.pitch * 0.4))}
-                  r="5" fill="#8b5cf6" opacity="0.9"
-                  style={{ filter: "drop-shadow(0 0 4px #8b5cf6)" }}
-                />
-              )}
-            </svg>
-          </div>
-          <div className="flex-1 space-y-1">
-            <div className="flex justify-between text-[9px] text-zinc-500">
-              <span>Pitch</span><span className="text-violet-400 font-mono">{latest ? latest.pitch.toFixed(1) : "—"}°</span>
-            </div>
-            <div className="flex justify-between text-[9px] text-zinc-500">
-              <span>Roll</span><span className="text-fuchsia-400 font-mono">{latest ? latest.roll.toFixed(1) : "—"}°</span>
-            </div>
-            <div className="mt-1 px-2 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-center">
-              <span className="text-[10px] font-bold text-violet-300">{dir.label}</span>
-              {dir.pct > 0 && <span className="text-[9px] text-zinc-500 ml-1">{dir.pct.toFixed(0)}%</span>}
-            </div>
-          </div>
-        </div>
-
-        {/* Accel chart */}
-        <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
-          <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mb-1.5">Accelerometer (g)</div>
-          {(["ax","ay","az"] as const).map((k, i) => {
-            const colors = ["#ef4444","#22c55e","#3b82f6"];
-            const vals = accelData(k);
-            return (
-              <div key={k} className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-mono w-5" style={{ color: colors[i] }}>{k.toUpperCase()}</span>
-                <div className="flex-1"><Sparkline data={vals} color={colors[i]} min={-4} max={4} height={24} /></div>
-                <span className="text-[9px] font-mono w-10 text-right" style={{ color: colors[i] }}>
-                  {latest ? latest[k].toFixed(2) : "—"}
-                </span>
+        {tab === "3d" && (
+          <>
+            {/* 3D cube + horizon side by side */}
+            <div className="flex gap-3 items-center justify-center">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">3D Orientation</span>
+                <Cube3D pitch={data.pitch} roll={data.roll} />
               </div>
-            );
-          })}
-        </div>
-
-        {/* Gyro chart */}
-        <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
-          <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mb-1.5">Gyroscope (°/s)</div>
-          {(["gx","gy","gz"] as const).map((k, i) => {
-            const colors = ["#f97316","#eab308","#a855f7"];
-            const vals = accelData(k);
-            return (
-              <div key={k} className="flex items-center gap-2 mb-1">
-                <span className="text-[9px] font-mono w-5" style={{ color: colors[i] }}>{k.toUpperCase()}</span>
-                <div className="flex-1"><Sparkline data={vals} color={colors[i]} min={-500} max={500} height={24} /></div>
-                <span className="text-[9px] font-mono w-10 text-right" style={{ color: colors[i] }}>
-                  {latest ? latest[k].toFixed(1) : "—"}
-                </span>
+              <div className="flex flex-col gap-3">
+                {/* G-force ring */}
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">G-Force</span>
+                  <GForceRing ax={data.ax} ay={data.ay} az={data.az} />
+                </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
 
-        {history.length === 0 && (
-          <div className="text-center py-2 text-[10px] text-zinc-600">
-            Run code that outputs: <code className="text-violet-400">MPU6050,ax,ay,az,gx,gy,gz,pitch,roll</code>
+            {/* Motion trail */}
+            <div className="rounded-xl border border-[#1e1e26] bg-[#080810] p-2.5">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Motion Trail</span>
+                <span className="text-[9px] font-mono text-zinc-600">{history.length} samples</span>
+              </div>
+              <div className="flex justify-center">
+                <MotionTrail history={isLive ? history : [demo]} />
+              </div>
+            </div>
+
+            {/* Quick stats row */}
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label: "Pitch", value: data.pitch.toFixed(1)+"°", color: "#8b5cf6" },
+                { label: "Roll",  value: data.roll.toFixed(1)+"°",  color: "#ec4899" },
+                { label: "ω",     value: gyroTotal.toFixed(0)+"°/s", color: "#06b6d4" },
+              ].map(s => (
+                <div key={s.label} className="rounded-lg border border-[#1e1e26] bg-[#0c0c12] p-2 text-center">
+                  <div className="text-[9px] text-zinc-500 uppercase tracking-wider">{s.label}</div>
+                  <div className="text-sm font-bold font-mono mt-0.5" style={{ color: s.color }}>{s.value}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {tab === "horizon" && (
+          <>
+            <div className="flex gap-3 items-start justify-center">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Artificial Horizon</span>
+                <ArtificialHorizon pitch={data.pitch} roll={data.roll} />
+              </div>
+              <div className="flex flex-col gap-2 flex-1">
+                <GForceRing ax={data.ax} ay={data.ay} az={data.az} />
+                {[
+                  { label: "Pitch", val: data.pitch, max: 90, color: "#8b5cf6", unit: "°" },
+                  { label: "Roll",  val: data.roll,  max: 90, color: "#ec4899", unit: "°" },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg border border-[#1e1e26] bg-[#0c0c12] p-2">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-[9px] text-zinc-500">{s.label}</span>
+                      <span className="text-[10px] font-mono font-bold" style={{color:s.color}}>{s.val.toFixed(1)}{s.unit}</span>
+                    </div>
+                    <div className="relative h-1.5 rounded-full bg-[#1e1e26] overflow-hidden">
+                      <div className="absolute top-0 bottom-0 rounded-full transition-all"
+                        style={{
+                          left: "50%",
+                          width: `${Math.abs(s.val) / s.max * 50}%`,
+                          transform: s.val < 0 ? "translateX(-100%)" : "none",
+                          background: s.color,
+                          boxShadow: `0 0 6px ${s.color}`,
+                        }} />
+                      <div className="absolute top-0 bottom-0 w-px bg-zinc-600" style={{ left: "50%" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {tab === "graphs" && (
+          <>
+            {/* Accel */}
+            <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+              <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Accelerometer (g)</div>
+              {(["ax","ay","az"] as const).map((k, i) => {
+                const colors = ["#ef4444","#22c55e","#3b82f6"];
+                const vals = history.map(h => h[k]);
+                return (
+                  <div key={k} className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[9px] font-mono w-6 font-bold" style={{ color: colors[i] }}>{k.toUpperCase()}</span>
+                    <div className="flex-1 relative h-8 bg-[#080810] rounded overflow-hidden">
+                      <Sparkline data={vals.length ? vals : [data[k]]} color={colors[i]} min={-4} max={4} height={32} />
+                      {/* zero line */}
+                      <div className="absolute top-1/2 left-0 right-0 h-px bg-[#2d2d35]" />
+                    </div>
+                    <span className="text-[10px] font-mono font-bold w-12 text-right" style={{ color: colors[i] }}>
+                      {data[k].toFixed(3)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Gyro */}
+            <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+              <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Gyroscope (°/s)</div>
+              {(["gx","gy","gz"] as const).map((k, i) => {
+                const colors = ["#f97316","#eab308","#a855f7"];
+                const vals = history.map(h => h[k]);
+                return (
+                  <div key={k} className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[9px] font-mono w-6 font-bold" style={{ color: colors[i] }}>{k.toUpperCase()}</span>
+                    <div className="flex-1 relative h-8 bg-[#080810] rounded overflow-hidden">
+                      <Sparkline data={vals.length ? vals : [data[k]]} color={colors[i]} min={-500} max={500} height={32} />
+                      <div className="absolute top-1/2 left-0 right-0 h-px bg-[#2d2d35]" />
+                    </div>
+                    <span className="text-[10px] font-mono font-bold w-12 text-right" style={{ color: colors[i] }}>
+                      {data[k].toFixed(1)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="text-center text-[9px] text-zinc-600 font-mono">
+              Total G: <span className="text-violet-400">{gTotal.toFixed(3)}</span> &nbsp;|&nbsp;
+              ω: <span className="text-cyan-400">{gyroTotal.toFixed(1)}°/s</span>
+            </div>
+          </>
+        )}
+
+        {!isLive && (
+          <div className="text-center py-1 text-[9px] text-zinc-600 border border-dashed border-[#1e1e26] rounded-xl">
+            Output: <code className="text-violet-400 font-mono">print(f"MPU6050,{"{ax},{ay},{az},{gx},{gy},{gz},{pitch},{roll}"}")</code>
           </div>
         )}
       </div>

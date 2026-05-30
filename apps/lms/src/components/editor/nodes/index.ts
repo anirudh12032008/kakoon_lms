@@ -12,7 +12,7 @@ import { WiFiConnectNode, HTTPGetNode, ESPNOWSenderNode, ESPNOWReceiverNode, Tim
 import {
   UltrasonicSensorNode, TouchSensorNode, SoilMoistureSensorNode,
   IRReceiverNode, IRSensorNode, FourChannelTouchNode,
-  AnalogSensorNode, ButtonDigitalInputNode,
+  AnalogSensorNode, ButtonDigitalInputNode, IMUSensorNode,
 } from "./SensorNodes";
 import {
   OLEDDisplayNode, SevenSegNode, MAX7219Node, PlayAnimationNode, ShowImageNode,
@@ -21,6 +21,7 @@ import {
 import {
   ServoMotorNode, ServoMotorAdvanceNode, L298NMotorDriverNode, DCMotorSingleNode,
   MultiMotorControllerNode, ServoControllerNode, MultiServoSequencerNode,
+  RobotDriveNode,
 } from "./MotorNodes";
 import { MapRangeNode, RandomNumberNode } from "./MathNodes";
 import { I2CScannerNode, ServoCalibrationNode } from "./ToolNodes";
@@ -61,6 +62,7 @@ export const NODE_TYPES: NodeTypes = {
   ir_receiver: IRReceiverNode,
   ir_sensor: IRSensorNode,
   four_channel_touch: FourChannelTouchNode,
+  imu_sensor: IMUSensorNode,
   analog_sensor: AnalogSensorNode,
   button_digital_input: ButtonDigitalInputNode,
   oled_display: OLEDDisplayNode,
@@ -69,6 +71,7 @@ export const NODE_TYPES: NodeTypes = {
   play_animation: PlayAnimationNode,
   show_image: ShowImageNode,
   lcd_16x2: LCD16x2Node,
+  robot_drive: RobotDriveNode,
   servo_motor: ServoMotorNode,
   servo_motor_advance: ServoMotorAdvanceNode,
   l298n_motor: L298NMotorDriverNode,
@@ -170,6 +173,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "ir_receiver", label: "IR Receiver", color: "#f97316", previewDot: "#f97316" },
       { type: "ir_sensor", label: "IR Sensor", color: "#f97316", previewDot: "#f97316" },
       { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6" },
+      { type: "imu_sensor", label: "IMU Sensor (MPU6050)", color: "#8b5cf6", previewDot: "#8b5cf6" },
     ],
   },
   {
@@ -202,13 +206,13 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "Motors",
     icon: "⚙️",
     nodes: [
+      { type: "robot_drive", label: "Robot Drive", color: "#f97316", previewDot: "#f97316" },
+      { type: "dc_motor_single", label: "DC Motor (Single)", color: "#f97316", previewDot: "#f97316" },
+      { type: "multi_motor_controller", label: "Multi-Motor Controller", color: "#ef4444", previewDot: "#ef4444" },
       { type: "servo_motor", label: "Servo Motor", color: "#f97316", previewDot: "#f97316" },
-      { type: "servo_motor_advance", label: "Servo Motor Advance", color: "#f97316", previewDot: "#f97316" },
+      { type: "servo_motor_advance", label: "Servo Sweep", color: "#f97316", previewDot: "#f97316" },
       { type: "servo_controller", label: "Servo Controller", color: "#f97316", previewDot: "#f97316" },
       { type: "multi_servo_sequencer", label: "Multi-Servo Sequencer", color: "#8b5cf6", previewDot: "#8b5cf6" },
-      { type: "dc_motor_single", label: "DC Motor (Single)", color: "#f97316", previewDot: "#f97316" },
-      { type: "l298n_motor", label: "L298N Motor Driver", color: "#ef4444", previewDot: "#ef4444" },
-      { type: "multi_motor_controller", label: "Multi-Motor Controller", color: "#ef4444", previewDot: "#ef4444" },
     ],
   },
   {

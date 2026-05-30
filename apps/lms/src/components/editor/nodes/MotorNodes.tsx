@@ -38,6 +38,17 @@ const DIR_OPTIONS = [
   { label: "Coast",   value: "Coast"   },
 ];
 
+const ROBOT_MOVES = [
+  { value: "forward",    label: "Forward",    icon: "↑" },
+  { value: "backward",   label: "Backward",   icon: "↓" },
+  { value: "left",       label: "Turn Left",  icon: "↖" },
+  { value: "right",      label: "Turn Right", icon: "↗" },
+  { value: "spin_left",  label: "Spin Left",  icon: "↺" },
+  { value: "spin_right", label: "Spin Right", icon: "↻" },
+  { value: "stop",       label: "Stop",       icon: "■" },
+] as const;
+type RobotMove = typeof ROBOT_MOVES[number]["value"];
+
 function MotorIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -85,7 +96,6 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
   const [dragging, setDragging] = useState(false);
 
   const CX = 44, CY = 44, R = 34;
-  // Arc spans 210° (from 255° to 465° / -105° to 105° offset from bottom)
   const START_DEG = 225, TOTAL_DEG = 270;
   const pct = (angle - min) / (max - min);
   const angleDeg = START_DEG + pct * TOTAL_DEG;
@@ -105,7 +115,6 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
     onChange(Math.max(min, Math.min(max, v)));
   };
 
-  // Arc path helper
   const arcPath = (fromPct: number, toPct: number, c: string, w = 4) => {
     const a1 = ((START_DEG + fromPct * TOTAL_DEG) * Math.PI) / 180;
     const a2 = ((START_DEG + toPct * TOTAL_DEG) * Math.PI) / 180;
@@ -123,18 +132,13 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
         onMouseUp={() => setDragging(false)}
         onMouseLeave={() => setDragging(false)}
       >
-        {/* Track */}
         {arcPath(0, 1, "#2d2d35", 5)}
-        {/* Fill */}
         {arcPath(0, pct, color, 5)}
-        {/* Knob */}
         <circle cx={knobX} cy={knobY} r={6} fill={color} />
         <circle cx={knobX} cy={knobY} r={3} fill="#0f0f12" />
-        {/* Center readout */}
         <text x={CX} y={CY - 4} textAnchor="middle" fill="white" fontSize={14} fontWeight="bold" fontFamily="monospace">{angle}</text>
         <text x={CX} y={CY + 9} textAnchor="middle" fill="#6b7280" fontSize={8}>degrees</text>
       </svg>
-      {/* Min/Max labels */}
       <div className="flex justify-between w-[88px] px-1">
         <span className="text-[8px] text-zinc-600">{min}°</span>
         <span className="text-[8px] text-zinc-600">{max}°</span>
@@ -143,12 +147,136 @@ function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange 
   );
 }
 
-// ─── DC Motor (Single) ────────────────────────────────────────────────────────
+// ─── Robot Drive ──────────────────────────────────────────────────────────────
+// Beginner-friendly node: pick a move direction + speed, generates DRV8833 code
+// for all 4 motors automatically.
+
+function RobotArrow({ move }: { move: RobotMove }) {
+  // Mini top-view robot diagram showing which wheels spin and which way
+  const W = 80, H = 64;
+  const wheelColor = (side: "L" | "R", fwd: boolean | null) =>
+    fwd === null ? "#3f3f46" : fwd ? "#22c55e" : "#ef4444";
+
+  type WheelState = { L: boolean | null; R: boolean | null };
+  const states: Record<RobotMove, WheelState> = {
+    forward:    { L: true,  R: true  },
+    backward:   { L: false, R: false },
+    left:       { L: null,  R: true  },
+    right:      { L: true,  R: null  },
+    spin_left:  { L: false, R: true  },
+    spin_right: { L: true,  R: false },
+    stop:       { L: null,  R: null  },
+  };
+  const { L, R } = states[move];
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="mx-auto">
+      {/* Body */}
+      <rect x={20} y={14} width={40} height={36} rx={5} fill="#18181b" stroke="#3f3f46" strokeWidth={1.5} />
+      {/* Direction arrow on body */}
+      {move !== "stop" && (
+        <text x={40} y={36} textAnchor="middle" fontSize={18} fill={move.includes("spin") ? "#a78bfa" : "#f97316"}>
+          {ROBOT_MOVES.find(m => m.value === move)?.icon ?? "?"}
+        </text>
+      )}
+      {move === "stop" && (
+        <rect x={32} y={27} width={16} height={11} rx={2} fill="#ef4444" opacity={0.7} />
+      )}
+      {/* Left wheels */}
+      <rect x={8} y={16} width={12} height={8} rx={2} fill={wheelColor("L", L)} />
+      <rect x={8} y={40} width={12} height={8} rx={2} fill={wheelColor("L", L)} />
+      {/* Right wheels */}
+      <rect x={60} y={16} width={12} height={8} rx={2} fill={wheelColor("R", R)} />
+      <rect x={60} y={40} width={12} height={8} rx={2} fill={wheelColor("R", R)} />
+      {/* Wheel direction arrows */}
+      {L !== null && (
+        <>
+          <text x={14} y={15}  textAnchor="middle" fontSize={8} fill={L ? "#22c55e" : "#ef4444"}>{L ? "↑" : "↓"}</text>
+          <text x={14} y={57}  textAnchor="middle" fontSize={8} fill={L ? "#22c55e" : "#ef4444"}>{L ? "↑" : "↓"}</text>
+        </>
+      )}
+      {R !== null && (
+        <>
+          <text x={66} y={15}  textAnchor="middle" fontSize={8} fill={R ? "#22c55e" : "#ef4444"}>{R ? "↑" : "↓"}</text>
+          <text x={66} y={57}  textAnchor="middle" fontSize={8} fill={R ? "#22c55e" : "#ef4444"}>{R ? "↑" : "↓"}</text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+export function RobotDriveNode() {
+  const [move, setMove]   = useNodeField<RobotMove>("move", "forward");
+  const [speed, setSpeed] = useNodeField<number>("speed", 75);
+
+  const current = ROBOT_MOVES.find(m => m.value === move) ?? ROBOT_MOVES[0];
+  const isStop  = move === "stop";
+  const isSpin  = move.includes("spin");
+
+  return (
+    <BaseNode title="Robot Drive" color={COLORS.orange} icon={<MotorIcon />} width="260px">
+      {/* Direction grid */}
+      <div className="px-3 pb-1 pt-0.5">
+        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Direction</span>
+        <div className="grid grid-cols-4 gap-1 mt-1.5">
+          {ROBOT_MOVES.map(m => (
+            <button key={m.value} onClick={() => setMove(m.value)}
+              title={m.label}
+              className={`nodrag py-1.5 rounded-lg border text-sm font-bold transition-all ${
+                move === m.value
+                  ? m.value === "stop"
+                    ? "border-red-500/60 bg-red-500/15 text-red-400"
+                    : m.value.includes("spin")
+                      ? "border-purple-500/60 bg-purple-500/15 text-purple-300"
+                      : "border-orange-500/60 bg-orange-500/15 text-orange-300"
+                  : "border-[#2d2d35] bg-[#111116] text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {m.icon}
+            </button>
+          ))}
+        </div>
+        <div className="text-center mt-1">
+          <span className="text-[10px] font-semibold text-zinc-400">{current.label}</span>
+        </div>
+      </div>
+
+      {/* Robot diagram */}
+      <div className="pb-1">
+        <RobotArrow move={move} />
+      </div>
+
+      {/* Speed */}
+      {!isStop && (
+        <div className="px-3 pb-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+            <span className={`text-[10px] font-mono ${isSpin ? "text-purple-400" : "text-orange-400"}`}>{speed}%</span>
+          </div>
+          <input type="range" min={0} max={100} step={1} value={speed}
+            onChange={e => setSpeed(Number(e.target.value))}
+            className="nodrag w-full h-1 cursor-pointer"
+            style={{ accentColor: isSpin ? "#a78bfa" : COLORS.orange }} />
+        </div>
+      )}
+
+      {/* Hardware info */}
+      <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — all 4 motors</span>
+        <div className="flex gap-3 mt-0.5 flex-wrap">
+          <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-zinc-400 font-mono">left</span></span>
+          <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-zinc-400 font-mono">right</span></span>
+        </div>
+      </div>
+    </BaseNode>
+  );
+}
+
+// ─── DC Motor (Single port) ───────────────────────────────────────────────────
 export function DCMotorSingleNode() {
   const [motorPort, setMotorPort] = useNodeField<MotorKey>("motorPort", "L1");
-  const [speed, setSpeed] = useNodeField<number>("speed", 50);
+  const [speed, setSpeed]         = useNodeField<number>("speed", 50);
   const [direction, setDirection] = useNodeField<string>("direction", "Forward");
-  const [pwmFreq, setPwmFreq] = useNodeField<number>("pwmFreq", 40000);
 
   return (
     <BaseNode title="DC Motor" color={COLORS.orange} icon={<MotorIcon />} width="260px">
@@ -157,7 +285,6 @@ export function DCMotorSingleNode() {
       </NodeField>
       <MotorPinInfo motorKey={motorPort} />
 
-      {/* Speed slider */}
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
@@ -168,24 +295,21 @@ export function DCMotorSingleNode() {
           className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
       </div>
 
-      <NodeField label="Direction">
-        <SelectInput value={direction} onChange={setDirection} compact options={DIR_OPTIONS} />
-      </NodeField>
-
-      {/* PWM frequency */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">PWM Freq</span>
-          <NumberInput value={pwmFreq} onChange={setPwmFreq} />
-        </div>
-        <div className="flex gap-1 flex-wrap mt-1">
-          {[1000, 5000, 20000, 40000].map(v => (
-            <button key={v} onClick={() => setPwmFreq(v)}
-              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all ${
-                pwmFreq === v ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[#2d2d35] text-zinc-500 hover:border-zinc-600 bg-[#111116]"
+      <div className="px-3 pb-2">
+        <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Direction</span>
+        <div className="grid grid-cols-4 gap-1 mt-1">
+          {DIR_OPTIONS.map(d => (
+            <button key={d.value} onClick={() => setDirection(d.value)}
+              className={`nodrag py-1 rounded-lg border text-[9px] font-bold transition-all ${
+                direction === d.value
+                  ? "border-orange-500/60 bg-orange-500/15 text-orange-300"
+                  : "border-[#2d2d35] bg-[#111116] text-zinc-500 hover:border-zinc-600"
               }`}
-            >{v >= 1000 ? `${v / 1000}kHz` : `${v}Hz`}</button>
+            >{d.label[0]}{d.label === "Coast" ? "st" : ""}</button>
           ))}
+        </div>
+        <div className="text-center mt-1">
+          <span className="text-[10px] text-zinc-400 font-semibold">{direction}</span>
         </div>
       </div>
     </BaseNode>
@@ -211,7 +335,6 @@ export function MultiMotorControllerNode() {
   const [leftDir,    setLeftDir]    = useNodeField<string>("leftDir",    "Forward");
   const [rightDir,   setRightDir]   = useNodeField<string>("rightDir",   "Forward");
 
-  // In sync mode motor 1 (L1) settings are mirrored to all
   const motors = syncMode
     ? [{ label: "All Motors (synced)", speed: l1speed, setSpeed: setL1speed, dir: l1dir, setDir: setL1dir }]
     : [
@@ -221,7 +344,9 @@ export function MultiMotorControllerNode() {
         { label: "R2 – Rear Right",  speed: r2speed, setSpeed: setR2speed, dir: r2dir, setDir: setR2dir },
       ];
 
-  const SpeedRow = ({ label, speed, setSpeed, dir, setDir }: { label: string; speed: number; setSpeed: (v: number) => void; dir: string; setDir: (v: string) => void }) => (
+  const SpeedRow = ({ label, speed, setSpeed, dir, setDir }: {
+    label: string; speed: number; setSpeed: (v: number) => void; dir: string; setDir: (v: string) => void;
+  }) => (
     <div className="px-3 pt-1.5">
       <div className="flex items-center justify-between mb-1">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">{label}</span>
@@ -247,31 +372,32 @@ export function MultiMotorControllerNode() {
       <div className="px-3 pt-1 pb-1 flex items-center gap-2">
         <div className="flex-1">
           <NodeField label="Sync all">
-            <ToggleInput value={syncMode} onChange={setSyncMode} leftLabel="Independent" rightLabel="Sync" />
+            <ToggleInput value={syncMode} onChange={setSyncMode} leftLabel="Indep." rightLabel="Sync" />
           </NodeField>
         </div>
         <div className="flex-1">
           <NodeField label="View">
-            <ToggleInput value={pairMode} onChange={setPairMode} leftLabel="4-motor" rightLabel="L/R pair" />
+            <ToggleInput value={pairMode} onChange={setPairMode} leftLabel="4-motor" rightLabel="L/R" />
           </NodeField>
         </div>
       </div>
 
       {pairMode && !syncMode ? (
         <>
-          <SpeedRow label="Left Motors (L1+L2)" speed={leftSpeed} setSpeed={setLeftSpeed} dir={leftDir} setDir={setLeftDir} />
-          <SpeedRow label="Right Motors (R1+R2)" speed={rightSpeed} setSpeed={setRightSpeed} dir={rightDir} setDir={setRightDir} />
+          <SpeedRow label="Left (L1+L2)" speed={leftSpeed} setSpeed={setLeftSpeed} dir={leftDir} setDir={setLeftDir} />
+          <SpeedRow label="Right (R1+R2)" speed={rightSpeed} setSpeed={setRightSpeed} dir={rightDir} setDir={setRightDir} />
         </>
       ) : (
         motors.map(m => <SpeedRow key={m.label} {...m} />)
       )}
 
-      {/* Common driver info */}
-      <div className="mx-3 mt-2 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver config</span>
+      <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
         <div className="flex gap-3 mt-0.5 flex-wrap">
-          <span className="text-[10px] text-zinc-500">L1: PWM<span className="text-zinc-300 font-mono">15</span>/DIR<span className="text-zinc-300 font-mono">16</span></span>
-          <span className="text-[10px] text-zinc-500">R1: PWM<span className="text-zinc-300 font-mono">45</span>/DIR<span className="text-zinc-300 font-mono">46</span></span>
+          <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">15/16</span></span>
+          <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">37/38</span></span>
+          <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">45/46</span></span>
+          <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">17/18</span></span>
         </div>
       </div>
     </BaseNode>
@@ -281,7 +407,7 @@ export function MultiMotorControllerNode() {
 // ─── Servo Motor ──────────────────────────────────────────────────────────────
 export function ServoMotorNode() {
   const [servoPort, setServoPort] = useNodeField<ServoKey>("servoPort", "S1");
-  const [angle, setAngle] = useNodeField<number>("angle", 90);
+  const [angle, setAngle]         = useNodeField<number>("angle", 90);
   return (
     <BaseNode title="Servo Motor" color={COLORS.orange} icon={<MotorIcon />} width="240px">
       <NodeField label="Servo Port">
@@ -297,34 +423,56 @@ export function ServoMotorNode() {
 export function ServoMotorAdvanceNode() {
   const [servoPort, setServoPort] = useNodeField<ServoKey>("servoPort", "S1");
   const [startAngle, setStartAngle] = useNodeField<number>("startAngle", 0);
-  const [endAngle, setEndAngle] = useNodeField<number>("endAngle", 90);
-  const [speed, setSpeed] = useNodeField<number>("speed", 50);
+  const [endAngle, setEndAngle]     = useNodeField<number>("endAngle", 90);
+  const [speed, setSpeed]           = useNodeField<number>("speed", 50);
+  const [steps, setSteps]           = useNodeField<number>("steps", 10);
+
   return (
-    <BaseNode title="Servo Motor Advance" color={COLORS.orange} icon={<MotorIcon />} width="240px">
+    <BaseNode title="Servo Sweep" color={COLORS.orange} icon={<MotorIcon />} width="240px">
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
       <ServoPinInfo servoKey={servoPort} />
-      <NodeField label="Start Angle"><NumberInput value={startAngle} onChange={setStartAngle} /></NodeField>
-      <NodeField label="End Angle"><NumberInput value={endAngle} onChange={setEndAngle} /></NodeField>
-      <NodeField label="Speed (1–100)"><NumberInput value={speed} onChange={setSpeed} /></NodeField>
+
+      {/* Dual dial preview */}
+      <div className="flex px-2 gap-2 pb-1">
+        <div className="flex flex-col items-center flex-1">
+          <span className="text-[9px] text-zinc-500 mb-0.5">Start</span>
+          <AngleDial angle={startAngle} onChange={setStartAngle} max={endAngle} color="#60a5fa" />
+        </div>
+        <div className="flex flex-col items-center flex-1">
+          <span className="text-[9px] text-zinc-500 mb-0.5">End</span>
+          <AngleDial angle={endAngle} onChange={setEndAngle} min={startAngle} color={COLORS.orange} />
+        </div>
+      </div>
+
+      <div className="px-3 pb-1">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+          <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
+        </div>
+        <input type="range" min={1} max={100} step={1} value={speed}
+          onChange={e => setSpeed(Number(e.target.value))}
+          className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
+      </div>
+
+      <NodeField label="Steps"><NumberInput value={steps} onChange={setSteps} /></NodeField>
     </BaseNode>
   );
 }
 
 // ─── Servo Controller ─────────────────────────────────────────────────────────
 export function ServoControllerNode() {
-  const [servoPort, setServoPort] = useNodeField<ServoKey>("servoPort", "S1");
-  const [mode, setMode] = useNodeField<string>("mode", "standard");
-  const [angle, setAngle] = useNodeField<number>("angle", 90);
-  const [sweepMin, setSweepMin] = useNodeField<number>("sweepMin", 0);
-  const [sweepMax, setSweepMax] = useNodeField<number>("sweepMax", 180);
+  const [servoPort, setServoPort]   = useNodeField<ServoKey>("servoPort", "S1");
+  const [mode, setMode]             = useNodeField<string>("mode", "standard");
+  const [angle, setAngle]           = useNodeField<number>("angle", 90);
+  const [sweepMin, setSweepMin]     = useNodeField<number>("sweepMin", 0);
+  const [sweepMax, setSweepMax]     = useNodeField<number>("sweepMax", 180);
   const [sweepPeriod, setSweepPeriod] = useNodeField<number>("sweepPeriod", 1000);
-  const [contSpeed, setContSpeed] = useNodeField<number>("contSpeed", 50);
-  const [pulseMin, setPulseMin] = useNodeField<number>("pulseMin", 600);
-  const [pulseMax, setPulseMax] = useNodeField<number>("pulseMax", 2400);
+  const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 50);
+  const [pulseMin, setPulseMin]     = useNodeField<number>("pulseMin", 600);
+  const [pulseMax, setPulseMax]     = useNodeField<number>("pulseMax", 2400);
 
-  // Pulse width for current angle (for fine-tuning readout)
   const pulseUs = Math.round(pulseMin + (angle / 180) * (pulseMax - pulseMin));
 
   return (
@@ -346,32 +494,29 @@ export function ServoControllerNode() {
       {mode === "standard" && (
         <>
           <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />
-          {/* Pulse width readout */}
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] flex items-center justify-between">
-            <span className="text-[9px] text-zinc-500">Pulse width at {angle}°</span>
+            <span className="text-[9px] text-zinc-500">Pulse @ {angle}°</span>
             <span className="text-[10px] font-mono text-orange-400">{pulseUs} µs</span>
           </div>
         </>
       )}
 
       {mode === "continuous" && (
-        <>
-          <div className="px-3 py-1">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
-              <span className="text-[10px] font-mono text-orange-400">
-                {contSpeed === 0 ? "STOP" : contSpeed > 0 ? `+${contSpeed}%` : `${contSpeed}%`}
-              </span>
-            </div>
-            <input type="range" min={-100} max={100} step={5} value={contSpeed}
-              onChange={e => setContSpeed(Number(e.target.value))}
-              className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
-            <div className="flex justify-between mt-0.5">
-              <span className="text-[8px] text-zinc-600">← Reverse</span>
-              <span className="text-[8px] text-zinc-600">Forward →</span>
-            </div>
+        <div className="px-3 py-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+            <span className="text-[10px] font-mono text-orange-400">
+              {contSpeed === 0 ? "STOP" : contSpeed > 0 ? `+${contSpeed}%` : `${contSpeed}%`}
+            </span>
           </div>
-        </>
+          <input type="range" min={-100} max={100} step={5} value={contSpeed}
+            onChange={e => setContSpeed(Number(e.target.value))}
+            className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
+          <div className="flex justify-between mt-0.5">
+            <span className="text-[8px] text-zinc-600">← Reverse</span>
+            <span className="text-[8px] text-zinc-600">Forward →</span>
+          </div>
+        </div>
       )}
 
       {mode === "sweep" && (
@@ -390,7 +535,6 @@ export function ServoControllerNode() {
         </>
       )}
 
-      {/* Pulse width fine-tune */}
       <div className="px-3 pt-1 pb-0.5">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Pulse Width Fine-tune</span>
       </div>
@@ -424,7 +568,7 @@ export function MultiServoSequencerNode() {
   const [s2port, setS2port] = useNodeField<ServoKey>("s2port", "S2");
   const [s3port, setS3port] = useNodeField<ServoKey>("s3port", "S3");
   const [keyframeDelay, setKeyframeDelay] = useNodeField<number>("keyframeDelay", 500);
-  const [loop, setLoop] = useNodeField<boolean>("loop", true);
+  const [loop, setLoop]   = useNodeField<boolean>("loop", true);
   const [keyframes, setKeyframes] = useNodeField<Keyframe[]>("keyframes", defaultKeyframes());
 
   const [playing, setPlaying] = useState(false);
@@ -469,7 +613,6 @@ export function MultiServoSequencerNode() {
 
   return (
     <BaseNode title="Multi-Servo Sequencer" color={COLORS.purple} icon={<MotorIcon />} width="290px">
-      {/* Port selectors */}
       {([s1port, s2port, s3port] as ServoKey[]).map((p, i) => {
         const setters = [setS1port, setS2port, setS3port];
         return (
@@ -485,12 +628,10 @@ export function MultiServoSequencerNode() {
       <NodeField label="Step delay (ms)"><NumberInput value={keyframeDelay} onChange={setKeyframeDelay} /></NodeField>
       <NodeField label="Playback"><ToggleInput value={loop} onChange={setLoop} leftLabel="One-shot" rightLabel="Loop" /></NodeField>
 
-      {/* Timeline */}
       <div className="px-3 pt-2 pb-0.5">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Timeline ({keyframes.length} keyframes · {totalDuration}ms)</span>
       </div>
 
-      {/* Visual timeline bar */}
       <div className="px-3 pb-1">
         <div className="relative h-6 rounded-lg bg-[#0a0a0d] border border-[#2d2d35] overflow-hidden">
           {keyframes.map((kf, i) => {
@@ -510,7 +651,6 @@ export function MultiServoSequencerNode() {
         </div>
       </div>
 
-      {/* Keyframe editor rows */}
       <div className="max-h-48 overflow-y-auto px-3 flex flex-col gap-1.5 pb-1">
         {keyframes.map((kf, kfIdx) => (
           <div key={kfIdx} className={`rounded-lg border p-2 transition-all ${playing && kfIdx === playIdx ? "border-purple-500/60 bg-purple-500/5" : "border-[#2d2d35] bg-[#0d0d10]"}`}>
@@ -535,18 +675,15 @@ export function MultiServoSequencerNode() {
         ))}
       </div>
 
-      {/* Playback preview — shows current angles as mini dials */}
       <div className="px-3 pb-1 pt-0.5">
         <div className="rounded-lg border border-[#2d2d35] bg-[#0a0a0d] p-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Preview</span>
-            <div className="flex gap-1.5">
-              <button onClick={playing ? stopPlay : startPlay}
-                className={`nodrag px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                  playing ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-purple-500/40 text-purple-400 bg-purple-500/10"
-                }`}
-              >{playing ? "⏹ Stop" : "▶ Play"}</button>
-            </div>
+            <button onClick={playing ? stopPlay : startPlay}
+              className={`nodrag px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                playing ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-purple-500/40 text-purple-400 bg-purple-500/10"
+              }`}
+            >{playing ? "⏹ Stop" : "▶ Play"}</button>
           </div>
           <div className="flex justify-around">
             {currentAngles.map((a, i) => {
@@ -575,7 +712,6 @@ export function MultiServoSequencerNode() {
         </div>
       </div>
 
-      {/* Add keyframe + export */}
       <div className="px-3 pb-2 flex gap-2">
         <button onClick={addKeyframe}
           className="nodrag flex-1 py-1 rounded-lg border border-purple-500/40 text-purple-400 text-[10px] font-bold hover:bg-purple-500/10 transition-all">
@@ -596,7 +732,6 @@ export function MultiServoSequencerNode() {
 
 // ─── Servo Calibration ────────────────────────────────────────────────────────
 export function ServoCalibrationNode() {
-  // Read all nodes on the canvas to find servo controllers
   const allNodes = useNodes();
   const servoNodes = allNodes.filter(n =>
     n.type === "servo_motor" || n.type === "servo_motor_advance" || n.type === "servo_controller"
@@ -633,8 +768,6 @@ export function ServoCalibrationNode() {
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
       </svg>
     } width="280px">
-
-      {/* Canvas servo count */}
       <div className="mx-3 mb-2 px-2.5 py-2 rounded-lg border border-[#2d2d35] bg-[#111116]">
         <div className="flex items-center justify-between">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Canvas Servo Nodes</span>
@@ -645,7 +778,6 @@ export function ServoCalibrationNode() {
         )}
       </div>
 
-      {/* Center all button */}
       <div className="px-3 pb-2">
         <button onClick={centerAll}
           className={`nodrag w-full py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
@@ -654,15 +786,10 @@ export function ServoCalibrationNode() {
               : "border-cyan-500/40 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20"
           }`}
         >
-          {centered ? (
-            <><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg> All Centered!</>
-          ) : (
-            <><svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Center All Servos (90°)</>
-          )}
+          {centered ? "✓ All Centered!" : "Center All Servos (90°)"}
         </button>
       </div>
 
-      {/* Per-servo override */}
       {servoNodes.length > 0 && (
         <>
           <div className="px-3 pb-0.5">
@@ -691,7 +818,6 @@ export function ServoCalibrationNode() {
         </>
       )}
 
-      {/* Compile-time only notice */}
       <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
         <p className="text-[9px] text-amber-400/80">Compile-time utility only — does not generate runtime code.</p>
       </div>
@@ -699,13 +825,13 @@ export function ServoCalibrationNode() {
   );
 }
 
-// ─── L298N Motor Driver (legacy) ──────────────────────────────────────────────
+// ─── L298N Motor Driver (deprecated — kept for backward compat) ───────────────
 export function L298NMotorDriverNode() {
   const [direction, setDirection] = useNodeField<string>("direction", "Forward");
   return (
     <BaseNode title="L298N Motor Driver" color={COLORS.red} icon={<MotorIcon />} width="220px">
       <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
-        <p className="text-[10px] text-amber-400">Use "Multi-Motor Controller" for the Kokoon board's 2× DRV8833 setup.</p>
+        <p className="text-[10px] text-amber-400">⚠️ Deprecated — use Multi-Motor Controller (DRV8833) instead.</p>
       </div>
       <NodeField label="Direction">
         <SelectInput value={direction} onChange={setDirection} compact

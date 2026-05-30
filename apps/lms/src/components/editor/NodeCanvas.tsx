@@ -25,6 +25,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { NODE_TYPES } from "./nodes";
 import { generatePythonFromFlow } from "@/lib/nodeCodegen";
+import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/lib/customNodes";
 
 export interface NodeCanvasRef {
   getCode: () => string;
@@ -89,14 +90,12 @@ function NodeCanvasInner({
     const customRaw = e.dataTransfer.getData("application/reactflow-custom-node");
     if (customRaw) {
       try {
-        const template = JSON.parse(customRaw) as { sourceType: string; data: Record<string, unknown>; label: string };
-        if (allowedNodeTypes && !allowedNodeTypes.includes(template.sourceType)) return;
-        setNodes((nds) => nds.concat({
-          id: getId(),
-          type: template.sourceType,
-          position,
-          data: { ...template.data, label: template.data?.label ?? template.label },
-        }));
+        const template = JSON.parse(customRaw) as CustomNodeTemplate;
+        const allowedNodeTypeSet = allowedNodeTypes ? new Set(allowedNodeTypes) : undefined;
+        if (!isCustomNodeTemplateAllowed(template, allowedNodeTypeSet)) return;
+        const instanced = instantiateCustomNodeTemplate(template, position);
+        setNodes((nds) => nds.concat(instanced.nodes as Node[]));
+        setEdges((eds) => eds.concat(instanced.edges as Edge[]));
         return;
       } catch {
         return;

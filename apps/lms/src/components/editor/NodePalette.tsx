@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
+import { PencilLine, Trash2 } from "lucide-react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "./nodes";
-import { useCustomNodes, type CustomNodeTemplate } from "@/lib/customNodes";
+import { useCustomNodes, type CustomNodeTemplate, isCustomNodeTemplateAllowed } from "@/lib/customNodes";
 
 function SearchIcon() {
   return (
@@ -42,7 +43,15 @@ function NodeItem({ node }: { node: NodeDef }) {
   );
 }
 
-function CustomNodeItem({ node }: { node: CustomNodeTemplate }) {
+function CustomNodeItem({
+  node,
+  onRename,
+  onDelete,
+}: {
+  node: CustomNodeTemplate;
+  onRename: (node: CustomNodeTemplate) => void;
+  onDelete: (node: CustomNodeTemplate) => void;
+}) {
   const onDragStart = useCallback((e: React.DragEvent) => {
     e.dataTransfer.setData("application/reactflow-custom-node", JSON.stringify(node));
     e.dataTransfer.effectAllowed = "move";
@@ -61,8 +70,34 @@ function CustomNodeItem({ node }: { node: CustomNodeTemplate }) {
           {node.label}
         </span>
         <span className="block text-[10px] uppercase tracking-[0.16em] text-[#52525b] truncate">
-          {node.sourceType}
+          {node.sourceType} · {node.nodes.length} block{node.nodes.length !== 1 ? "s" : ""}
         </span>
+      </div>
+      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <button
+          type="button"
+          title="Rename custom node"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRename(node);
+          }}
+          className="p-1 rounded hover:bg-white/5 text-[#9ca3af] hover:text-white"
+        >
+          <PencilLine className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          title="Delete custom node"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDelete(node);
+          }}
+          className="p-1 rounded hover:bg-white/5 text-[#9ca3af] hover:text-rose-400"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   );
@@ -113,7 +148,7 @@ export function NodePalette({
   allowedNodeTypes?: string[];
 }) {
   const [search, setSearch] = useState("");
-  const { customNodes } = useCustomNodes();
+  const { customNodes, updateCustomNodeLabel, removeCustomNode } = useCustomNodes();
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(() => {
     const firstAllowed = NODE_CATEGORIES.find((category) => !allowedCategories || allowedCategories.includes(category.id));
     return firstAllowed?.id ?? null;
@@ -124,7 +159,7 @@ export function NodePalette({
   const visibleCustomNodes = useMemo(() => {
     const trimmedSearch = search.trim().toLowerCase();
     return customNodes.filter((node) => {
-      if (allowedNodeTypeSet && !allowedNodeTypeSet.has(node.sourceType)) return false;
+      if (!isCustomNodeTemplateAllowed(node, allowedNodeTypeSet ?? undefined)) return false;
       if (!trimmedSearch) return true;
       return node.label.toLowerCase().includes(trimmedSearch) || node.sourceType.toLowerCase().includes(trimmedSearch);
     });
@@ -179,7 +214,21 @@ export function NodePalette({
           </div>
           <div className="mt-1 grid grid-cols-1 gap-1">
             {visibleCustomNodes.length > 0 ? (
-              visibleCustomNodes.map((node) => <CustomNodeItem key={node.id} node={node} />)
+              visibleCustomNodes.map((node) => (
+                <CustomNodeItem
+                  key={node.id}
+                  node={node}
+                  onRename={(target) => {
+                    const nextLabel = window.prompt("Rename custom node", target.label)?.trim();
+                    if (!nextLabel) return;
+                    updateCustomNodeLabel(target.id, nextLabel);
+                  }}
+                  onDelete={(target) => {
+                    if (!window.confirm(`Delete ${target.label}?`)) return;
+                    removeCustomNode(target.id);
+                  }}
+                />
+              ))
             ) : (
               <div className="px-3 py-3 text-xs text-[#6b7280]">
                 Save any node to reuse it here.

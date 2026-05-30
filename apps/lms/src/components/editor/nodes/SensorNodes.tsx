@@ -441,5 +441,53 @@ export function FourChannelTouchNode() {
   );
 }
 
+// ─── IMU Sensor (MPU6050) — SCL=42, SDA=41 ────────────────────────────────────
+export function IMUSensorNode() {
+  const [varName, setVarName] = useNodeField<string>("varName", "imu");
+  const [outputMode, setOutputMode] = useNodeField<string>("outputMode", "print");
+  const [loopDelay, setLoopDelay]   = useNodeField<number>("loopDelay", 100);
+
+  return (
+    <BaseNode title="IMU Sensor (MPU6050)" color={COLORS.purple} icon={<SensorIcon />} width="260px">
+      {/* Fixed I2C pin info */}
+      <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">SoftI2C — fixed GPIO</span>
+          <span className="text-[9px] font-mono text-purple-400">locked</span>
+        </div>
+        <div className="flex gap-4 mt-0.5">
+          <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">42</span></span>
+          <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">41</span></span>
+          <span className="text-[10px] text-zinc-500">Addr <span className="text-zinc-300 font-mono">0x68</span></span>
+        </div>
+      </div>
+
+      <NodeField label="Variable Name">
+        <TextInput value={varName} onChange={setVarName} />
+      </NodeField>
+
+      <NodeField label="Output Mode">
+        <SelectInput value={outputMode} onChange={setOutputMode} compact options={[
+          { label: "Print (for IMU Visualizer)", value: "print" },
+          { label: "Store in variables",         value: "store"  },
+          { label: "Both",                       value: "both"   },
+        ]} />
+      </NodeField>
+
+      <NodeField label="Loop Delay (ms)">
+        <NumberInput value={loopDelay} onChange={setLoopDelay} />
+      </NodeField>
+
+      {/* Format hint */}
+      <div className="mx-3 mb-2 px-2 py-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5">
+        <p className="text-[9px] text-purple-400/80 font-mono">
+          MPU6050,ax,ay,az,gx,gy,gz,pitch,roll
+        </p>
+        <p className="text-[8px] text-zinc-600 mt-0.5">→ open IMU Visualizer to see live 3D view</p>
+      </div>
+    </BaseNode>
+  );
+}
+
 // ─── Analog Sensor (legacy alias for old nodes type) ─────────────────────────
 export { AnalogSensorNode as AnalogSensor };
