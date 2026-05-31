@@ -51,6 +51,15 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   },
   // ── Sensor ───────────────────────────────────────────────────────────────────
   {
+    id: "lsm6ds3",
+    name: "lsm6ds3.py",
+    description: "LSM6DS3 onboard 6-axis IMU — Kakoon ESP32-S3 (SCL=42, SDA=41)",
+    trigger: "lsm6ds3",
+    path: "/libs/lsm6ds3.py",
+    category: "Sensor",
+    size: "2 KB",
+  },
+  {
     id: "mpu6050",
     name: "mpu6050.py",
     description: "MPU6050 6-axis IMU (accelerometer + gyroscope) — I2C",

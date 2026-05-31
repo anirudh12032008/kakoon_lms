@@ -2,7 +2,7 @@
  * DataViz — floating real-time data visualisation panels
  *
  * Parses ESP32 serial output lines (from the logs[] array) looking for:
- *   IMU:      "MPU6050,ax,ay,az,gx,gy,gz,pitch,roll"
+ *   IMU:      "IMU,ax,ay,az,gx,gy,gz,pitch,roll"
  *   Sensor:   "SENSOR,type,label,value"   (type = analog|digital|angle|raw)
  *   Radar:    "RADAR,angle,distance"  or  "SERVO,angle,distance"
  *
@@ -108,6 +108,19 @@ interface IMUData {
   ax: number; ay: number; az: number;
   gx: number; gy: number; gz: number;
   pitch: number; roll: number;
+}
+
+function parseImuSample(line: string): IMUData | null {
+  const raw = stripLogPrefix(line);
+  // Accept "IMU,..." or legacy "MPU6050,..."
+  const match = raw.match(/(?:IMU|MPU6050|LSM6DS3),(.+)/);
+  if (!match) return null;
+  const parts = match[1].split(",");
+  if (parts.length < 8) return null;
+  const values = parts.slice(0, 8).map(Number);
+  if (values.some(isNaN)) return null;
+  const [ax, ay, az, gx, gy, gz, pitch, roll] = values;
+  return { ax, ay, az, gx, gy, gz, pitch, roll };
 }
 
 // ─── 3D Cube (pure SVG, isometric projection) ─────────────────────────────────
@@ -383,63 +396,50 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
   const [history, setHistory] = useState<IMUData[]>([]);
   const [latest, setLatest] = useState<IMUData | null>(null);
   const [tab, setTab] = useState<"3d" | "horizon" | "graphs">("3d");
-
-  // Demo animation when no real data
-  const animRef = useRef<number>(0);
-  const [demo, setDemo] = useState<IMUData>({ ax:0, ay:0, az:1, gx:0, gy:0, gz:0, pitch:0, roll:0 });
-  const demoT = useRef(0);
+  const prevLenRef = useRef(0);
 
   useEffect(() => {
-    const last = [...logs].reverse().find(l => stripLogPrefix(l).startsWith("MPU6050,"));
-    if (!last) return;
-    const raw = stripLogPrefix(last);
-    const parts = raw.split(",");
-    if (parts.length < 9) return;
-    const [, ax, ay, az, gx, gy, gz, pitch, roll] = parts.map((v, i) => i === 0 ? 0 : parseFloat(v));
-    const entry: IMUData = { ax, ay, az, gx, gy, gz, pitch, roll };
-    setLatest(entry);
-    setHistory(prev => [...prev.slice(-(IMU_MAX - 1)), entry]);
+    const prev = prevLenRef.current;
+    const cur  = logs.length;
+    prevLenRef.current = cur;
+
+    // Which lines are actually new?
+    // • cur > prev  → normal growth, slice from prev
+    // • cur === prev && cur > 0 → cap (100) hit: array shifted, last entry is new
+    // • cur < prev  → logs were cleared, nothing to do
+    const toProcess: string[] =
+      cur > prev  ? logs.slice(prev) :
+      cur === prev && cur > 0 ? [logs[cur - 1]] :
+      [];
+
+    for (const line of toProcess) {
+      const entry = parseImuSample(line);
+      if (!entry) continue;
+      setLatest(entry);
+      setHistory(h => [...h.slice(-(IMU_MAX - 1)), entry]);
+    }
   }, [logs]);
 
-  // Gentle idle animation when no live data
-  useEffect(() => {
-    if (latest) return;
-    const tick = () => {
-      demoT.current += 0.012;
-      const t = demoT.current;
-      setDemo({
-        ax: Math.sin(t * 0.7) * 0.3,
-        ay: Math.cos(t * 0.5) * 0.2,
-        az: 1 + Math.sin(t * 1.1) * 0.05,
-        gx: Math.sin(t * 1.3) * 15,
-        gy: Math.cos(t * 0.9) * 20,
-        gz: Math.sin(t * 0.6) * 10,
-        pitch: Math.sin(t * 0.4) * 18,
-        roll:  Math.cos(t * 0.3) * 22,
-      });
-      animRef.current = requestAnimationFrame(tick);
-    };
-    animRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [latest]);
+  const clearHistory = () => { setHistory([]); setLatest(null); };
 
-  const data = latest ?? demo;
+  const placeholder: IMUData = { ax: 0, ay: 0, az: 1, gx: 0, gy: 0, gz: 0, pitch: 0, roll: 0 };
+  const data = latest ?? placeholder;
   const isLive = !!latest;
 
   const gTotal = Math.sqrt(data.ax**2 + data.ay**2 + data.az**2);
   const gyroTotal = Math.sqrt(data.gx**2 + data.gy**2 + data.gz**2);
 
   return (
-    <PanelShell title="IMU Visualizer — Onboard MPU6050" icon={<Activity className="w-4 h-4" />}
+    <PanelShell title="IMU — LSM6DS3 Onboard" icon={<Activity className="w-4 h-4" />}
       color="#8b5cf6" onClose={onClose} initialPos={{ x: 24, y: 80 }} width={400}>
 
-      {/* Live / Demo badge */}
+      {/* Toolbar: live badge + tabs + refresh */}
       <div className="flex items-center gap-2 px-3 py-1.5 border-b border-[#1a1a24]">
-        <div className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-green-400 shadow-[0_0_4px_#22c55e]" : "bg-amber-500"} animate-pulse`} />
-        <span className={`text-[9px] font-bold ${isLive ? "text-green-400" : "text-amber-500"}`}>
-          {isLive ? "LIVE DATA" : "DEMO MODE"}
-        </span>
-        {!isLive && <span className="text-[9px] text-zinc-600">→ run the onboard MPU6050 node to see real data</span>}
+        <div className={`w-1.5 h-1.5 rounded-full ${isLive ? "bg-green-400 shadow-[0_0_4px_#22c55e]" : "bg-amber-500"} animate-pulse flex-shrink-0`} />
+        {isLive
+          ? <span className="text-[9px] font-bold text-green-400">LIVE  ·  {history.length} pts</span>
+          : <span className="text-[9px] text-zinc-600">Waiting for LSM6DS3 telemetry…</span>
+        }
 
         {/* Tab switcher */}
         <div className="ml-auto flex gap-1">
@@ -452,6 +452,13 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
             </button>
           ))}
         </div>
+
+        {/* Refresh / clear button */}
+        <button
+          onClick={clearHistory}
+          title="Clear history"
+          className="ml-1 px-2 py-0.5 rounded border border-[#2d2d35] text-[9px] font-bold text-zinc-500 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-all"
+        >↺</button>
       </div>
 
       <div className="p-3 space-y-3">
@@ -479,7 +486,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
                 <span className="text-[9px] font-mono text-zinc-600">{history.length} samples</span>
               </div>
               <div className="flex justify-center">
-                <MotionTrail history={isLive ? history : [demo]} />
+                <MotionTrail history={history} />
               </div>
             </div>
 
@@ -588,8 +595,9 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
         )}
 
         {!isLive && (
-          <div className="text-center py-1 text-[9px] text-zinc-600 border border-dashed border-[#1e1e26] rounded-xl">
-            Output: <code className="text-violet-400 font-mono">print(f"MPU6050,{"{ax},{ay},{az},{gx},{gy},{gz},{pitch},{roll}"}")</code>
+          <div className="text-center py-2 text-[9px] text-zinc-600 border border-dashed border-[#1e1e26] rounded-xl space-y-1">
+            <p>Add an <span className="text-violet-400 font-bold">IMU Sensor</span> node inside a Forever Loop and run it.</p>
+            <p className="font-mono text-[8px] text-zinc-700">Expected: <span className="text-violet-400">IMU,ax,ay,az,gx,gy,gz,pitch,roll</span></p>
           </div>
         )}
       </div>

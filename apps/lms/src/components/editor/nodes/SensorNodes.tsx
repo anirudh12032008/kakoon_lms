@@ -438,14 +438,14 @@ export function FourChannelTouchNode() {
   );
 }
 
-// ─── Onboard IMU (MPU6050) — SCL=42, SDA=41 ──────────────────────────────────
+// ─── Onboard IMU — SCL=42, SDA=41 ────────────────────────────────────────────
 export function IMUSensorNode() {
   const [varName, setVarName] = useNodeField<string>("varName", "imu");
   const [outputMode, setOutputMode] = useNodeField<string>("outputMode", "print");
   const [loopDelay, setLoopDelay]   = useNodeField<number>("loopDelay", 100);
 
   return (
-    <BaseNode title="Onboard IMU (MPU6050)" color={COLORS.purple} icon={<SensorIcon />} width="260px">
+    <BaseNode title="Onboard IMU" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       {/* Fixed I2C pin info */}
       <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
         <div className="flex items-center justify-between">
@@ -478,7 +478,7 @@ export function IMUSensorNode() {
       {/* Format hint */}
       <div className="mx-3 mb-2 px-2 py-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5">
         <p className="text-[9px] text-purple-400/80 font-mono">
-          MPU6050,ax,ay,az,gx,gy,gz,pitch,roll
+          IMU,ax,ay,az,gx,gy,gz,pitch,roll
         </p>
         <p className="text-[8px] text-zinc-600 mt-0.5">→ open IMU Visualizer to see live onboard data</p>
       </div>

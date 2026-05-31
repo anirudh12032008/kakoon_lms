@@ -314,25 +314,29 @@ rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear,
         imports.add("from machine import Pin");
         chunkLines.push(`${indent}pin_${d.pin ?? 4}.value(${d.value ? 1 : 0})`);
         break;
-      case "pin_read":
-        imports.add("from machine import Pin");
-        chunkLines.push(`${indent}${d.varName ?? "value"} = pin_${d.pin ?? 4}.value()`);
+      case "imu_sensor":
+      case "onboard_imu": {
+        imports.add("from machine import SoftI2C, Pin");
+        imports.add("from lsm6ds3 import LSM6DS3");
+        imports.add("import time, math");
+        emitOnce("imu_setup", `# LSM6DS3 onboard IMU — SCL=42 SDA=41
+_i2c_imu = SoftI2C(scl=Pin(42), sda=Pin(41))
+_imu = LSM6DS3(_i2c_imu)
+time.sleep(0.1)`);
+        const vn   = d.varName    ?? "imu";
+        const mode = d.outputMode ?? "print";
+        chunkLines.push(`${indent}${vn}_ax, ${vn}_ay, ${vn}_az = _imu.accel()`);
+        chunkLines.push(`${indent}${vn}_gx, ${vn}_gy, ${vn}_gz = _imu.gyro()`);
+        chunkLines.push(`${indent}${vn}_pitch = math.atan2(${vn}_ay, math.sqrt(${vn}_ax**2 + ${vn}_az**2)) * 57.2958`);
+        chunkLines.push(`${indent}${vn}_roll  = math.atan2(-${vn}_ax, ${vn}_az) * 57.2958`);
+        if (mode === "print" || mode === "both") {
+          chunkLines.push(`${indent}print(f"IMU,{${vn}_ax:.3f},{${vn}_ay:.3f},{${vn}_az:.3f},{${vn}_gx:.1f},{${vn}_gy:.1f},{${vn}_gz:.1f},{${vn}_pitch:.1f},{${vn}_roll:.1f}")`);
+        }
+        if (d.loopDelay && d.loopDelay > 0) {
+          chunkLines.push(`${indent}time.sleep_ms(${d.loopDelay ?? 100})`);
+        }
         break;
-      case "pwm":
-        imports.add("from machine import Pin, PWM");
-        setupLines.push(`pwm_${d.pin ?? 2} = PWM(Pin(${d.pin ?? 2}), freq=${d.freq ?? 1000})`);
-        chunkLines.push(`${indent}pwm_${d.pin ?? 2}.duty(${d.duty ?? 512})`);
-        break;
-      case "adc":
-        imports.add("from machine import ADC, Pin");
-        setupLines.push(`adc_${d.pin ?? 34} = ADC(Pin(${d.pin ?? 34}))`);
-        chunkLines.push(`${indent}${d.varName ?? "value"} = adc_${d.pin ?? 34}.read_u16()`);
-        break;
-      case "push_button":
-        imports.add("from machine import Pin");
-        setupLines.push(`btn_${d.pin ?? 4} = Pin(${d.pin ?? 4}, Pin.IN)`);
-        chunkLines.push(`${indent}${d.varName ?? "value"} = btn_${d.pin ?? 4}.value()`);
-        break;
+      }
       case "buzzer_tone":
         imports.add("from machine import Pin, PWM");
         imports.add("import time");
@@ -472,34 +476,6 @@ rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear,
         break;
 
       // ─── Sensor ────────────────────────────────────────────────────────────
-      case "imu_sensor":
-      case "onboard_imu": {
-        // MPU6050 on SoftI2C SCL=42, SDA=41
-        imports.add("from machine import SoftI2C, Pin");
-        imports.add("import time, math, struct");
-        emitOnce("imu_setup", `# MPU6050 IMU — SCL=42 SDA=41
-_i2c_imu = SoftI2C(scl=Pin(42), sda=Pin(41))
-_i2c_imu.writeto_mem(0x68, 0x6B, b'\\x00')  # wake up
-def _imu_read():
-    raw = _i2c_imu.readfrom_mem(0x68, 0x3B, 14)
-    ax,ay,az,_,gx,gy,gz = struct.unpack('>7h', raw)
-    ax/=16384.0; ay/=16384.0; az/=16384.0
-    gx/=131.0;  gy/=131.0;  gz/=131.0
-    pitch = math.atan2(ay, math.sqrt(ax*ax+az*az)) * 57.2958
-    roll  = math.atan2(-ax, az) * 57.2958
-    return ax,ay,az,gx,gy,gz,pitch,roll`);
-        const vn = d.varName ?? "imu";
-        const mode = d.outputMode ?? "print";
-        chunkLines.push(`${indent}${vn}_ax,${vn}_ay,${vn}_az,${vn}_gx,${vn}_gy,${vn}_gz,${vn}_pitch,${vn}_roll = _imu_read()`);
-        if (mode === "print" || mode === "both") {
-          chunkLines.push(`${indent}print(f"MPU6050,{${vn}_ax:.3f},{${vn}_ay:.3f},{${vn}_az:.3f},{${vn}_gx:.1f},{${vn}_gy:.1f},{${vn}_gz:.1f},{${vn}_pitch:.1f},{${vn}_roll:.1f}")`);
-        }
-        if (d.loopDelay && d.loopDelay > 0) {
-          chunkLines.push(`${indent}time.sleep_ms(${d.loopDelay ?? 100})`);
-        }
-        break;
-      }
-
       case "ultrasonic":
         imports.add("from machine import Pin");
         imports.add("import time");
