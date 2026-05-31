@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { PencilLine, Trash2 } from "lucide-react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "./nodes";
 import { useCustomNodes, type CustomNodeTemplate, isCustomNodeTemplateAllowed } from "@/lib/customNodes";
+import { useModal } from "@/context/ModalContext";
 
 function SearchIcon() {
   return (
@@ -149,6 +150,7 @@ export function NodePalette({
 }) {
   const [search, setSearch] = useState("");
   const { customNodes, updateCustomNodeLabel, removeCustomNode } = useCustomNodes();
+  const { confirm, prompt } = useModal();
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(() => {
     const firstAllowed = NODE_CATEGORIES.find((category) => !allowedCategories || allowedCategories.includes(category.id));
     return firstAllowed?.id ?? null;
@@ -218,13 +220,13 @@ export function NodePalette({
                 <CustomNodeItem
                   key={node.id}
                   node={node}
-                  onRename={(target) => {
-                    const nextLabel = window.prompt("Rename custom node", target.label)?.trim();
+                  onRename={async (target) => {
+                    const nextLabel = await prompt("Rename custom node", target.label);
                     if (!nextLabel) return;
                     updateCustomNodeLabel(target.id, nextLabel);
                   }}
-                  onDelete={(target) => {
-                    if (!window.confirm(`Delete ${target.label}?`)) return;
+                  onDelete={async (target) => {
+                    if (!await confirm(`Delete "${target.label}"?`)) return;
                     removeCustomNode(target.id);
                   }}
                 />

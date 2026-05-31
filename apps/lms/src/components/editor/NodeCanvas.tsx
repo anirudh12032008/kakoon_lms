@@ -32,7 +32,7 @@ export interface NodeCanvasRef {
   getWorkspace: () => { nodes: Node[]; edges: Edge[] };
   setWorkspace: (workspace: { nodes: Node[]; edges: Edge[] }) => void;
   addNode: (type: string, data?: Record<string, unknown>) => void;
-  getRequiredLibraries: () => any[];
+  getRequiredLibraries: () => string[];
 }
 
 interface NodeCanvasProps {
@@ -43,8 +43,7 @@ interface NodeCanvasProps {
   allowedNodeTypes?: string[];
 }
 
-let nodeIdCounter = 1;
-const getId = () => `node_${nodeIdCounter++}`;
+const getId = () => `node_${crypto.randomUUID().slice(0, 8)}`;
 
 function NodeCanvasInner({
   onCodeChange,
@@ -133,7 +132,20 @@ function NodeCanvasInner({
         { id: getId(), type, position, data: { label: type, ...data } },
       ]);
     },
-    getRequiredLibraries: () => [],
+    getRequiredLibraries: () => {
+      const code = generatePythonFromFlow(nodes, edges);
+      // Scan import statements for known third-party MicroPython libraries
+      const THIRD_PARTY = ["ssd1306", "mpu6050", "ds18x20", "onewire", "umqtt", "neopixel", "bme280", "vl53l0x", "ads1x15"];
+      const found = new Set<string>();
+      for (const line of code.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith("import") && !trimmed.startsWith("from")) continue;
+        for (const lib of THIRD_PARTY) {
+          if (trimmed.includes(lib)) found.add(lib);
+        }
+      }
+      return Array.from(found);
+    },
   }));
 
   return (

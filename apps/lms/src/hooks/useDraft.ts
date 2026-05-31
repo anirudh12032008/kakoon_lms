@@ -36,13 +36,14 @@ export function useDraft({
         if (draft.isEditing) setIsEditing(draft.isEditing);
         if (draft.generatedCode) setGeneratedCode(draft.generatedCode);
         if (draft.flowData) {
-          const check = setInterval(() => {
-            if (canvasRef.current) {
-              clearInterval(check);
-              try { canvasRef.current.setWorkspace(JSON.parse(draft.flowData)); } catch { }
-            }
-          }, 100);
-          setTimeout(() => clearInterval(check), 5000);
+          try {
+            const workspace = JSON.parse(draft.flowData);
+            // Canvas ref is populated during the same commit; one rAF is
+            // enough for ReactFlow's internal setup to finish.
+            requestAnimationFrame(() => {
+              canvasRef.current?.setWorkspace(workspace);
+            });
+          } catch { /* corrupted flow data */ }
         }
       }
     } catch {

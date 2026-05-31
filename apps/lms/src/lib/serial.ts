@@ -203,28 +203,27 @@ export async function uploadCodeToESP32(
   await writer.write(encoder.encode("\x01"));
   await new Promise((r) => setTimeout(r, 100));
   
-  // Create a script that writes to main.py
-  const escapedCode = code
-    .replace(/\\/g, "\\\\")
-    .replace(/'/g, "\\'")
-    .replace(/\n/g, "\\n");
-  
-  const uploadScript = `
-import os
-try:
-    os.remove('main.py')
-except:
-    pass
-f = open('main.py', 'w')
-f.write('${escapedCode}')
-f.close()
-print('UPLOAD_SUCCESS')
-`;
-
   onProgress?.("Writing main.py to ESP32...");
-  
-  // Send the upload script
-  for (const line of uploadScript.split("\n")) {
+
+  // Open the file, then write in safe JSON-escaped chunks so any character
+  // in the source code is handled correctly (tabs, quotes, backslashes, etc.)
+  const openScript = `import os\ntry:\n    os.remove('main.py')\nexcept:\n    pass\n_f = open('main.py', 'w')\n`;
+  for (const line of openScript.split("\n")) {
+    await writer.write(encoder.encode(line + "\n"));
+    await new Promise((r) => setTimeout(r, 30));
+  }
+
+  // Write in 200-char source chunks using JSON.stringify for safe escaping
+  const CHUNK = 200;
+  for (let i = 0; i < code.length; i += CHUNK) {
+    const chunk = code.slice(i, i + CHUNK);
+    const chunkLine = `_f.write(${JSON.stringify(chunk)})\n`;
+    await writer.write(encoder.encode(chunkLine));
+    await new Promise((r) => setTimeout(r, 30));
+  }
+
+  const closeScript = `_f.close()\nprint('UPLOAD_SUCCESS')\n`;
+  for (const line of closeScript.split("\n")) {
     await writer.write(encoder.encode(line + "\n"));
     await new Promise((r) => setTimeout(r, 30));
   }

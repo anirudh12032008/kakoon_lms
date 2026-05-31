@@ -85,17 +85,15 @@ export function useSerialConnection() {
       setIsConnected(true);
       addLog("✅ Connected via USB Serial");
       startReading();
-    } catch (err: any) {
-      addLog(`❌ Connection failed: ${err?.message ?? err}`);
+    } catch (err: unknown) {
+      addLog(`❌ Connection failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsConnecting(false);
     }
   }, [addLog, startReading]);
 
   const connectWifi = useCallback(async (ip: string, _password: string) => {
-    addLog(`📡 WiFi connect to ${ip} — WebREPL not wired yet`);
-    connectionTypeRef.current = "wifi";
-    setIsConnected(true);
+    addLog(`📡 WiFi / WebREPL not yet implemented — cannot connect to ${ip}`);
   }, [addLog]);
 
   const disconnect = useCallback(async () => {
@@ -115,8 +113,8 @@ export function useSerialConnection() {
       await sendCodeToESP32(connectionRef.current.writer!, code);
       setIsRunning(true);
       return true;
-    } catch (err: any) {
-      addLog(`❌ Send failed: ${err?.message ?? err}`);
+    } catch (err: unknown) {
+      addLog(`❌ Send failed: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
   }, [addLog]);
@@ -130,8 +128,8 @@ export function useSerialConnection() {
       await writer.write(encoder.encode("\x03\x03"));
       setIsRunning(false);
       addLog("⛔ Stopped — sent Ctrl+C");
-    } catch (err: any) {
-      addLog(`❌ Stop failed: ${err?.message ?? err}`);
+    } catch (err: unknown) {
+      addLog(`❌ Stop failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }, [addLog]);
 
@@ -143,8 +141,8 @@ export function useSerialConnection() {
     try {
       await uploadCodeToESP32(connectionRef.current.writer!, code);
       return true;
-    } catch (err: any) {
-      addLog(`❌ Upload failed: ${err?.message ?? err}`);
+    } catch (err: unknown) {
+      addLog(`❌ Upload failed: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
   }, [addLog]);

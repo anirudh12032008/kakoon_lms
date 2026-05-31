@@ -1,5 +1,18 @@
 import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
+
+// Safe formula evaluator — whitelist chars before using Function constructor.
+// Allows: digits, x, basic operators, parentheses, decimal points, and safe
+// Math methods. Anything else throws so malicious strings never execute.
+const SAFE_FORMULA_RE = /^[0-9x\s+\-*/.()%,]+$|(Math\.(floor|ceil|abs|round|min|max|sqrt|pow|log|exp|sin|cos|tan)\b)/;
+function evalSafeFormula(formula: string, x: number): number {
+  const stripped = formula.replace(/Math\.(floor|ceil|abs|round|min|max|sqrt|pow|log|exp|sin|cos|tan)\b/g, "");
+  if (!SAFE_FORMULA_RE.test(stripped)) {
+    throw new Error("Formula contains unsafe characters");
+  }
+  // eslint-disable-next-line no-new-func
+  return new Function("x", `"use strict"; return (${formula});`)(x) as number;
+}
 import {
   BaseNode, NodeField, TextInput, NumberInput, SelectInput, ToggleInput,
   useNodeField, COLORS, makeHandleStyle,
@@ -180,10 +193,10 @@ export function MathTransformNode() {
       else if (op === "abs") r = Math.abs(x);
       else if (op === "round") r = Math.round(x);
       else if (op === "invert") r = 1 / x;
-      else { const fn = new Function("x", `return ${formula}`); r = fn(x); }
+      else r = evalSafeFormula(formula, x);
       setPreview(`x=2048 → ${typeof r === "number" ? r.toFixed(3) : r}`);
-    } catch {
-      setPreview("Formula error");
+    } catch (err: unknown) {
+      setPreview(err instanceof Error ? `Error: ${err.message}` : "Formula error");
     }
   };
 

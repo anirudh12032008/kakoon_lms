@@ -1,5 +1,6 @@
-import { type ReactNode, useCallback, useState } from "react";
-import { Handle, Position, useNodeId, useReactFlow, useStore } from "@xyflow/react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { Handle, Position, useNodeId, useNodes, useReactFlow } from "@xyflow/react";
+import { useModal } from "@/context/ModalContext";
 import { PlusCircle } from "lucide-react";
 import { saveCustomSubflowFromSelection } from "@/lib/customNodes";
 
@@ -48,30 +49,26 @@ export function NodeToggleButton({
 function SelectionToolbar() {
   const nodeId = useNodeId();
   const { getNode, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+  const { prompt } = useModal();
 
-  const isSelected = useStore(
-    useCallback(
-      (store) => {
-        if (!nodeId) return false;
-        // @xyflow/react v12: nodes are in store.nodes array
-        const node = (store as any).nodes?.find((n: any) => n.id === nodeId)
-          ?? (store as any).nodeInternals?.get(nodeId);
-        return node ? !!node.selected : false;
-      },
-      [nodeId]
-    )
+  // useNodes() re-renders only when node selection changes — no store any-cast needed
+  const allNodes = useNodes();
+  const isSelected = useMemo(
+    () => allNodes.find((n) => n.id === nodeId)?.selected ?? false,
+    [allNodes, nodeId]
   );
 
   if (!nodeId || !isSelected) return null;
 
-  const handleSaveAsCustomNode = (e: React.MouseEvent) => {
+  const handleSaveAsCustomNode = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const node = getNode(nodeId);
     if (!node) return;
-    const defaultLabel = typeof node.data?.label === "string" && node.data.label.trim()
-      ? node.data.label.trim()
-      : node.type ?? "Custom Node";
-    const savedLabel = window.prompt("Name this custom subflow", defaultLabel)?.trim();
+    const defaultLabel =
+      typeof node.data?.label === "string" && node.data.label.trim()
+        ? node.data.label.trim()
+        : node.type ?? "Custom Node";
+    const savedLabel = await prompt("Name this custom node", defaultLabel);
     if (!savedLabel) return;
     saveCustomSubflowFromSelection(node, getNodes(), getEdges(), savedLabel);
   };
@@ -178,6 +175,8 @@ export function NodeField({ label, children }: { label?: string; children: React
   );
 }
 
+const VAR_KEYS = ["varName", "t1", "t2", "t3", "t4", "name"] as const;
+
 export function TextInput({
   value, onChange, className, green, wide, style,
 }: {
@@ -185,20 +184,21 @@ export function TextInput({
   className?: string; green?: boolean; wide?: boolean; style?: React.CSSProperties;
 }) {
   const [isFocused, setIsFocused] = useState(false);
-  const { getNodes } = useReactFlow();
+  const allNodes = useNodes();
 
-  const allNodes = getNodes();
-  const vars = new Set<string>();
-  allNodes.forEach((n) => {
-    if (n.data) {
-      if (typeof n.data.varName === "string" && n.data.varName.trim()) vars.add(n.data.varName.trim());
-      for (const k of ["t1", "t2", "t3", "t4", "name"]) {
-        if (typeof n.data[k] === "string" && (n.data[k] as string).trim()) vars.add((n.data[k] as string).trim());
+  const suggestions = useMemo(() => {
+    if (!isFocused) return [];
+    const vars = new Set<string>();
+    for (const n of allNodes) {
+      if (!n.data) continue;
+      for (const k of VAR_KEYS) {
+        const v = n.data[k];
+        if (typeof v === "string" && v.trim()) vars.add(v.trim());
       }
     }
-  });
-
-  const suggestions = Array.from(vars).filter((s) => s.toLowerCase().includes(value.toLowerCase()) && s !== value);
+    const lower = value.toLowerCase();
+    return Array.from(vars).filter((s) => s !== value && s.toLowerCase().includes(lower));
+  }, [allNodes, isFocused, value]);
 
   const dropdown = isFocused && suggestions.length > 0 && (
     <div className="absolute left-0 right-0 top-full mt-1 z-[9999] rounded-lg border border-cyan-800 bg-[#0c0c0f]/95 backdrop-blur-md shadow-2xl p-1 max-h-[140px] overflow-y-auto select-none nodrag">

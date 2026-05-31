@@ -9,7 +9,7 @@
  * Each panel is a standalone draggable card rendered via createPortal.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Activity, Radio, Gauge } from "lucide-react";
 
@@ -112,6 +112,8 @@ interface IMUData {
 
 // ─── 3D Cube (pure SVG, isometric projection) ─────────────────────────────────
 function Cube3D({ pitch, roll }: { pitch: number; roll: number }) {
+  const uid = useId();
+  const glowId = `${uid}-cubeglow`;
   const W = 160, H = 160, CX = 80, CY = 80, S = 36;
 
   // Convert degrees to radians
@@ -179,16 +181,12 @@ function Cube3D({ pitch, roll }: { pitch: number; roll: number }) {
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
       {/* Background glow */}
       <defs>
-        <radialGradient id="cubeglow" cx="50%" cy="50%" r="50%">
+        <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="#4c1d95" stopOpacity="0.3" />
           <stop offset="100%" stopColor="#000" stopOpacity="0" />
         </radialGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="blur" />
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
       </defs>
-      <ellipse cx={CX} cy={CY+48} rx={44} ry={10} fill="url(#cubeglow)" opacity="0.5" />
+      <ellipse cx={CX} cy={CY+48} rx={44} ry={10} fill={`url(#${glowId})`} opacity="0.5" />
 
       {sorted.map(({ idxs, visible, label }, fi) => {
         if (!visible) return null;
@@ -237,6 +235,10 @@ function Cube3D({ pitch, roll }: { pitch: number; roll: number }) {
 
 // ─── Artificial Horizon ────────────────────────────────────────────────────────
 function ArtificialHorizon({ pitch, roll }: { pitch: number; roll: number }) {
+  const uid = useId();
+  const clipId = `${uid}-horizon-clip`;
+  const skyId = `${uid}-sky-grad`;
+  const groundId = `${uid}-ground-grad`;
   const W = 160, H = 90, CX = W/2, CY = H/2, R = 40;
   const clampedPitch = Math.max(-60, Math.min(60, pitch));
   // Horizon line offset from center
@@ -246,14 +248,14 @@ function ArtificialHorizon({ pitch, roll }: { pitch: number; roll: number }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ borderRadius: 8, overflow: "hidden" }}>
       <defs>
-        <clipPath id="horizon-clip">
+        <clipPath id={clipId}>
           <circle cx={CX} cy={CY} r={R} />
         </clipPath>
-        <radialGradient id="sky-grad" cx="50%" cy="30%" r="70%">
+        <radialGradient id={skyId} cx="50%" cy="30%" r="70%">
           <stop offset="0%" stopColor="#1e3a8a" />
           <stop offset="100%" stopColor="#0f172a" />
         </radialGradient>
-        <radialGradient id="ground-grad" cx="50%" cy="70%" r="70%">
+        <radialGradient id={groundId} cx="50%" cy="70%" r="70%">
           <stop offset="0%" stopColor="#7c2d12" />
           <stop offset="100%" stopColor="#431407" />
         </radialGradient>
@@ -263,12 +265,12 @@ function ArtificialHorizon({ pitch, roll }: { pitch: number; roll: number }) {
       <circle cx={CX} cy={CY} r={R} fill="#0f0f14" stroke="#2d2d3a" strokeWidth="1" />
 
       {/* Rotating ground/sky group */}
-      <g clipPath="url(#horizon-clip)">
+      <g clipPath={`url(#${clipId})`}>
         <g style={{ transform: `rotate(${roll}deg)`, transformOrigin: `${CX}px ${CY}px` }}>
           {/* Sky */}
-          <rect x={CX-R-4} y={CY-R-4} width={(R+4)*2} height={horizonY - (CY-R-4)} fill="url(#sky-grad)" />
+          <rect x={CX-R-4} y={CY-R-4} width={(R+4)*2} height={horizonY - (CY-R-4)} fill={`url(#${skyId})`} />
           {/* Ground */}
-          <rect x={CX-R-4} y={horizonY} width={(R+4)*2} height={(CY+R+4) - horizonY} fill="url(#ground-grad)" />
+          <rect x={CX-R-4} y={horizonY} width={(R+4)*2} height={(CY+R+4) - horizonY} fill={`url(#${groundId})`} />
           {/* Horizon line */}
           <line x1={CX-R-4} y1={horizonY} x2={CX+R+4} y2={horizonY} stroke="#fbbf24" strokeWidth="1.5" opacity="0.9" />
           {/* Pitch ladder marks */}
@@ -428,7 +430,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
   const gyroTotal = Math.sqrt(data.gx**2 + data.gy**2 + data.gz**2);
 
   return (
-    <PanelShell title="IMU Visualizer — MPU6050" icon={<Activity className="w-4 h-4" />}
+    <PanelShell title="IMU Visualizer — Onboard MPU6050" icon={<Activity className="w-4 h-4" />}
       color="#8b5cf6" onClose={onClose} initialPos={{ x: 24, y: 80 }} width={400}>
 
       {/* Live / Demo badge */}
@@ -437,7 +439,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
         <span className={`text-[9px] font-bold ${isLive ? "text-green-400" : "text-amber-500"}`}>
           {isLive ? "LIVE DATA" : "DEMO MODE"}
         </span>
-        {!isLive && <span className="text-[9px] text-zinc-600">→ run MPU6050 code to see real data</span>}
+        {!isLive && <span className="text-[9px] text-zinc-600">→ run the onboard MPU6050 node to see real data</span>}
 
         {/* Tab switcher */}
         <div className="ml-auto flex gap-1">

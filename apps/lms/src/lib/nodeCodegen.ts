@@ -1,5 +1,58 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Node, Edge } from "@xyflow/react";
+
+// All possible fields across every node type — each node only uses a subset.
+interface NodeData {
+  // General
+  disabled?: boolean;
+  text?: string;
+  seconds?: number;
+  name?: string;
+  value?: number | string | null;
+  tone?: number;
+  // GPIO
+  pin?: number; pin1?: number; pin2?: number; pin3?: number; pin4?: number;
+  mode?: string; freq?: number; duty?: number; pullup?: boolean;
+  trigPin?: number; echoPin?: number;
+  // Variable / logic / math
+  varName?: string; variable?: string; condition?: string;
+  left?: string; right?: string; op?: string;
+  start?: number; end?: number; step?: number;
+  times?: number; expression?: string; interval?: number;
+  // NeoPixel
+  color?: string; brightness?: number; red?: number; green?: number; blue?: number;
+  ledCount?: number; fps?: number; frames?: number[][][]; pattern?: string;
+  // OLED
+  driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
+  staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
+  // 7-seg / LCD
+  clk?: number; dio?: number; number?: number; address?: string;
+  // Servo
+  servoPort?: string; angle?: number; startAngle?: number; endAngle?: number;
+  steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
+  sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
+  // Motors
+  motorPort?: string; direction?: string;
+  syncMode?: boolean; pairMode?: boolean;
+  leftSpeed?: number; rightSpeed?: number; leftDir?: string; rightDir?: string;
+  l1speed?: number; l2speed?: number; r1speed?: number; r2speed?: number;
+  l1dir?: string; l2dir?: string; r1dir?: string; r2dir?: string;
+  move?: string;
+  // Multi-servo sequencer
+  s1port?: string; s2port?: string; s3port?: string;
+  keyframes?: Array<{ angles?: number[] }>;
+  keyframeDelay?: number;
+  // Touch
+  t1?: string; t2?: string; t3?: string; t4?: string;
+  // Comms / IoT
+  ssid?: string; password?: string; url?: string; mac?: string; sendData?: string;
+  deviceName?: string; clientId?: string; broker?: string; topic?: string; payload?: string;
+  // Display / misc
+  fromMin?: number; fromMax?: number; toMin?: number; toMax?: number;
+  from?: number; to?: number;
+  outputMode?: string; loopDelay?: number; durationMs?: number;
+  animationName?: string; imageName?: string;
+  width?: number; height?: number; csPin?: number; mosi?: number; miso?: number;
+}
 
 // ─── OLED pixel → MONO_HLSB bytes ─────────────────────────────────────────────
 // The node stores pixels as boolean[][] with storedH rows (typically 32 for a
@@ -72,7 +125,7 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
   };
 
   for (const node of nodes) {
-    const d: any = node.data || {};
+    const d = (node.data ?? {}) as NodeData;
     switch (node.type) {
       case "servo_motor":
       case "servo_motor_advance":
@@ -193,7 +246,7 @@ rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear,
     const node = nodeMap.get(nodeId);
     if (!node) return [];
 
-    const d: any = node.data || {};
+    const d = (node.data ?? {}) as NodeData;
     const indent = "    ".repeat(indentLevel);
     const chunkLines: string[] = [];
 
@@ -419,7 +472,8 @@ rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear,
         break;
 
       // ─── Sensor ────────────────────────────────────────────────────────────
-      case "imu_sensor": {
+      case "imu_sensor":
+      case "onboard_imu": {
         // MPU6050 on SoftI2C SCL=42, SDA=41
         imports.add("from machine import SoftI2C, Pin");
         imports.add("import time, math, struct");

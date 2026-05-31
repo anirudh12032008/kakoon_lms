@@ -8,6 +8,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  makeHandleStyle,
   COLORS,
 } from "./BaseNode";
 
@@ -31,10 +32,7 @@ const PORT_OPTIONS = [
   { label: "Port 4", value: "4" },
 ];
 
-const outHS = {
-  width: 12, height: 12, background: "#111113", border: "2.5px solid #22c55e",
-  borderRadius: "50%", zIndex: 10, top: "50%", transform: "translateY(-50%)",
-};
+const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
 
 // ─── GPIO Pin ─────────────────────────────────────────────────────────────────
 export function GPIOPinNode() {

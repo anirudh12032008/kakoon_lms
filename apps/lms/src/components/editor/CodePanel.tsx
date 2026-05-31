@@ -41,9 +41,25 @@ function highlightCode(line: string): React.ReactNode {
   return <>{parts}</>;
 }
 
+function findCommentStart(line: string): number {
+  let inStr: string | null = null;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inStr) {
+      if (ch === "\\" ) { i++; continue; } // skip escaped char
+      if (ch === inStr) inStr = null;
+    } else if (ch === '"' || ch === "'") {
+      inStr = ch;
+    } else if (ch === "#") {
+      return i;
+    }
+  }
+  return -1;
+}
+
 function highlightPython(line: string): React.ReactNode {
-  if (line.includes("#")) {
-    const idx = line.indexOf("#");
+  const idx = findCommentStart(line);
+  if (idx !== -1) {
     return <>{highlightCode(line.slice(0, idx))}<span className="text-zinc-500">{line.slice(idx)}</span></>;
   }
   return highlightCode(line);

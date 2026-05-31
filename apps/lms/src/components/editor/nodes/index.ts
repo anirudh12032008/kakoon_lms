@@ -173,7 +173,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "ir_receiver", label: "IR Receiver", color: "#f97316", previewDot: "#f97316" },
       { type: "ir_sensor", label: "IR Sensor", color: "#f97316", previewDot: "#f97316" },
       { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "imu_sensor", label: "IMU Sensor (MPU6050)", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "imu_sensor", label: "Onboard IMU (MPU6050)", color: "#8b5cf6", previewDot: "#8b5cf6" },
     ],
   },
   {

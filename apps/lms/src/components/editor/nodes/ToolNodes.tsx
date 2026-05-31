@@ -83,6 +83,11 @@ export function I2CScannerNode() {
       <NodeField label="SDA Pin"><NumberInput value={sda} onChange={setSda} /></NodeField>
       <NodeField label="SCL Pin"><NumberInput value={scl} onChange={setScl} /></NodeField>
 
+      {/* Demo notice */}
+      <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-amber-500/20 bg-amber-500/5">
+        <span className="text-[9px] text-amber-400/80">Preview mode — shows demo devices. Connect ESP32 and run generated code to scan live.</span>
+      </div>
+
       {/* Range label */}
       <div className="px-3 py-0.5 flex items-center justify-between">
         <span className="text-[9px] text-zinc-500 font-mono">Range: 0x00 – 0x7F</span>
@@ -121,7 +126,6 @@ export function I2CScannerNode() {
             <div className="h-full bg-blue-500 rounded-full"
               style={{ animation: "i2cScan 1.4s linear forwards", width: "0%" }} />
           </div>
-          <style>{`@keyframes i2cScan{to{width:100%}}`}</style>
         </div>
       )}
 

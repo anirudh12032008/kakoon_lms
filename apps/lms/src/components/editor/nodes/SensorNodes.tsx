@@ -7,6 +7,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  makeHandleStyle,
   COLORS,
 } from "./BaseNode";
 
@@ -21,11 +22,9 @@ function SensorIcon() {
   );
 }
 
-const outHS = {
-  width: 12, height: 12,
-  background: "#111113", border: "2.5px solid #22c55e",
-  borderRadius: "50%", zIndex: 10, top: "50%", transform: "translateY(-50%)",
-};
+const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
+
+const ONBOARD_IMU_PINS = { scl: 42, sda: 41, address: "0x68" };
 
 // Kokoon board sensor port → GPIO pins
 // Port 1: SCL/TRIG=4, SDA/ECHO=5 | Port 2: SCL/TRIG=1, SDA/ECHO=2
@@ -70,7 +69,6 @@ function WaveformDisplay({ color = "#8b5cf6" }: { color?: string }) {
     "0,20 8,15 14,8 20,14 28,30 34,34 42,28 50,20 58,13 65,7 72,13 80,26 88,32 96,26 104,20 112,15 118,8 124,14 132,30 138,34 146,28 154,20 162,13 169,7 176,13 184,26 192,32 200,26 208,20 216,15 222,8";
   return (
     <div className="w-full h-10 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] overflow-hidden relative">
-      <style>{`@keyframes scrollWave{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
       <svg className="absolute inset-0 w-[200%] h-full" viewBox="0 0 440 40" preserveAspectRatio="none">
         <polyline points={pts + " " + pts.split(" ").map(p => {
           const [x, y] = p.split(",");
@@ -165,7 +163,6 @@ export function AnalogSensorNode() {
 function EchoPulseDisplay() {
   return (
     <div className="w-full h-10 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] overflow-hidden px-3 flex flex-col justify-center gap-0.5">
-      <style>{`@keyframes trigPulse{0%,100%{opacity:.3}30%,70%{opacity:1}}`}</style>
       <div className="flex items-center gap-1">
         <span className="text-[8px] text-purple-400 font-mono w-7">TRIG</span>
         <div className="flex-1 flex items-center h-3">
@@ -441,24 +438,24 @@ export function FourChannelTouchNode() {
   );
 }
 
-// ─── IMU Sensor (MPU6050) — SCL=42, SDA=41 ────────────────────────────────────
+// ─── Onboard IMU (MPU6050) — SCL=42, SDA=41 ──────────────────────────────────
 export function IMUSensorNode() {
   const [varName, setVarName] = useNodeField<string>("varName", "imu");
   const [outputMode, setOutputMode] = useNodeField<string>("outputMode", "print");
   const [loopDelay, setLoopDelay]   = useNodeField<number>("loopDelay", 100);
 
   return (
-    <BaseNode title="IMU Sensor (MPU6050)" color={COLORS.purple} icon={<SensorIcon />} width="260px">
+    <BaseNode title="Onboard IMU (MPU6050)" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       {/* Fixed I2C pin info */}
       <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">SoftI2C — fixed GPIO</span>
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Onboard SoftI2C — fixed GPIO</span>
           <span className="text-[9px] font-mono text-purple-400">locked</span>
         </div>
         <div className="flex gap-4 mt-0.5">
-          <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">42</span></span>
-          <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">41</span></span>
-          <span className="text-[10px] text-zinc-500">Addr <span className="text-zinc-300 font-mono">0x68</span></span>
+          <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
+          <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
+          <span className="text-[10px] text-zinc-500">Addr <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.address}</span></span>
         </div>
       </div>
 
@@ -483,7 +480,7 @@ export function IMUSensorNode() {
         <p className="text-[9px] text-purple-400/80 font-mono">
           MPU6050,ax,ay,az,gx,gy,gz,pitch,roll
         </p>
-        <p className="text-[8px] text-zinc-600 mt-0.5">→ open IMU Visualizer to see live 3D view</p>
+        <p className="text-[8px] text-zinc-600 mt-0.5">→ open IMU Visualizer to see live onboard data</p>
       </div>
     </BaseNode>
   );

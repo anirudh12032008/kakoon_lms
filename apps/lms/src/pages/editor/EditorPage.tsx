@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useModal } from "@/context/ModalContext";
 import { Trash2 } from "lucide-react";
 import { NodeCanvas, type NodeCanvasRef } from "@/components/editor/NodeCanvas";
 import { useSerialConnection } from "@/lib/useSerial";
@@ -27,7 +28,6 @@ export type ViewMode = "blocks" | "split" | "code";
 interface EditorPageProps {
   launchContext?: EditorLaunchContext;
   onBackToDashboard?: () => void;
-  onComplete?: (codeSnapshot: string) => void;
 }
 
 export default function EditorPage({ launchContext, onBackToDashboard }: EditorPageProps) {
@@ -46,6 +46,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const [isUploading, setIsUploading] = useState(false);
   const [connectionMode, setConnectionMode] = useState<"usb" | "wifi">("usb");
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const { confirm } = useModal();
 
   // ── Feature panel visibility ────────────────────────────────────────────────
   const [showTerminal, setShowTerminal] = useState(false);
@@ -308,8 +309,8 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
           style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
-            onClick={() => {
-              if (confirm("Clear the canvas?")) {
+            onClick={async () => {
+              if (await confirm("Clear the canvas?")) {
                 canvasRef.current?.setWorkspace({ nodes: [], edges: [] });
               }
               setContextMenu(null);

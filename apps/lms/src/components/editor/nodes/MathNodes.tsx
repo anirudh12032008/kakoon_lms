@@ -6,6 +6,7 @@ import {
   TextInput,
   NumberInput,
   useNodeField,
+  makeHandleStyle,
   COLORS,
 } from "./BaseNode";
 
@@ -13,16 +14,7 @@ function MathIcon() {
   return <span className="text-xs font-bold font-mono">(x)</span>;
 }
 
-const outHS = {
-  width: 12,
-  height: 12,
-  background: "#111113",
-  border: "2.5px solid #22c55e",
-  borderRadius: "50%",
-  zIndex: 10,
-  top: "50%",
-  transform: "translateY(-50%)",
-};
+const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
 
 // ─── Map Range ────────────────────────────────────────────────────────────────
 export function MapRangeNode() {
