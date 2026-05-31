@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { type Tutorial, type TutorialStep } from "@/features/tutorial/lib/tutorials";
+import { type Tutorial, type TutorialStep } from "@/features/editor/tutorial/lib/tutorials";
 import type { Node, Edge } from "@xyflow/react";
 import { Check, X, ArrowRight, Play, Award, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { NODE_CATEGORIES } from "@/entities/node/model";

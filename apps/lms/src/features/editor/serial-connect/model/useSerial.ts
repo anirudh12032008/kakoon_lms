@@ -6,7 +6,7 @@ import {
   isWebSerialSupported,
   sendCodeToESP32,
   uploadCodeToESP32,
-} from "@/features/serial-connect/lib/serial";
+} from "@/features/editor/serial-connect/lib/serial";
 
 type ConnectionType = "usb" | "wifi";
 

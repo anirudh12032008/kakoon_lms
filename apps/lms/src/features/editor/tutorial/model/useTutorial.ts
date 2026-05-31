@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Node, Edge } from "@xyflow/react";
-import type { Tutorial } from "@/features/tutorial/lib/tutorials";
+import type { Tutorial } from "@/features/editor/tutorial/lib/tutorials";
 import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import type { RefObject } from "react";
 

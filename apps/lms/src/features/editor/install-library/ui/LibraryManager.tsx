@@ -4,7 +4,7 @@ import { X, Package, Upload, CheckCircle, Loader2, AlertTriangle, Search } from 
 import {
   LIBRARY_REGISTRY, getRequiredLibraries, CATEGORY_COLORS,
   type LibraryEntry,
-} from "@/features/install-library/lib/libraryRegistry";
+} from "@/features/editor/install-library/lib/libraryRegistry";
 
 interface Props {
   code: string;

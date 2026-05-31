@@ -2,13 +2,13 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useModal } from "@/shared/context/ModalContext";
 import { Trash2 } from "lucide-react";
 import { NodeCanvas, type NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
-import { useSerialConnection } from "@/features/serial-connect/model/useSerial";
-import { TutorialsDashboard } from "@/features/tutorial/ui/TutorialsDashboard";
-import { TutorialHelper } from "@/features/tutorial/ui/TutorialHelper";
-import { LibraryManager } from "@/features/install-library/ui/LibraryManager";
-import { DesignerHub } from "@/features/designer-hub/ui/DesignerHub";
-import { FirmwareFlasher } from "@/features/flash-firmware/ui/FirmwareFlasher";
-import { IMUVisualizerPanel, SensorVizPanel, RadarPanel } from "@/features/data-viz/ui/DataViz";
+import { useSerialConnection } from "@/features/editor/serial-connect/model/useSerial";
+import { TutorialsDashboard } from "@/features/editor/tutorial/ui/TutorialsDashboard";
+import { TutorialHelper } from "@/features/editor/tutorial/ui/TutorialHelper";
+import { LibraryManager } from "@/features/editor/install-library/ui/LibraryManager";
+import { DesignerHub } from "@/features/editor/designer-hub/ui/DesignerHub";
+import { FirmwareFlasher } from "@/features/editor/flash-firmware/ui/FirmwareFlasher";
+import { IMUVisualizerPanel, SensorVizPanel, RadarPanel } from "@/features/editor/data-viz/ui/DataViz";
 
 import { EditorHeader } from "@/widgets/editor-header/ui/EditorHeader";
 import { FeatureToolbar } from "@/widgets/feature-toolbar/ui/FeatureToolbar";
@@ -16,9 +16,9 @@ import { CodePanel } from "@/widgets/code-panel/ui/CodePanel";
 import { FloatingTerminal } from "@/widgets/floating-terminal/ui/FloatingTerminal";
 import { EditorStatusBar } from "@/widgets/editor-statusbar/ui/EditorStatusBar";
 
-import { useWifi } from "@/features/wifi-connect/model/useWifi";
-import { useDraft } from "@/features/save-draft/model/useDraft";
-import { useTutorial } from "@/features/tutorial/model/useTutorial";
+import { useWifi } from "@/features/editor/wifi-connect/model/useWifi";
+import { useDraft } from "@/features/editor/save-draft/model/useDraft";
+import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 

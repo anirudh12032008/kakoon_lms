@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, ChevronDown, Check, ArrowLeft, Eye, Play, Upload, Loader2, X } from "lucide-react";
-import { type Tutorial, BUILTIN_TUTORIALS } from "@/features/tutorial/lib/tutorials";
+import { type Tutorial, BUILTIN_TUTORIALS } from "@/features/editor/tutorial/lib/tutorials";
 
 interface TutorialsDashboardProps {
   onBack: () => void;
