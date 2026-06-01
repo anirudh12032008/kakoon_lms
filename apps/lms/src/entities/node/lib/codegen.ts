@@ -32,6 +32,7 @@ interface NodeData {
   // OLED
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
+  animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
   // Servo
@@ -588,6 +589,28 @@ time.sleep(0.1)`);
         imports.add(`import ${dLib}`);
         setupLines.push(`i2c = SoftI2C(scl=Pin(${d.sck ?? OLED.scl}), sda=Pin(${d.sda ?? OLED.sda}))`);
         setupLines.push(`oled = ${dLib}.${dClass}(${oledW}, ${oledH}, i2c)`);
+
+        // Animation file stored on device — generate file-reading code
+        if (d.animFile) {
+          imports.add(`import ${dLib}, framebuf, time`);
+          emitOnce("oled_anim_player",
+            `def _play_oled(oled, path):\n` +
+            `    with open(path, 'rb') as f:\n` +
+            `        magic = f.read(4)\n` +
+            `        fps = (ord(f.read(1)) << 8) | ord(f.read(1))\n` +
+            `        n   = (ord(f.read(1)) << 8) | ord(f.read(1))\n` +
+            `        delay = max(1, 1000 // fps)\n` +
+            `        while True:\n` +
+            `            f.seek(8)\n` +
+            `            for _ in range(n):\n` +
+            `                buf = bytearray(f.read(1024))\n` +
+            `                fb = framebuf.FrameBuffer(buf, 128, 64, framebuf.MONO_HLSB)\n` +
+            `                oled.fill(0); oled.blit(fb, 0, 0); oled.show()\n` +
+            `                time.sleep_ms(delay)`
+          );
+          chunkLines.push(`${indent}_play_oled(oled, '/anim/${d.animFile}.bin')`);
+          break;
+        }
 
         // Always clear before drawing
         chunkLines.push(`${indent}oled.fill(0)`);

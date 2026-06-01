@@ -23,7 +23,7 @@ export function floydSteinberg(grays: Float32Array, w: number, h: number): numbe
       const i = y * w + x;
       const old = buf[i];
       const nv  = old < 128 ? 0 : 255;
-      out[i] = nv === 0 ? 1 : 0;
+      out[i] = nv === 255 ? 1 : 0;
       const err = old - nv;
       if (x + 1 < w)              buf[i + 1]     += err * 7 / 16;
       if (y + 1 < h) {
@@ -54,10 +54,10 @@ export function pixelsFromImageData(
   } else if (dither === "ordered") {
     bits = Array.from(grays).map((v, i) => {
       const bv = BAYER4[(Math.floor(i / OLED_W) % 4) * 4 + (i % OLED_W) % 4];
-      return v < bv ? 1 : 0;
+      return v >= bv ? 1 : 0;
     });
   } else {
-    bits = Array.from(grays).map(v => v < threshold ? 1 : 0);
+    bits = Array.from(grays).map(v => v >= threshold ? 1 : 0);
   }
   return invert ? bits.map(v => v ^ 1) : bits;
 }

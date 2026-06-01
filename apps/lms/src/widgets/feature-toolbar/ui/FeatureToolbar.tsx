@@ -1,4 +1,4 @@
-import { Package, Palette, Activity, Zap } from "lucide-react";
+import { Package, Palette, Activity, Zap, HardDrive } from "lucide-react";
 
 interface FeatureToolbarProps {
   showDesignerHub: boolean;
@@ -7,19 +7,21 @@ interface FeatureToolbarProps {
   showRadarViz: boolean;
   showLibraryManager: boolean;
   showFirmwareFlasher: boolean;
+  showESP32Files: boolean;
   onOpenDesignerHub: () => void;
   onToggleIMUViz: () => void;
   onToggleSensorViz: () => void;
   onToggleRadarViz: () => void;
   onOpenLibraryManager: () => void;
   onOpenFirmwareFlasher: () => void;
+  onToggleESP32Files: () => void;
 }
 
 export function FeatureToolbar({
   showDesignerHub, showIMUViz, showSensorViz, showRadarViz,
-  showLibraryManager, showFirmwareFlasher,
+  showLibraryManager, showFirmwareFlasher, showESP32Files,
   onOpenDesignerHub, onToggleIMUViz, onToggleSensorViz, onToggleRadarViz,
-  onOpenLibraryManager, onOpenFirmwareFlasher,
+  onOpenLibraryManager, onOpenFirmwareFlasher, onToggleESP32Files,
 }: FeatureToolbarProps) {
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 border-b border-[#1a1a20] bg-[#0a0a0d] px-3 overflow-x-auto">
@@ -86,6 +88,17 @@ export function FeatureToolbar({
       >
         <Package className="h-3.5 w-3.5" />
         Libraries
+      </button>
+
+      <button
+        onClick={onToggleESP32Files}
+        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-all whitespace-nowrap ${
+          showESP32Files ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "text-zinc-400 hover:bg-zinc-800 hover:text-emerald-400"
+        }`}
+        title="Browse & manage ESP32 filesystem"
+      >
+        <HardDrive className="h-3.5 w-3.5" />
+        Files
       </button>
 
       <button

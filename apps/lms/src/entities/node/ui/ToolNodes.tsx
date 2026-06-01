@@ -15,8 +15,8 @@ function ToolIcon() {
   );
 }
 
-// ServoCalibrationNode has moved to MotorNodes.tsx
-export { ServoCalibrationNode } from "./MotorNodes";
+// ServoCalibrationNode has moved to ServoNodes.tsx
+export { ServoCalibrationNode } from "./ServoNodes";
 
 // ─── Known I2C device map ─────────────────────────────────────────────────────
 const KNOWN_DEVICES: Record<string, string> = {

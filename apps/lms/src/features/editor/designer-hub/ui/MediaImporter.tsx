@@ -50,7 +50,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
     const ctx = pc.getContext("2d")!;
     const img = ctx.createImageData(OLED_W, OLED_H);
     for (let i = 0; i < OLED_W * OLED_H; i++) {
-      const v = px[i] ? 0 : 255;
+      const v = px[i] ? 255 : 0;
       img.data[i * 4] = v; img.data[i * 4 + 1] = v;
       img.data[i * 4 + 2] = v; img.data[i * 4 + 3] = 255;
     }
@@ -73,17 +73,26 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
         const captured: number[][] = [];
         const interval = Math.round(1000 / opts.fps);
         let lastHash = "";
-        await new Promise<void>(res => {
-          const id = setInterval(() => {
-            drawSourceToCanvas(ctx, src, opts.scaleMode);
-            const d = ctx.getImageData(0, 0, OLED_W, OLED_H);
-            const p = pixelsFromImageData(d, opts);
-            const hash = Array.from({ length: 32 }, (_, i) => p[Math.floor(i * OLED_W * OLED_H / 32)]).join("");
-            if (hash !== lastHash) { captured.push(p); lastHash = hash; }
-            if (captured.length >= opts.maxFrames) { clearInterval(id); res(); }
-          }, interval);
-          setTimeout(() => { clearInterval(id); res(); }, 4000);
-        });
+        // Append img to visible DOM so animated GIF advances frames
+        const tempDiv = document.createElement('div');
+        tempDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;';
+        document.body.appendChild(tempDiv);
+        tempDiv.appendChild(src as unknown as HTMLElement);
+        try {
+          await new Promise<void>(res => {
+            const id = setInterval(() => {
+              drawSourceToCanvas(ctx, src, opts.scaleMode);
+              const d = ctx.getImageData(0, 0, OLED_W, OLED_H);
+              const p = pixelsFromImageData(d, opts);
+              const hash = Array.from({ length: 32 }, (_, i) => p[Math.floor(i * OLED_W * OLED_H / 32)]).join("");
+              if (hash !== lastHash) { captured.push(p); lastHash = hash; }
+              if (captured.length >= opts.maxFrames) { clearInterval(id); res(); }
+            }, interval);
+            setTimeout(() => { clearInterval(id); res(); }, 6000);
+          });
+        } finally {
+          document.body.removeChild(tempDiv);
+        }
         const result = captured.length > 0 ? captured : [px];
         setFrames(result);
         setStatusMsg(`✅ ${result.length} frame${result.length !== 1 ? "s" : ""} captured`);
@@ -100,15 +109,29 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
       const total = Math.min(opts.maxFrames, Math.ceil(duration * opts.fps));
       const captured: number[][] = [];
 
-      setStatusMsg(`Extracting ${total} frames…`);
-      for (let i = 0; i < total; i++) {
-        video.currentTime = start + (i / opts.fps);
-        await new Promise<void>(res => { video.onseeked = () => res(); });
-        drawSourceToCanvas(ctx, video, opts.scaleMode);
-        const d = ctx.getImageData(0, 0, OLED_W, OLED_H);
-        captured.push(pixelsFromImageData(d, opts));
-        if (i === 0) { renderPreview(captured[0]); }
-        setStatusMsg(`Extracting frame ${i + 1} / ${total}…`);
+      // Append video to hidden DOM so browser decodes frames
+      const tempDiv = document.createElement('div');
+      tempDiv.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;';
+      document.body.appendChild(tempDiv);
+      tempDiv.appendChild(video);
+      try {
+        setStatusMsg(`Extracting ${total} frames…`);
+        for (let i = 0; i < total; i++) {
+          await new Promise<void>(res => {
+            const onSeeked = () => { video.removeEventListener('seeked', onSeeked); res(); };
+            video.addEventListener('seeked', onSeeked);
+            video.currentTime = start + (i / opts.fps);
+          });
+          // small delay for decoder
+          await new Promise(r => setTimeout(r, 50));
+          drawSourceToCanvas(ctx, video, opts.scaleMode);
+          const d = ctx.getImageData(0, 0, OLED_W, OLED_H);
+          captured.push(pixelsFromImageData(d, opts));
+          if (i === 0) { renderPreview(captured[0]); }
+          setStatusMsg(`Extracting frame ${i + 1} / ${total}…`);
+        }
+      } finally {
+        document.body.removeChild(tempDiv);
       }
       setFrames(captured);
       setStatusMsg(`✅ ${captured.length} frames extracted`);

@@ -1,31 +1,29 @@
 import type { NodeTypes } from "@xyflow/react";
 
 import { PrintNode, VariableNode, SleepNode } from "../ui/GeneralNodes";
-import {
-  GPIOPinNode, PinWriteNode, PinReadNode, PWMNode, ADCNode,
-  PushButtonNode, BuzzerToneNode, NeoPixelLEDNode, NeoPixelRGBNode,
-  RGBLEDMatrixNode, PWMOutputNode, NeoPixelDesignerNode,
-} from "../ui/GPIONodes";
+import { GPIOPinNode, PinWriteNode, PinReadNode, PWMNode, ADCNode, PushButtonNode, BuzzerToneNode, PWMOutputNode } from "../ui/GPIOBasicNodes";
+import { NeoPixelLEDNode, NeoPixelRGBNode, RGBLEDMatrixNode, NeoPixelDesignerNode } from "../ui/NeoPixelNodes";
 import { ForeverLoopNode, ForLoopNode, WhileLoopNode, RepeatNode, BreakNode } from "../ui/LoopNodes";
 import { IfElseNode } from "../ui/ConditionalNodes";
 import { WiFiConnectNode, HTTPGetNode, ESPNOWSenderNode, ESPNOWReceiverNode, TimeOnlineNode } from "../ui/IOTNodes";
-import {
-  UltrasonicSensorNode, TouchSensorNode, SoilMoistureSensorNode,
-  IRReceiverNode, IRSensorNode, FourChannelTouchNode,
-  AnalogSensorNode, ButtonDigitalInputNode, IMUSensorNode, PIRSensorNode,
-} from "../ui/SensorNodes";
-import {
-  OLEDDisplayNode, SevenSegNode, MAX7219Node, PlayAnimationNode, ShowImageNode,
-  LCD16x2Node,
-} from "../ui/DisplayNodes";
-import {
-  ServoMotorNode, ServoMotorAdvanceNode, L298NMotorDriverNode, DCMotorSingleNode,
-  MultiMotorControllerNode, ServoControllerNode, MultiServoSequencerNode,
-  RobotDriveNode,
-} from "../ui/MotorNodes";
+import { AnalogSensorNode } from "../ui/AnalogSensorNode";
+import { UltrasonicSensorNode } from "../ui/UltrasonicSensorNode";
+import { TouchSensorNode, SoilMoistureSensorNode, ButtonDigitalInputNode, FourChannelTouchNode } from "../ui/DigitalSensorNodes";
+import { IRSensorNode, IRReceiverNode } from "../ui/IRNodes";
+import { IMUSensorNode, PIRSensorNode } from "../ui/IMUNodes";
+import { OLEDDisplayNode, PlayAnimationNode, ShowImageNode } from "../ui/OLEDNodes";
+import { LCD16x2Node } from "../ui/LCDNodes";
+import { MAX7219Node } from "../ui/MatrixNodes";
+import { SevenSegNode } from "../ui/SevenSegNodes";
+import { ServoMotorNode, ServoMotorAdvanceNode, ServoControllerNode, MultiServoSequencerNode } from "../ui/ServoNodes";
+import { DCMotorSingleNode, MultiMotorControllerNode, L298NMotorDriverNode, RobotDriveNode } from "../ui/DCMotorNodes";
 import { MapRangeNode, RandomNumberNode } from "../ui/MathNodes";
-import { I2CScannerNode, ServoCalibrationNode } from "../ui/ToolNodes";
-import { BLEModeNode, WiFiNodeNode, MQTTNode, HTTPClientNode, SerialMonitorNode } from "../ui/CommsNodes";
+import { I2CScannerNode } from "../ui/ToolNodes";
+import { ServoCalibrationNode } from "../ui/ServoNodes";
+import { BLEModeNode } from "../ui/BLENodes";
+import { WiFiNodeNode } from "../ui/WiFiNode";
+import { MQTTNode } from "../ui/MQTTNodes";
+import { HTTPClientNode, SerialMonitorNode } from "../ui/HTTPSerialNodes";
 import { TimerIntervalNode, VariableStateNode, MathTransformNode } from "../ui/LogicNodes";
 import { DeepSleepNode, OTAUpdateNode, SDCardNode } from "../ui/PowerNodes";
 

@@ -22,6 +22,8 @@ import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { NodeActionsProvider } from "@/shared/context/NodeActionsContext";
+import { ESP32FilesPanel } from "@/features/editor/esp32-files/ui/ESP32FilesPanel";
+import { removeAnim, markOnDevice } from "@/shared/lib/animRegistry";
 
 export type LessonContext = EditorLaunchContext;
 export type ViewMode = "blocks" | "split" | "code";
@@ -54,6 +56,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const [showLibraryManager, setShowLibraryManager] = useState(false);
   const [showDesignerHub, setShowDesignerHub] = useState(false);
   const [designerTab, setDesignerTab] = useState<"oled" | "neopixel" | "matrix">("oled");
+  const [showESP32Files, setShowESP32Files] = useState(false);
   const [showFirmwareFlasher, setShowFirmwareFlasher] = useState(false);
   const [showIMUViz, setShowIMUViz] = useState(false);
   const [showSensorViz, setShowSensorViz] = useState(false);
@@ -63,7 +66,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const {
     isConnected, isConnecting, isSupported, isRunning,
     connect, connectWifi, disconnect,
-    sendCode, stopCode, uploadCode,
+    sendCode, stopCode, sendPythonCode, uploadCode,
     logs, addLog, clearLogs,
   } = useSerialConnection();
 
@@ -144,6 +147,82 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     }
   }, [isConnected, addLog, sendCode]);
 
+  // ── OLED Animation Upload ─────────────────────────────────────────────────────
+  const uploadOLEDAnimation = useCallback(async (
+    frames: number[][], fps: number, name: string
+  ): Promise<boolean> => {
+    if (!isConnected) { addLog("⚠️ Not connected to ESP32"); return false; }
+
+    addLog(`📤 Saving animation "${name}" to ESP32...`);
+
+    const safeName = name.replace(/[^a-z0-9_]/gi, '_').toLowerCase();
+    const numFrames = frames.length;
+
+    function frameToBinary(frame: number[]): Uint8Array {
+      const bytes = new Uint8Array(1024); // 128*64/8
+      for (let y = 0; y < 64; y++) {
+        for (let xb = 0; xb < 16; xb++) { // 128/8 = 16 bytes per row
+          let byte = 0;
+          for (let bit = 0; bit < 8; bit++) {
+            if (frame[y * 128 + xb * 8 + bit]) byte |= (0x80 >> bit);
+          }
+          bytes[y * 16 + xb] = byte;
+        }
+      }
+      return bytes;
+    }
+
+    const totalBytes = 8 + numFrames * 1024;
+    const payload = new Uint8Array(totalBytes);
+    payload[0] = 0x4F; payload[1] = 0x41; payload[2] = 0x4E; payload[3] = 0x4D; // "OANM"
+    payload[4] = (fps >> 8) & 0xFF; payload[5] = fps & 0xFF;
+    payload[6] = (numFrames >> 8) & 0xFF; payload[7] = numFrames & 0xFF;
+    frames.forEach((f, i) => {
+      payload.set(frameToBinary(f), 8 + i * 1024);
+    });
+
+    const CHUNK_BYTES = 256;
+
+    try {
+      const openCode = `import os, binascii\ntry: os.mkdir('/anim')\nexcept: pass\n_oaf = open('/anim/${safeName}.bin', 'wb')\n`;
+      await sendCode(openCode);
+
+      for (let i = 0; i < totalBytes; i += CHUNK_BYTES) {
+        const chunk = payload.slice(i, i + CHUNK_BYTES);
+        const hexStr = Array.from(chunk).map(b => b.toString(16).padStart(2, '0')).join('');
+        await sendCode(`_oaf.write(binascii.unhexlify('${hexStr}'))\n`);
+      }
+
+      await sendCode(`_oaf.close()\nprint('ANIM_SAVED:${safeName}')\n`);
+      addLog(`✅ Animation "${name}" saved to /anim/${safeName}.bin`);
+
+      // Mark as on-device in the local animation registry
+      markOnDevice(safeName, true);
+
+      return true;
+    } catch {
+      addLog(`❌ Failed to save animation "${name}"`);
+      return false;
+    }
+  }, [isConnected, addLog, sendCode]);
+
+  // ── OLED Animation Delete ─────────────────────────────────────────────────────
+  const deleteOLEDAnim = useCallback(async (name: string): Promise<void> => {
+    const safeName = name.replace(/[^a-z0-9_]/gi, "_").toLowerCase();
+    // Always remove from local registry
+    removeAnim(name);
+    addLog(`🗑 Removed "${name}" from library`);
+    // If connected, also delete from device
+    if (isConnected) {
+      try {
+        await sendCode(`import os\ntry: os.remove('/anim/${safeName}.bin')\nexcept: pass\nprint('ANIM_DEL:${safeName}')\n`);
+        addLog(`🗑 Deleted /anim/${safeName}.bin from ESP32`);
+      } catch {
+        addLog(`⚠️ Could not delete from device — file may still be there`);
+      }
+    }
+  }, [isConnected, addLog, sendCode]);
+
   // ── Run / Upload ──────────────────────────────────────────────────────────────
   const getCurrentCode = useCallback(() =>
     isEditing ? editableCode : (canvasRef.current?.getCode() || generatedCode),
@@ -177,6 +256,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   return (
     <NodeActionsProvider
       openMatrixDesigner={() => { setDesignerTab("matrix"); setShowDesignerHub(true); }}
+      deleteOLEDAnim={deleteOLEDAnim}
     >
     <div
       className="flex h-screen flex-col bg-[#09090b]"
@@ -199,12 +279,14 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         showRadarViz={showRadarViz}
         showLibraryManager={showLibraryManager}
         showFirmwareFlasher={showFirmwareFlasher}
+        showESP32Files={showESP32Files}
         onOpenDesignerHub={() => setShowDesignerHub(true)}
         onToggleIMUViz={() => setShowIMUViz((v) => !v)}
         onToggleSensorViz={() => setShowSensorViz((v) => !v)}
         onToggleRadarViz={() => setShowRadarViz((v) => !v)}
         onOpenLibraryManager={() => setShowLibraryManager(true)}
         onOpenFirmwareFlasher={() => setShowFirmwareFlasher(true)}
+        onToggleESP32Files={() => setShowESP32Files((v) => !v)}
       />
 
       {/* Main content */}
@@ -343,11 +425,21 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
           defaultTab={designerTab}
           onClose={() => setShowDesignerHub(false)}
           onAddNode={(type, data) => { canvasRef.current?.addNode(type, data); setShowDesignerHub(false); }}
+          onSaveOLEDAnimation={uploadOLEDAnimation}
         />
       )}
 
       {showFirmwareFlasher && (
         <FirmwareFlasher onClose={() => setShowFirmwareFlasher(false)} />
+      )}
+
+      {showESP32Files && (
+        <ESP32FilesPanel
+          isConnected={isConnected}
+          onClose={() => setShowESP32Files(false)}
+          sendPythonCode={sendPythonCode}
+          sendCode={sendCode}
+        />
       )}
 
       {showIMUViz && (

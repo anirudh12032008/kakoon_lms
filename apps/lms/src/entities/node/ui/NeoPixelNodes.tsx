@@ -1,169 +1,13 @@
 import { useState, useCallback } from "react";
-import { Handle, Position } from "@xyflow/react";
 import {
   BaseNode,
   NodeField,
-  TextInput,
   NumberInput,
   SelectInput,
-  ToggleInput,
   useNodeField,
-  makeHandleStyle,
   COLORS,
 } from "./BaseNode";
-
-function ChipIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-      <rect x="4" y="4" width="16" height="16" rx="2"/>
-      <rect x="9" y="9" width="6" height="6"/>
-      <line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/>
-      <line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/>
-      <line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/>
-      <line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
-    </svg>
-  );
-}
-
-const PORT_OPTIONS = [
-  { label: "Port 1", value: "1" },
-  { label: "Port 2", value: "2" },
-  { label: "Port 3", value: "3" },
-  { label: "Port 4", value: "4" },
-];
-
-const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
-
-// ─── GPIO Pin ─────────────────────────────────────────────────────────────────
-export function GPIOPinNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 2);
-  const [mode, setMode] = useNodeField<string>("mode", "OUT");
-  return (
-    <BaseNode title="GPIO Pin" color={COLORS.green} icon={<ChipIcon />} width="200px">
-      <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Mode">
-        <SelectInput value={mode} onChange={setMode} options={[{ label: "OUT", value: "OUT" }, { label: "IN", value: "IN" }]} compact />
-      </NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── Pin Write ────────────────────────────────────────────────────────────────
-export function PinWriteNode() {
-  const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 4);
-  const [value, setValue] = useNodeField<boolean>("value", false);
-  return (
-    <BaseNode title="Pin Write" color={COLORS.orange} icon={<ChipIcon />} width="210px">
-      <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
-      <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Value"><ToggleInput value={value} onChange={setValue} leftLabel="0" rightLabel="1" /></NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── Pin Read ─────────────────────────────────────────────────────────────────
-export function PinReadNode() {
-  const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 4);
-  const [varName, setVarName] = useNodeField<string>("varName", "value");
-  return (
-    <BaseNode title="Pin Read" color={COLORS.indigo} icon={<ChipIcon />} width="220px">
-      <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
-      <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Value">
-        <TextInput value={varName} onChange={setVarName} green />
-        <Handle type="source" position={Position.Right} id="value" style={{ ...outHS, right: -6 }} />
-      </NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── PWM ──────────────────────────────────────────────────────────────────────
-export function PWMNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 2);
-  const [freq, setFreq] = useNodeField<number>("freq", 1000);
-  const [duty, setDuty] = useNodeField<number>("duty", 512);
-  return (
-    <BaseNode title="PWM" color={COLORS.purple} icon={<ChipIcon />} width="210px">
-      <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Frequency"><NumberInput value={freq} onChange={setFreq} /></NodeField>
-      <NodeField label="Duty Cycle"><NumberInput value={duty} onChange={setDuty} /></NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── ADC ──────────────────────────────────────────────────────────────────────
-export function ADCNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 34);
-  const [varName, setVarName] = useNodeField<string>("varName", "value");
-  return (
-    <BaseNode title="ADC" color={COLORS.green} icon={<ChipIcon />} width="220px">
-      <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Store In">
-        <TextInput value={varName} onChange={setVarName} green />
-        <Handle type="source" position={Position.Right} id="value" style={{ ...outHS, right: -6 }} />
-      </NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── Push Button ──────────────────────────────────────────────────────────────
-export function PushButtonNode() {
-  const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 4);
-  const [varName, setVarName] = useNodeField<string>("varName", "value");
-  return (
-    <BaseNode title="Push Button" color={COLORS.pink} icon={<ChipIcon />} width="230px">
-      <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
-      <NodeField label="Data Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Button Value">
-        <TextInput value={varName} onChange={setVarName} green />
-        <Handle type="source" position={Position.Right} id="value" style={{ ...outHS, right: -6 }} />
-      </NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── Buzzer Tone ──────────────────────────────────────────────────────────────
-export function BuzzerToneNode() {
-  const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 46);
-  const [tone, setTone] = useNodeField<string>("tone", "1");
-  return (
-    <BaseNode title="Buzzer Tone" color={COLORS.green} icon={<ChipIcon />} width="210px">
-      <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
-      <NodeField label="Buzzer pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Tone">
-        <SelectInput value={tone} onChange={setTone} compact
-          options={[1,2,3,4,5,6,7,8].map(n => ({ label: String(n), value: String(n) }))} />
-      </NodeField>
-    </BaseNode>
-  );
-}
-
-// ─── NeoPixel LED ─────────────────────────────────────────────────────────────
-export function NeoPixelLEDNode() {
-  const [numLeds, setNumLeds] = useNodeField<number>("numLeds", 8);
-  const [brightness, setBrightness] = useNodeField<number>("brightness", 50);
-  const [color, setColor] = useNodeField<string>("color", "#ff0000");
-  return (
-    <BaseNode title="NeoPixel LED" color={COLORS.cyan} icon={<ChipIcon />} width="230px">
-      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
-          <span className="text-[9px] font-mono text-cyan-400">fixed</span>
-        </div>
-      </div>
-      <NodeField label="LED Count"><NumberInput value={numLeds} onChange={setNumLeds} /></NodeField>
-      <NodeField label="Brightness"><NumberInput value={brightness} onChange={setBrightness} /></NodeField>
-      <NodeField label="Color">
-        <input type="color" value={color} onChange={e => setColor(e.target.value)}
-          className="nodrag w-10 h-6 rounded border border-[#2d2d35] cursor-pointer bg-transparent" />
-      </NodeField>
-    </BaseNode>
-  );
-}
+import { ChipIcon } from "./_shared";
 
 // ─── Per-pixel colour palette for small LED counts ────────────────────────────
 function PixelPalette({ colors, onChange }: { colors: string[]; onChange: (c: string[]) => void }) {
@@ -193,6 +37,29 @@ const PATTERN_DESCRIPTIONS: Record<string, string> = {
   Solid: "All LEDs show a single color",
   Twinkle: "Random pixels flicker like stars",
 };
+
+// ─── NeoPixel LED ─────────────────────────────────────────────────────────────
+export function NeoPixelLEDNode() {
+  const [numLeds, setNumLeds] = useNodeField<number>("numLeds", 8);
+  const [brightness, setBrightness] = useNodeField<number>("brightness", 50);
+  const [color, setColor] = useNodeField<string>("color", "#ff0000");
+  return (
+    <BaseNode title="NeoPixel LED" color={COLORS.cyan} icon={<ChipIcon />} width="230px">
+      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
+          <span className="text-[9px] font-mono text-cyan-400">fixed</span>
+        </div>
+      </div>
+      <NodeField label="LED Count"><NumberInput value={numLeds} onChange={setNumLeds} /></NodeField>
+      <NodeField label="Brightness"><NumberInput value={brightness} onChange={setBrightness} /></NodeField>
+      <NodeField label="Color">
+        <input type="color" value={color} onChange={e => setColor(e.target.value)}
+          className="nodrag w-10 h-6 rounded border border-[#2d2d35] cursor-pointer bg-transparent" />
+      </NodeField>
+    </BaseNode>
+  );
+}
 
 // ─── RGB LED Matrix ───────────────────────────────────────────────────────────
 export function RGBLEDMatrixNode() {
@@ -360,91 +227,6 @@ export function RGBLEDMatrixNode() {
   );
 }
 
-// ─── PWM Output ───────────────────────────────────────────────────────────────
-export function PWMOutputNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 2);
-  const [freq, setFreq] = useNodeField<number>("freq", 1000);
-  const [duty, setDuty] = useNodeField<number>("duty", 50);
-  const [sensorBind, setSensorBind] = useNodeField<string>("sensorBind", "");
-  const [sensorMin, setSensorMin] = useNodeField<number>("sensorMin", 0);
-  const [sensorMax, setSensorMax] = useNodeField<number>("sensorMax", 4095);
-
-  const freqPreset = (v: number) => setFreq(v);
-
-  return (
-    <BaseNode title="PWM Output" color={COLORS.purple} icon={<ChipIcon />} width="260px">
-      <NodeField label="GPIO Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-
-      {/* Frequency with quick presets */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Frequency</span>
-          <NumberInput value={freq} onChange={setFreq} />
-        </div>
-        <div className="flex gap-1 mt-1 flex-wrap">
-          {[50, 500, 1000, 5000, 20000, 40000].map(v => (
-            <button key={v} onClick={() => freqPreset(v)}
-              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all ${
-                freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[#2d2d35] text-zinc-500 hover:border-zinc-600 bg-[#111116]"
-              }`}
-            >{v >= 1000 ? `${v / 1000}k` : v}Hz</button>
-          ))}
-        </div>
-        <p className="text-[9px] text-zinc-600 mt-1">Range: 1 Hz – 40 kHz</p>
-      </div>
-
-      {/* Duty cycle slider */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Duty Cycle</span>
-          <span className="text-[10px] font-mono text-purple-400">{duty} %</span>
-        </div>
-        <input type="range" min={0} max={100} step={1} value={duty}
-          onChange={e => setDuty(Number(e.target.value))}
-          className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.purple }} />
-        <div className="flex justify-between mt-0.5">
-          <span className="text-[8px] text-zinc-600">0%</span>
-          <span className="text-[8px] text-zinc-600">100%</span>
-        </div>
-      </div>
-
-      {/* PWM waveform mini-preview */}
-      <div className="px-3 pb-1">
-        <svg width="100%" height="28" viewBox="0 0 200 28" preserveAspectRatio="none" className="rounded-lg overflow-hidden border border-[#2d2d35]" style={{ background: "#0a0a0d" }}>
-          {/* One cycle */}
-          {[0, 100].map(offset => {
-            const onW = duty * 2;
-            const offW = 200 - onW;
-            return (
-              <g key={offset}>
-                <polyline
-                  points={`${offset},24 ${offset},4 ${offset + onW},4 ${offset + onW},24 ${offset + onW + offW},24`}
-                  fill="none" stroke={COLORS.purple} strokeWidth="1.5" opacity="0.8"
-                />
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      {/* Sensor input binding */}
-      <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Auto-modulate from Sensor</span>
-      </div>
-      <NodeField label="Sensor var">
-        <TextInput value={sensorBind} onChange={setSensorBind} />
-      </NodeField>
-      {sensorBind.trim() !== "" && (
-        <>
-          <NodeField label="Sensor min"><NumberInput value={sensorMin} onChange={setSensorMin} /></NodeField>
-          <NodeField label="Sensor max"><NumberInput value={sensorMax} onChange={setSensorMax} /></NodeField>
-          <p className="text-[9px] text-zinc-600 px-3 pb-1">Maps <span className="font-mono text-zinc-400">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
-        </>
-      )}
-    </BaseNode>
-  );
-}
-
 // ─── NeoPixel RGB Advanced ────────────────────────────────────────────────────
 export function NeoPixelRGBNode() {
   const [numLeds, setNumLeds] = useNodeField<number>("numLeds", 8);
@@ -470,8 +252,6 @@ export function NeoPixelRGBNode() {
 }
 
 // ─── NeoPixel Designer Node ────────────────────────────────────────────────────
-// Created when "Add to Canvas" is clicked in the Designer Hub NeoPixel tab.
-// Stores the full frame/color data and shows a live LED preview in the node.
 type RGB = [number, number, number];
 
 export function NeoPixelDesignerNode() {

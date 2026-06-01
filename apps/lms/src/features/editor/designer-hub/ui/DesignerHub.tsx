@@ -31,9 +31,10 @@ interface DesignerHubProps {
   onClose: () => void;
   onAddNode?: (type: string, data: Record<string, unknown>) => void;
   defaultTab?: "oled" | "neopixel" | "matrix";
+  onSaveOLEDAnimation?: (frames: number[][], fps: number, name: string) => Promise<boolean>;
 }
 
-export function DesignerHub({ onClose, onAddNode, defaultTab = "oled" }: DesignerHubProps) {
+export function DesignerHub({ onClose, onAddNode, defaultTab = "oled", onSaveOLEDAnimation }: DesignerHubProps) {
   const [activeTab, setActiveTab] = useState<"oled" | "neopixel" | "matrix">(defaultTab);
 
   return createPortal(
@@ -63,7 +64,7 @@ export function DesignerHub({ onClose, onAddNode, defaultTab = "oled" }: Designe
 
         {/* Content */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === "oled"     && <OLEDDesigner     onAddNode={onAddNode} />}
+          {activeTab === "oled"     && <OLEDDesigner     onAddNode={onAddNode} onSaveToDevice={onSaveOLEDAnimation ? async (frames, fps, name) => { await onSaveOLEDAnimation(frames, fps, name); } : undefined} />}
           {activeTab === "neopixel" && <NeoPixelDesigner onAddNode={onAddNode} />}
           {activeTab === "matrix"   && <MatrixDesigner   onAddNode={onAddNode} />}
         </div>
