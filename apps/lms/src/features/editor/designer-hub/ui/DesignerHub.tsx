@@ -30,10 +30,11 @@ function Tab({ label, icon, active, onClick }: TabProps) {
 interface DesignerHubProps {
   onClose: () => void;
   onAddNode?: (type: string, data: Record<string, unknown>) => void;
+  defaultTab?: "oled" | "neopixel" | "matrix";
 }
 
-export function DesignerHub({ onClose, onAddNode }: DesignerHubProps) {
-  const [activeTab, setActiveTab] = useState<"oled" | "neopixel" | "matrix">("oled");
+export function DesignerHub({ onClose, onAddNode, defaultTab = "oled" }: DesignerHubProps) {
+  const [activeTab, setActiveTab] = useState<"oled" | "neopixel" | "matrix">(defaultTab);
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-2">

@@ -21,6 +21,7 @@ import { useDraft } from "@/features/editor/save-draft/model/useDraft";
 import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
+import { NodeActionsProvider } from "@/shared/context/NodeActionsContext";
 
 export type LessonContext = EditorLaunchContext;
 export type ViewMode = "blocks" | "split" | "code";
@@ -52,6 +53,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const [showTerminal, setShowTerminal] = useState(false);
   const [showLibraryManager, setShowLibraryManager] = useState(false);
   const [showDesignerHub, setShowDesignerHub] = useState(false);
+  const [designerTab, setDesignerTab] = useState<"oled" | "neopixel" | "matrix">("oled");
   const [showFirmwareFlasher, setShowFirmwareFlasher] = useState(false);
   const [showIMUViz, setShowIMUViz] = useState(false);
   const [showSensorViz, setShowSensorViz] = useState(false);
@@ -173,6 +175,9 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   }, [getCurrentCode, isConnected, uploadCode, addLog]);
 
   return (
+    <NodeActionsProvider
+      openMatrixDesigner={() => { setDesignerTab("matrix"); setShowDesignerHub(true); }}
+    >
     <div
       className="flex h-screen flex-col bg-[#09090b]"
       onClick={() => setContextMenu(null)}
@@ -335,6 +340,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
       {showDesignerHub && (
         <DesignerHub
+          defaultTab={designerTab}
           onClose={() => setShowDesignerHub(false)}
           onAddNode={(type, data) => { canvasRef.current?.addNode(type, data); setShowDesignerHub(false); }}
         />
@@ -356,5 +362,6 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         <RadarPanel logs={logs} onClose={() => setShowRadarViz(false)} />
       )}
     </div>
+    </NodeActionsProvider>
   );
 }

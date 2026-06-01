@@ -605,51 +605,245 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
   );
 }
 
-// ─── Sensor Gauge Visualizer ───────────────────────────────────────────────────
+// ─── Sensor Visualizer ────────────────────────────────────────────────────────
 const SENSOR_MAX = 200;
+const VIZ_STALE  = 3000;
 
-interface SensorChannel {
-  label: string;
-  type: string;
-  values: number[];
-  latest: number;
+interface SensorChannel { label: string; type: string; values: number[]; latest: number; ts: number; }
+
+type SensorKind = "pir" | "ir-beam" | "ir-remote" | "digital" | "analog" | "angle";
+function inferKind(label: string, type: string): SensorKind {
+  const l = label.toLowerCase();
+  if (l.includes("pir") || l.includes("motion")) return "pir";
+  if ((l.includes("ir") || l.includes("infrared")) && type === "raw") return "ir-remote";
+  if (l.includes("ir") || l.includes("infrared")) return "ir-beam";
+  if (type === "angle")   return "angle";
+  if (type === "digital") return "digital";
+  return "analog";
 }
 
-function ArcGauge({ value, min, max, color, label }: { value: number; min: number; max: number; color: string; label: string }) {
-  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
-  const R = 28, C = 36, startAngle = 220, sweep = 280;
-  const toRad = (deg: number) => (deg * Math.PI) / 180;
-  const arc = (angle: number) => ({
-    x: C + R * Math.cos(toRad(angle - 90)),
-    y: C + R * Math.sin(toRad(angle - 90)),
-  });
-  const arcPath = (from: number, to: number) => {
-    const s = arc(from), e = arc(to);
-    const large = to - from > 180 ? 1 : 0;
-    return `M ${s.x} ${s.y} A ${R} ${R} 0 ${large} 1 ${e.x} ${e.y}`;
-  };
-  const valAngle = startAngle + pct * sweep;
+function ChannelHeader({ label, badge, color, live }: { label: string; badge: string; color: string; live: boolean }) {
   return (
-    <svg width="72" height="72" viewBox="0 0 72 72">
-      <path d={arcPath(startAngle, startAngle + sweep)} fill="none" stroke="#1e1e26" strokeWidth="5" strokeLinecap="round" />
-      <path d={arcPath(startAngle, valAngle)} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" />
-      <text x="36" y="38" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold" fontFamily="monospace">
-        {value.toFixed(1)}
-      </text>
-      <text x="36" y="50" textAnchor="middle" fill="#6b7280" fontSize="6" fontFamily="monospace">
-        {label.slice(0, 8)}
+    <div className="flex items-center gap-1.5 mb-2">
+      <span className="text-xs font-bold text-white truncate">{label}</span>
+      <span className="text-[8px] px-1 py-0.5 rounded font-bold"
+        style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}>{badge}</span>
+      <div className="ml-auto flex items-center gap-1">
+        <span className="w-1.5 h-1.5 rounded-full"
+          style={{ background: live ? color : "#3f3f46", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
+        <span className="text-[8px] text-zinc-600 font-mono">{live ? "LIVE" : "stale"}</span>
+      </div>
+    </div>
+  );
+}
+
+function DigitalTimeline({ values, color }: { values: number[]; color: string }) {
+  return (
+    <div className="flex items-end gap-px h-5 mt-1">
+      {values.slice(-50).map((v, i) => (
+        <div key={i} className="flex-1 rounded-sm transition-all"
+          style={{ height: v ? "100%" : "28%", background: v ? color : "#1e1e26" }} />
+      ))}
+    </div>
+  );
+}
+
+function ArcGauge({ value, min, max, color }: { value: number; min: number; max: number; color: string }) {
+  const pct = Math.max(0, Math.min(1, (value - min) / (max - min)));
+  const R = 26, C = 34, startAngle = 220, sweep = 280;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const pt = (a: number) => ({ x: C + R * Math.cos(toRad(a - 90)), y: C + R * Math.sin(toRad(a - 90)) });
+  const arc = (from: number, to: number) => {
+    const s = pt(from), e = pt(to);
+    return `M ${s.x} ${s.y} A ${R} ${R} 0 ${to - from > 180 ? 1 : 0} 1 ${e.x} ${e.y}`;
+  };
+  return (
+    <svg width="68" height="60" viewBox="0 0 68 60" className="flex-shrink-0">
+      <path d={arc(startAngle, startAngle + sweep)} fill="none" stroke="#1e1e26" strokeWidth="5" strokeLinecap="round" />
+      <path d={arc(startAngle, startAngle + pct * sweep)} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" />
+      <text x="34" y="36" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" fontFamily="monospace">
+        {value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}
       </text>
     </svg>
   );
 }
 
-function DigitalTimeline({ values }: { values: number[] }) {
-  const recent = values.slice(-40);
+function PIRCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
+  const detected = live && ch.latest === 1;
+  const color    = detected ? "#22c55e" : "#52525b";
   return (
-    <div className="flex items-center gap-px h-5">
-      {recent.map((v, i) => (
-        <div key={i} className="flex-1 h-full rounded-sm" style={{ background: v ? "#22c55e" : "#1a1a20" }} />
-      ))}
+    <div className="rounded-2xl border bg-[#0c0c10] p-3 transition-all duration-300"
+      style={{ borderColor: detected ? "#22c55e50" : "#1e1e26", boxShadow: detected ? "0 0 20px #22c55e22" : "none" }}>
+      <ChannelHeader label={ch.label} badge="PIR" color="#22c55e" live={live} />
+      <div className="flex items-center gap-3">
+        <svg width="52" height="40" viewBox="0 0 56 44" className="flex-shrink-0">
+          {[18, 26, 34].map((r, i) => (
+            <path key={r} d={`M ${28 - r} 38 A ${r} ${r} 0 0 1 ${28 + r} 38`}
+              fill="none" stroke="#22c55e" strokeWidth="1.2"
+              opacity={detected ? 0.25 + i * 0.2 : 0.06 + i * 0.04} />
+          ))}
+          {detected && [10, 20].map((r, i) => (
+            <circle key={r} cx="28" cy="38" r={r} fill="none" stroke="#22c55e" strokeWidth="0.8"
+              opacity={0} style={{ animation: `pirBurst 1.2s ease-out ${i * 0.4}s infinite` }} />
+          ))}
+          <line x1="28" y1="38" x2="28" y2="6" stroke="#22c55e" strokeWidth="1.5" strokeLinecap="round"
+            opacity={live ? 0.7 : 0.2}
+            style={{ transformOrigin: "28px 38px", animation: live ? "pirSweep 2s linear infinite" : "none" }} />
+          <circle cx="28" cy="38" r="2.5" fill="#22c55e" opacity={live ? 0.9 : 0.3}
+            style={{ filter: detected ? "drop-shadow(0 0 5px #22c55e)" : "none" }} />
+        </svg>
+        <div className="flex-1">
+          <span className="text-[15px] font-bold block mb-1.5 transition-colors duration-300" style={{ color }}>
+            {!live ? "🔌 Waiting..." : detected ? "🏃 Motion!" : "😴 All Clear"}
+          </span>
+          <DigitalTimeline values={ch.values} color="#22c55e" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function IRBeamCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
+  const blocked = live && ch.latest === 0;
+  const beamClr = blocked ? "#ef4444" : "#22c55e";
+  return (
+    <div className="rounded-2xl border bg-[#0c0c10] p-3 transition-all duration-300"
+      style={{ borderColor: !live ? "#1e1e26" : blocked ? "#ef444440" : "#22c55e40",
+        boxShadow: !live ? "none" : blocked ? "0 0 16px #ef444418" : "0 0 14px #22c55e18" }}>
+      <ChannelHeader label={ch.label} badge="IR Sensor" color="#f97316" live={live} />
+      <div className="flex items-center gap-3 my-2">
+        <div className="w-9 h-10 rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 transition-all"
+          style={{ borderColor: beamClr, background: `${beamClr}15` }}>
+          <span className="text-sm leading-none">📡</span>
+          <span className="text-[7px] font-bold" style={{ color: beamClr }}>TX</span>
+        </div>
+        <div className="flex-1 flex items-center">
+          {blocked ? (
+            <>
+              <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
+              <div className="w-7 h-7 rounded-full bg-red-500/20 border-2 border-red-500/60 flex items-center justify-center mx-1 flex-shrink-0"
+                style={{ animation: "pulse 0.7s ease-in-out infinite" }}>
+                <span className="text-base">🚫</span>
+              </div>
+              <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
+            </>
+          ) : (
+            <div className="flex-1 h-0.5 rounded-full transition-all duration-500"
+              style={{ background: beamClr, opacity: live ? 1 : 0.15,
+                boxShadow: live ? `0 0 8px ${beamClr}, 0 0 16px ${beamClr}44` : "none" }} />
+          )}
+        </div>
+        <div className="w-9 h-10 rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 transition-all"
+          style={{ borderColor: beamClr, background: `${beamClr}15` }}>
+          <span className="text-sm leading-none">👁️</span>
+          <span className="text-[7px] font-bold" style={{ color: beamClr }}>RX</span>
+        </div>
+      </div>
+      <span className="text-[13px] font-bold block mb-1.5 transition-colors duration-300" style={{ color: beamClr }}>
+        {!live ? "🔌 Waiting..." : blocked ? "🚫 Something's There!" : "✅ Path Clear!"}
+      </span>
+      <DigitalTimeline values={ch.values} color={beamClr} />
+    </div>
+  );
+}
+
+function IRRemoteCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
+  const hex    = live ? `0x${ch.latest.toString(16).toUpperCase().padStart(4, "0")}` : "——";
+  const recent = [...new Set(ch.values.slice(-10))].slice(0, 6);
+  return (
+    <div className="rounded-2xl border border-[#1e1e26] bg-[#0c0c10] p-3">
+      <ChannelHeader label={ch.label} badge="IR Remote" color="#f97316" live={live} />
+      <p className="text-[9px] text-zinc-600 mb-2">📱 Point your remote at the receiver</p>
+      <div className="flex items-center justify-center py-3 px-3 mb-2 rounded-xl bg-[#111116] border border-[#2a2a30]">
+        <span className="text-2xl font-mono font-bold tracking-widest"
+          style={{ color: live ? "#f97316" : "#3f3f46",
+            textShadow: live ? "0 0 20px #f9731655" : "none" }}>{hex}</span>
+      </div>
+      {recent.length > 0 && (
+        <>
+          <p className="text-[8px] text-zinc-600 mb-1">Recent buttons:</p>
+          <div className="flex flex-wrap gap-1">
+            {recent.reverse().map((v, i) => (
+              <span key={i} className="text-[9px] font-mono px-2 py-0.5 rounded-lg bg-orange-500/10 border border-orange-500/25 text-orange-400">
+                {`0x${v.toString(16).toUpperCase().padStart(4, "0")}`}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function DigitalCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
+  const on    = live && ch.latest !== 0;
+  const emoji = !live ? "❓" : on ? "🟢" : "⚫";
+  const label = !live ? "Waiting..." : on ? "It's ON!" : "It's OFF";
+  const color = on ? "#22c55e" : "#52525b";
+  return (
+    <div className="rounded-2xl border bg-[#0c0c10] p-3 transition-all"
+      style={{ borderColor: on ? "#22c55e35" : "#1e1e26", boxShadow: on ? "0 0 14px #22c55e15" : "none" }}>
+      <ChannelHeader label={ch.label} badge="digital" color="#22c55e" live={live} />
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl transition-all"
+          style={{ background: on ? "#22c55e18" : "#1a1a20", border: `2px solid ${on ? "#22c55e40" : "#2d2d35"}`,
+            boxShadow: on ? "0 0 12px #22c55e22" : "none" }}>
+          {emoji}
+        </div>
+        <span className="text-[15px] font-bold transition-all duration-300" style={{ color }}>{label}</span>
+      </div>
+      <DigitalTimeline values={ch.values} color="#22c55e" />
+    </div>
+  );
+}
+
+function AngleCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
+  const color = "#f97316";
+  const angle = Math.max(0, Math.min(180, ch.latest));
+  const rad   = (angle * Math.PI) / 180;
+  const cx = 50, cy = 50, r = 36;
+  const ex = cx + r * Math.cos(Math.PI - rad), ey = cy - r * Math.sin(Math.PI - rad);
+  return (
+    <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+      <ChannelHeader label={ch.label} badge="angle" color={color} live={live} />
+      <div className="flex items-center gap-3">
+        <svg width="72" height="48" viewBox="0 0 100 60" className="flex-shrink-0">
+          <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
+            fill="none" stroke="#1e1e26" strokeWidth="4" strokeLinecap="round" />
+          <path d={`M ${cx} ${cy} L ${cx + r} ${cy} A ${r} ${r} 0 ${angle > 90 ? 1 : 0} 0 ${ex} ${ey} Z`}
+            fill={`${color}15`} />
+          <line x1={cx} y1={cy} x2={ex} y2={ey} stroke={color} strokeWidth="2.5" strokeLinecap="round"
+            style={{ filter: live ? `drop-shadow(0 0 3px ${color})` : "none" }} />
+          <circle cx={cx} cy={cy} r="3" fill={color} />
+          <text x={cx} y={cy + 14} textAnchor="middle" fill={color} fontSize="11" fontWeight="bold" fontFamily="monospace">
+            {angle.toFixed(0)}°
+          </text>
+        </svg>
+        <div className="flex-1">
+          <Sparkline data={ch.values} color={color} min={0} max={180} height={36} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnalogCard({ ch, live, color }: { ch: SensorChannel; live: boolean; color: string }) {
+  const min = Math.min(...ch.values), max = Math.max(...ch.values);
+  const avg = ch.values.reduce((a, b) => a + b, 0) / ch.values.length;
+  return (
+    <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+      <ChannelHeader label={ch.label} badge={ch.type} color={color} live={live} />
+      <div className="flex items-start gap-3">
+        <ArcGauge value={ch.latest} min={min === max ? min - 1 : min} max={min === max ? max + 1 : max} color={color} />
+        <div className="flex-1 min-w-0">
+          <Sparkline data={ch.values} color={color} min={min === max ? min - 1 : min} max={min === max ? max + 1 : max} height={36} />
+          <div className="flex gap-3 mt-1 text-[9px] font-mono">
+            <span className="text-zinc-600">min <span style={{ color }}>{min.toFixed(1)}</span></span>
+            <span className="text-zinc-600">avg <span style={{ color }}>{avg.toFixed(1)}</span></span>
+            <span className="text-zinc-600">max <span style={{ color }}>{max.toFixed(1)}</span></span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -660,20 +854,18 @@ export function SensorVizPanel({ logs, onClose }: { logs: string[]; onClose: () 
   useEffect(() => {
     const raw = logs.map(stripLogPrefix).filter((l) => l.startsWith("SENSOR,"));
     if (raw.length === 0) return;
-    const last20 = raw.slice(-20);
     setChannels((prev) => {
       const updated = new Map(prev);
-      for (const line of last20) {
+      for (const line of raw.slice(-20)) {
         const [, type, label, valStr] = line.split(",");
         if (!type || !label || valStr === undefined) continue;
         const val = parseFloat(valStr);
         if (isNaN(val)) continue;
         const existing = updated.get(label);
         updated.set(label, {
-          label,
-          type: type.toLowerCase(),
+          label, type: type.toLowerCase(),
           values: [...(existing?.values ?? []).slice(-(SENSOR_MAX - 1)), val],
-          latest: val,
+          latest: val, ts: Date.now(),
         });
       }
       return updated;
@@ -681,64 +873,32 @@ export function SensorVizPanel({ logs, onClose }: { logs: string[]; onClose: () 
   }, [logs]);
 
   const chans = Array.from(channels.values());
-
-  const colorOf = (type: string) => {
-    if (type === "digital") return "#22c55e";
-    if (type === "angle") return "#f97316";
-    if (type === "raw") return "#a855f7";
-    return "#3b82f6";
-  };
+  const colorOf = (type: string) =>
+    type === "digital" ? "#22c55e" : type === "angle" ? "#f97316" : type === "raw" ? "#a855f7" : "#3b82f6";
 
   return (
     <PanelShell title="Sensor Visualizer" icon={<Gauge className="w-4 h-4" />}
       color="#22c55e" onClose={onClose} initialPos={{ x: 24, y: 420 }} width={360}>
-      <div className="p-3 space-y-2 max-h-[420px] overflow-y-auto">
+      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
         {chans.length === 0 ? (
-          <div className="text-center py-4 text-[10px] text-zinc-600 space-y-1">
-            <p>No sensor data yet.</p>
-            <p className="text-zinc-700">Output format: <code className="text-green-500">SENSOR,analog,Temperature,23.5</code></p>
+          <div className="text-center py-6 space-y-1.5">
+            <p className="text-zinc-500 text-[11px] font-medium">No sensor data yet</p>
+            <p className="text-zinc-700 text-[10px]">Run code with "Send to Viz" enabled on any sensor node</p>
+            <p className="font-mono text-[9px] text-zinc-700 mt-2 leading-relaxed">
+              SENSOR,digital,motion,1<br />SENSOR,analog,Temperature,23.5
+            </p>
           </div>
-        ) : (
-          chans.map((ch) => {
-            const color = colorOf(ch.type);
-            const min = Math.min(...ch.values), max = Math.max(...ch.values);
-            const avg = ch.values.reduce((a, b) => a + b, 0) / ch.values.length;
-            return (
-              <div key={ch.label} className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
-                <div className="flex items-start gap-3">
-                  {ch.type === "digital" ? (
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${ch.latest ? "bg-green-500/20" : "bg-zinc-800"}`}>
-                      {ch.latest ? "🟢" : "⚫"}
-                    </div>
-                  ) : (
-                    <ArcGauge value={ch.latest} min={min === max ? min - 1 : min} max={min === max ? max + 1 : max} color={color} label={ch.label} />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-xs font-bold text-white truncate">{ch.label}</span>
-                      <span className="text-[8px] px-1 py-0.5 rounded font-bold"
-                        style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}>
-                        {ch.type}
-                      </span>
-                    </div>
-                    {ch.type === "digital" ? (
-                      <DigitalTimeline values={ch.values} />
-                    ) : (
-                      <Sparkline data={ch.values} color={color} min={min} max={max} height={28} />
-                    )}
-                    {ch.type !== "digital" && (
-                      <div className="flex gap-3 mt-1 text-[9px] font-mono">
-                        <span className="text-zinc-600">min <span style={{ color }}>{min.toFixed(1)}</span></span>
-                        <span className="text-zinc-600">avg <span style={{ color }}>{avg.toFixed(1)}</span></span>
-                        <span className="text-zinc-600">max <span style={{ color }}>{max.toFixed(1)}</span></span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
+        ) : chans.map((ch) => {
+          const live  = (Date.now() - ch.ts) < VIZ_STALE;
+          const kind  = inferKind(ch.label, ch.type);
+          const color = colorOf(ch.type);
+          if (kind === "pir")       return <PIRCard       key={ch.label} ch={ch} live={live} />;
+          if (kind === "ir-beam")   return <IRBeamCard    key={ch.label} ch={ch} live={live} />;
+          if (kind === "ir-remote") return <IRRemoteCard  key={ch.label} ch={ch} live={live} />;
+          if (kind === "digital")   return <DigitalCard   key={ch.label} ch={ch} live={live} />;
+          if (kind === "angle")     return <AngleCard     key={ch.label} ch={ch} live={live} />;
+          return                           <AnalogCard    key={ch.label} ch={ch} live={live} color={color} />;
+        })}
       </div>
     </PanelShell>
   );

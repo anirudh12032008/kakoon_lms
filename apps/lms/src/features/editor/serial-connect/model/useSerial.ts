@@ -7,6 +7,7 @@ import {
   sendCodeToESP32,
   uploadCodeToESP32,
 } from "@/features/editor/serial-connect/lib/serial";
+import { tryParseSensorLine } from "@/shared/lib/sensorStore";
 
 type ConnectionType = "usb" | "wifi";
 
@@ -65,6 +66,7 @@ export function useSerialConnection() {
             if (line.trim()) {
               addLog(`📥 ${line}`);
               responseCallbackRef.current?.(line);
+              tryParseSensorLine(line);
               // MicroPython REPL prompt means program finished
               if (line.includes(">>>")) setIsRunning(false);
             }

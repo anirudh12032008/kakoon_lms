@@ -155,17 +155,21 @@ export async function sendCodeToESP32(
   }
   
   // Default: REPL paste mode
+  // Ctrl+B — exit raw REPL mode if we're stuck in it from a previous Upload
+  await writer.write(encoder.encode("\x02"));
+  await new Promise((r) => setTimeout(r, 100));
+
   // Ctrl+C to interrupt any running code
   await writer.write(encoder.encode("\x03"));
-  await new Promise((r) => setTimeout(r, 100));
-  
+  await new Promise((r) => setTimeout(r, 150));
+
   // Ctrl+C again to be sure
   await writer.write(encoder.encode("\x03"));
-  await new Promise((r) => setTimeout(r, 100));
-  
+  await new Promise((r) => setTimeout(r, 150));
+
   // Ctrl+E to enter paste mode
   await writer.write(encoder.encode("\x05"));
-  await new Promise((r) => setTimeout(r, 100));
+  await new Promise((r) => setTimeout(r, 200)); // longer wait — board needs time to switch modes
   
   // Send code in small chunks
   const lines = code.split("\n");
@@ -228,13 +232,20 @@ export async function uploadCodeToESP32(
     await new Promise((r) => setTimeout(r, 30));
   }
   
-  // Ctrl+D to execute in raw REPL
+  // Ctrl+D — execute the accumulated file-writing script in raw REPL
   await writer.write(encoder.encode("\x04"));
-  await new Promise((r) => setTimeout(r, 500));
-  
-  // Exit raw REPL (Ctrl+B)
+
+  // Wait long enough for the file-writing script to finish.
+  // Rule of thumb: 50 ms per KB of source code, minimum 1 s.
+  const waitMs = Math.max(1500, Math.ceil(code.length / 1000) * 200);
+  await new Promise((r) => setTimeout(r, waitMs));
+
+  // Ctrl+B — exit raw REPL and return to friendly REPL.
+  // Send it twice with a gap so it isn't missed.
   await writer.write(encoder.encode("\x02"));
-  await new Promise((r) => setTimeout(r, 100));
-  
+  await new Promise((r) => setTimeout(r, 200));
+  await writer.write(encoder.encode("\x02"));
+  await new Promise((r) => setTimeout(r, 200));
+
   onProgress?.("Upload complete! Code will run on next boot.");
 }

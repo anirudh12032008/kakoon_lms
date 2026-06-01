@@ -95,24 +95,37 @@ function generateMatrixCode(frames: number[][], modules: number, fps: number, na
     `# MAX7219 Matrix — ${name} (${modules} module${modules > 1 ? "s" : ""}, ${W}×8, ${fps} fps)`,
     `from machine import SPI, Pin`,
     `import max7219, time`,
-    `_spi = SPI(1, baudrate=10_000_000, polarity=0, phase=0, sck=Pin(11), mosi=Pin(10), miso=Pin(12))`,
+    `_spi = SPI(1, baudrate=10_000_000, polarity=0, phase=0, sck=Pin(11), mosi=Pin(10))`,
     `_cs  = Pin(13, Pin.OUT)`,
     `_mat = max7219.Matrix8x8(_spi, _cs, ${modules})`,
     `_mat.brightness(8)`,
-    `_frames = [`];
+    `# Each frame: ${modules * 8} bytes — layout [row0_mod0, row0_mod1, ..., row7_mod${modules - 1}]`,
+    `_frames = [`,
+  ];
+  // Encode: byte[row * modules + mod] = 8 pixels (always 0-255)
   frames.slice(0, 60).forEach((f) => {
-    const rows = Array.from({ length: 8 }, (_, r) => {
-      let byte = 0;
-      for (let c = 0; c < W; c++) if (f[r * W + c]) byte |= (1 << c);
-      return byte;
-    });
-    lines.push(`    bytes([${rows.join(", ")}]),`);
+    const bytes: number[] = [];
+    for (let row = 0; row < 8; row++) {
+      for (let mod = 0; mod < modules; mod++) {
+        let b = 0;
+        for (let bit = 0; bit < 8; bit++) {
+          if (f[row * W + mod * 8 + bit]) b |= (1 << bit);
+        }
+        bytes.push(b);
+      }
+    }
+    lines.push(`    bytes([${bytes.join(", ")}]),`);
   });
   lines.push(`]`);
   lines.push(`while True:`);
   lines.push(`    for _f in _frames:`);
   lines.push(`        _mat.fill(0)`);
-  lines.push(`        for _r in range(8): _mat.row(_r, _f[_r])`);
+  lines.push(`        for _r in range(8):`);
+  lines.push(`            for _m in range(${modules}):`);
+  lines.push(`                _b = _f[_r * ${modules} + _m]`);
+  lines.push(`                _px = ${modules - 1} - _m`);
+  lines.push(`                for _bit in range(8):`);
+  lines.push(`                    if _b & (1 << _bit): _mat.pixel(_px * 8 + (7 - _bit), _r, 1)`);
   lines.push(`        _mat.show()`);
   lines.push(`        time.sleep_ms(${Math.round(1000 / fps)})`);
   return lines.join("\n");
@@ -280,10 +293,16 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           {code}
         </pre>
         {onAddNode && (
-          <div className="px-3 py-2.5 border-t border-[#1a1a20]">
+          <div className="px-3 py-2.5 border-t border-[#1a1a20] space-y-2">
             <button
               onClick={() => {
-                onAddNode("max7219", { modules, width: modules, height: 1 });
+                onAddNode("max7219", {
+                  modules,
+                  matrixFrames: frames,
+                  fps,
+                  brightness: 8,
+                  designName,
+                });
                 setAddedToCanvas(true);
                 setTimeout(() => setAddedToCanvas(false), 2000);
               }}
@@ -296,6 +315,9 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
               <PlusCircle className="w-3.5 h-3.5" />
               {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
             </button>
+            <p className="text-[8px] text-zinc-700 text-center">
+              {frames.length} frame{frames.length !== 1 ? "s" : ""} · {modules} module{modules !== 1 ? "s" : ""} · {fps} fps
+            </p>
           </div>
         )}
       </div>

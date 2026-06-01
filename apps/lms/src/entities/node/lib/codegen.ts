@@ -1,4 +1,9 @@
 import type { Node, Edge } from "@xyflow/react";
+import {
+  ONBOARD_IMU, OLED, NEOPIXEL, SENSOR_PORTS,
+  SERVO_PORTS, SERVO_PORT_ORDER, MOTORS,
+  PIR_SENSOR, IR_SENSOR, MATRIX,
+} from "@/entities/board";
 
 // All possible fields across every node type — each node only uses a subset.
 interface NodeData {
@@ -21,6 +26,8 @@ interface NodeData {
   // NeoPixel
   color?: string; brightness?: number; red?: number; green?: number; blue?: number;
   ledCount?: number; fps?: number; frames?: number[][][]; pattern?: string;
+  // MAX7219 matrix
+  matrixFrames?: number[][]; modules?: number; designName?: string;
   // OLED
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
@@ -43,6 +50,8 @@ interface NodeData {
   keyframeDelay?: number;
   // Touch
   t1?: string; t2?: string; t3?: string; t4?: string;
+  // PIR / IR
+  sendToViz?: boolean; debounce?: number; invert?: boolean;
   // Comms / IoT
   ssid?: string; password?: string; url?: string; mac?: string; sendData?: string;
   deviceName?: string; clientId?: string; broker?: string; topic?: string; payload?: string;
@@ -114,9 +123,9 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
   const setupOnce = new Set<string>(); // dedup helper functions across multiple nodes
 
   // Board hardware pin maps (shared between codegen cases)
-  const SERVO_PIN_MAP: Record<string, number> = { S1: 21, S2: 47, S3: 39, S4: 40 };
-
-  const SERVO_PORT_ORDER = ["S1", "S2", "S3", "S4"] as const;
+  const SERVO_PIN_MAP: Record<string, number> = Object.fromEntries(
+    Object.entries(SERVO_PORTS).map(([k, v]) => [k, v.pin])
+  );
   const usedServoPorts = new Set<string>();
   const markServoPort = (port: unknown) => {
     if (typeof port === "string" && port in SERVO_PIN_MAP) {
@@ -185,8 +194,8 @@ class DRV8833:
 
 def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
 def _dp(pin): return Pin(pin, Pin.OUT)
-front = DRV8833(_mp(17), _dp(18), _mp(45), _dp(46))  # FR=a, FL=b (a=right front, b=left front)
-rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear, b=left rear)`;
+front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))  # FR=a, FL=b
+rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))   # RR=a, RL=b`;
 
   // Helper: emit a shared helper block only once per script
   const emitOnce = (key: string, code: string) => {
@@ -319,8 +328,8 @@ rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear,
         imports.add("from machine import SoftI2C, Pin");
         imports.add("from lsm6ds3 import LSM6DS3");
         imports.add("import time, math");
-        emitOnce("imu_setup", `# LSM6DS3 onboard IMU — SCL=42 SDA=41
-_i2c_imu = SoftI2C(scl=Pin(42), sda=Pin(41))
+        emitOnce("imu_setup", `# LSM6DS3 onboard IMU — SCL=${ONBOARD_IMU.scl} SDA=${ONBOARD_IMU.sda}
+_i2c_imu = SoftI2C(scl=Pin(${ONBOARD_IMU.scl}), sda=Pin(${ONBOARD_IMU.sda}))
 _imu = LSM6DS3(_i2c_imu)
 time.sleep(0.1)`);
         const vn   = d.varName    ?? "imu";
@@ -337,6 +346,28 @@ time.sleep(0.1)`);
         }
         break;
       }
+      case "pir_sensor": {
+        const vn      = d.varName  ?? "motion";
+        const pinNum  = d.pin      ?? PIR_SENSOR.pin;
+        const pullup  = d.pullup   ? "Pin.PULL_UP" : "Pin.PULL_DOWN";
+        const debounce = d.debounce ?? 50;
+        const sendViz = d.sendToViz !== false;
+        imports.add("from machine import Pin");
+        imports.add("import time");
+        emitOnce(`pir_setup_${pinNum}`,
+          `# PIR motion sensor — GPIO ${pinNum}\n` +
+          `_pir_${pinNum} = Pin(${pinNum}, Pin.IN, ${pullup})`
+        );
+        chunkLines.push(`${indent}${vn} = _pir_${pinNum}.value()`);
+        if (debounce > 0) {
+          chunkLines.push(`${indent}time.sleep_ms(${debounce})`);
+        }
+        if (sendViz) {
+          // label = varName so the node's sensorStore lookup matches
+          chunkLines.push(`${indent}print(f"SENSOR,digital,${vn},{${vn}}")`);
+        }
+        break;
+      }
       case "buzzer_tone":
         imports.add("from machine import Pin, PWM");
         imports.add("import time");
@@ -347,7 +378,7 @@ time.sleep(0.1)`);
       case "neopixel_led":
         imports.add("from machine import Pin");
         imports.add("import neopixel");
-        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? 48}), 1)`);
+        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), 1)`);
         {
           const c = d.color ?? "#ff0000";
           const r = parseInt(c.slice(1, 3), 16);
@@ -361,7 +392,7 @@ time.sleep(0.1)`);
       case "neopixel_rgb":
         imports.add("from machine import Pin");
         imports.add("import neopixel");
-        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? 48}), 1)`);
+        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), 1)`);
         {
           const br = (d.brightness ?? 50) / 100;
           chunkLines.push(`${indent}np[0] = (${Math.round((d.red ?? 255) * br)}, ${Math.round((d.green ?? 0) * br)}, ${Math.round((d.blue ?? 0) * br)})`);
@@ -372,7 +403,7 @@ time.sleep(0.1)`);
       case "neopixel_designer": {
         imports.add("from machine import Pin");
         imports.add("import neopixel, time");
-        const npPin = d.pin ?? 48;
+        const npPin = d.pin ?? NEOPIXEL.pin;
         const npCount = d.ledCount ?? 8;
         const npFps = d.fps ?? 10;
         const npFrames = d.frames as number[][][] | undefined;
@@ -476,32 +507,64 @@ time.sleep(0.1)`);
         break;
 
       // ─── Sensor ────────────────────────────────────────────────────────────
-      case "ultrasonic":
+      case "ultrasonic": {
+        const uPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
+        const uPins = SENSOR_PORTS[uPort] ?? SENSOR_PORTS["1"];
+        const trig  = d.trigPin ?? uPins.trig;
+        const echo  = d.echoPin ?? uPins.echo;
         imports.add("from machine import Pin");
         imports.add("import time");
-        chunkLines.push(`${indent}# Ultrasonic - Trig:${d.trigPin ?? 1} Echo:${d.echoPin ?? 5}`);
-        chunkLines.push(`${indent}trig = Pin(${d.trigPin ?? 1}, Pin.OUT)`);
-        chunkLines.push(`${indent}echo = Pin(${d.echoPin ?? 5}, Pin.IN)`);
+        chunkLines.push(`${indent}# Ultrasonic port ${uPort} — TRIG:${trig} ECHO:${echo}`);
+        chunkLines.push(`${indent}trig = Pin(${trig}, Pin.OUT)`);
+        chunkLines.push(`${indent}echo = Pin(${echo}, Pin.IN)`);
         chunkLines.push(`${indent}trig.value(1); time.sleep_us(10); trig.value(0)`);
         chunkLines.push(`${indent}${d.varName ?? "distance"} = echo.value()`);
         break;
-      case "touch_sensor":
+      }
+      case "touch_sensor": {
+        const tPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
+        const tPins = SENSOR_PORTS[tPort] ?? SENSOR_PORTS["1"];
         imports.add("from machine import TouchPad, Pin");
-        chunkLines.push(`${indent}${d.varName ?? "touch_value"} = TouchPad(Pin(${d.pin ?? 4})).read()`);
+        chunkLines.push(`${indent}${d.varName ?? "touch_value"} = TouchPad(Pin(${d.pin ?? tPins.sda})).read()`);
         break;
-      case "soil_moisture":
+      }
+      case "soil_moisture": {
+        const sPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
+        const sPins = SENSOR_PORTS[sPort] ?? SENSOR_PORTS["1"];
+        const smPin = d.pin ?? sPins.sda;
         imports.add("from machine import ADC, Pin");
-        setupLines.push(`soil_moisture_${d.pin ?? 4} = ADC(Pin(${d.pin ?? 4}))`);
-        chunkLines.push(`${indent}${d.varName ?? "value"} = soil_moisture_${d.pin ?? 4}.read_u16()`);
+        setupLines.push(`soil_moisture_${smPin} = ADC(Pin(${smPin}))`);
+        chunkLines.push(`${indent}${d.varName ?? "value"} = soil_moisture_${smPin}.read_u16()`);
         break;
-      case "ir_receiver":
-        chunkLines.push(`${indent}# IR Receiver on pin ${d.pin ?? 5}`);
-        chunkLines.push(`${indent}${d.varName ?? "ir_cmd"} = 0  # Read from IR receiver`);
-        break;
-      case "ir_sensor":
+      }
+      case "ir_receiver": {
+        const vn = d.varName ?? "ir_cmd";
         imports.add("from machine import Pin");
-        chunkLines.push(`${indent}${d.varName ?? "ir_value"} = Pin(${d.pin ?? 4}, Pin.IN).value()`);
+        emitOnce(`ir_recv_setup_${d.pin ?? 6}`,
+          `# IR Receiver (NEC) — GPIO ${d.pin ?? 6}\n` +
+          `_ir_recv_${d.pin ?? 6} = Pin(${d.pin ?? 6}, Pin.IN)`
+        );
+        // Basic NEC pulse-counting stub — real decode needs irq + timing
+        chunkLines.push(`${indent}${vn} = _ir_recv_${d.pin ?? 6}.value()  # raw pulse; use irq for full NEC decode`);
+        if (d.sendToViz !== false) {
+          chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
+        }
         break;
+      }
+      case "ir_sensor": {
+        const vn = d.varName ?? "ir_value";
+        imports.add("from machine import Pin");
+        imports.add("import time");
+        emitOnce(`ir_sensor_setup_${d.pin ?? 6}`,
+          `# IR obstacle sensor — GPIO ${d.pin ?? 6}\n` +
+          `_ir_${d.pin ?? 6} = Pin(${d.pin ?? 6}, Pin.IN)`
+        );
+        chunkLines.push(`${indent}${vn} = _ir_${d.pin ?? 6}.value()`);
+        if (d.sendToViz !== false) {
+          chunkLines.push(`${indent}print(f"SENSOR,digital,${vn},{${vn}}")`);
+        }
+        break;
+      }
 
       case "four_channel_touch":
         imports.add("from machine import TouchPad, Pin");
@@ -522,7 +585,7 @@ time.sleep(0.1)`);
 
         imports.add("from machine import SoftI2C, Pin");
         imports.add(`import ${dLib}`);
-        setupLines.push(`i2c = SoftI2C(scl=Pin(${d.sck ?? 36}), sda=Pin(${d.sda ?? 35}))`);
+        setupLines.push(`i2c = SoftI2C(scl=Pin(${d.sck ?? OLED.scl}), sda=Pin(${d.sda ?? OLED.sda}))`);
         setupLines.push(`oled = ${dLib}.${dClass}(${oledW}, ${oledH}, i2c)`);
 
         // Always clear before drawing
@@ -633,7 +696,7 @@ time.sleep(0.1)`);
       case "rgb_led_matrix":
         imports.add("import neopixel");
         imports.add("from machine import Pin");
-        setupLines.push(`rgb_matrix = neopixel.NeoPixel(Pin(${d.pin ?? 48}), ${d.ledCount ?? 16})`);
+        setupLines.push(`rgb_matrix = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), ${d.ledCount ?? 16})`);
         chunkLines.push(`${indent}# Pattern: ${d.pattern ?? "Chase"} on ${d.ledCount ?? 16} LEDs`);
         chunkLines.push(`${indent}for i in range(len(rgb_matrix)):`);
         chunkLines.push(`${indent}    rgb_matrix[i] = (${Math.round((d.brightness ?? 128))}, 0, 0)`);
@@ -662,8 +725,8 @@ time.sleep(0.1)`);
         pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
 def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
 def _dp(pin): return Pin(pin, Pin.OUT)
-    front = DRV8833(_mp(17), _dp(18), _mp(45), _dp(46))  # FR=a, FL=b (a=right front, b=left front)
-    rear  = DRV8833(_mp(37), _dp(38), _mp(15), _dp(16))  # RR=a, RL=b (a=right rear, b=left rear)`);
+    front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))  # FR=a, FL=b
+    rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))   # RR=a, RL=b`);
         const move = (d.move as string) ?? "forward";
         const t    = ((d.speed ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
         const ti   = (((d.speed ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
@@ -891,13 +954,71 @@ def _dp(pin): return Pin(pin, Pin.OUT)
         chunkLines.push(`${indent}sd = sdcard.SDCard(spi, Pin(${d.csPin ?? 5}))`);
         break;
 
-      case "max7219":
+      case "max7219": {
+        const mods       = d.modules ?? 1;
+        const W          = mods * 8;
+        const mFps       = d.fps ?? 8;
+        const mFrames    = d.matrixFrames;
+        const mName      = d.designName ?? "matrix";
+        const mBright    = d.brightness ?? 8;
         imports.add("from machine import Pin, SPI");
-        imports.add("import max7219");
-        chunkLines.push(`${indent}# MAX7219 matrix: ${d.width ?? 8}x${d.height ?? 8}`);
-        chunkLines.push(`${indent}spi = SPI(1, baudrate=10000000, polarity=0, phase=0)`);
-        chunkLines.push(`${indent}display = max7219.Matrix8x8(spi, Pin(${d.csPin ?? 5}), ${d.width ?? 1}, ${d.height ?? 1})`);
+        imports.add("import max7219, time");
+        const mSck  = d.sck  ?? MATRIX.sck;
+        const mMosi = d.mosi ?? MATRIX.mosi;
+        const mCs   = d.cs   ?? MATRIX.cs;
+        // MAX7219 is write-only — no MISO line needed
+        emitOnce("matrix_setup",
+          `# MAX7219 matrix — CLK=${mSck} DIN=${mMosi} CS=${mCs}\n` +
+          `_mat_spi = SPI(1, baudrate=${MATRIX.baudrate}, polarity=0, phase=0, sck=Pin(${mSck}), mosi=Pin(${mMosi}))\n` +
+          `_mat_cs  = Pin(${mCs}, Pin.OUT)\n` +
+          `_mat     = max7219.Matrix8x8(_mat_spi, _mat_cs, ${mods})\n` +
+          `_mat.brightness(${mBright})`
+        );
+        if (mFrames && mFrames.length > 0) {
+          // Encode frames as (mods * 8) bytes each.
+          // Layout: byte[row * mods + mod] = 8 pixels of module `mod` on row `row`.
+          // Each byte is always 0-255 regardless of module count.
+          const frameBytes = mFrames.slice(0, 60).map((frame) => {
+            const bytes: number[] = [];
+            for (let row = 0; row < 8; row++) {
+              for (let mod = 0; mod < mods; mod++) {
+                let b = 0;
+                for (let bit = 0; bit < 8; bit++) {
+                  if (frame[row * W + mod * 8 + bit]) b |= (1 << bit);
+                }
+                bytes.push(b);
+              }
+            }
+            return bytes;
+          });
+          const framesLiteral = frameBytes
+            .map(bytes => `    bytes([${bytes.join(", ")}])`)
+            .join(",\n");
+          emitOnce(`matrix_frames_${mName}`,
+            `# Matrix frames: ${mName} (${mFrames.length} frame${mFrames.length > 1 ? "s" : ""}, ${mFps} fps)\n` +
+            `# Each frame = ${mods * 8} bytes: [row0_mod0, row0_mod1, ..., row7_mod${mods - 1}]\n` +
+            `_mat_frames = [\n${framesLiteral}\n]`
+          );
+          // Pixel x-axis: show() sends buffer[y*num+0] first → it arrives at the
+          // LAST physical module (SPI daisy-chain). Reverse module index so that
+          // frame column 0 (leftmost in designer) maps to the leftmost physical module.
+          chunkLines.push(`${indent}for _mf in _mat_frames:`);
+          chunkLines.push(`${indent}    _mat.fill(0)`);
+          chunkLines.push(`${indent}    for _r in range(8):`);
+          chunkLines.push(`${indent}        for _m in range(${mods}):`);
+          chunkLines.push(`${indent}            _b = _mf[_r * ${mods} + _m]`);
+          chunkLines.push(`${indent}            _px = (${mods - 1} - _m) * 8`);
+          chunkLines.push(`${indent}            for _bit in range(8):`);
+          chunkLines.push(`${indent}                if _b & (1 << _bit): _mat.pixel(_px + (7 - _bit), _r, 1)`);
+          chunkLines.push(`${indent}    _mat.show()`);
+          chunkLines.push(`${indent}    time.sleep_ms(${Math.round(1000 / mFps)})`);
+        } else {
+          // No design yet — blank display
+          chunkLines.push(`${indent}_mat.fill(0)`);
+          chunkLines.push(`${indent}_mat.show()`);
+        }
         break;
+      }
 
       case "play_animation":
         chunkLines.push(`${indent}# Play animation: ${d.animationName ?? "default"}`);

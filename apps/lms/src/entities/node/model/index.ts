@@ -12,7 +12,7 @@ import { WiFiConnectNode, HTTPGetNode, ESPNOWSenderNode, ESPNOWReceiverNode, Tim
 import {
   UltrasonicSensorNode, TouchSensorNode, SoilMoistureSensorNode,
   IRReceiverNode, IRSensorNode, FourChannelTouchNode,
-  AnalogSensorNode, ButtonDigitalInputNode, IMUSensorNode,
+  AnalogSensorNode, ButtonDigitalInputNode, IMUSensorNode, PIRSensorNode,
 } from "../ui/SensorNodes";
 import {
   OLEDDisplayNode, SevenSegNode, MAX7219Node, PlayAnimationNode, ShowImageNode,
@@ -63,6 +63,7 @@ export const NODE_TYPES: NodeTypes = {
   ir_sensor: IRSensorNode,
   four_channel_touch: FourChannelTouchNode,
   imu_sensor: IMUSensorNode,
+  pir_sensor: PIRSensorNode,
   analog_sensor: AnalogSensorNode,
   button_digital_input: ButtonDigitalInputNode,
   oled_display: OLEDDisplayNode,
@@ -173,7 +174,8 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "ir_receiver", label: "IR Receiver", color: "#f97316", previewDot: "#f97316" },
       { type: "ir_sensor", label: "IR Sensor", color: "#f97316", previewDot: "#f97316" },
       { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "imu_sensor", label: "Onboard IMU (MPU6050)", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "imu_sensor",    label: "Onboard IMU (LSM6DS3)", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "pir_sensor", label: "PIR Motion Sensor", color: "#22c55e", previewDot: "#22c55e" },
     ],
   },
   {
