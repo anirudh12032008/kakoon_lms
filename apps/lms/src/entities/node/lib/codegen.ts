@@ -2,7 +2,7 @@ import type { Node, Edge } from "@xyflow/react";
 import {
   ONBOARD_IMU, OLED, NEOPIXEL, SENSOR_PORTS,
   SERVO_PORTS, SERVO_PORT_ORDER, MOTORS,
-  PIR_SENSOR, IR_SENSOR, MATRIX,
+  PIR_SENSOR, MATRIX,
 } from "@/entities/board";
 
 // All possible fields across every node type — each node only uses a subset.
@@ -14,8 +14,9 @@ interface NodeData {
   name?: string;
   value?: number | string | null;
   tone?: number;
-  // GPIO
+  // GPIO / sensor port
   pin?: number; pin1?: number; pin2?: number; pin3?: number; pin4?: number;
+  port?: string; cs?: number;
   mode?: string; freq?: number; duty?: number; pullup?: boolean;
   trigPin?: number; echoPin?: number;
   // Variable / logic / math

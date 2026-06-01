@@ -36,7 +36,7 @@ const PORT_OPTIONS = [
 ];
 
 function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultrasonic" }) {
-  const p = SENSOR_PORT_PINS[port] ?? SENSOR_PORT_PINS["1"];
+  const p = SENSOR_PORT_PINS[port as keyof typeof SENSOR_PORT_PINS] ?? SENSOR_PORT_PINS["1"];
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
       <div className="flex items-center justify-between">
