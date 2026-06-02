@@ -28,10 +28,10 @@
 .react-flow__controls button {
   background: var(--k-base-200) !important;
   border-color: var(--k-border) !important;
-  color: var(--k-text-muted) !important;
+  color: var(--k-muted) !important;
 }
 .react-flow__controls button:hover {
-  background: var(--k-elevated) !important;
+  background: var(--k-base-400) !important;
   color: var(--k-text) !important;
 }
 .react-flow__attribution { display: none !important; }

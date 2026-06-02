@@ -32,13 +32,12 @@ export default function App() {
   return (
     <Suspense
       fallback={
-        <div className="fixed inset-0 flex flex-col items-center justify-center gap-4"
-          style={{ background: "var(--k-base-100)" }}>
+        <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
           <div className="flex items-center gap-3">
             <span className="text-2xl">⚡</span>
-            <span className="text-lg font-bold" style={{ color: "var(--k-primary)" }}>Kakoon</span>
+            <span className="text-lg font-bold text-primary-c">Kakoon</span>
           </div>
-          <span className="loading loading-spinner loading-md" style={{ color: "var(--k-primary)" }} />
+          <span className="loading loading-spinner loading-md text-primary-c" />
         </div>
       }
     >

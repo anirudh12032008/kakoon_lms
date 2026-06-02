@@ -57,8 +57,14 @@ interface NodeData {
   // Comms / IoT
   ssid?: string; password?: string; url?: string; mac?: string; sendData?: string;
   deviceName?: string; clientId?: string; broker?: string; topic?: string; payload?: string;
+  // BLE
+  serviceUUID?: string; rxCharUUID?: string; txCharUUID?: string;
+  rawVarName?: string; enableCmdMap?: boolean;
+  cmdMap?: Array<{ trigger: string; varName: string; value: string }>;
+  txVarName?: string; enableTx?: boolean;
   // Display / misc
   fromMin?: number; fromMax?: number; toMin?: number; toMax?: number;
+  minVal?: number; maxVal?: number;
   from?: number; to?: number;
   outputMode?: string; loopDelay?: number; durationMs?: number;
   animationName?: string; imageName?: string;
@@ -110,7 +116,7 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
     // An edge pointing INTO a node counts as "has incoming flow" only if it's
     // a plain sequential edge (not a body/true/false branch handle from a loop/conditional)
     const srcHandle = e.sourceHandle ?? "";
-    if (srcHandle !== "body" && srcHandle !== "true" && srcHandle !== "false") {
+    if (srcHandle !== "body" && srcHandle !== "true" && srcHandle !== "false" && !srcHandle.startsWith("cmd_")) {
       hasIncomingFlow.add(e.target);
     }
   }
@@ -288,7 +294,7 @@ rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _m
       const edge = edges.find((e) => {
         if (e.source !== nodeId) return false;
         const handle = e.sourceHandle ?? "";
-        if (handle === "body" || handle === "true" || handle === "false") return false;
+        if (handle === "body" || handle === "true" || handle === "false" || handle.startsWith("cmd_")) return false;
         // For loops using the Y-fallback body, skip the edge we used as body
         if (isLoopNode && !edges.some((b) => b.source === nodeId && b.sourceHandle === "body")) {
           const tgt = nodeMap.get(e.target);
@@ -891,15 +897,101 @@ def _dp(pin): return Pin(pin, Pin.OUT)
       }
 
       // ─── Comms Nodes ───────────────────────────────────────────────────────
-      case "ble_mode":
+      case "ble_mode": {
+        // Nordic UART Service (NUS) BLE peripheral using raw bluetooth module
+        const bleDevName  = d.deviceName  ?? "ESP32-BLE";
+        const bleSvcUUID  = d.serviceUUID ?? "6E400001-B5A3-F393-E0A9-E50E24DCCA9E";
+        const bleRxUUID   = d.rxCharUUID  ?? "6E400002-B5A3-F393-E0A9-E50E24DCCA9E";
+        const bleTxUUID   = d.txCharUUID  ?? "6E400003-B5A3-F393-E0A9-E50E24DCCA9E";
+        const bleRawVar   = d.rawVarName  ?? "ble_data";
+        const bleTxVar    = d.txVarName   ?? "ble_tx";
+        const BLE_DEFAULT_CMDS = [
+          { trigger: "LED_ON",  varName: "", value: "" },
+          { trigger: "LED_OFF", varName: "", value: "" },
+        ];
+        const bleCmds     = (d.cmdMap && d.cmdMap.length > 0) ? d.cmdMap : BLE_DEFAULT_CMDS;
+        const bleCmdMap   = d.enableCmdMap ?? true;
+        const bleTxOn     = d.enableTx ?? false;
+
         imports.add("import bluetooth");
-        imports.add("from ble_simple_peripheral import BLESimplePeripheral");
-        setupLines.push(`ble = bluetooth.BLE()`);
-        setupLines.push(`ble_sp = BLESimplePeripheral(ble, name="${d.deviceName ?? "ESP32-BLE"}")`);
-        chunkLines.push(`${indent}${d.varName ?? "ble_cmd"} = None`);
-        chunkLines.push(`${indent}if ble_sp.is_connected():`);
-        chunkLines.push(`${indent}    ${d.varName ?? "ble_cmd"} = ble_sp.read()`);
+        imports.add("import struct");
+
+        // BLE setup — GATT server with NUS service
+        setupLines.push(`# ── BLE Peripheral (NUS) ───────────────────────────────`);
+        setupLines.push(`_ble = bluetooth.BLE()`);
+        setupLines.push(`_ble.active(True)`);
+        setupLines.push(`_BLE_SVC  = bluetooth.UUID("${bleSvcUUID}")`);
+        setupLines.push(`_BLE_RX   = (bluetooth.UUID("${bleRxUUID}"), bluetooth.FLAG_WRITE,)`);
+        setupLines.push(`_BLE_TX   = (bluetooth.UUID("${bleTxUUID}"), bluetooth.FLAG_NOTIFY,)`);
+        setupLines.push(`_BLE_UART = (_BLE_SVC, (_BLE_TX, _BLE_RX,),)`);
+        setupLines.push(`((_ble_tx_h, _ble_rx_h),) = _ble.gatts_register_services((_BLE_UART,))`);
+        setupLines.push(`_ble_conn = None`);
+        setupLines.push(`${bleRawVar} = None`);
+        if (bleCmdMap && bleCmds.length > 0) {
+          const uniqueVars = [...new Set(bleCmds.map(c => c.varName).filter(Boolean))];
+          for (const v of uniqueVars) {
+            setupLines.push(`${v} = None`);
+          }
+        }
+        if (bleTxOn) {
+          setupLines.push(`${bleTxVar} = None`);
+          setupLines.push(`_ble_prev_tx = None`);
+        }
+
+        // IRQ handler
+        setupLines.push(`def _ble_irq(event, data):`);
+        setupLines.push(`    global _ble_conn, ${bleRawVar}`);
+        setupLines.push(`    if event == 1:    # CENTRAL_CONNECT`);
+        setupLines.push(`        _ble_conn = data[0]`);
+        setupLines.push(`    elif event == 2:  # CENTRAL_DISCONNECT`);
+        setupLines.push(`        _ble_conn = None`);
+        setupLines.push(`        _ble_adv()`);
+        setupLines.push(`    elif event == 3:  # GATTS_WRITE`);
+        setupLines.push(`        ${bleRawVar} = _ble.gatts_read(_ble_rx_h).decode().strip()`);
+        setupLines.push(`_ble.irq(_ble_irq)`);
+
+        // Advertise helper
+        setupLines.push(`def _ble_adv():`);
+        setupLines.push(`    name = b"${bleDevName}"`);
+        setupLines.push(`    adv = bytes([0x02,0x01,0x06, len(name)+1,0x09]) + name`);
+        setupLines.push(`    _ble.gap_advertise(100_000, adv)`);
+        setupLines.push(`_ble_adv()`);
+
+        // Loop chunk — process incoming data
+        chunkLines.push(`${indent}# BLE: process received data`);
+        if (bleCmdMap && bleCmds.length > 0) {
+          chunkLines.push(`${indent}if ${bleRawVar} is not None:`);
+          for (let ci = 0; ci < bleCmds.length; ci++) {
+            const cmd = bleCmds[ci];
+            if (!cmd.trigger) continue;
+            const handleId = `cmd_${ci}`;
+            const branchLines = getBranchLines(handleId, indentLevel + 2);
+            if (branchLines.length > 0) {
+              // Has wired nodes — generate a block for them
+              chunkLines.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
+              chunkLines.push(...branchLines);
+            } else {
+              // No wired nodes — fall back to variable assignment
+              if (cmd.varName) {
+                const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
+                chunkLines.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": ${cmd.varName} = ${val}`);
+              }
+            }
+          }
+          chunkLines.push(`${indent}    ${bleRawVar} = None  # clear after handling`);
+        } else {
+          chunkLines.push(`${indent}# ${bleRawVar} contains last received string (or None)`);
+        }
+
+        // TX notify
+        if (bleTxOn) {
+          chunkLines.push(`${indent}# BLE: send data back to phone`);
+          chunkLines.push(`${indent}if _ble_conn is not None and ${bleTxVar} is not None and ${bleTxVar} != _ble_prev_tx:`);
+          chunkLines.push(`${indent}    _ble.gatts_notify(_ble_conn, _ble_tx_h, str(${bleTxVar}).encode())`);
+          chunkLines.push(`${indent}    _ble_prev_tx = ${bleTxVar}`);
+        }
         break;
+      }
       case "wifi_node":
         imports.add("import network");
         imports.add("import time");
@@ -1072,6 +1164,9 @@ def _dp(pin): return Pin(pin, Pin.OUT)
         return out_min
     return int((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min)`);
         chunkLines.push(`${indent}${d.varName ?? "mapped_value"} = map_range(${d.value ?? "value"}, ${d.fromMin ?? 0}, ${d.fromMax ?? 4095}, ${d.toMin ?? 0}, ${d.toMax ?? 180})`);
+        break;
+      case "clamp":
+        chunkLines.push(`${indent}${d.varName ?? "clamped"} = max(${d.minVal ?? 0}, min(${d.maxVal ?? 100}, ${d.value ?? "value"}))`);
         break;
       case "random_number":
         imports.add("import random");

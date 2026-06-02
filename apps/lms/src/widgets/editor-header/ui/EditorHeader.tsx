@@ -33,52 +33,41 @@ export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
   launchContext, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
 }: EditorHeaderProps) {
-  const title      = launchContext?.title       ?? "Full Workspace";
-  const launchType = launchContext?.launchType  ?? "mode";
+  const title      = launchContext?.title      ?? "Full Workspace";
+  const launchType = launchContext?.launchType ?? "mode";
 
   return (
-    <header
-      className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 border-b"
-      style={{ background: "var(--k-base-200)", borderColor: "var(--k-border)" }}
-    >
+    <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 bg-panel border-b border-subtle">
       {/* Logo */}
       <div className="flex items-center gap-2 px-1 shrink-0">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg"
-          style={{ background: "linear-gradient(135deg, var(--k-primary), var(--k-secondary))" }}>
+        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
           <Blocks className="h-4 w-4 text-white" />
         </div>
-        <span className="text-sm font-bold text-white hidden sm:inline">Kakoon</span>
+        <span className="text-sm font-bold text-body hidden sm:inline">Kakoon</span>
       </div>
 
       {/* Centre breadcrumb */}
       <div className="hidden flex-1 items-center justify-center px-2 md:flex min-w-0">
-        <div className="flex max-w-[42rem] items-center gap-2 rounded-full px-3 py-1.5 text-xs"
-          style={{ background: "var(--k-base-300)", border: "1px solid var(--k-border)" }}>
-          <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px]"
-            style={{ color: "var(--k-text-dim)" }}>
+        <div className="flex max-w-[42rem] items-center gap-2 rounded-full px-3 py-1.5 bg-raised border border-subtle">
+          <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px] text-hint">
             {launchType}
           </span>
-          <span className="font-semibold truncate" style={{ color: "var(--k-text)" }}>{title}</span>
+          <span className="text-xs font-semibold truncate text-body">{title}</span>
         </div>
       </div>
 
       {/* View mode switcher */}
       <div className="flex items-center shrink-0">
-        <div className="flex rounded-full p-1 gap-0.5"
-          style={{ background: "var(--k-base-300)" }}>
+        <div className="flex rounded-full p-1 gap-0.5 bg-raised">
           {VIEW_TABS.map(({ mode, icon, label }) => (
             <button
               key={mode}
               onClick={() => { setViewMode(mode); if (mode !== "code") setIsEditing(false); }}
               className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
                 viewMode === mode
-                  ? "text-white shadow-sm"
-                  : "hover:text-white"
+                  ? "bg-brand-gradient text-white shadow-sm"
+                  : "text-sub hover:text-body"
               }`}
-              style={viewMode === mode
-                ? { background: "linear-gradient(135deg, var(--k-primary), var(--k-secondary))", color: "white" }
-                : { color: "var(--k-text-muted)" }
-              }
             >
               {icon}
               <span className="hidden sm:inline">{label}</span>
@@ -88,11 +77,10 @@ export function EditorHeader({
       </div>
 
       {/* Right actions */}
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onToggleTutorials}
-          className={`btn btn-sm btn-ghost gap-1.5 ${showTutorialsCatalog ? "btn-active" : ""}`}
-          style={showTutorialsCatalog ? { color: "var(--k-secondary)" } : { color: "var(--k-text-muted)" }}
+          className={`btn btn-ghost btn-sm gap-1.5 ${showTutorialsCatalog ? "text-secondary-c bg-secondary-tint" : "text-sub"}`}
           title="Tutorials"
         >
           <BookOpen className="h-4 w-4" />
@@ -102,8 +90,7 @@ export function EditorHeader({
         {onBackToDashboard && (
           <button
             onClick={onBackToDashboard}
-            className="btn btn-sm btn-ghost gap-1.5 hidden md:flex"
-            style={{ color: "var(--k-text-muted)" }}
+            className="btn btn-ghost btn-sm gap-1.5 text-sub hidden md:flex"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
             <span className="text-xs">Dashboard</span>

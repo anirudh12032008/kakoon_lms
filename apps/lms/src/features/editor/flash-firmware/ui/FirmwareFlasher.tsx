@@ -1,161 +1,147 @@
 /**
- * FirmwareFlasher — flashes MicroPython firmware onto ESP32 boards
- * Uses esptool-js (WebSerial) to detect the chip and write .bin firmware.
- * Firmware binaries should live in /public/firmware/<file>.bin
+ * FirmwareFlasher — flashes MicroPython v1.25.0 onto ESP32-S3 via WebSerial
+ * Firmware is bundled at /public/firmware/esp32s3-micropython.bin
  */
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { X, Cpu, AlertTriangle, CheckCircle, Loader2, Zap } from "lucide-react";
+import { X, Cpu, AlertTriangle, CheckCircle, Loader2, Zap, Plus, Usb } from "lucide-react";
 import { ESPLoader, Transport } from "esptool-js";
 
-// ─── Chip → firmware map ───────────────────────────────────────────────────────
-const FIRMWARE_MAP: Record<string, { label: string; file: string; color: string }> = {
-  esp32:   { label: "ESP32",    file: "esp32-micropython.bin",   color: "#3b82f6" },
-  esp32s3: { label: "ESP32-S3", file: "esp32s3-micropython.bin", color: "#8b5cf6" },
-  esp32c3: { label: "ESP32-C3", file: "esp32c3-micropython.bin", color: "#14b8a6" },
-  esp32s2: { label: "ESP32-S2", file: "esp32s2-micropython.bin", color: "#f97316" },
-  esp32c6: { label: "ESP32-C6", file: "esp32c6-micropython.bin", color: "#22c55e" },
-};
-
-type FlashState = "idle" | "detecting" | "ready" | "erasing" | "flashing" | "done" | "error";
+type FlashState = "idle" | "connecting" | "erasing" | "flashing" | "done" | "error";
 
 interface Props { onClose: () => void; }
 
 export function FirmwareFlasher({ onClose }: Props) {
-  const [flashState, setFlashState] = useState<FlashState>("idle");
-  const [progress, setProgress] = useState(0);
-  const [log, setLog] = useState<string[]>([]);
-  const [detectedChip, setDetectedChip] = useState<string | null>(null);
-  const [selectedChip, setSelectedChip] = useState("esp32s3");
-  const [customFirmware, setCustomFirmware] = useState<File | null>(null);
+  const [state,        setState]        = useState<FlashState>("idle");
+  const [progress,     setProgress]     = useState(0);
+  const [log,          setLog]          = useState<string[]>([]);
+  const [ports,        setPorts]        = useState<SerialPort[]>([]);
+  const [selectedPort, setSelectedPort] = useState<SerialPort | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const pushLog = (msg: string) => {
-    setLog((prev) => [...prev.slice(-80), msg]);
+  useEffect(() => {
+    if (!("serial" in navigator)) return;
+    navigator.serial.getPorts().then((p) => {
+      setPorts(p);
+      if (p.length === 1) setSelectedPort(p[0]);
+    });
+  }, []);
+
+  const push = (msg: string) => {
+    setLog(prev => [...prev.slice(-80), msg]);
     setTimeout(() => logEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
-  const handleFlash = async () => {
-    if (!("serial" in navigator)) {
-      pushLog("❌ Web Serial API not supported. Use Chrome or Edge.");
-      setFlashState("error");
-      return;
-    }
+  const isBusy = state === "connecting" || state === "erasing" || state === "flashing";
 
-    setFlashState("detecting");
+  const handleRequestPort = async () => {
+    try {
+      const port = await navigator.serial.requestPort();
+      setPorts(prev => prev.includes(port) ? prev : [...prev, port]);
+      setSelectedPort(port);
+    } catch { /* user cancelled */ }
+  };
+
+  const handleFlash = async () => {
+    if (!selectedPort) return;
+    setState("connecting");
     setProgress(0);
     setLog([]);
-
     let transport: InstanceType<typeof Transport> | null = null;
 
     try {
-      pushLog("🔍 Requesting serial port — select your ESP32 USB port…");
-      const port = await navigator.serial.requestPort();
-      transport = new Transport(port, true);
+      push("⏳ Connecting to ESP32-S3 bootloader…");
+      transport = new Transport(selectedPort, false);
 
-      pushLog("🔌 Connecting to ESP32 — hold the BOOT button on your board…");
       const loader = new ESPLoader({
         transport,
         baudrate: 115200,
         terminal: {
           clean: () => {},
-          writeLine: (line: string) => pushLog(`  ${line}`),
-          write: (str: string) => { if (str.trim()) pushLog(`  ${str.trim()}`); },
+          writeLine: (line) => push(`  ${line}`),
+          write: (str) => { if (str.trim()) push(`  ${str.trim()}`); },
         },
       });
 
-      const chip = await loader.main();
-      const chipKey = chip.toLowerCase().replace(/[^a-z0-9]/g, "");
-      setDetectedChip(chip);
-      const mapped = Object.keys(FIRMWARE_MAP).find((k) => chipKey.includes(k)) ?? "esp32";
-      setSelectedChip(mapped);
-      pushLog(`✅ Detected: ${chip}`);
-      pushLog(`📦 Using firmware: ${FIRMWARE_MAP[mapped].label} MicroPython`);
-      setFlashState("ready");
+      await loader.main();
+      push("✅ Connected");
 
-      // Erase
-      setFlashState("erasing");
+      setState("erasing");
       setProgress(10);
-      pushLog("🗑  Erasing flash memory (~10 seconds)…");
+      push("🗑  Erasing flash (~10s)…");
       await loader.eraseFlash();
       setProgress(25);
-      pushLog("✅ Flash erased.");
+      push("✅ Erased");
 
-      // Fetch firmware binary
-      setFlashState("flashing");
-      let firmwareBuffer: ArrayBuffer;
-      if (customFirmware) {
-        pushLog(`📂 Loading custom firmware: ${customFirmware.name}`);
-        firmwareBuffer = await customFirmware.arrayBuffer();
-      } else {
-        const fw = FIRMWARE_MAP[mapped];
-        pushLog(`⬇️  Fetching /firmware/${fw.file}…`);
-        const res = await fetch(`/firmware/${fw.file}`);
-        if (!res.ok) throw new Error(`Firmware file not found: ${fw.file} (HTTP ${res.status}). Add it to /public/firmware/.`);
-        firmwareBuffer = await res.arrayBuffer();
-      }
-      const firmwareData = new Uint8Array(firmwareBuffer);
-      pushLog(`✅ Firmware loaded — ${(firmwareData.length / 1024).toFixed(0)} KB`);
-      pushLog("⚡ Writing to flash…");
+      setState("flashing");
+      push("⬇️  Loading MicroPython v1.25.0…");
+      const res = await fetch("/firmware/esp32s3-micropython.bin");
+      if (!res.ok) throw new Error(`Firmware fetch failed (${res.status})`);
+      const data = new Uint8Array(await res.arrayBuffer());
+      if (data[0] !== 0xE9) throw new Error(`Invalid firmware header (0x${data[0].toString(16)})`);
+      push(`✅ ${(data.length / 1024).toFixed(0)} KB ready`);
+      push("⚡ Writing…");
 
       await loader.writeFlash({
-        fileArray: [{ data: firmwareData, address: 0x1000 }],
-        flashMode: "keep",
-        flashFreq: "keep",
-        flashSize: "keep",
-        eraseAll: false,
-        compress: true,
-        reportProgress: (_idx: number, written: number, total: number) => {
-          const pct = Math.round(25 + (written / total) * 73);
-          setProgress(pct);
-        },
+        fileArray: [{ data, address: 0x0 }],
+        flashMode: "keep", flashFreq: "keep", flashSize: "keep",
+        eraseAll: false, compress: true,
+        reportProgress: (_i, written, total) =>
+          setProgress(Math.round(25 + (written / total) * 73)),
       });
 
       setProgress(100);
-      pushLog("✅ Firmware written successfully!");
-      pushLog("🔄 Resetting board…");
+      push("✅ Done!");
+      push("🎉 ESP32-S3 is running MicroPython v1.25.0. Connect now.");
       await loader.after();
-      pushLog("🎉 Done! Your ESP32 is now running MicroPython.");
-      setFlashState("done");
+      setState("done");
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      pushLog(`❌ ${msg}`);
-      setFlashState("error");
+      if (!msg.toLowerCase().includes("no port selected")) {
+        push(`❌ ${msg}`);
+        setState("error");
+      } else {
+        setState("idle");
+      }
     } finally {
       try { await transport?.disconnect(); } catch { /* ignore */ }
     }
   };
 
+  const portLabel = (p: SerialPort) => {
+    const info = p.getInfo();
+    if (info.usbVendorId && info.usbProductId)
+      return `USB ${info.usbVendorId.toString(16).padStart(4,"0")}:${info.usbProductId.toString(16).padStart(4,"0")}`;
+    return "USB Serial Port";
+  };
+
   const stateColor: Record<FlashState, string> = {
-    idle: "#6b7280", detecting: "#3b82f6", ready: "#22c55e",
-    erasing: "#f97316", flashing: "#8b5cf6", done: "#22c55e", error: "#ef4444",
+    idle: "#6b7280", connecting: "#3b82f6", erasing: "#f97316",
+    flashing: "#8b5cf6", done: "#22c55e", error: "#ef4444",
   };
   const stateLabel: Record<FlashState, string> = {
-    idle: "Ready", detecting: "Detecting chip…", ready: "Chip found!",
-    erasing: "Erasing flash…", flashing: "Flashing…", done: "Done! 🎉", error: "Error",
+    idle: "Ready", connecting: "Connecting…", erasing: "Erasing…",
+    flashing: "Flashing…", done: "Done! 🎉", error: "Error",
   };
 
-  const isBusy = flashState === "detecting" || flashState === "erasing" || flashState === "flashing";
+  const noSerial = !("serial" in navigator);
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={(e) => { if (e.target === e.currentTarget && !isBusy) onClose(); }}
-    >
-      <div className="w-full max-w-xl overflow-hidden rounded-2xl border border-[#2a2a32] bg-[#09090b] shadow-2xl flex flex-col">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={(e) => { if (e.target === e.currentTarget && !isBusy) onClose(); }}>
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[#2a2a32] bg-[#09090b] shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a20] bg-gradient-to-r from-blue-500/10 to-violet-500/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a20] bg-gradient-to-r from-violet-500/10 to-blue-500/10">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Firmware Flasher</h2>
-              <p className="text-[10px] text-zinc-500">Flash MicroPython onto your ESP32 board</p>
+              <h2 className="text-sm font-bold text-white">Flash Firmware</h2>
+              <p className="text-[10px] text-zinc-500">ESP32-S3 · MicroPython v1.25.0</p>
             </div>
           </div>
           {!isBusy && (
@@ -167,108 +153,79 @@ export function FirmwareFlasher({ onClose }: Props) {
 
         <div className="p-5 space-y-4">
 
-          {/* Browser warning */}
-          {!("serial" in navigator) && (
+          {noSerial && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
-              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-              Web Serial API not supported. Open in Chrome or Edge.
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              Web Serial not supported — open in Chrome or Edge.
             </div>
           )}
 
-          {/* How-to steps */}
-          <div className="grid grid-cols-3 gap-2">
+          {/* Port picker */}
+          {!noSerial && (
+            <div>
+              <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Select Port</p>
+              <div className="space-y-1.5">
+                {ports.map((p, i) => (
+                  <button key={i} onClick={() => !isBusy && setSelectedPort(p)} disabled={isBusy}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-sm transition-all ${
+                      selectedPort === p
+                        ? "border-violet-500/50 bg-violet-500/10 text-white"
+                        : "border-[#2a2a32] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                    }`}>
+                    <Usb className="w-3.5 h-3.5 shrink-0" style={{ color: selectedPort === p ? "#8b5cf6" : undefined }} />
+                    <span className="font-mono text-[11px] flex-1 text-left">{portLabel(p)}</span>
+                    {selectedPort === p && <span className="text-[9px] text-violet-400 font-semibold">Selected</span>}
+                  </button>
+                ))}
+                <button onClick={handleRequestPort} disabled={isBusy}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-dashed border-[#2a2a32] text-zinc-600 hover:border-zinc-500 hover:text-zinc-400 text-[11px] transition-all disabled:opacity-40">
+                  <Plus className="w-3.5 h-3.5" />
+                  {ports.length === 0 ? "Select a port…" : "Add another port"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Boot instructions */}
+          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1.5">
+            <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠️ Enter bootloader first</p>
             {[
-              { icon: "👆", label: "Hold the BOOT button on your board" },
-              { icon: "🔌", label: "Click Flash & select the USB port" },
-              { icon: "🐍", label: "Wait for 🎉 — enjoy MicroPython!" },
-            ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-[#0f0f13] border border-[#1e1e26] text-center">
-                <span className="text-xl">{s.icon}</span>
-                <span className="text-[9px] text-zinc-500 leading-tight">{s.label}</span>
+              <>Hold <kbd className="px-1 py-0.5 rounded bg-[#1e1e26] border border-[#2a2a32] font-mono text-[10px]">BOOT</kbd> button</>,
+              <>Press &amp; release <kbd className="px-1 py-0.5 rounded bg-[#1e1e26] border border-[#2a2a32] font-mono text-[10px]">RESET</kbd> (or replug USB)</>,
+              <>Release <kbd className="px-1 py-0.5 rounded bg-[#1e1e26] border border-[#2a2a32] font-mono text-[10px]">BOOT</kbd> — then click Flash</>,
+            ].map((text, i) => (
+              <div key={i} className="flex items-center gap-2 text-[11px] text-zinc-300">
+                <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold shrink-0">{i+1}</span>
+                <span>{text}</span>
               </div>
             ))}
           </div>
 
-          {/* Chip selector */}
-          <div>
-            <div className="flex items-center gap-2 text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-2">
-              <span>Board / Chip</span>
-              {detectedChip && (
-                <span className="text-green-400 normal-case">✅ Auto-detected: {detectedChip}</span>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {Object.entries(FIRMWARE_MAP).map(([key, fw]) => (
-                <button key={key} onClick={() => !isBusy && setSelectedChip(key)}
-                  disabled={isBusy}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border disabled:opacity-50 ${
-                    selectedChip === key
-                      ? "text-white"
-                      : "border-[#2a2a32] text-zinc-500 hover:border-zinc-600 hover:text-zinc-300"
-                  }`}
-                  style={selectedChip === key ? {
-                    background: `${fw.color}20`, color: fw.color, borderColor: `${fw.color}60`,
-                  } : {}}>
-                  {fw.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Custom firmware */}
-          <div>
-            <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-2">
-              Custom Firmware <span className="normal-case text-zinc-600">(optional — overrides above)</span>
-            </div>
+          {/* Progress + log */}
+          <div className="rounded-xl border border-[#1e1e26] bg-[#0a0a0d] p-3 space-y-2">
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isBusy}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#2a2a32] text-[10px] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 transition-all disabled:opacity-50"
-              >
-                📂 Browse .bin file
-              </button>
-              {customFirmware && (
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <span className="text-[10px] text-zinc-300 font-mono truncate">{customFirmware.name}</span>
-                  <span className="text-[9px] text-zinc-600">{(customFirmware.size / 1024).toFixed(0)} KB</span>
-                  <button onClick={() => setCustomFirmware(null)} className="text-zinc-600 hover:text-red-400 flex-shrink-0">×</button>
-                </div>
-              )}
-              <input ref={fileInputRef} type="file" accept=".bin" className="hidden"
-                onChange={(e) => setCustomFirmware(e.target.files?.[0] ?? null)} />
-            </div>
-          </div>
-
-          {/* Status + progress + log */}
-          <div className="rounded-xl border border-[#1e1e26] bg-[#0a0a0d] p-3">
-            <div className="flex items-center gap-2 mb-2">
-              {isBusy && <Loader2 className="w-3.5 h-3.5 animate-spin" style={{ color: stateColor[flashState] }} />}
-              {flashState === "done" && <CheckCircle className="w-3.5 h-3.5 text-green-400" />}
-              {flashState === "error" && <AlertTriangle className="w-3.5 h-3.5 text-red-400" />}
-              {(flashState === "idle" || flashState === "ready") && <Zap className="w-3.5 h-3.5" style={{ color: stateColor[flashState] }} />}
-              <span className="text-xs font-bold" style={{ color: stateColor[flashState] }}>{stateLabel[flashState]}</span>
+              {isBusy              && <Loader2       className="w-3.5 h-3.5 animate-spin" style={{ color: stateColor[state] }} />}
+              {state === "done"    && <CheckCircle   className="w-3.5 h-3.5 text-green-400" />}
+              {state === "error"   && <AlertTriangle className="w-3.5 h-3.5 text-red-400" />}
+              {state === "idle"    && <Zap           className="w-3.5 h-3.5 text-zinc-500" />}
+              <span className="text-xs font-bold" style={{ color: stateColor[state] }}>{stateLabel[state]}</span>
               {isBusy && <span className="ml-auto text-[10px] font-mono text-zinc-400">{progress}%</span>}
             </div>
-
-            {flashState !== "idle" && (
-              <div className="w-full h-1.5 rounded-full bg-[#1c1c20] overflow-hidden mb-2">
+            {state !== "idle" && (
+              <div className="w-full h-1.5 rounded-full bg-[#1c1c20] overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%`, background: stateColor[flashState] }} />
+                  style={{ width: `${progress}%`, background: stateColor[state] }} />
               </div>
             )}
-
-            <div className="bg-[#050507] rounded-lg p-2 h-[110px] overflow-y-auto font-mono text-[9px] space-y-0.5">
+            <div className="bg-[#050507] rounded-lg p-2 h-[90px] overflow-y-auto font-mono text-[9px] space-y-0.5">
               {log.length === 0
                 ? <span className="text-zinc-700">Log will appear here…</span>
                 : log.map((l, i) => (
                   <div key={i} className={
                     l.includes("❌") ? "text-red-400" :
                     l.includes("✅") || l.includes("🎉") ? "text-green-400" :
-                    l.includes("⚡") ? "text-violet-400" :
-                    l.includes("⬇️") || l.includes("📂") ? "text-cyan-400" :
-                    l.includes("🗑") ? "text-orange-400" :
-                    "text-zinc-500"
+                    l.includes("⚡") || l.includes("⬇️") ? "text-violet-400" :
+                    l.includes("🗑") ? "text-orange-400" : "text-zinc-500"
                   }>{l}</div>
                 ))
               }
@@ -276,28 +233,23 @@ export function FirmwareFlasher({ onClose }: Props) {
             </div>
           </div>
 
-          {/* CTA button */}
-          {flashState === "done" ? (
+          {state === "done" ? (
             <button onClick={onClose}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/20 border border-green-500/40 text-green-400 text-sm font-bold transition-all hover:bg-green-500/30">
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/20 border border-green-500/40 text-green-400 text-sm font-bold hover:bg-green-500/30 transition-all">
               <CheckCircle className="w-4 h-4" /> Close — Board is ready!
             </button>
           ) : (
-            <button
-              onClick={handleFlash}
-              disabled={!("serial" in navigator) || isBusy}
-              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-violet-500 text-white text-sm font-bold transition-all hover:from-blue-600 hover:to-violet-600 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
+            <button onClick={handleFlash} disabled={noSerial || isBusy || !selectedPort}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-blue-500 text-white text-sm font-bold hover:from-violet-600 hover:to-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
               {isBusy
-                ? <><Loader2 className="w-4 h-4 animate-spin" /> {stateLabel[flashState]}</>
+                ? <><Loader2 className="w-4 h-4 animate-spin" /> {stateLabel[state]}</>
                 : <><Zap className="w-4 h-4" /> Flash MicroPython</>
               }
             </button>
           )}
 
-          <p className="text-[9px] text-zinc-700 text-center leading-relaxed">
-            This will erase the ESP32 and install MicroPython.
-            Your existing code will be removed — save your project first!
+          <p className="text-[9px] text-zinc-700 text-center">
+            Erases the board and installs MicroPython v1.25.0. Save your project first!
           </p>
         </div>
       </div>

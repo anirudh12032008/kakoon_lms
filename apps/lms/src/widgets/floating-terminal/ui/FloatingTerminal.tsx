@@ -2,12 +2,12 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import { Trash2, X, Terminal } from "lucide-react";
 
 function logColor(log: string): string {
-  if (log.includes("❌") || log.includes("error") || log.includes("Error")) return "var(--k-error)";
-  if (log.includes("✅") || log.includes("🚀") || log.includes("success"))  return "var(--k-success)";
-  if (log.includes("⚠️") || log.includes("warning"))                        return "var(--k-warning)";
-  if (log.includes("📥") || log.includes(">>>"))                            return "var(--k-accent)";
-  if (log.includes("📤") || log.includes("Sending"))                        return "var(--k-primary)";
-  return "var(--k-text-muted)";
+  if (log.includes("❌") || log.includes("error") || log.includes("Error")) return "text-error-c";
+  if (log.includes("✅") || log.includes("🚀") || log.includes("success"))  return "text-success-c";
+  if (log.includes("⚠️") || log.includes("warning"))                        return "text-warning-c";
+  if (log.includes("📥") || log.includes(">>>"))                            return "text-accent-c";
+  if (log.includes("📤") || log.includes("Sending"))                        return "text-primary-c";
+  return "text-sub";
 }
 
 interface FloatingTerminalProps {
@@ -23,9 +23,7 @@ export function FloatingTerminal({ logs, onClearLogs, onClose }: FloatingTermina
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs]);
+  useEffect(() => { logsEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (terminalRef.current) {
@@ -48,33 +46,22 @@ export function FloatingTerminal({ logs, onClearLogs, onClose }: FloatingTermina
   return (
     <div
       ref={terminalRef}
-      className="fixed z-20 w-[700px] max-w-[95vw] overflow-hidden rounded-2xl shadow-2xl"
-      style={{
-        border: "1px solid var(--k-border)",
-        background: "var(--k-base-100)",
-        ...(position
-          ? { left: position.x, top: position.y }
-          : { left: "50%", bottom: 64, transform: "translateX(-50%)" }),
-      }}
+      className="fixed z-20 w-[700px] max-w-[95vw] overflow-hidden rounded-2xl shadow-2xl bg-page border border-subtle"
+      style={position ? { left: position.x, top: position.y } : { left: "50%", bottom: 64, transform: "translateX(-50%)" }}
     >
       {/* Title bar */}
       <div
-        className="flex h-9 cursor-move items-center justify-between px-3 select-none"
-        style={{
-          background: "linear-gradient(90deg, color-mix(in srgb, var(--k-accent) 15%, transparent), color-mix(in srgb, var(--k-primary) 10%, transparent))",
-          borderBottom: "1px solid var(--k-border)",
-        }}
+        className="flex h-9 cursor-move items-center justify-between px-3 select-none bg-accent-tint border-b border-subtle"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-2">
-          <Terminal className="h-3.5 w-3.5" style={{ color: "var(--k-accent)" }} />
-          <span className="text-xs font-bold" style={{ color: "var(--k-accent)" }}>WebTerminal</span>
+          <Terminal className="h-3.5 w-3.5 text-accent-c" />
+          <span className="text-xs font-bold text-accent-c">WebTerminal</span>
           <button
-            className="btn btn-ghost btn-xs"
+            className="btn btn-ghost btn-xs text-hint"
             onClick={onClearLogs}
             onMouseDown={(e) => e.stopPropagation()}
             title="Clear logs"
-            style={{ color: "var(--k-text-dim)" }}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
@@ -82,8 +69,7 @@ export function FloatingTerminal({ logs, onClearLogs, onClose }: FloatingTermina
         <button
           onClick={onClose}
           onMouseDown={(e) => e.stopPropagation()}
-          className="btn btn-ghost btn-xs"
-          style={{ color: "var(--k-text-muted)" }}
+          className="btn btn-ghost btn-xs text-sub"
         >
           <X className="h-4 w-4" />
         </button>
@@ -92,9 +78,9 @@ export function FloatingTerminal({ logs, onClearLogs, onClose }: FloatingTermina
       {/* Log output */}
       <div className="h-[250px] overflow-auto p-3 font-mono text-xs">
         {logs.length === 0
-          ? <p style={{ color: "var(--k-text-dim)" }}>Connected. Waiting for output…</p>
+          ? <p className="text-hint">Connected. Waiting for output…</p>
           : logs.map((log, i) => (
-            <div key={i} className="py-0.5 leading-5" style={{ color: logColor(log) }}>{log}</div>
+            <div key={i} className={`py-0.5 leading-5 ${logColor(log)}`}>{log}</div>
           ))
         }
         <div ref={logsEndRef} />

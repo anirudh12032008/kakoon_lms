@@ -79,7 +79,53 @@
   --radius-badge: 9999px;
 }
 
-/* ── 4. GLOBAL COMPONENT OVERRIDES ──────────────────────────── */
+/* ── 4. SEMANTIC UTILITY CLASSES ──────────────────────────────
+   Use these in every component — never inline style= for colors.
+   Change the variables in Section 1; these update automatically. */
+@layer utilities {
+  /* Surfaces */
+  .bg-page    { background-color: var(--k-base-100); }
+  .bg-panel   { background-color: var(--k-base-200); }
+  .bg-raised  { background-color: var(--k-base-300); }
+  .bg-hover   { background-color: var(--k-base-400); }
+
+  /* Borders / dividers */
+  .border-subtle { border-color: var(--k-border); }
+  .divide-subtle > * + * { border-color: var(--k-border); }
+
+  /* Text */
+  .text-body  { color: var(--k-text); }
+  .text-sub   { color: var(--k-muted); }
+  .text-hint  { color: var(--k-dim); }
+
+  /* Tinted surfaces — for active/selected state chips */
+  .bg-primary-tint   { background-color: color-mix(in srgb, var(--k-primary)   12%, transparent); }
+  .bg-secondary-tint { background-color: color-mix(in srgb, var(--k-secondary) 12%, transparent); }
+  .bg-accent-tint    { background-color: color-mix(in srgb, var(--k-accent)    12%, transparent); }
+  .bg-success-tint   { background-color: color-mix(in srgb, var(--k-success)   12%, transparent); }
+  .bg-error-tint     { background-color: color-mix(in srgb, var(--k-error)     12%, transparent); }
+  .bg-warning-tint   { background-color: color-mix(in srgb, var(--k-warning)   12%, transparent); }
+  .bg-info-tint      { background-color: color-mix(in srgb, var(--k-info)      12%, transparent); }
+
+  /* Tinted borders */
+  .border-primary-tint   { border-color: color-mix(in srgb, var(--k-primary)   35%, transparent); }
+  .border-success-tint   { border-color: color-mix(in srgb, var(--k-success)   35%, transparent); }
+  .border-error-tint     { border-color: color-mix(in srgb, var(--k-error)     35%, transparent); }
+
+  /* Tinted text */
+  .text-primary-c  { color: var(--k-primary); }
+  .text-secondary-c { color: var(--k-secondary); }
+  .text-accent-c   { color: var(--k-accent); }
+  .text-success-c  { color: var(--k-success); }
+  .text-error-c    { color: var(--k-error); }
+  .text-warning-c  { color: var(--k-warning); }
+  .text-info-c     { color: var(--k-info); }
+
+  /* Gradient brand background */
+  .bg-brand-gradient { background: linear-gradient(135deg, var(--k-primary), var(--k-secondary)); }
+}
+
+/* ── 5. GLOBAL COMPONENT OVERRIDES ──────────────────────────── */
 
 /* btn — reset DaisyUI's default heavy shadow/border treatment */
 .btn {

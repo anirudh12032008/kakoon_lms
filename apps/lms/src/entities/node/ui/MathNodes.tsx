@@ -39,6 +39,25 @@ export function MapRangeNode() {
   );
 }
 
+// ─── Clamp ────────────────────────────────────────────────────────────────────
+export function ClampNode() {
+  const [value,   setValue]   = useNodeField<string>("value",   "value");
+  const [minVal,  setMinVal]  = useNodeField<number>("minVal",  0);
+  const [maxVal,  setMaxVal]  = useNodeField<number>("maxVal",  100);
+  const [varName, setVarName] = useNodeField<string>("varName", "clamped");
+  return (
+    <BaseNode title="Clamp" color={COLORS.green} icon={<MathIcon />} width="220px">
+      <NodeField label="Value"><TextInput value={value} onChange={setValue} /></NodeField>
+      <NodeField label="Min"><NumberInput value={minVal} onChange={setMinVal} /></NodeField>
+      <NodeField label="Max"><NumberInput value={maxVal} onChange={setMaxVal} /></NodeField>
+      <NodeField label="result">
+        <TextInput value={varName} onChange={setVarName} green />
+        <Handle type="source" position={Position.Right} id="clamped" style={{ ...outHS, right: -6 }} />
+      </NodeField>
+    </BaseNode>
+  );
+}
+
 // ─── Random Number ────────────────────────────────────────────────────────────
 export function RandomNumberNode() {
   const [from, setFrom] = useNodeField<number>("from", 0);

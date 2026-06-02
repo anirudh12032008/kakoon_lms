@@ -259,8 +259,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
       deleteOLEDAnim={deleteOLEDAnim}
     >
     <div
-      className="flex h-screen flex-col"
-      style={{ background: "var(--k-base-100)" }}
+      className="flex h-screen flex-col bg-page"
       onClick={() => setContextMenu(null)}
     >
       <EditorHeader
@@ -360,7 +359,6 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         onRun={handleRun}
         onStop={handleStop}
         onOpenFileManager={() => setShowLibraryManager(true)}
-        onOpenFirmwareFlasher={() => setShowFirmwareFlasher(true)}
       />
 
       {/* Tutorials */}
@@ -377,10 +375,9 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
       )}
 
       {tutorial.showTutorialsCatalog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8"
-          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(8px)" }}>
-          <div className="relative w-full h-[90vh] max-w-6xl overflow-hidden rounded-2xl shadow-2xl flex flex-col"
-            style={{ border: "1px solid var(--k-border)", background: "var(--k-base-100)" }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 backdrop-blur-md"
+          style={{ background: "rgba(0,0,0,0.85)" }}>
+          <div className="relative w-full h-[90vh] max-w-6xl overflow-hidden rounded-2xl shadow-2xl flex flex-col bg-page border border-subtle">
             <div className="flex-1 overflow-hidden">
               <TutorialsDashboard
                 onBack={() => tutorial.setShowTutorialsCatalog(false)}
@@ -395,8 +392,8 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
       {/* Context menu */}
       {contextMenu && (
         <div
-          className="fixed z-[9999] min-w-[180px] overflow-hidden rounded-xl p-1.5 shadow-2xl"
-          style={{ top: contextMenu.y, left: contextMenu.x, border: "1px solid var(--k-border)", background: "var(--k-base-200)", backdropFilter: "blur(8px)" }}
+          className="fixed z-[9999] min-w-[180px] overflow-hidden rounded-xl p-1.5 shadow-2xl bg-panel border border-subtle backdrop-blur-md"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
         >
           <button
             onClick={async () => {
@@ -405,10 +402,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
               }
               setContextMenu(null);
             }}
-            className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all"
-            style={{ color: "var(--k-error)" }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in srgb, var(--k-error) 10%, transparent)"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = ""; }}
+            className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors text-error-c hover:bg-error-tint"
           >
             <Trash2 className="w-3.5 h-3.5" />
             Clear Canvas

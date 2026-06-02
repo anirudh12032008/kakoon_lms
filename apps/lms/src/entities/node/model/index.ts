@@ -17,7 +17,7 @@ import { MAX7219Node } from "../ui/MatrixNodes";
 import { SevenSegNode } from "../ui/SevenSegNodes";
 import { ServoMotorNode, ServoMotorAdvanceNode, ServoControllerNode, MultiServoSequencerNode } from "../ui/ServoNodes";
 import { DCMotorSingleNode, MultiMotorControllerNode, L298NMotorDriverNode, RobotDriveNode } from "../ui/DCMotorNodes";
-import { MapRangeNode, RandomNumberNode } from "../ui/MathNodes";
+import { MapRangeNode, RandomNumberNode, ClampNode } from "../ui/MathNodes";
 import { I2CScannerNode } from "../ui/ToolNodes";
 import { ServoCalibrationNode } from "../ui/ServoNodes";
 import { BLEModeNode } from "../ui/BLENodes";
@@ -80,6 +80,7 @@ export const NODE_TYPES: NodeTypes = {
   multi_servo_sequencer: MultiServoSequencerNode,
   map_range: MapRangeNode,
   random_number: RandomNumberNode,
+  clamp: ClampNode,
   i2c_scanner: I2CScannerNode,
   servo_calibration: ServoCalibrationNode,
   ble_mode: BLEModeNode,
@@ -263,6 +264,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     nodes: [
       { type: "map_range", label: "Map Range", color: "#3b82f6", previewDot: "#3b82f6" },
       { type: "random_number", label: "Random Number", color: "#7c3aed", previewDot: "#7c3aed" },
+      { type: "clamp", label: "Clamp", color: "#22c55e", previewDot: "#22c55e" },
     ],
   },
 ];
