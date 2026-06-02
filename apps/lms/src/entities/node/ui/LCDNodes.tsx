@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import {
   BaseNode,
   NodeField,
-  TextInput,
   SelectInput,
   ToggleInput,
   useNodeField,

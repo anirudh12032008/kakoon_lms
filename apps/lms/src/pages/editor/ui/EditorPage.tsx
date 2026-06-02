@@ -66,7 +66,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const {
     isConnected, isConnecting, isSupported, isRunning,
     connect, connectWifi, disconnect,
-    sendCode, stopCode, sendPythonCode, uploadCode,
+    sendCode, stopCode, uploadCode,
     logs, addLog, clearLogs,
   } = useSerialConnection();
 

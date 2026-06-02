@@ -134,14 +134,6 @@ export function EditorLaunchDashboard({ onLaunch }: Props) {
     });
   };
 
-  const toggleBuilderNode = (type: string) =>
-    setBuilder((prev) => ({
-      ...prev,
-      selectedNodeTypes: prev.selectedNodeTypes.includes(type)
-        ? prev.selectedNodeTypes.filter((t) => t !== type)
-        : [...prev.selectedNodeTypes, type],
-    }));
-
   const saveBuilderPreset = () => {
     const saved = saveCustomPreset({
       id: `custom-${Date.now()}`, title: builderContext.title, description: builderContext.description,
