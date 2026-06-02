@@ -9,17 +9,7 @@ import {
 type OLEDTool = "pen" | "eraser" | "line" | "rect" | "circle" | "fill";
 interface OLEDDesign { id: string; name: string; frames: number[][]; fps: number; }
 
-// Legacy local library (kept for migration — new saves go to animRegistry)
-const LIBRARY_KEY = "kakoon-oled-library";
-
 function copyText(s: string) { navigator.clipboard.writeText(s).catch(() => {}); }
-
-function loadLibrary(): LibraryEntry[] {
-  try { return JSON.parse(localStorage.getItem(LIBRARY_KEY) ?? "[]"); } catch { return []; }
-}
-function saveLibrary(entries: LibraryEntry[]) {
-  localStorage.setItem(LIBRARY_KEY, JSON.stringify(entries));
-}
 
 const OLED_PRESETS: { name: string; pixels: number[] }[] = [
   { name: "Smiley 😊", pixels: (() => {
@@ -719,7 +709,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
                 <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" /> Saving…</>
               ) : saveDeviceState === "saved" ? "✅ Saved!" :
                  saveDeviceState === "failed" ? "❌ Failed" : (
-                <><Save className="w-3 h-3" /> Save to Device</>
+                <><Upload className="w-3 h-3" /> Upload to Device</>
               )}
             </button>
           )}

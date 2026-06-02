@@ -437,7 +437,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         <ESP32FilesPanel
           isConnected={isConnected}
           onClose={() => setShowESP32Files(false)}
-          sendPythonCode={sendPythonCode}
+          logs={logs}
           sendCode={sendCode}
         />
       )}

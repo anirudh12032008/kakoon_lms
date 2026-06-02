@@ -163,6 +163,9 @@ function NodeCanvasInner({
         onConnect={onConnect}
         nodeTypes={NODE_TYPES}
         fitView
+        fitViewOptions={{ padding: 0.6, maxZoom: 1.3 }}
+        minZoom={0.8}
+        maxZoom={2}
         deleteKeyCode={["Backspace", "Delete"]}
         connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2 }}
         defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}
