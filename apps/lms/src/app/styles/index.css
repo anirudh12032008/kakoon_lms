@@ -1,15 +1,15 @@
 @import "tailwindcss";
+@plugin "daisyui";
+@import "./theme.css";
 
 @layer base {
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
+  *, *::before, *::after { box-sizing: border-box; }
 
   html, body, #root {
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background: #09090b;
+    background: var(--k-base-100);
     font-family: "Inter", system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -19,27 +19,24 @@
 /* Scrollbars */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #27272a; border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+::-webkit-scrollbar-thumb { background: var(--k-border); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--k-elevated); }
 
 /* ReactFlow overrides */
 .react-flow__edge-path { stroke-width: 2 !important; }
 .react-flow__handle { cursor: crosshair !important; }
 .react-flow__controls button {
-  background: #18181b !important;
-  border-color: #27272a !important;
-  color: #71717a !important;
+  background: var(--k-base-200) !important;
+  border-color: var(--k-border) !important;
+  color: var(--k-text-muted) !important;
 }
 .react-flow__controls button:hover {
-  background: #27272a !important;
-  color: white !important;
+  background: var(--k-elevated) !important;
+  color: var(--k-text) !important;
 }
-.react-flow__attribution {
-  display: none !important;
-}
+.react-flow__attribution { display: none !important; }
 
-/* Node canvas animations — defined here so they're not duplicated per
-   component render when multiple sensor / tool nodes are on the canvas */
+/* Node canvas animations */
 @keyframes scrollWave {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }

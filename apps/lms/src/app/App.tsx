@@ -32,9 +32,13 @@ export default function App() {
   return (
     <Suspense
       fallback={
-        <div style={{ position: "fixed", inset: 0, background: "#09090b", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ width: 32, height: 32, border: "3px solid #3f3f46", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div className="fixed inset-0 flex flex-col items-center justify-center gap-4"
+          style={{ background: "var(--k-base-100)" }}>
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">⚡</span>
+            <span className="text-lg font-bold" style={{ color: "var(--k-primary)" }}>Kakoon</span>
+          </div>
+          <span className="loading loading-spinner loading-md" style={{ color: "var(--k-primary)" }} />
         </div>
       }
     >

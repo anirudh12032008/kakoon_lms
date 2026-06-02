@@ -4,11 +4,9 @@ import {
 } from "lucide-react";
 
 interface EditorStatusBarProps {
-  // Terminal
   showTerminal: boolean;
   onToggleTerminal: () => void;
   logCount: number;
-  // Connection
   isConnected: boolean;
   isConnecting: boolean;
   isSupported: boolean;
@@ -17,7 +15,6 @@ interface EditorStatusBarProps {
   onConnect: () => void;
   onDisconnect: () => void;
   onConnectWifi: () => void;
-  // WiFi panel
   showWifiInput: boolean;
   setShowWifiInput: (v: boolean) => void;
   setConnectionMode: (m: "usb" | "wifi") => void;
@@ -27,7 +24,6 @@ interface EditorStatusBarProps {
   setWifiPassword: (v: string) => void;
   wifiSubnet: string;
   setWifiSubnet: (v: string) => void;
-  // Actions
   isUploading: boolean;
   isSending: boolean;
   isRunning: boolean;
@@ -47,19 +43,21 @@ export function EditorStatusBar({
   isUploading, isSending, isRunning, onUpload, onRun, onStop, onOpenFileManager, onOpenFirmwareFlasher,
 }: EditorStatusBarProps) {
   return (
-    <footer className="flex h-12 shrink-0 items-center justify-between border-t border-[#1f1f23] bg-[#0c0c0f] px-3 gap-1">
+    <footer
+      className="flex h-12 shrink-0 items-center justify-between gap-2 px-3 border-t"
+      style={{ background: "var(--k-base-200)", borderColor: "var(--k-border)" }}
+    >
       {/* Terminal toggle */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <button
           onClick={onToggleTerminal}
-          className={`flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors ${
-            showTerminal ? "bg-cyan-500/20 text-cyan-400" : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
-          }`}
+          className="btn btn-xs btn-ghost gap-1.5"
+          style={showTerminal ? { color: "var(--k-accent)" } : { color: "var(--k-text-muted)" }}
         >
           <PanelLeftClose className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Terminal</span>
+          <span className="hidden sm:inline text-xs">Terminal</span>
           {logCount > 0 && (
-            <span className="ml-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-zinc-700 px-1 text-[10px]">
+            <span className="badge badge-sm" style={{ background: "var(--k-elevated)", color: "var(--k-text-muted)", fontSize: "10px" }}>
               {logCount}
             </span>
           )}
@@ -67,67 +65,69 @@ export function EditorStatusBar({
       </div>
 
       {/* Device status + connection mode */}
-      <div className="flex items-center gap-3">
-        <div className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${
-          isConnected ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-800 text-zinc-400"
-        }`}>
-          <Circle className={`h-2 w-2 ${isConnected ? "fill-emerald-400 text-emerald-400" : "fill-zinc-500 text-zinc-500"}`} />
-          <span className="hidden sm:inline">{isConnected ? "ESP32" : "No Device"}</span>
+      <div className="flex items-center gap-2">
+        {/* Status pill */}
+        <div
+          className="hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
+          style={isConnected
+            ? { background: "color-mix(in srgb, var(--k-success) 15%, transparent)", color: "var(--k-success)" }
+            : { background: "var(--k-elevated)", color: "var(--k-text-muted)" }
+          }
+        >
+          <Circle className="h-2 w-2" style={{ fill: isConnected ? "var(--k-success)" : "var(--k-text-dim)" }} />
+          {isConnected ? "ESP32" : "No Device"}
         </div>
 
+        {/* Connection mode picker */}
         <div className="relative">
           <button
             onClick={() => setShowWifiInput(!showWifiInput)}
-            className="flex items-center gap-1.5 rounded-md bg-zinc-800/50 px-2.5 py-1.5 text-xs text-zinc-400 hover:bg-zinc-700/50"
+            className="btn btn-xs btn-ghost gap-1"
+            style={{ color: "var(--k-text-muted)" }}
           >
             {connectionMode === "usb" ? <Usb className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{connectionMode === "usb" ? "USB" : "WiFi"}</span>
+            <span className="hidden sm:inline text-xs">{connectionMode === "usb" ? "USB" : "WiFi"}</span>
             <ChevronDown className="h-3 w-3" />
           </button>
 
           {showWifiInput && (
-            <div className="absolute bottom-full left-0 mb-2 w-56 rounded-lg border z-30 border-zinc-800 bg-[#0c0c0f] p-2 shadow-xl">
-              <button
-                onClick={() => { setConnectionMode("usb"); setShowWifiInput(false); }}
-                className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs ${connectionMode === "usb" ? "bg-violet-500/20 text-violet-400" : "text-zinc-400 hover:bg-zinc-800"}`}
-              >
-                <Usb className="h-3.5 w-3.5" /> USB Serial
-              </button>
-              <button
-                onClick={() => setConnectionMode("wifi")}
-                className={`flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs ${connectionMode === "wifi" ? "bg-violet-500/20 text-violet-400" : "text-zinc-400 hover:bg-zinc-800"}`}
-              >
-                <Wifi className="h-3.5 w-3.5" /> WiFi (WebREPL)
-              </button>
+            <div
+              className="absolute bottom-full left-0 mb-2 w-56 rounded-xl p-2 shadow-xl z-30"
+              style={{ border: "1px solid var(--k-border)", background: "var(--k-base-200)" }}
+            >
+              {(["usb", "wifi"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  onClick={() => { setConnectionMode(mode); if (mode === "usb") setShowWifiInput(false); }}
+                  className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors"
+                  style={connectionMode === mode
+                    ? { background: "color-mix(in srgb, var(--k-primary) 15%, transparent)", color: "var(--k-primary)" }
+                    : { color: "var(--k-text-muted)" }
+                  }
+                >
+                  {mode === "usb" ? <Usb className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}
+                  {mode === "usb" ? "USB Serial" : "WiFi (WebREPL)"}
+                </button>
+              ))}
 
               {connectionMode === "wifi" && (
-                <div className="mt-2 space-y-2 border-t border-zinc-800 pt-2">
-                  <input
-                    type="text"
-                    placeholder="WiFi Name (SSID)"
-                    value={wifiSsid}
-                    onChange={(e) => setWifiSsid(e.target.value)}
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300 placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none"
-                  />
-                  <input
-                    type="password"
-                    placeholder="WiFi Password (not saved)"
-                    value={wifiPassword}
-                    onChange={(e) => setWifiPassword(e.target.value)}
-                    autoComplete="current-password"
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300 placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none"
-                  />
-                  <p className="text-[10px] text-zinc-500">Password is never stored anywhere.</p>
-                  <div className="border-t border-zinc-800 pt-2">
+                <div className="mt-2 space-y-1.5 pt-2" style={{ borderTop: "1px solid var(--k-border)" }}>
+                  {[
+                    { value: wifiSsid,     setter: setWifiSsid,     placeholder: "WiFi Name (SSID)",          type: "text"     },
+                    { value: wifiPassword, setter: setWifiPassword,  placeholder: "WiFi Password (not saved)", type: "password" },
+                    { value: wifiSubnet,   setter: setWifiSubnet,    placeholder: "ESP32 IP (e.g. 192.168.1.105)", type: "text" },
+                  ].map(({ value, setter, placeholder, type }) => (
                     <input
-                      type="text"
-                      placeholder="ESP32 IP (e.g. 192.168.1.105)"
-                      value={wifiSubnet}
-                      onChange={(e) => setWifiSubnet(e.target.value)}
-                      className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-300 placeholder:text-zinc-500 focus:border-violet-500 focus:outline-none"
+                      key={placeholder}
+                      type={type}
+                      placeholder={placeholder}
+                      value={value}
+                      onChange={(e) => setter(e.target.value)}
+                      className="input input-bordered input-xs w-full text-xs"
+                      style={{ background: "var(--k-base-300)" }}
                     />
-                    <p className="text-[10px] text-zinc-500 mt-1">Enter IP to connect directly.</p>
-                  </div>
+                  ))}
+                  <p className="text-[10px]" style={{ color: "var(--k-text-dim)" }}>Password is never stored.</p>
                 </div>
               )}
             </div>
@@ -136,24 +136,27 @@ export function EditorStatusBar({
       </div>
 
       {/* Action buttons */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         {!isSupported && connectionMode === "usb" && (
-          <span className="text-[9px] text-red-400 bg-red-900/30 px-1.5 py-0.5 rounded border border-red-800 hidden sm:flex">Chrome/Edge</span>
+          <span className="badge badge-error badge-sm hidden sm:inline-flex text-[9px]">Chrome/Edge only</span>
         )}
 
+        {/* Connect / Disconnect */}
         <button
           onClick={isConnected ? onDisconnect : (connectionMode === "wifi" ? onConnectWifi : onConnect)}
           disabled={isConnecting || isConfiguringWifi || (!isSupported && connectionMode === "usb")}
-          className={`flex h-8 items-center gap-2 rounded-md border px-3 text-xs font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-            isConnected
-              ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
-              : "border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-          }`}
+          className="btn btn-xs gap-1.5 disabled:opacity-40"
+          style={isConnected
+            ? { border: "1px solid color-mix(in srgb, var(--k-success) 50%, transparent)",
+                background: "color-mix(in srgb, var(--k-success) 10%, transparent)",
+                color: "var(--k-success)" }
+            : { border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }
+          }
         >
           {isConnecting || isConfiguringWifi ? (
-            <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Connecting</span></>
+            <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Connecting…</span></>
           ) : isConnected ? (
-            <><Circle className="h-2 w-2 fill-emerald-400" /><span className="hidden sm:inline">Connected</span></>
+            <><Circle className="h-2 w-2" style={{ fill: "var(--k-success)" }} /><span className="hidden sm:inline">Connected</span></>
           ) : (
             <>{connectionMode === "usb" ? <Usb className="h-3.5 w-3.5" /> : <Wifi className="h-3.5 w-3.5" />}<span className="hidden sm:inline">Connect</span></>
           )}
@@ -162,11 +165,12 @@ export function EditorStatusBar({
         <button
           onClick={onUpload}
           disabled={!isConnected || isUploading}
-          className="flex h-8 items-center gap-2 rounded-md border border-zinc-700 px-3 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn btn-xs gap-1.5 disabled:opacity-40"
+          style={{ border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }}
           title="Save code to ESP32 (persists after reboot)"
         >
           {isUploading
-            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Uploading</span></>
+            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Uploading…</span></>
             : <><Upload className="h-3.5 w-3.5" /><span className="hidden sm:inline">Upload</span></>
           }
         </button>
@@ -174,30 +178,36 @@ export function EditorStatusBar({
         <button
           onClick={onOpenFileManager}
           disabled={!isConnected}
-          className="flex h-8 items-center gap-2 rounded-md border border-zinc-700 px-3 text-xs text-zinc-300 hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn btn-xs gap-1.5 disabled:opacity-40 hidden md:flex"
+          style={{ border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }}
           title="Manage ESP32 files"
         >
           <HardDrive className="h-3.5 w-3.5" />
-          <span className="hidden md:inline">Files</span>
+          Files
         </button>
 
         <button
           onClick={onOpenFirmwareFlasher}
-          className="flex h-8 items-center gap-2 rounded-md border border-zinc-700 px-3 text-xs text-zinc-300 hover:bg-zinc-800"
+          className="btn btn-xs gap-1.5 hidden md:flex"
+          style={{ border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }}
           title="Flash MicroPython firmware"
         >
           <Cpu className="h-3.5 w-3.5" />
-          <span className="hidden md:inline">Flash</span>
+          Flash
         </button>
 
-        {/* Stop — visible only when code is actively running */}
         {isRunning && (
           <button
             onClick={onStop}
-            className="flex h-8 items-center gap-2 rounded-md border border-red-500/60 bg-red-500/15 px-3 text-xs font-medium text-red-400 hover:bg-red-500/25 transition-all animate-pulse"
+            className="btn btn-xs gap-1.5 animate-pulse"
+            style={{
+              border: "1px solid color-mix(in srgb, var(--k-error) 60%, transparent)",
+              background: "color-mix(in srgb, var(--k-error) 15%, transparent)",
+              color: "var(--k-error)",
+            }}
             title="Stop running program (Ctrl+C)"
           >
-            <Square className="h-3.5 w-3.5 fill-red-400" />
+            <Square className="h-3.5 w-3.5" style={{ fill: "var(--k-error)" }} />
             <span className="hidden sm:inline">Stop</span>
           </button>
         )}
@@ -205,11 +215,12 @@ export function EditorStatusBar({
         <button
           onClick={onRun}
           disabled={!isConnected || isSending}
-          className="flex h-8 items-center gap-2 rounded-md bg-gradient-to-r from-violet-500 to-fuchsia-500 px-3 text-xs font-medium text-white hover:from-violet-600 hover:to-fuchsia-600 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn btn-sm gap-1.5 font-bold disabled:opacity-40 text-white"
+          style={{ background: "linear-gradient(135deg, var(--k-primary), var(--k-secondary))" }}
         >
           {isSending
-            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Running</span></>
-            : <><Play className="h-3.5 w-3.5 fill-white" /><span className="hidden sm:inline">Run</span></>
+            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Running…</span></>
+            : <><Play className="h-3.5 w-3.5" style={{ fill: "white" }} /><span className="hidden sm:inline">Run</span></>
           }
         </button>
       </div>

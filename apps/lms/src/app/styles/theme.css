@@ -1,0 +1,117 @@
+/*
+ * ╔══════════════════════════════════════════════════════════════╗
+ * ║          KAKOON COLOR CONFIG — edit this file to retheme     ║
+ * ║  Change the hex values in Section 1; everything else auto.   ║
+ * ╚══════════════════════════════════════════════════════════════╝
+ */
+
+/* ── 1. RAW PALETTE  (the only values you ever need to change) ── */
+:root {
+  --k-primary:    #7c3aed;   /* violet  – main buttons, selected   */
+  --k-secondary:  #d946ef;   /* fuchsia – designer, creative tools */
+  --k-accent:     #06b6d4;   /* cyan    – terminal, IoT, online    */
+  --k-success:    #22c55e;   /* green   – connected, saved, ok     */
+  --k-warning:    #f59e0b;   /* amber   – manual edits, caution    */
+  --k-error:      #ef4444;   /* red     – errors, delete, stop     */
+  --k-info:       #3b82f6;   /* blue    – firmware, files          */
+
+  --k-base-100:   #09090b;   /* page background                    */
+  --k-base-200:   #0e0e12;   /* panels / header / footer           */
+  --k-base-300:   #14141a;   /* sidebars, palette, raised cards    */
+  --k-base-400:   #1e1e26;   /* hover surfaces                     */
+  --k-border:     #25252e;   /* dividers, outlines                 */
+
+  --k-text:       #e8e8ed;   /* primary text                       */
+  --k-muted:      #9898a8;   /* body / secondary text              */
+  --k-dim:        #4a4a58;   /* placeholders, disabled             */
+}
+
+/* ── 2. TAILWIND v4 THEME REGISTRATION ──────────────────────────
+   @theme inline makes bg-primary, text-accent, border-base-300
+   etc. work as real Tailwind utility classes everywhere.         */
+@theme inline {
+  --color-primary:   var(--k-primary);
+  --color-secondary: var(--k-secondary);
+  --color-accent:    var(--k-accent);
+  --color-success:   var(--k-success);
+  --color-warning:   var(--k-warning);
+  --color-error:     var(--k-error);
+  --color-info:      var(--k-info);
+
+  --color-base-100:  var(--k-base-100);
+  --color-base-200:  var(--k-base-200);
+  --color-base-300:  var(--k-base-300);
+  --color-base-400:  var(--k-base-400);
+  --color-border:    var(--k-border);
+
+  --color-text:      var(--k-text);
+  --color-muted:     var(--k-muted);
+  --color-dim:       var(--k-dim);
+}
+
+/* ── 3. DAISYUI THEME ────────────────────────────────────────── */
+[data-theme="kakoon"] {
+  color-scheme: dark;
+
+  --color-primary:          var(--k-primary);
+  --color-primary-content:  #ffffff;
+  --color-secondary:        var(--k-secondary);
+  --color-secondary-content:#ffffff;
+  --color-accent:           var(--k-accent);
+  --color-accent-content:   #021419;
+  --color-neutral:          var(--k-base-400);
+  --color-neutral-content:  var(--k-text);
+  --color-base-100:         var(--k-base-100);
+  --color-base-200:         var(--k-base-200);
+  --color-base-300:         var(--k-base-300);
+  --color-base-content:     var(--k-text);
+  --color-info:             var(--k-info);
+  --color-info-content:     #ffffff;
+  --color-success:          var(--k-success);
+  --color-success-content:  #052e16;
+  --color-warning:          var(--k-warning);
+  --color-warning-content:  #1a0f00;
+  --color-error:            var(--k-error);
+  --color-error-content:    #ffffff;
+
+  --radius-box:   0.875rem;
+  --radius-btn:   0.5rem;
+  --radius-badge: 9999px;
+}
+
+/* ── 4. GLOBAL COMPONENT OVERRIDES ──────────────────────────── */
+
+/* btn — reset DaisyUI's default heavy shadow/border treatment */
+.btn {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+}
+.btn-ghost {
+  border-color: transparent !important;
+}
+
+/* inputs */
+.input, .textarea, .select {
+  background-color: var(--k-base-300);
+  border-color: var(--k-border);
+  color: var(--k-text);
+}
+.input:focus, .textarea:focus, .select:focus {
+  outline-color: var(--k-primary);
+  border-color: var(--k-primary);
+}
+.input::placeholder, .textarea::placeholder {
+  color: var(--k-dim);
+}
+
+/* badge */
+.badge-ghost {
+  background-color: var(--k-base-400);
+  border-color: var(--k-border);
+  color: var(--k-muted);
+}
+
+/* divider */
+.divider { color: var(--k-dim); }
+.divider::before, .divider::after { background-color: var(--k-border); }

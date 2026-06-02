@@ -1,346 +1,280 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowRight,
-  Blocks,
-  Check,
-  Cpu,
-  Edit3,
-  KeyRound,
-  Layers3,
-  Save,
-  Shield,
-  Sparkles,
-  Trash2,
+  ArrowRight, Blocks, Check, Cpu, Edit3, KeyRound,
+  Layers3, Save, Shield, Sparkles, Trash2,
 } from "lucide-react";
 import {
-  ADMIN_SECRET,
-  ADMIN_UNLOCK_STORAGE_KEY,
-  buildCustomLaunchContext,
-  buildLaunchContext,
-  CUSTOM_DEFAULT_CATEGORIES,
-  deleteCustomPreset,
-  EDITOR_KIT_PRESETS,
-  EDITOR_MODE_PRESETS,
-  loadCustomPresets,
-  saveCustomPreset,
-  type CustomLaunchPreset,
-  type EditorLaunchContext,
+  ADMIN_SECRET, ADMIN_UNLOCK_STORAGE_KEY,
+  buildCustomLaunchContext, buildLaunchContext,
+  CUSTOM_DEFAULT_CATEGORIES, deleteCustomPreset,
+  EDITOR_KIT_PRESETS, EDITOR_MODE_PRESETS,
+  loadCustomPresets, saveCustomPreset,
+  type CustomLaunchPreset, type EditorLaunchContext,
 } from "@/entities/editor-launch/model/config";
 import { NODE_CATEGORIES } from "@/entities/node/model";
 
-interface Props {
-  onLaunch: (context: EditorLaunchContext) => void;
-}
-
+interface Props { onLaunch: (context: EditorLaunchContext) => void; }
 interface BuilderState {
-  title: string;
-  description: string;
-  mode: EditorLaunchContext["mode"];
-  selectedCategories: string[];
-  selectedNodeTypes: string[];
-  sensorNames: string;
+  title: string; description: string; mode: EditorLaunchContext["mode"];
+  selectedCategories: string[]; selectedNodeTypes: string[]; sensorNames: string;
 }
 
-function PresetCard({
-  title,
-  description,
-  badge,
-  accent,
-  selected,
-  onClick,
-}: {
-  title: string;
-  description: string;
-  badge: string;
-  accent: string;
-  selected: boolean;
-  onClick: () => void;
+/* ── Preset card ─────────────────────────────────────────────────────────── */
+function PresetCard({ title, description, badge, accentColor, selected, onClick }: {
+  title: string; description: string; badge: string;
+  accentColor: string; selected: boolean; onClick: () => void;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`group relative overflow-hidden rounded-2xl border p-4 text-left transition-all ${
-        selected ? "border-white/20 bg-white/8 shadow-2xl shadow-black/20" : "border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06]"
-      }`}
+      className="group relative overflow-hidden rounded-2xl p-4 text-left transition-all"
+      style={{
+        border: selected
+          ? `2px solid color-mix(in srgb, ${accentColor} 60%, transparent)`
+          : "2px solid var(--k-border)",
+        background: selected
+          ? `color-mix(in srgb, ${accentColor} 10%, var(--k-base-300))`
+          : "var(--k-base-300)",
+      }}
+      onMouseEnter={(e) => {
+        if (!selected) (e.currentTarget as HTMLButtonElement).style.borderColor = `color-mix(in srgb, ${accentColor} 40%, transparent)`;
+      }}
+      onMouseLeave={(e) => {
+        if (!selected) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--k-border)";
+      }}
     >
-      <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-gradient-to-br ${accent} to-transparent`} />
-      <div className="relative flex items-start justify-between gap-3">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <div className="mb-2 flex items-center gap-2">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-black/20 border border-white/10 text-white">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl"
+              style={{ background: `color-mix(in srgb, ${accentColor} 20%, transparent)`, color: accentColor }}>
               <Blocks className="h-4 w-4" />
             </span>
             <div>
-              <h3 className="text-sm font-semibold text-white">{title}</h3>
-              <p className="text-[11px] uppercase tracking-[0.24em] text-white/45">{badge}</p>
+              <h3 className="text-sm font-bold" style={{ color: "var(--k-text)" }}>{title}</h3>
+              <span className="badge badge-ghost badge-sm text-[10px] uppercase tracking-wider" style={{ color: "var(--k-text-dim)" }}>{badge}</span>
             </div>
           </div>
-          <p className="max-w-[28rem] text-sm leading-6 text-white/65">{description}</p>
+          <p className="text-xs leading-5" style={{ color: "var(--k-text-muted)" }}>{description}</p>
         </div>
-        {selected ? <Check className="h-4 w-4 text-emerald-300" /> : <ArrowRight className="h-4 w-4 text-white/35" />}
+        {selected
+          ? <Check className="h-4 w-4 shrink-0 mt-0.5" style={{ color: accentColor }} />
+          : <ArrowRight className="h-4 w-4 shrink-0 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accentColor }} />
+        }
       </div>
     </button>
   );
 }
 
+/* ── Section wrapper ─────────────────────────────────────────────────────── */
+function Section({ title, subtitle, icon, children }: {
+  title: string; subtitle: string; icon: React.ReactNode; children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl p-5 space-y-4"
+      style={{ border: "1px solid var(--k-border)", background: "var(--k-base-200)" }}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-base font-bold" style={{ color: "var(--k-text)" }}>{title}</h2>
+          <p className="text-xs mt-0.5" style={{ color: "var(--k-text-dim)" }}>{subtitle}</p>
+        </div>
+        <div style={{ color: "var(--k-text-dim)" }}>{icon}</div>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/* ── Accent colors for preset cards ─────────────────────────────────────── */
+const MODE_COLORS = ["var(--k-primary)", "var(--k-warning)", "var(--k-success)", "var(--k-info)"];
+const KIT_COLORS  = ["var(--k-accent)", "var(--k-secondary)", "var(--k-warning)", "var(--k-primary)"];
+
+/* ── Main component ──────────────────────────────────────────────────────── */
 export function EditorLaunchDashboard({ onLaunch }: Props) {
   const [selectedPresetId, setSelectedPresetId] = useState(EDITOR_MODE_PRESETS[0].id);
-  const [selectedKitId, setSelectedKitId] = useState(EDITOR_KIT_PRESETS[0].id);
-  const [customTitle, setCustomTitle] = useState("Custom Workspace");
+  const [selectedKitId,    setSelectedKitId]    = useState(EDITOR_KIT_PRESETS[0].id);
+  const [customTitle,       setCustomTitle]      = useState("Custom Workspace");
   const [customDescription, setCustomDescription] = useState("Pick exactly the blocks you want the learner to see.");
   const [selectedCategories, setSelectedCategories] = useState<string[]>(CUSTOM_DEFAULT_CATEGORIES);
-  const [customPresets, setCustomPresets] = useState<CustomLaunchPreset[]>([]);
-  const [adminUnlocked, setAdminUnlocked] = useState(false);
-  const [adminSecretInput, setAdminSecretInput] = useState("");
+  const [customPresets, setCustomPresets]   = useState<CustomLaunchPreset[]>([]);
+  const [adminUnlocked, setAdminUnlocked]   = useState(false);
+  const [adminInput,    setAdminInput]      = useState("");
   const [builder, setBuilder] = useState<BuilderState>({
     title: "My Custom Preset",
     description: "A preset tailored for my own kit or lesson.",
     mode: "guided",
     selectedCategories: CUSTOM_DEFAULT_CATEGORIES,
     selectedNodeTypes: NODE_CATEGORIES
-      .filter((category) => CUSTOM_DEFAULT_CATEGORIES.includes(category.id))
-      .flatMap((category) => category.nodes.map((node) => node.type)),
+      .filter((c) => CUSTOM_DEFAULT_CATEGORIES.includes(c.id))
+      .flatMap((c) => c.nodes.map((n) => n.type)),
     sensorNames: "",
   });
 
-  const selectedMode = useMemo(
-    () => EDITOR_MODE_PRESETS.find((preset) => preset.id === selectedPresetId) ?? EDITOR_MODE_PRESETS[0],
-    [selectedPresetId]
-  );
-  const selectedKit = useMemo(
-    () => EDITOR_KIT_PRESETS.find((preset) => preset.id === selectedKitId) ?? EDITOR_KIT_PRESETS[0],
-    [selectedKitId]
-  );
+  const selectedMode = useMemo(() => EDITOR_MODE_PRESETS.find((p) => p.id === selectedPresetId) ?? EDITOR_MODE_PRESETS[0], [selectedPresetId]);
+  const selectedKit  = useMemo(() => EDITOR_KIT_PRESETS.find((p) => p.id === selectedKitId)    ?? EDITOR_KIT_PRESETS[0],  [selectedKitId]);
 
   useEffect(() => {
     setCustomPresets(loadCustomPresets());
-    try {
-      setAdminUnlocked(localStorage.getItem(ADMIN_UNLOCK_STORAGE_KEY) === "true");
-    } catch {
-      setAdminUnlocked(false);
-    }
+    try { setAdminUnlocked(localStorage.getItem(ADMIN_UNLOCK_STORAGE_KEY) === "true"); } catch { /* noop */ }
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(ADMIN_UNLOCK_STORAGE_KEY, adminUnlocked ? "true" : "false");
-    } catch {
-      // Ignore storage failures.
-    }
+    try { localStorage.setItem(ADMIN_UNLOCK_STORAGE_KEY, adminUnlocked ? "true" : "false"); } catch { /* noop */ }
   }, [adminUnlocked]);
 
-  const customContext = useMemo(
-    () => buildCustomLaunchContext({
-      title: customTitle.trim() || "Custom Workspace",
-      description: customDescription.trim() || "Pick exactly the blocks you want the learner to see.",
-      selectedCategories,
-      availableSensors: selectedCategories.flatMap((categoryId) => {
-        const category = NODE_CATEGORIES.find((item) => item.id === categoryId);
-        return category ? category.nodes.slice(0, 4).map((node) => node.label) : [];
-      }),
+  const customContext = useMemo(() => buildCustomLaunchContext({
+    title: customTitle.trim() || "Custom Workspace",
+    description: customDescription.trim() || "Pick exactly the blocks you want the learner to see.",
+    selectedCategories,
+    availableSensors: selectedCategories.flatMap((catId) => {
+      const cat = NODE_CATEGORIES.find((c) => c.id === catId);
+      return cat ? cat.nodes.slice(0, 4).map((n) => n.label) : [];
     }),
-    [customTitle, customDescription, selectedCategories]
-  );
+  }), [customTitle, customDescription, selectedCategories]);
 
-  const builderContext = useMemo(
-    () => buildCustomLaunchContext({
-      title: builder.title.trim() || "My Custom Preset",
-      description: builder.description.trim() || "A preset tailored for my own kit or lesson.",
-      selectedCategories: builder.selectedCategories,
-      selectedNodeTypes: builder.selectedNodeTypes,
-      availableSensors: builder.sensorNames
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-    }),
-    [builder]
-  );
+  const builderContext = useMemo(() => buildCustomLaunchContext({
+    title: builder.title.trim() || "My Custom Preset",
+    description: builder.description.trim() || "A preset tailored for my own kit or lesson.",
+    selectedCategories: builder.selectedCategories,
+    selectedNodeTypes: builder.selectedNodeTypes,
+    availableSensors: builder.sensorNames.split(",").map((s) => s.trim()).filter(Boolean),
+  }), [builder]);
 
-  const launchMode = () => onLaunch(buildLaunchContext(selectedMode));
-  const launchKit = () => onLaunch(buildLaunchContext(selectedKit));
-  const launchCustom = () => onLaunch(customContext);
-
-  const unlockedPresets = customPresets;
+  const toggleCategory = (id: string) =>
+    setSelectedCategories((prev) => prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]);
 
   const toggleBuilderCategory = (categoryId: string) => {
     setBuilder((prev) => {
-      const category = NODE_CATEGORIES.find((item) => item.id === categoryId);
-      const categoryNodeTypes = category?.nodes.map((node) => node.type) ?? [];
-      const nextCategories = prev.selectedCategories.includes(categoryId)
-        ? prev.selectedCategories.filter((item) => item !== categoryId)
+      const cat = NODE_CATEGORIES.find((c) => c.id === categoryId);
+      const catTypes = cat?.nodes.map((n) => n.type) ?? [];
+      const nextCats = prev.selectedCategories.includes(categoryId)
+        ? prev.selectedCategories.filter((c) => c !== categoryId)
         : [...prev.selectedCategories, categoryId];
-
-      const nextSelectedNodeTypes = prev.selectedCategories.includes(categoryId)
-        ? prev.selectedNodeTypes.filter((nodeType) => !categoryNodeTypes.includes(nodeType))
-        : Array.from(new Set([...prev.selectedNodeTypes, ...categoryNodeTypes]));
-
-      return { ...prev, selectedCategories: nextCategories, selectedNodeTypes: nextSelectedNodeTypes };
+      const nextTypes = prev.selectedCategories.includes(categoryId)
+        ? prev.selectedNodeTypes.filter((t) => !catTypes.includes(t))
+        : Array.from(new Set([...prev.selectedNodeTypes, ...catTypes]));
+      return { ...prev, selectedCategories: nextCats, selectedNodeTypes: nextTypes };
     });
   };
 
-  const toggleBuilderNode = (nodeType: string) => {
+  const toggleBuilderNode = (type: string) =>
     setBuilder((prev) => ({
       ...prev,
-      selectedNodeTypes: prev.selectedNodeTypes.includes(nodeType)
-        ? prev.selectedNodeTypes.filter((item) => item !== nodeType)
-        : [...prev.selectedNodeTypes, nodeType],
+      selectedNodeTypes: prev.selectedNodeTypes.includes(type)
+        ? prev.selectedNodeTypes.filter((t) => t !== type)
+        : [...prev.selectedNodeTypes, type],
     }));
-  };
-
-  const unlockAdmin = () => {
-    if (adminSecretInput.trim() !== ADMIN_SECRET) return;
-    setAdminUnlocked(true);
-    setAdminSecretInput("");
-  };
 
   const saveBuilderPreset = () => {
     const saved = saveCustomPreset({
-      id: `custom-${Date.now()}`,
-      title: builderContext.title,
-      description: builderContext.description,
-      mode: builderContext.mode,
-      launchType: "custom",
-      kitId: builderContext.kitId,
-      accent: builderContext.accent,
-      allowedCategories: builderContext.allowedCategories,
-      allowedNodeTypes: builderContext.allowedNodeTypes,
-      availableSensors: builderContext.availableSensors,
+      id: `custom-${Date.now()}`, title: builderContext.title, description: builderContext.description,
+      mode: builderContext.mode, launchType: "custom", kitId: builderContext.kitId,
+      accent: builderContext.accent, allowedCategories: builderContext.allowedCategories,
+      allowedNodeTypes: builderContext.allowedNodeTypes, availableSensors: builderContext.availableSensors,
     });
     setCustomPresets(saved);
     onLaunch(builderContext);
   };
 
-  const removePreset = (presetId: string) => {
-    const updated = deleteCustomPreset(presetId);
-    setCustomPresets(updated);
-  };
-
-  const toggleCategory = (categoryId: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((item) => item !== categoryId)
-        : [...prev, categoryId]
-    );
-  };
-
   return (
-    <div
-      className="h-full overflow-y-scroll bg-[#060607] text-white [scrollbar-gutter:stable]"
-      style={{ scrollbarGutter: "stable", scrollbarWidth: "thin" }}
-    >
-      <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-4 py-5 sm:px-6 lg:px-8">
-        <header className="mb-6 flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5 shadow-2xl shadow-black/20 backdrop-blur-sm sm:p-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.3em] text-cyan-200">
-              <Sparkles className="h-3.5 w-3.5" />
-              LMS Launch Dashboard
+    <div className="h-full overflow-y-auto" style={{ background: "var(--k-base-100)", color: "var(--k-text)" }}>
+      <div className="mx-auto flex min-h-full w-full max-w-7xl flex-col px-4 py-6 sm:px-6 lg:px-8 gap-6">
+
+        {/* ── Hero header ── */}
+        <header className="rounded-3xl p-5 sm:p-7"
+          style={{ border: "1px solid var(--k-border)", background: "var(--k-base-200)" }}>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-widest"
+                style={{ border: "1px solid color-mix(in srgb, var(--k-accent) 30%, transparent)",
+                         background: "color-mix(in srgb, var(--k-accent) 10%, transparent)",
+                         color: "var(--k-accent)" }}>
+                <Sparkles className="h-3.5 w-3.5" />
+                Launch Dashboard
+              </div>
+              <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl" style={{ color: "var(--k-text)" }}>
+                Pick your workspace ⚡
+              </h1>
+              <p className="mt-2 text-sm leading-6" style={{ color: "var(--k-text-muted)" }}>
+                Choose a mode, a hardware kit, or build your own custom block set. Your progress is always saved.
+              </p>
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Choose a workspace before opening the editor.</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60">
-              Pick a preset mode, launch a kit-limited workspace, open the full editor, or create a custom block set for a specific classroom or hardware package.
-            </p>
-          </div>
-          <div className="grid gap-2 text-xs text-white/60 sm:grid-cols-3 lg:min-w-[27rem]">
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">Modes</p>
-              <p className="mt-1 text-sm font-medium text-white">Guided, Challenge, Sandbox, Full</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">Kits</p>
-              <p className="mt-1 text-sm font-medium text-white">Starter, Sensor, Motion, IoT</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-              <p className="text-[10px] uppercase tracking-[0.24em] text-white/35">Safety</p>
-              <p className="mt-1 text-sm font-medium text-white">Restrict blocks by preset, kit, or admin custom mode</p>
+            <div className="grid grid-cols-3 gap-2 text-xs lg:min-w-[22rem]">
+              {[
+                { label: "Modes",  value: "Guided · Challenge · Sandbox · Full", color: "var(--k-primary)" },
+                { label: "Kits",   value: "Starter · Sensor · Motion · IoT",     color: "var(--k-secondary)" },
+                { label: "Safety", value: "Restrict blocks by preset or kit",    color: "var(--k-success)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} className="rounded-xl p-3"
+                  style={{ border: "1px solid var(--k-border)", background: "var(--k-base-300)" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color }}>{label}</p>
+                  <p className="text-xs font-medium leading-4" style={{ color: "var(--k-text)" }}>{value}</p>
+                </div>
+              ))}
             </div>
           </div>
         </header>
 
-        <div className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)]">
+        <div className="grid flex-1 gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
           <main className="space-y-6">
-            <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">Preset Modes</h2>
-                  <p className="text-xs text-white/45">A quick launch for teaching modes and general classroom setups.</p>
-                </div>
-                <Layers3 className="h-5 w-5 text-cyan-300" />
-              </div>
-              <div className="grid gap-3 md:grid-cols-4">
-                {EDITOR_MODE_PRESETS.map((preset) => (
-                  <PresetCard
-                    key={preset.id}
-                    title={preset.title}
-                    description={preset.description}
-                    badge={preset.mode}
-                    accent={preset.accent ?? "from-violet-500 to-fuchsia-500"}
+
+            {/* ── Preset Modes ── */}
+            <Section title="🎮 Preset Modes" subtitle="Quick launch for teaching modes and classroom setups."
+              icon={<Layers3 className="h-5 w-5" />}>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {EDITOR_MODE_PRESETS.map((preset, i) => (
+                  <PresetCard key={preset.id} title={preset.title} description={preset.description}
+                    badge={preset.mode} accentColor={MODE_COLORS[i % MODE_COLORS.length]}
                     selected={selectedPresetId === preset.id}
-                    onClick={() => setSelectedPresetId(preset.id)}
-                  />
+                    onClick={() => setSelectedPresetId(preset.id)} />
                 ))}
               </div>
               <div className="flex justify-end">
-                <button
-                  onClick={launchMode}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-white/90"
-                >
-                  Open selected mode
-                  <ArrowRight className="h-4 w-4" />
+                <button onClick={() => onLaunch(buildLaunchContext(selectedMode))}
+                  className="btn btn-primary gap-2 font-bold">
+                  Open Mode <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
-            </section>
+            </Section>
 
-            <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">My Presets</h2>
-                  <p className="text-xs text-white/45">Saved custom presets are available for direct launch here.</p>
-                </div>
-                <Save className="h-5 w-5 text-violet-300" />
-              </div>
-
-              {unlockedPresets.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-4 text-sm text-white/45">
+            {/* ── My Presets ── */}
+            <Section title="💾 My Presets" subtitle="Saved custom presets for direct launch."
+              icon={<Save className="h-5 w-5" />}>
+              {customPresets.length === 0 ? (
+                <div className="rounded-xl p-4 text-sm text-center"
+                  style={{ border: "1px dashed var(--k-border)", color: "var(--k-text-dim)" }}>
                   No saved custom presets yet. Unlock admin mode to create one.
                 </div>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
-                  {unlockedPresets.map((preset) => (
-                    <div key={preset.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
+                  {customPresets.map((preset) => (
+                    <div key={preset.id} className="rounded-2xl p-4"
+                      style={{ border: "1px solid var(--k-border)", background: "var(--k-base-300)" }}>
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h3 className="text-sm font-semibold text-white">{preset.title}</h3>
-                          <p className="mt-1 text-xs leading-5 text-white/55">{preset.description}</p>
+                          <h3 className="text-sm font-bold" style={{ color: "var(--k-text)" }}>{preset.title}</h3>
+                          <p className="mt-1 text-xs leading-5" style={{ color: "var(--k-text-muted)" }}>{preset.description}</p>
                         </div>
-                        <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.24em] text-white/40">
-                          custom
-                        </span>
+                        <span className="badge badge-ghost badge-sm text-[10px]">custom</span>
                       </div>
                       <div className="mt-3 flex flex-wrap gap-1.5">
-                        {(preset.allowedCategories ?? []).slice(0, 4).map((categoryId) => {
-                          const category = NODE_CATEGORIES.find((item) => item.id === categoryId);
+                        {(preset.allowedCategories ?? []).slice(0, 4).map((catId) => {
+                          const cat = NODE_CATEGORIES.find((c) => c.id === catId);
                           return (
-                            <span key={categoryId} className="rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-white/55">
-                              {category?.icon} {category?.label}
+                            <span key={catId} className="badge badge-ghost badge-sm text-[10px]">
+                              {cat?.icon} {cat?.label}
                             </span>
                           );
                         })}
                       </div>
                       <div className="mt-4 flex items-center gap-2">
-                        <button
-                          onClick={() => onLaunch(preset)}
-                          className="inline-flex items-center gap-2 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black transition-colors hover:bg-white/90"
-                        >
-                          Launch preset
-                          <ArrowRight className="h-3.5 w-3.5" />
+                        <button onClick={() => onLaunch(preset)} className="btn btn-sm btn-primary gap-1.5">
+                          Launch <ArrowRight className="h-3.5 w-3.5" />
                         </button>
                         {adminUnlocked && (
-                          <button
-                            onClick={() => removePreset(preset.id)}
-                            className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-white/70 hover:bg-white/[0.06]"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            Delete
+                          <button onClick={() => setCustomPresets(deleteCustomPreset(preset.id))}
+                            className="btn btn-sm btn-ghost gap-1.5" style={{ color: "var(--k-error)" }}>
+                            <Trash2 className="h-3.5 w-3.5" /> Delete
                           </button>
                         )}
                       </div>
@@ -348,299 +282,266 @@ export function EditorLaunchDashboard({ onLaunch }: Props) {
                   ))}
                 </div>
               )}
-            </section>
+            </Section>
 
-            <section className="space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">Preset Kits</h2>
-                  <p className="text-xs text-white/45">Launch a workspace limited to the items inside a real hardware kit.</p>
-                </div>
-                <Cpu className="h-5 w-5 text-emerald-300" />
-              </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                {EDITOR_KIT_PRESETS.map((preset) => (
-                  <PresetCard
-                    key={preset.id}
-                    title={preset.title}
-                    description={preset.description}
-                    badge={preset.kitId ?? preset.id}
-                    accent={preset.accent ?? "from-violet-500 to-fuchsia-500"}
-                    selected={selectedKitId === preset.id}
-                    onClick={() => setSelectedKitId(preset.id)}
-                  />
+            {/* ── Kit Presets ── */}
+            <Section title="🤖 Hardware Kits" subtitle="Launch a workspace limited to a real hardware kit."
+              icon={<Cpu className="h-5 w-5" />}>
+              <div className="grid gap-2 md:grid-cols-2">
+                {EDITOR_KIT_PRESETS.map((preset, i) => (
+                  <PresetCard key={preset.id} title={preset.title} description={preset.description}
+                    badge={preset.kitId ?? preset.id} accentColor={KIT_COLORS[i % KIT_COLORS.length]}
+                    selected={selectedKitId === preset.id} onClick={() => setSelectedKitId(preset.id)} />
                 ))}
               </div>
               <div className="flex justify-end">
-                <button
-                  onClick={launchKit}
-                  className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-black transition-colors hover:bg-emerald-300"
-                >
-                  Open selected kit
-                  <ArrowRight className="h-4 w-4" />
+                <button onClick={() => onLaunch(buildLaunchContext(selectedKit))}
+                  className="btn btn-success gap-2 font-bold">
+                  Open Kit <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
-            </section>
+            </Section>
 
-            <section className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold">Customize</h2>
-                  <p className="text-xs text-white/45">Select the exact blocks you want to expose in the editor.</p>
-                </div>
-                <Edit3 className="h-5 w-5 text-fuchsia-300" />
-              </div>
-
+            {/* ── Customize ── */}
+            <Section title="🎨 Customize" subtitle="Select the exact blocks you want to expose in the editor."
+              icon={<Edit3 className="h-5 w-5" />}>
               <div className="grid gap-3 sm:grid-cols-2">
-                <label className="space-y-2">
-                  <span className="text-xs uppercase tracking-[0.24em] text-white/35">Workspace title</span>
-                  <input
-                    value={customTitle}
-                    onChange={(e) => setCustomTitle(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none transition-colors placeholder:text-white/25 focus:border-cyan-400/60"
-                    placeholder="Custom Workspace"
-                  />
+                <label className="space-y-1.5">
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Workspace title</span>
+                  <input value={customTitle} onChange={(e) => setCustomTitle(e.target.value)}
+                    className="input input-bordered input-sm w-full" placeholder="Custom Workspace"
+                    style={{ background: "var(--k-base-300)" }} />
                 </label>
-                <label className="space-y-2">
-                  <span className="text-xs uppercase tracking-[0.24em] text-white/35">Description</span>
-                  <input
-                    value={customDescription}
-                    onChange={(e) => setCustomDescription(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm outline-none transition-colors placeholder:text-white/25 focus:border-cyan-400/60"
-                    placeholder="Pick exactly the blocks you want the learner to see."
-                  />
+                <label className="space-y-1.5">
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Description</span>
+                  <input value={customDescription} onChange={(e) => setCustomDescription(e.target.value)}
+                    className="input input-bordered input-sm w-full" placeholder="Pick exactly the blocks you want…"
+                    style={{ background: "var(--k-base-300)" }} />
                 </label>
               </div>
 
               <div>
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <span className="text-xs uppercase tracking-[0.24em] text-white/35">Available categories</span>
-                  <span className="text-xs text-white/50">{selectedCategories.length} selected</span>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Available categories</span>
+                  <span className="badge badge-ghost badge-sm">{selectedCategories.length} selected</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {NODE_CATEGORIES.map((category) => {
-                    const active = selectedCategories.includes(category.id);
+                  {NODE_CATEGORIES.map((cat) => {
+                    const active = selectedCategories.includes(cat.id);
                     return (
-                      <button
-                        key={category.id}
-                        onClick={() => toggleCategory(category.id)}
-                        className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                          active
-                            ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
-                            : "border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white"
-                        }`}
-                      >
-                        <span>{category.icon}</span>
-                        <span>{category.label}</span>
+                      <button key={cat.id} onClick={() => toggleCategory(cat.id)}
+                        className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+                        style={active
+                          ? { border: "1px solid color-mix(in srgb, var(--k-accent) 40%, transparent)",
+                              background: "color-mix(in srgb, var(--k-accent) 15%, transparent)",
+                              color: "var(--k-accent)" }
+                          : { border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }
+                        }>
+                        <span>{cat.icon}</span><span>{cat.label}</span>
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-semibold text-white">Custom preview</p>
-                    <p className="text-xs text-white/45">{customContext.allowedNodeTypes?.length ?? 0} blocks will be visible.</p>
-                  </div>
-                  <Shield className="h-4 w-4 text-white/35" />
+              <div className="rounded-xl p-3" style={{ border: "1px solid var(--k-border)", background: "var(--k-base-300)" }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-bold" style={{ color: "var(--k-text)" }}>Preview</span>
+                  <span className="text-xs" style={{ color: "var(--k-text-dim)" }}>
+                    {customContext.allowedNodeTypes?.length ?? 0} blocks visible
+                  </span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {(customContext.availableSensors || []).slice(0, 8).map((sensor) => (
-                    <span key={sensor} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1 text-[11px] text-white/55">
-                      {sensor}
-                    </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {(customContext.availableSensors ?? []).slice(0, 8).map((sensor) => (
+                    <span key={sensor} className="badge badge-ghost badge-sm text-[11px]">{sensor}</span>
                   ))}
-                  {(customContext.availableSensors || []).length === 0 && (
-                    <span className="text-xs text-white/35">No sensors selected yet.</span>
+                  {!(customContext.availableSensors?.length) && (
+                    <span className="text-xs" style={{ color: "var(--k-text-dim)" }}>No sensors selected yet.</span>
                   )}
                 </div>
               </div>
 
               <div className="flex justify-end">
-                <button
-                  onClick={launchCustom}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:from-violet-400 hover:to-fuchsia-400"
-                >
-                  Open custom workspace
-                  <ArrowRight className="h-4 w-4" />
+                <button onClick={() => onLaunch(customContext)}
+                  className="btn gap-2 font-bold text-white"
+                  style={{ background: "linear-gradient(135deg, var(--k-primary), var(--k-secondary))" }}>
+                  Open Custom Workspace <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
-            </section>
+            </Section>
           </main>
 
-          <aside className="space-y-6 lg:sticky lg:top-6 lg:self-start">
-            <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.08] to-white/[0.03] p-5 shadow-2xl shadow-black/20">
-              <div className="mb-4 flex items-center justify-between gap-3">
+          {/* ── Sidebar ── */}
+          <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+
+            {/* Selected preset preview */}
+            <div className="rounded-2xl p-5"
+              style={{ border: "1px solid var(--k-border)", background: "var(--k-base-200)" }}>
+              <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/35">Selected preset</p>
-                  <h3 className="mt-1 text-xl font-semibold text-white">{selectedMode.title}</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "var(--k-text-dim)" }}>Selected Preset</p>
+                  <h3 className="text-lg font-extrabold" style={{ color: "var(--k-text)" }}>{selectedMode.title}</h3>
                 </div>
-                <span className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-[11px] uppercase tracking-[0.24em] text-white/50">
-                  {selectedMode.launchType}
-                </span>
+                <span className="badge badge-primary badge-sm uppercase">{selectedMode.launchType}</span>
               </div>
-              <p className="text-sm leading-6 text-white/60">{selectedMode.description}</p>
-              <div className="mt-4 space-y-3">
+              <p className="text-sm leading-6 mb-4" style={{ color: "var(--k-text-muted)" }}>{selectedMode.description}</p>
+
+              <div className="space-y-3">
                 <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Visible categories</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(selectedMode.allowedCategories ?? CUSTOM_DEFAULT_CATEGORIES).map((categoryId) => {
-                      const category = NODE_CATEGORIES.find((item) => item.id === categoryId);
-                      return (
-                        <span key={categoryId} className="rounded-full border border-white/10 bg-black/20 px-3 py-1 text-xs text-white/70">
-                          {category?.icon ?? "•"} {category?.label ?? categoryId}
-                        </span>
-                      );
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--k-text-dim)" }}>Categories</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(selectedMode.allowedCategories ?? CUSTOM_DEFAULT_CATEGORIES).map((catId) => {
+                      const cat = NODE_CATEGORIES.find((c) => c.id === catId);
+                      return <span key={catId} className="badge badge-ghost badge-sm">{cat?.icon ?? "•"} {cat?.label ?? catId}</span>;
                     })}
                   </div>
                 </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.24em] text-white/35">Focus sensors</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(selectedMode.availableSensors ?? []).map((sensor) => (
-                      <span key={sensor} className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-100">
-                        {sensor}
-                      </span>
-                    ))}
+                {(selectedMode.availableSensors ?? []).length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: "var(--k-text-dim)" }}>Focus Sensors</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(selectedMode.availableSensors ?? []).map((s) => (
+                        <span key={s} className="badge badge-accent badge-sm">{s}</span>
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
-            </section>
+            </div>
 
-            <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-              <p className="text-xs uppercase tracking-[0.24em] text-white/35">How it works</p>
-              <ul className="mt-3 space-y-3 text-sm leading-6 text-white/60">
-                <li>1. Pick a mode or a kit to preconfigure the editor.</li>
-                <li>2. The editor opens with the block palette filtered to the allowed hardware.</li>
-                <li>3. Admin can create and save custom presets after unlocking the secret panel below.</li>
-              </ul>
-            </section>
+            {/* How it works */}
+            <div className="rounded-2xl p-5"
+              style={{ border: "1px solid var(--k-border)", background: "var(--k-base-200)" }}>
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-3" style={{ color: "var(--k-text-dim)" }}>How it works</p>
+              <ol className="space-y-2.5 text-sm leading-6" style={{ color: "var(--k-text-muted)" }}>
+                {[
+                  "Pick a mode or a kit to pre-configure the editor.",
+                  "The block palette filters to the allowed hardware only.",
+                  "Admin can create & save custom presets after unlocking below.",
+                ].map((step, i) => (
+                  <li key={i} className="flex gap-2.5">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                      style={{ background: "var(--k-elevated)", color: "var(--k-text-muted)" }}>
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ol>
+            </div>
 
-            <section className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.03] p-5">
-              <div className="flex items-center justify-between gap-3">
+            {/* Admin panel */}
+            <div className="rounded-2xl p-5"
+              style={{ border: "1px solid var(--k-border)", background: "var(--k-base-200)" }}>
+              <div className="flex items-center justify-between gap-3 mb-3">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/35">Admin</p>
-                  <h3 className="mt-1 text-lg font-semibold text-white">Secret builder</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "var(--k-text-dim)" }}>Admin</p>
+                  <h3 className="text-base font-bold" style={{ color: "var(--k-text)" }}>🔐 Secret Builder</h3>
                 </div>
-                <Shield className="h-5 w-5 text-emerald-300" />
+                <Shield className="h-5 w-5" style={{ color: "var(--k-success)" }} />
               </div>
 
               {!adminUnlocked ? (
-                <div className="mt-4 space-y-3">
-                  <p className="text-sm leading-6 text-white/60">Unlock this panel with the admin secret to create or delete presets.</p>
-                  <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/20 px-3 py-2">
-                    <KeyRound className="h-4 w-4 text-white/35" />
-                    <input
-                      value={adminSecretInput}
-                      onChange={(e) => setAdminSecretInput(e.target.value)}
-                      type={adminSecretInput ? "password" : "text"}
+                <div className="space-y-3">
+                  <p className="text-sm leading-6" style={{ color: "var(--k-text-muted)" }}>
+                    Unlock with the admin secret to create or delete presets.
+                  </p>
+                  <div className="flex items-center gap-2 rounded-xl px-3 py-2"
+                    style={{ border: "1px solid var(--k-border)", background: "var(--k-base-300)" }}>
+                    <KeyRound className="h-4 w-4 shrink-0" style={{ color: "var(--k-text-dim)" }} />
+                    <input value={adminInput} onChange={(e) => setAdminInput(e.target.value)}
+                      type={adminInput ? "password" : "text"}
                       placeholder="Enter admin secret"
-                      className="w-full bg-transparent text-sm outline-none placeholder:text-white/25"
+                      className="w-full bg-transparent text-sm outline-none"
+                      style={{ color: "var(--k-text)" }}
+                      onKeyDown={(e) => { if (e.key === "Enter" && adminInput.trim() === ADMIN_SECRET) { setAdminUnlocked(true); setAdminInput(""); } }}
                     />
-                    <button onClick={unlockAdmin} className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-black">
-                      Unlock
-                    </button>
+                    <button
+                      onClick={() => { if (adminInput.trim() === ADMIN_SECRET) { setAdminUnlocked(true); setAdminInput(""); } }}
+                      className="btn btn-xs btn-primary">Unlock</button>
                   </div>
-                  <p className="text-[11px] text-white/35">Secret is currently defined in the frontend config and can be moved server-side later.</p>
                 </div>
               ) : (
-                <div className="mt-4 space-y-4">
-                  <div className="grid gap-3">
-                    <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.24em] text-white/35">Preset name</span>
-                      <input
-                        value={builder.title}
-                        onChange={(e) => setBuilder((prev) => ({ ...prev, title: e.target.value }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm outline-none focus:border-cyan-400/50"
-                      />
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="badge badge-success badge-sm">Unlocked</span>
+                    <button onClick={() => setAdminUnlocked(false)} className="btn btn-xs btn-ghost text-[10px]">Lock</button>
+                  </div>
+
+                  {/* Builder fields */}
+                  <div className="space-y-3">
+                    {[
+                      { label: "Preset name",        value: builder.title,       setter: (v: string) => setBuilder((p) => ({ ...p, title: v })),       placeholder: "My Preset" },
+                      { label: "Sensors label list", value: builder.sensorNames, setter: (v: string) => setBuilder((p) => ({ ...p, sensorNames: v })), placeholder: "Ultrasonic, Touch, GPIO" },
+                    ].map(({ label, value, setter, placeholder }) => (
+                      <label key={label} className="space-y-1 block">
+                        <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>{label}</span>
+                        <input value={value} onChange={(e) => setter(e.target.value)} placeholder={placeholder}
+                          className="input input-bordered input-sm w-full" style={{ background: "var(--k-base-300)" }} />
+                      </label>
+                    ))}
+                    <label className="space-y-1 block">
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Description</span>
+                      <textarea value={builder.description}
+                        onChange={(e) => setBuilder((p) => ({ ...p, description: e.target.value }))}
+                        rows={2} className="textarea textarea-bordered textarea-sm w-full"
+                        style={{ background: "var(--k-base-300)" }} />
                     </label>
-                    <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.24em] text-white/35">Description</span>
-                      <textarea
-                        value={builder.description}
-                        onChange={(e) => setBuilder((prev) => ({ ...prev, description: e.target.value }))}
-                        rows={3}
-                        className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm outline-none focus:border-cyan-400/50"
-                      />
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.24em] text-white/35">Mode</span>
-                      <select
-                        value={builder.mode}
-                        onChange={(e) => setBuilder((prev) => ({ ...prev, mode: e.target.value as BuilderState["mode"] }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm outline-none focus:border-cyan-400/50"
-                      >
-                        <option value="guided">Guided</option>
-                        <option value="challenge">Challenge</option>
-                        <option value="sandbox">Sandbox</option>
-                        <option value="full">Full</option>
-                        <option value="customize">Customize</option>
+                    <label className="space-y-1 block">
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Mode</span>
+                      <select value={builder.mode} onChange={(e) => setBuilder((p) => ({ ...p, mode: e.target.value as BuilderState["mode"] }))}
+                        className="select select-bordered select-sm w-full" style={{ background: "var(--k-base-300)" }}>
+                        {(["guided","challenge","sandbox","full","customize"] as const).map((m) => (
+                          <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+                        ))}
                       </select>
-                    </label>
-                    <label className="space-y-2">
-                      <span className="text-xs uppercase tracking-[0.24em] text-white/35">Sensors label list</span>
-                      <input
-                        value={builder.sensorNames}
-                        onChange={(e) => setBuilder((prev) => ({ ...prev, sensorNames: e.target.value }))}
-                        className="w-full rounded-2xl border border-white/10 bg-black/20 px-4 py-2.5 text-sm outline-none focus:border-cyan-400/50"
-                        placeholder="Ultrasonic Sensor, Touch Sensor, GPIO Pin"
-                      />
                     </label>
                   </div>
 
+                  {/* Category toggles */}
                   <div>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="text-xs uppercase tracking-[0.24em] text-white/35">Keep categories</span>
-                      <span className="text-xs text-white/45">{builder.selectedCategories.length} active</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Keep categories</span>
+                      <span className="badge badge-ghost badge-sm">{builder.selectedCategories.length}</span>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {NODE_CATEGORIES.map((category) => {
-                        const active = builder.selectedCategories.includes(category.id);
+                    <div className="flex flex-wrap gap-1.5">
+                      {NODE_CATEGORIES.map((cat) => {
+                        const active = builder.selectedCategories.includes(cat.id);
                         return (
-                          <button
-                            key={category.id}
-                            onClick={() => toggleBuilderCategory(category.id)}
-                            className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                              active
-                                ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-100"
-                                : "border-white/10 bg-black/20 text-white/55 hover:border-white/20 hover:text-white"
-                            }`}
-                          >
-                            <span>{category.icon}</span>
-                            <span>{category.label}</span>
+                          <button key={cat.id} onClick={() => toggleBuilderCategory(cat.id)}
+                            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors"
+                            style={active
+                              ? { border: "1px solid color-mix(in srgb, var(--k-success) 40%, transparent)", background: "color-mix(in srgb, var(--k-success) 15%, transparent)", color: "var(--k-success)" }
+                              : { border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }}>
+                            {cat.icon} {cat.label}
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
+                  {/* Node toggles */}
                   <div>
-                    <div className="mb-3 flex items-center justify-between gap-3">
-                      <span className="text-xs uppercase tracking-[0.24em] text-white/35">Keep blocks</span>
-                      <span className="text-xs text-white/45">{builder.selectedNodeTypes.length} selected</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--k-text-dim)" }}>Keep blocks</span>
+                      <span className="badge badge-ghost badge-sm">{builder.selectedNodeTypes.length}</span>
                     </div>
-                    <div className="max-h-64 overflow-y-auto rounded-2xl border border-white/10 bg-black/20 p-3 space-y-3">
-                      {NODE_CATEGORIES.filter((category) => builder.selectedCategories.includes(category.id)).map((category) => (
-                        <div key={category.id} className="space-y-2">
-                          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-white/35">
-                            <span>{category.icon}</span>
-                            <span>{category.label}</span>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {category.nodes.map((node) => {
+                    <div className="max-h-52 overflow-y-auto rounded-xl p-2 space-y-2"
+                      style={{ border: "1px solid var(--k-border)", background: "var(--k-base-300)" }}>
+                      {NODE_CATEGORIES.filter((c) => builder.selectedCategories.includes(c.id)).map((cat) => (
+                        <div key={cat.id}>
+                          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: "var(--k-text-dim)" }}>
+                            <span>{cat.icon}</span><span>{cat.label}</span>
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {cat.nodes.map((node) => {
                               const active = builder.selectedNodeTypes.includes(node.type);
                               return (
-                                <button
-                                  key={node.type}
-                                  onClick={() => toggleBuilderNode(node.type)}
-                                  className={`rounded-full border px-3 py-1.5 text-[11px] font-medium transition-colors ${
-                                    active
-                                      ? "border-cyan-400/40 bg-cyan-400/15 text-cyan-100"
-                                      : "border-white/10 bg-white/[0.03] text-white/50 hover:border-white/20 hover:text-white"
-                                  }`}
-                                >
+                                <button key={node.type} onClick={() => toggleBuilderNode(node.type)}
+                                  className="rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors"
+                                  style={active
+                                    ? { border: "1px solid color-mix(in srgb, var(--k-accent) 40%, transparent)", background: "color-mix(in srgb, var(--k-accent) 15%, transparent)", color: "var(--k-accent)" }
+                                    : { border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }}>
                                   {node.label}
                                 </button>
                               );
@@ -651,30 +552,24 @@ export function EditorLaunchDashboard({ onLaunch }: Props) {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 pt-1">
                     <button
-                      onClick={() => setBuilder((prev) => ({
-                        ...prev,
+                      onClick={() => setBuilder((p) => ({
+                        ...p,
                         selectedCategories: CUSTOM_DEFAULT_CATEGORIES,
                         selectedNodeTypes: NODE_CATEGORIES
-                          .filter((category) => CUSTOM_DEFAULT_CATEGORIES.includes(category.id))
-                          .flatMap((category) => category.nodes.map((node) => node.type)),
+                          .filter((c) => CUSTOM_DEFAULT_CATEGORIES.includes(c.id))
+                          .flatMap((c) => c.nodes.map((n) => n.type)),
                       }))}
-                      className="inline-flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-white/70 hover:bg-white/[0.06]"
-                    >
-                      Reset
-                    </button>
-                    <button
-                      onClick={saveBuilderPreset}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-cyan-400 px-4 py-2 text-sm font-semibold text-black transition-colors hover:from-emerald-300 hover:to-cyan-300"
-                    >
-                      <Save className="h-4 w-4" />
-                      Save preset
+                      className="btn btn-sm btn-ghost">Reset</button>
+                    <button onClick={saveBuilderPreset}
+                      className="btn btn-sm btn-success gap-1.5 font-bold">
+                      <Save className="h-4 w-4" /> Save Preset
                     </button>
                   </div>
                 </div>
               )}
-            </section>
+            </div>
           </aside>
         </div>
       </div>

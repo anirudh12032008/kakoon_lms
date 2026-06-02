@@ -1,7 +1,7 @@
 import { Code2, Lock, Pencil } from "lucide-react";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 
-// ── Python Syntax Highlighting ────────────────────────────────────────────────
+// ── Python Syntax Highlighting ─────────────────────────────────────────────────
 
 function highlightCode(line: string): React.ReactNode {
   if (!line) return null;
@@ -10,22 +10,22 @@ function highlightCode(line: string): React.ReactNode {
 
   const stringRe = /(["'])(?:(?=(\\?))\2.)*?\1/g;
   while ((match = stringRe.exec(line)) !== null)
-    elements.push({ start: match.index, end: match.index + match[0].length, className: "text-amber-400", text: match[0] });
+    elements.push({ start: match.index, end: match.index + match[0].length, className: "k-syn-str", text: match[0] });
 
   const kwRe = /\b(import|from|def|class|if|else|elif|while|for|in|return|True|False|None|and|or|not|try|except|finally|with|as|pass|break|continue)\b/g;
   while ((match = kwRe.exec(line)) !== null)
     if (!elements.some((e) => match!.index >= e.start && match!.index < e.end))
-      elements.push({ start: match.index, end: match.index + match[0].length, className: "text-violet-400", text: match[0] });
+      elements.push({ start: match.index, end: match.index + match[0].length, className: "k-syn-kw", text: match[0] });
 
   const fnRe = /\b([a-zA-Z_][a-zA-Z0-9_]*)\s*(?=\()/g;
   while ((match = fnRe.exec(line)) !== null)
     if (!elements.some((e) => match!.index >= e.start && match!.index < e.end))
-      elements.push({ start: match.index, end: match.index + match[1].length, className: "text-cyan-400", text: match[1] });
+      elements.push({ start: match.index, end: match.index + match[1].length, className: "k-syn-fn", text: match[1] });
 
   const numRe = /\b(\d+\.?\d*)\b/g;
   while ((match = numRe.exec(line)) !== null)
     if (!elements.some((e) => match!.index >= e.start && match!.index < e.end))
-      elements.push({ start: match.index, end: match.index + match[0].length, className: "text-orange-400", text: match[0] });
+      elements.push({ start: match.index, end: match.index + match[0].length, className: "k-syn-num", text: match[0] });
 
   elements.sort((a, b) => a.start - b.start);
   if (elements.length === 0) return line;
@@ -45,23 +45,16 @@ function findCommentStart(line: string): number {
   let inStr: string | null = null;
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
-    if (inStr) {
-      if (ch === "\\" ) { i++; continue; } // skip escaped char
-      if (ch === inStr) inStr = null;
-    } else if (ch === '"' || ch === "'") {
-      inStr = ch;
-    } else if (ch === "#") {
-      return i;
-    }
+    if (inStr) { if (ch === "\\" ) { i++; continue; } if (ch === inStr) inStr = null; }
+    else if (ch === '"' || ch === "'") { inStr = ch; }
+    else if (ch === "#") { return i; }
   }
   return -1;
 }
 
 function highlightPython(line: string): React.ReactNode {
   const idx = findCommentStart(line);
-  if (idx !== -1) {
-    return <>{highlightCode(line.slice(0, idx))}<span className="text-zinc-500">{line.slice(idx)}</span></>;
-  }
+  if (idx !== -1) return <>{highlightCode(line.slice(0, idx))}<span className="k-syn-comment">{line.slice(idx)}</span></>;
   return highlightCode(line);
 }
 
@@ -84,48 +77,60 @@ export function CodePanel({
   onEditableCodeChange, onSetEditableCode,
 }: CodePanelProps) {
   return (
-    <div className={`flex flex-col border-l border-[#1f1f23] bg-[#0c0c0f] transition-all duration-300 ${
-      viewMode === "code" ? "flex-1" : "hidden md:flex w-[320px] lg:w-[420px]"
-    }`}>
-      <div className="flex h-10 items-center justify-between border-b border-[#1f1f23] px-3">
+    <div
+      className={`flex flex-col transition-all duration-300 ${viewMode === "code" ? "flex-1" : "hidden md:flex w-[320px] lg:w-[420px]"}`}
+      style={{ borderLeft: "1px solid var(--k-border)", background: "var(--k-base-200)" }}
+    >
+      {/* Header */}
+      <div
+        className="flex h-10 items-center justify-between px-3"
+        style={{ borderBottom: "1px solid var(--k-border)" }}
+      >
         <div className="flex items-center gap-2">
-          <Code2 className="h-4 w-4 text-zinc-500" />
-          <span className="text-xs font-medium text-zinc-300">
+          <Code2 className="h-4 w-4" style={{ color: "var(--k-text-dim)" }} />
+          <span className="text-xs font-semibold" style={{ color: "var(--k-text)" }}>
             {isEditing ? "main.py (edited)" : "main.py"}
           </span>
           {hasManualEdits && !isEditing && (
-            <span className="text-[10px] text-amber-400">(has edits)</span>
+            <span className="badge badge-warning badge-sm text-[10px]">edits</span>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {hasManualEdits && (
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="flex h-5 items-center gap-1 rounded border border-zinc-700 px-1.5 text-[10px] font-medium text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+              className="btn btn-xs btn-ghost text-[10px]"
+              style={{ border: "1px solid var(--k-border)", color: "var(--k-text-muted)" }}
             >
-              {isEditing ? "Code Mode" : "Block Mode"}
+              {isEditing ? "Block Mode" : "Code Mode"}
             </button>
           )}
-          <div className="flex items-center gap-2">
-            <Lock className={`h-3 w-3 ${!isEditing ? "text-zinc-400" : "text-zinc-600"}`} />
+          <div className="flex items-center gap-1.5">
+            <Lock className="h-3 w-3" style={{ color: !isEditing ? "var(--k-text-muted)" : "var(--k-text-dim)" }} />
             <button
               onClick={() => {
                 if (!isEditing && !hasManualEdits) onSetEditableCode(generatedCode);
                 setIsEditing(!isEditing);
               }}
-              className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${isEditing ? "bg-[#7c3aed]" : "bg-[#3f3f46]"}`}
+              className="relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors"
+              style={{ background: isEditing ? "var(--k-primary)" : "var(--k-elevated)" }}
             >
-              <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isEditing ? "translate-x-3.5" : "translate-x-0.5"}`} />
+              <span
+                className="inline-block h-3 w-3 rounded-full bg-white transition-transform"
+                style={{ transform: isEditing ? "translateX(14px)" : "translateX(2px)" }}
+              />
             </button>
-            <Pencil className={`h-3 w-3 ${isEditing ? "text-violet-400" : "text-zinc-600"}`} />
+            <Pencil className="h-3 w-3" style={{ color: isEditing ? "var(--k-primary)" : "var(--k-text-dim)" }} />
           </div>
         </div>
       </div>
 
+      {/* Code area */}
       <div className="flex-1 overflow-auto">
         {isEditing ? (
           <textarea
-            className="w-full h-full bg-transparent p-4 font-mono text-xs leading-6 text-zinc-300 outline-none resize-none"
+            className="w-full h-full bg-transparent p-4 font-mono text-xs leading-6 outline-none resize-none"
+            style={{ color: "var(--k-text)" }}
             value={editableCode}
             onChange={(e) => onEditableCodeChange(e.target.value)}
             placeholder="# Write your Python code here"
@@ -133,18 +138,31 @@ export function CodePanel({
           />
         ) : (
           <div className="flex min-h-full">
-            <div className="sticky left-0 flex flex-col bg-[#0c0c0f] py-4 pl-4 pr-3 text-right font-mono text-xs leading-6 text-zinc-600 select-none">
+            <div
+              className="sticky left-0 flex flex-col py-4 pl-4 pr-3 text-right font-mono text-xs leading-6 select-none"
+              style={{ background: "var(--k-base-200)", color: "var(--k-text-dim)" }}
+            >
               {(generatedCode || "# Add blocks to generate code\n").split("\n").map((_, i) => (
                 <span key={i}>{i + 1}</span>
               ))}
             </div>
             <pre className="flex-1 py-4 pr-4 font-mono text-xs leading-6">
-              <code className="text-zinc-300">
+              <code>
+                {/* Inline styles for syntax tokens — no extra CSS classes needed */}
+                <style>{`
+                  .k-syn-str     { color: var(--k-warning); }
+                  .k-syn-kw      { color: var(--k-primary); }
+                  .k-syn-fn      { color: var(--k-accent); }
+                  .k-syn-num     { color: #fb923c; }
+                  .k-syn-comment { color: var(--k-text-dim); }
+                `}</style>
                 {generatedCode
                   ? generatedCode.split("\n").map((line, i) => (
-                    <div key={i} className="hover:bg-zinc-800/30">{highlightPython(line)}</div>
+                    <div key={i} className="hover:bg-white/5 rounded" style={{ color: "var(--k-text)" }}>
+                      {highlightPython(line)}
+                    </div>
                   ))
-                  : <span className="text-zinc-500"># Add blocks to generate code</span>
+                  : <span style={{ color: "var(--k-text-dim)" }}># Add blocks to generate code</span>
                 }
               </code>
             </pre>
