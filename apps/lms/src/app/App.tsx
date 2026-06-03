@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import "./styles/App.css";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
+import { AnimationProvider } from "@/shared/context/AnimationContext";
 
 const EditorLaunchDashboard = lazy(() => import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard })));
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
@@ -30,6 +31,7 @@ export default function App() {
   }, [launchContext]);
 
   return (
+    <AnimationProvider>
     <Suspense
       fallback={
         <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
@@ -50,5 +52,6 @@ export default function App() {
         <EditorLaunchDashboard onLaunch={setLaunchContext} />
       )}
     </Suspense>
+    </AnimationProvider>
   );
 }

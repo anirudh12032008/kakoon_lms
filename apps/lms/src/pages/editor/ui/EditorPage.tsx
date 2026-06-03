@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { Node, Edge } from "@xyflow/react";
 import { useModal } from "@/shared/context/ModalContext";
 import { Trash2 } from "lucide-react";
@@ -320,11 +321,20 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden relative">
-        {viewMode === "hardware" && (
-          <div className="absolute inset-0 z-10">
-            <HardwareView canvasRef={canvasRef} />
-          </div>
-        )}
+        <AnimatePresence>
+          {viewMode === "hardware" && (
+            <motion.div
+              key="hardware-view"
+              className="absolute inset-0 z-10"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              <HardwareView canvasRef={canvasRef} />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Node canvas — always mounted so canvasRef stays valid */}
         <div
@@ -342,18 +352,29 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
           />
         </div>
 
-        {(viewMode === "split" || viewMode === "code") && (
-          <CodePanel
-            viewMode={viewMode}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            generatedCode={generatedCode}
-            editableCode={editableCode}
-            hasManualEdits={hasManualEdits}
-            onEditableCodeChange={(code) => { setEditableCode(code); setHasManualEdits(true); }}
-            onSetEditableCode={setEditableCode}
-          />
-        )}
+        <AnimatePresence>
+          {(viewMode === "split" || viewMode === "code") && (
+            <motion.div
+              key="code-panel"
+              className="flex h-full"
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            >
+              <CodePanel
+                viewMode={viewMode}
+                isEditing={isEditing}
+                setIsEditing={setIsEditing}
+                generatedCode={generatedCode}
+                editableCode={editableCode}
+                hasManualEdits={hasManualEdits}
+                onEditableCodeChange={(code) => { setEditableCode(code); setHasManualEdits(true); }}
+                onSetEditableCode={setEditableCode}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {showTerminal && (

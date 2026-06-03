@@ -989,8 +989,7 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
         fitView fitViewOptions={{ padding: 0.12 }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background id="hw-dots" color="#22c55e1a" gap={24} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#07090a" }} />
-        <Background id="hw-lines" color="#22c55e06" gap={96} size={0.5} variant={BackgroundVariant.Lines} />
+        <Background id="hw-dots" color="#16a34a" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#050a07" }} />
         <MiniMap
           nodeColor="#8b5cf6"
           maskColor="rgba(8, 12, 8, 0.85)"

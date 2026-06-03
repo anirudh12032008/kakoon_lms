@@ -1,6 +1,8 @@
-import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu } from "lucide-react";
+import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
+import { useAnimations } from "@/shared/context/AnimationContext";
 
 interface EditorHeaderProps {
   viewMode: ViewMode;
@@ -34,8 +36,9 @@ export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
   launchContext, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
 }: EditorHeaderProps) {
-  const title      = launchContext?.title      ?? "Full Workspace";
+  const title      = launchContext?.title      ?? "Full Workshop";
   const launchType = launchContext?.launchType ?? "mode";
+  const { animationsEnabled, toggle: toggleAnimations } = useAnimations();
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 bg-panel border-b border-subtle">
@@ -57,21 +60,30 @@ export function EditorHeader({
         </div>
       </div>
 
-      {/* View mode switcher */}
+      {/* View mode switcher — Framer Motion layoutId for sliding active indicator */}
       <div className="flex items-center shrink-0">
         <div className="flex rounded-full p-1 gap-0.5 bg-raised">
           {VIEW_TABS.map(({ mode, icon, label }) => (
             <button
               key={mode}
               onClick={() => { setViewMode(mode); if (mode !== "code") setIsEditing(false); }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-                viewMode === mode
-                  ? "bg-brand-gradient text-white shadow-sm"
-                  : "text-sub hover:text-body"
-              }`}
+              className="relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
+              style={{ color: viewMode === mode ? "white" : undefined }}
             >
-              {icon}
-              <span className="hidden sm:inline">{label}</span>
+              {/* Sliding background — shared layoutId makes it animate between tabs */}
+              {viewMode === mode && (
+                <motion.div
+                  layoutId="view-tab-indicator"
+                  className="absolute inset-0 rounded-full bg-brand-gradient shadow-sm"
+                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                />
+              )}
+              <span className={`relative z-10 ${viewMode === mode ? "" : "text-sub hover:text-body"}`}>
+                {icon}
+              </span>
+              <span className={`relative z-10 hidden sm:inline ${viewMode === mode ? "" : "text-sub hover:text-body"}`}>
+                {label}
+              </span>
             </button>
           ))}
         </div>
@@ -79,6 +91,16 @@ export function EditorHeader({
 
       {/* Right actions */}
       <div className="flex items-center gap-1 shrink-0">
+        {/* Animation toggle */}
+        <button
+          onClick={toggleAnimations}
+          title={animationsEnabled ? "Disable animations" : "Enable animations"}
+          className={`btn btn-ghost btn-sm gap-1.5 ${animationsEnabled ? "text-primary-c" : "text-sub"}`}
+        >
+          <Sparkles className={`h-4 w-4 transition-all ${animationsEnabled ? "fill-current opacity-90" : "opacity-40"}`} />
+          <span className="hidden md:inline text-xs">{animationsEnabled ? "Anim" : "Anim"}</span>
+        </button>
+
         <button
           onClick={onToggleTutorials}
           className={`btn btn-ghost btn-sm gap-1.5 ${showTutorialsCatalog ? "text-secondary-c bg-secondary-tint" : "text-sub"}`}

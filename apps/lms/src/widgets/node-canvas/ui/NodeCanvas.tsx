@@ -224,8 +224,7 @@ function NodeCanvasInner({
         connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2, filter: "drop-shadow(0 0 6px #7c3aed88)" }}
         defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}
       >
-        <Background id="dots" color="#7c3aed28" gap={24} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#07070b" }} />
-        <Background id="lines" color="#ffffff05" gap={96} size={0.5} variant={BackgroundVariant.Lines} />
+        <Background id="dots" color="#7c3aed" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#07070c" }} />
         <Controls style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
         <MiniMap
           nodeColor="#8b5cf6"
