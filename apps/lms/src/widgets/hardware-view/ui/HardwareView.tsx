@@ -407,7 +407,7 @@ const BOARD_PORTS = [
 // ─── Board node (close PCB replica) ──────────────────────────────────────────
 
 // Helper: a bold pill label used on the board
-function BoardLabel({ x, y, text, color, anchor = "middle" }: { x: number; y: number; text: string; color: string; anchor?: string }) {
+function BoardLabel({ x, y, text, color, anchor = "middle" }: { x: number; y: number; text: string; color: string; anchor?: "inherit" | "end" | "middle" | "start" }) {
   const w = text.length * 6.2 + 10;
   return (
     <g>
