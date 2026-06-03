@@ -54,6 +54,9 @@ function NodeCanvasInner({
 }: NodeCanvasProps & { canvasRef: React.Ref<NodeCanvasRef> }) {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [edges, setEdges] = useState<Edge[]>([]);
+  const FIT_VIEW_MAX_ZOOM = 1.3;
+  const MIN_ZOOM = 0.35;
+  const MAX_ZOOM = 2;
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition, getViewport } = useReactFlow();
 
@@ -163,9 +166,9 @@ function NodeCanvasInner({
         onConnect={onConnect}
         nodeTypes={NODE_TYPES}
         fitView
-        fitViewOptions={{ padding: 0.6, maxZoom: 1.3 }}
-        minZoom={0.8}
-        maxZoom={2}
+        fitViewOptions={{ padding: 0.6, maxZoom: FIT_VIEW_MAX_ZOOM }}
+        minZoom={MIN_ZOOM}
+        maxZoom={MAX_ZOOM}
         deleteKeyCode={["Backspace", "Delete"]}
         connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2 }}
         defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}

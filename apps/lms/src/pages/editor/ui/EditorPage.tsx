@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import type { Node, Edge } from "@xyflow/react";
 import { useModal } from "@/shared/context/ModalContext";
 import { Trash2 } from "lucide-react";
 import { NodeCanvas, type NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
@@ -23,7 +24,7 @@ import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { NodeActionsProvider } from "@/shared/context/NodeActionsContext";
 import { ESP32FilesPanel } from "@/features/editor/esp32-files/ui/ESP32FilesPanel";
-import { HardwareView } from "@/widgets/hardware-view/ui/HardwareView";
+import { HardwareView, syncAddHwNode, syncRemoveHwNode, isFlowSyncSuppressed } from "@/widgets/hardware-view/ui/HardwareView";
 import { removeAnim, markOnDevice } from "@/shared/lib/animRegistry";
 
 export type LessonContext = EditorLaunchContext;
@@ -36,6 +37,7 @@ interface EditorPageProps {
 
 export default function EditorPage({ launchContext, onBackToDashboard }: EditorPageProps) {
   const canvasRef = useRef<NodeCanvasRef>(null);
+  const prevBlocksNodesRef = useRef<Node[]>([]);
 
   // ── Core state ──────────────────────────────────────────────────────────────
   const [generatedCode, setGeneratedCode] = useState("");
@@ -83,6 +85,32 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
   // ── Tutorials ───────────────────────────────────────────────────────────────
   const tutorial = useTutorial({ canvasRef, addLog, isLoadingDraft });
+
+  // ── Blocks ↔ Hardware bidirectional sync ─────────────────────────────────────
+  const handleFlowChange = useCallback((nds: Node[], eds: Edge[]) => {
+    tutorial.setActiveFlowNodes(nds);
+    tutorial.setActiveFlowEdges(eds);
+
+    const prev = prevBlocksNodesRef.current;
+    const prevIds = new Set(prev.map(n => n.id));
+    const currIds = new Set(nds.map(n => n.id));
+
+    // Detect newly added blocks nodes → mirror to hardware view
+    for (const node of nds) {
+      if (!prevIds.has(node.id) && !isFlowSyncSuppressed(node.id)) {
+        syncAddHwNode(node.id, node.type ?? "", node.data as Record<string, unknown>);
+      }
+    }
+
+    // Detect removed blocks nodes → remove from hardware view
+    for (const node of prev) {
+      if (!currIds.has(node.id)) {
+        syncRemoveHwNode(node.id);
+      }
+    }
+
+    prevBlocksNodesRef.current = nds;
+  }, [tutorial]);
 
   // ── Launch restrictions ──────────────────────────────────────────────────────
   const launchRestrictions = useMemo(() => ({
@@ -308,10 +336,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
           <NodeCanvas
             ref={canvasRef}
             onCodeChange={setGeneratedCode}
-            onFlowChange={(nds, eds) => {
-              tutorial.setActiveFlowNodes(nds);
-              tutorial.setActiveFlowEdges(eds);
-            }}
+            onFlowChange={handleFlowChange}
             allowedCategories={launchRestrictions.allowedCategories}
             allowedNodeTypes={launchRestrictions.allowedNodeTypes}
           />

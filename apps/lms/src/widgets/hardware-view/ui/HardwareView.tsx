@@ -16,13 +16,10 @@ import {
 function UltrasonicImg() {
   return (
     <svg viewBox="0 0 120 70" className="w-full h-full">
-      {/* PCB */}
       <rect x="2" y="4" width="116" height="58" rx="3" fill="#1565c0" stroke="#0d47a1" strokeWidth="1.5"/>
       <rect x="5" y="7" width="110" height="52" rx="2" fill="#1976d2"/>
-      {/* Silkscreen */}
       <text x="60" y="16" textAnchor="middle" fontSize="7" fill="white" fontFamily="Arial" fontWeight="bold" opacity="0.9">HC-SR04</text>
       <text x="60" y="24" textAnchor="middle" fontSize="5" fill="white" fontFamily="Arial" opacity="0.7">ULTRASONIC SENSOR</text>
-      {/* Left transducer housing */}
       <rect x="8" y="26" width="38" height="26" rx="3" fill="#263238"/>
       <circle cx="27" cy="39" r="13" fill="#37474f" stroke="#546e7a" strokeWidth="1"/>
       <circle cx="27" cy="39" r="10" fill="#2d3a3e"/>
@@ -30,7 +27,6 @@ function UltrasonicImg() {
       <circle cx="27" cy="39" r="4" fill="#1c2529"/>
       <ellipse cx="27" cy="39" rx="10" ry="2.5" fill="none" stroke="#607d8b" strokeWidth="0.5" opacity="0.6"/>
       <ellipse cx="27" cy="39" rx="6" ry="1.5" fill="none" stroke="#607d8b" strokeWidth="0.5" opacity="0.6"/>
-      {/* Right transducer housing */}
       <rect x="74" y="26" width="38" height="26" rx="3" fill="#263238"/>
       <circle cx="93" cy="39" r="13" fill="#37474f" stroke="#546e7a" strokeWidth="1"/>
       <circle cx="93" cy="39" r="10" fill="#2d3a3e"/>
@@ -38,7 +34,6 @@ function UltrasonicImg() {
       <circle cx="93" cy="39" r="4" fill="#1c2529"/>
       <ellipse cx="93" cy="39" rx="10" ry="2.5" fill="none" stroke="#607d8b" strokeWidth="0.5" opacity="0.6"/>
       <ellipse cx="93" cy="39" rx="6" ry="1.5" fill="none" stroke="#607d8b" strokeWidth="0.5" opacity="0.6"/>
-      {/* Pin headers */}
       {["VCC","TRG","ECH","GND"].map((p,i)=>(
         <g key={p}>
           <rect x={40+i*9} y="55" width="7" height="8" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
@@ -52,29 +47,23 @@ function UltrasonicImg() {
 function ServoImg() {
   return (
     <svg viewBox="0 0 130 80" className="w-full h-full">
-      {/* Main body */}
       <rect x="5" y="8" width="75" height="58" rx="5" fill="#455a64" stroke="#37474f" strokeWidth="1.5"/>
       <rect x="8" y="11" width="69" height="52" rx="4" fill="#546e7a"/>
-      {/* Label area */}
       <rect x="12" y="15" width="61" height="18" rx="2" fill="#37474f"/>
       <text x="42" y="26" textAnchor="middle" fontSize="9" fill="#90a4ae" fontFamily="Arial" fontWeight="bold">SG90</text>
-      {/* Gear window */}
       <circle cx="42" cy="48" r="15" fill="#37474f" stroke="#607d8b" strokeWidth="1"/>
       <circle cx="42" cy="48" r="11" fill="#2d3a3e"/>
       <circle cx="42" cy="48" r="7" fill="#455a64"/>
       <circle cx="42" cy="48" r="4" fill="#607d8b"/>
-      {/* Horn */}
       <rect x="38" y="33" width="8" height="16" rx="4" fill="#eceff1" stroke="#bdbdbd" strokeWidth="0.8"/>
       <circle cx="42" cy="37" r="3" fill="#bdbdbd"/>
       <circle cx="42" cy="37" r="1.5" fill="#757575"/>
-      {/* Ear brackets */}
       <rect x="0" y="18" width="10" height="36" rx="2" fill="#455a64" stroke="#37474f" strokeWidth="1"/>
       <circle cx="5" cy="26" r="3" fill="#263238" stroke="#607d8b" strokeWidth="0.5"/>
       <circle cx="5" cy="46" r="3" fill="#263238" stroke="#607d8b" strokeWidth="0.5"/>
       <rect x="80" y="18" width="10" height="36" rx="2" fill="#455a64" stroke="#37474f" strokeWidth="1"/>
       <circle cx="85" cy="26" r="3" fill="#263238" stroke="#607d8b" strokeWidth="0.5"/>
       <circle cx="85" cy="46" r="3" fill="#263238" stroke="#607d8b" strokeWidth="0.5"/>
-      {/* Connector + wires */}
       <rect x="90" y="28" width="12" height="20" rx="2" fill="#f5f5f5" stroke="#bdbdbd" strokeWidth="0.8"/>
       <rect x="92" y="31" width="8" height="5" rx="0.5" fill="#ff6d00"/>
       <rect x="92" y="38" width="8" height="5" rx="0.5" fill="#d32f2f"/>
@@ -89,26 +78,19 @@ function ServoImg() {
 function MotorImg() {
   return (
     <svg viewBox="0 0 120 75" className="w-full h-full">
-      {/* Motor body */}
       <rect x="20" y="8" width="65" height="52" rx="5" fill="#f57f17" stroke="#e65100" strokeWidth="2"/>
       <rect x="23" y="11" width="59" height="46" rx="4" fill="#fb8c00"/>
-      {/* Motor brand text */}
       <text x="52" y="30" textAnchor="middle" fontSize="8" fill="#bf360c" fontFamily="Arial" fontWeight="900">TT</text>
       <text x="52" y="42" textAnchor="middle" fontSize="6" fill="#e64a19" fontFamily="Arial" fontWeight="bold">MOTOR</text>
-      {/* Gearbox side */}
       <rect x="5" y="14" width="18" height="40" rx="3" fill="#795548" stroke="#5d4037" strokeWidth="1.5"/>
       <rect x="7" y="16" width="14" height="36" rx="2" fill="#8d6e63"/>
-      {/* Gear teeth details */}
       {[18,24,30,36,42].map(y=>(
         <rect key={y} x="5" y={y} width="3" height="4" rx="0.5" fill="#6d4c41"/>
       ))}
-      {/* Output shaft */}
       <rect x="0" y="30" width="8" height="8" rx="1" fill="#bdbdbd" stroke="#9e9e9e" strokeWidth="0.8"/>
-      {/* Back terminals */}
       <rect x="85" y="20" width="14" height="12" rx="2" fill="#212121" stroke="#424242" strokeWidth="0.8"/>
       <rect x="87" y="22" width="4" height="8" rx="1" fill="#d32f2f"/>
       <rect x="93" y="22" width="4" height="8" rx="1" fill="#1565c0"/>
-      {/* Encoder/back cap */}
       <rect x="85" y="36" width="14" height="20" rx="2" fill="#263238" stroke="#37474f" strokeWidth="0.8"/>
       <circle cx="92" cy="46" r="5" fill="#37474f" stroke="#546e7a" strokeWidth="0.5"/>
       <circle cx="92" cy="46" r="2" fill="#263238"/>
@@ -119,14 +101,11 @@ function MotorImg() {
 function NeoPixelImg() {
   return (
     <svg viewBox="0 0 90 90" className="w-full h-full">
-      {/* PCB ring */}
       <circle cx="45" cy="45" r="42" fill="#1b1b1b" stroke="#333" strokeWidth="1.5"/>
       <circle cx="45" cy="45" r="36" fill="none" stroke="#2e7d32" strokeWidth="10"/>
       <circle cx="45" cy="45" r="36" fill="none" stroke="#1b5e20" strokeWidth="10" strokeDasharray="12 10" strokeDashoffset="0"/>
       <circle cx="45" cy="45" r="18" fill="#1b1b1b" stroke="#212121" strokeWidth="1"/>
-      {/* Center hole */}
       <circle cx="45" cy="45" r="8" fill="#111" stroke="#222" strokeWidth="1"/>
-      {/* 8 RGB LEDs */}
       {[0,45,90,135,180,225,270,315].map((angle,i)=>{
         const rad=(angle*Math.PI)/180;
         const cx=45+30*Math.cos(rad);
@@ -142,7 +121,6 @@ function NeoPixelImg() {
           </g>
         );
       })}
-      {/* Pads */}
       {["DI","5V","GND","DO"].map((p,i)=>{
         const angle=(i*90-45)*Math.PI/180;
         return (
@@ -163,28 +141,22 @@ function IRSensorImg() {
     <svg viewBox="0 0 110 60" className="w-full h-full">
       <rect x="2" y="4" width="106" height="44" rx="3" fill="#212121" stroke="#333" strokeWidth="1.5"/>
       <rect x="5" y="7" width="100" height="38" rx="2" fill="#1a1a1a"/>
-      {/* IR Emitter */}
       <rect x="8" y="10" width="22" height="28" rx="3" fill="#1a237e" stroke="#283593" strokeWidth="1"/>
       <ellipse cx="19" cy="24" rx="8" ry="10" fill="#303f9f"/>
       <ellipse cx="19" cy="24" rx="5" ry="7" fill="#3949ab"/>
       <ellipse cx="19" cy="24" rx="3" ry="4" fill="#7986cb" opacity="0.6"/>
       <text x="19" y="42" textAnchor="middle" fontSize="5" fill="#5c6bc0" fontFamily="monospace">IR-TX</text>
-      {/* IR Receiver */}
       <rect x="36" y="10" width="22" height="28" rx="3" fill="#1a1a1a" stroke="#b71c1c" strokeWidth="1"/>
       <ellipse cx="47" cy="24" rx="8" ry="10" fill="#212121"/>
       <ellipse cx="47" cy="24" rx="5" ry="7" fill="#1a1a1a"/>
       <ellipse cx="47" cy="24" rx="3" ry="4" fill="#4a148c" opacity="0.6"/>
       <text x="47" y="42" textAnchor="middle" fontSize="5" fill="#e53935" fontFamily="monospace">IR-RX</text>
-      {/* Op-amp chip */}
       <rect x="65" y="14" width="24" height="20" rx="2" fill="#263238" stroke="#37474f" strokeWidth="0.8"/>
       <text x="77" y="25" textAnchor="middle" fontSize="6" fill="#78909c" fontFamily="monospace">LM393</text>
-      {/* LED indicator */}
       <circle cx="98" cy="16" r="5" fill="#00c853" opacity="0.9" style={{filter:"drop-shadow(0 0 3px #00c853)"}}/>
       <text x="98" y="26" textAnchor="middle" fontSize="4" fill="#666">PWR</text>
-      {/* Potentiometer */}
       <circle cx="93" cy="35" r="6" fill="#37474f" stroke="#546e7a" strokeWidth="0.8"/>
       <line x1="93" y1="29" x2="95" y2="35" stroke="#90a4ae" strokeWidth="1.2"/>
-      {/* Pin headers */}
       {["VCC","GND","DO","AO"].map((p,i)=>(
         <g key={p}>
           <rect x={8+i*14} y="47" width="10" height="9" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
@@ -198,24 +170,19 @@ function IRSensorImg() {
 function ButtonImg() {
   return (
     <svg viewBox="0 0 70 70" className="w-full h-full">
-      {/* PCB */}
       <rect x="4" y="4" width="62" height="62" rx="4" fill="#004d40" stroke="#00332a" strokeWidth="1.5"/>
       <rect x="7" y="7" width="56" height="56" rx="3" fill="#00574a"/>
-      {/* Corner pads */}
       {[[12,12],[58,12],[12,58],[58,58]].map(([cx,cy],i)=>(
         <g key={i}>
           <rect x={cx-7} y={cy-7} width="14" height="14" rx="2" fill="#ffd700" stroke="#b8860b" strokeWidth="0.8"/>
           <rect x={cx-4} y={cy-4} width="8" height="8" rx="1" fill="#b8860b"/>
         </g>
       ))}
-      {/* Button body */}
       <rect x="18" y="18" width="34" height="34" rx="3" fill="#1a1a1a" stroke="#444" strokeWidth="1.5"/>
-      {/* Button cap */}
       <circle cx="35" cy="35" r="13" fill="#1565c0" stroke="#0d47a1" strokeWidth="1.5"/>
       <circle cx="35" cy="35" r="10" fill="#1976d2"/>
       <circle cx="35" cy="35" r="7" fill="#1e88e5"/>
       <circle cx="32" cy="32" r="2" fill="#42a5f5" opacity="0.7"/>
-      {/* Click indicator */}
       <text x="35" y="64" textAnchor="middle" fontSize="5" fill="#80cbc4" fontFamily="monospace">PUSH</text>
     </svg>
   );
@@ -224,25 +191,18 @@ function ButtonImg() {
 function OLEDImg() {
   return (
     <svg viewBox="0 0 120 75" className="w-full h-full">
-      {/* PCB */}
       <rect x="2" y="2" width="116" height="60" rx="3" fill="#0d1117" stroke="#1a2332" strokeWidth="1.5"/>
-      {/* Module body */}
       <rect x="5" y="5" width="110" height="52" rx="2" fill="#161b22"/>
-      {/* Screen bezel */}
       <rect x="10" y="8" width="100" height="42" rx="2" fill="#0d1117" stroke="#21262d" strokeWidth="1"/>
-      {/* OLED screen */}
       <rect x="13" y="11" width="94" height="36" rx="1" fill="#010409"/>
-      {/* Display content */}
       <rect x="15" y="13" width="20" height="8" rx="1" fill="#1f6feb" opacity="0.9"/>
       <text x="25" y="20" textAnchor="middle" fontSize="6" fill="white" fontFamily="monospace">K</text>
       <text x="40" y="20" fontSize="6" fill="#58a6ff" fontFamily="monospace">akoon</text>
       <text x="15" y="30" fontSize="5" fill="#3fb950" fontFamily="monospace">Hello World!</text>
       <text x="15" y="38" fontSize="4" fill="#8b949e" fontFamily="monospace">v2.0 ready...</text>
-      {/* Scan lines effect */}
       {[14,17,20,23,26,29,32,35,38,41,44].map(y=>(
         <line key={y} x1="13" y1={y} x2="107" y2={y} stroke="#58a6ff" strokeWidth="0.15" opacity="0.08"/>
       ))}
-      {/* Pin header */}
       <rect x="38" y="56" width="44" height="10" rx="1" fill="#21262d" stroke="#30363d" strokeWidth="0.5"/>
       {["GND","VCC","SCL","SDA"].map((p,i)=>(
         <g key={p}>
@@ -257,29 +217,21 @@ function OLEDImg() {
 function SoilImg() {
   return (
     <svg viewBox="0 0 70 100" className="w-full h-full">
-      {/* Control board */}
       <rect x="6" y="2" width="58" height="50" rx="3" fill="#1b5e20" stroke="#154360" strokeWidth="1.5"/>
       <rect x="9" y="5" width="52" height="44" rx="2" fill="#1e8449"/>
-      {/* Comparator chip */}
       <rect x="18" y="10" width="34" height="20" rx="2" fill="#1a1a2e" stroke="#16213e" strokeWidth="0.8"/>
       <text x="35" y="23" textAnchor="middle" fontSize="6" fill="#4fc3f7" fontFamily="monospace">LM393</text>
-      {/* LED */}
       <circle cx="52" cy="14" r="5" fill="#ff4081" opacity="0.9" style={{filter:"drop-shadow(0 0 3px #ff4081)"}}/>
-      {/* Pot */}
       <circle cx="18" cy="35" r="7" fill="#263238" stroke="#37474f" strokeWidth="1"/>
       <line x1="18" y1="28" x2="20" y2="35" stroke="#90a4ae" strokeWidth="1.2"/>
-      {/* Pins */}
       {["AO","DO","GND","VCC"].map((p,i)=>(
         <g key={p}>
           <rect x={8+i*14} y="46" width="10" height="8" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
           <text x={13+i*14} y="52" textAnchor="middle" fontSize="3.5" fill="#333" fontFamily="monospace">{p}</text>
         </g>
       ))}
-      {/* Probe connector line */}
       <line x1="35" y1="52" x2="35" y2="58" stroke="#90a4ae" strokeWidth="2"/>
-      {/* Probe board */}
       <rect x="12" y="58" width="46" height="10" rx="2" fill="#004d40" stroke="#00332a" strokeWidth="1"/>
-      {/* Probe prongs */}
       <rect x="18" y="68" width="8" height="30" rx="4" fill="#78909c" stroke="#607d8b" strokeWidth="1"/>
       <rect x="20" y="70" width="4" height="26" rx="3" fill="#b0bec5"/>
       <rect x="44" y="68" width="8" height="30" rx="4" fill="#78909c" stroke="#607d8b" strokeWidth="1"/>
@@ -293,22 +245,17 @@ function AnalogImg() {
     <svg viewBox="0 0 110 65" className="w-full h-full">
       <rect x="2" y="3" width="106" height="52" rx="3" fill="#1a237e" stroke="#0d1663" strokeWidth="1.5"/>
       <rect x="5" y="6" width="100" height="46" rx="2" fill="#1e2d9e"/>
-      {/* LDR */}
       <circle cx="25" cy="27" r="13" fill="#fff9c4" stroke="#f9a825" strokeWidth="2"/>
       <circle cx="25" cy="27" r="10" fill="#fff176"/>
       <path d="M19 21 Q25 15 31 21 Q31 33 25 33 Q19 33 19 21" fill="#f9a825" opacity="0.5"/>
       <ellipse cx="25" cy="27" rx="5" ry="5" fill="none" stroke="#f57f17" strokeWidth="1.5"/>
       <text x="25" y="44" textAnchor="middle" fontSize="5" fill="#fff59d" fontFamily="monospace">LDR</text>
-      {/* Comparator */}
       <rect x="48" y="14" width="30" height="22" rx="2" fill="#0d1117" stroke="#30363d" strokeWidth="0.8"/>
       <text x="63" y="26" textAnchor="middle" fontSize="5.5" fill="#58a6ff" fontFamily="monospace">LM393</text>
-      {/* LED */}
       <circle cx="90" cy="17" r="6" fill="#00e676" style={{filter:"drop-shadow(0 0 4px #00e676)"}}/>
       <text x="90" y="28" textAnchor="middle" fontSize="4" fill="#80cbc4">PWR</text>
-      {/* Pot */}
       <circle cx="90" cy="40" r="8" fill="#263238" stroke="#455a64" strokeWidth="1"/>
       <line x1="90" y1="32" x2="93" y2="40" stroke="#90a4ae" strokeWidth="1.2"/>
-      {/* Pins */}
       {["AO","DO","GND","VCC"].map((p,i)=>(
         <g key={p}>
           <rect x={5+i*20} y="52" width="14" height="10" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
@@ -324,9 +271,7 @@ function IMUImg() {
     <svg viewBox="0 0 90 75" className="w-full h-full">
       <rect x="3" y="3" width="84" height="58" rx="3" fill="#1a1a2e" stroke="#16213e" strokeWidth="1.5"/>
       <rect x="6" y="6" width="78" height="52" rx="2" fill="#16213e"/>
-      {/* Main IC */}
       <rect x="22" y="10" width="46" height="36" rx="2" fill="#0f0f1a" stroke="#1e3a5f" strokeWidth="1"/>
-      {/* IC pads */}
       {Array.from({length:5}).map((_,i)=>(
         <g key={i}>
           <rect x={26+i*8} y="8" width="5" height="4" rx="0.5" fill="#ffd700"/>
@@ -339,17 +284,14 @@ function IMUImg() {
           <rect x="66" y={13+i*10} width="4" height="5" rx="0.5" fill="#ffd700"/>
         </g>
       ))}
-      {/* Text on chip */}
       <text x="45" y="26" textAnchor="middle" fontSize="6" fill="#4fc3f7" fontFamily="monospace" fontWeight="bold">LSM6</text>
       <text x="45" y="35" textAnchor="middle" fontSize="5" fill="#29b6f6" fontFamily="monospace">DS3TR-C</text>
-      {/* Axis arrows */}
       <line x1="45" y1="8" x2="45" y2="3" stroke="#ef5350" strokeWidth="1.5"/>
       <polygon points="45,2 43,5 47,5" fill="#ef5350"/>
       <line x1="66" y1="28" x2="71" y2="28" stroke="#66bb6a" strokeWidth="1.5"/>
       <polygon points="72,28 69,26 69,30" fill="#66bb6a"/>
       <text x="45" y="1" textAnchor="middle" fontSize="4" fill="#ef5350" fontFamily="monospace">Z</text>
       <text x="73" y="30" fontSize="4" fill="#66bb6a" fontFamily="monospace">X</text>
-      {/* Pins */}
       {["VCC","GND","SCL","SDA"].map((p,i)=>(
         <g key={p}>
           <rect x={5+i*21} y="61" width="14" height="9" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
@@ -406,7 +348,6 @@ const BOARD_PORTS = [
 
 // ─── Board node (close PCB replica) ──────────────────────────────────────────
 
-// Helper: a bold pill label used on the board
 function BoardLabel({ x, y, text, color, anchor = "middle" }: { x: number; y: number; text: string; color: string; anchor?: "inherit" | "end" | "middle" | "start" }) {
   const w = text.length * 6.2 + 10;
   return (
@@ -435,12 +376,10 @@ function BoardNode() {
           </linearGradient>
         </defs>
 
-        {/* ── Board ── */}
         <rect x="3" y="3" width="494" height="554" rx="12"
           fill="url(#pcbGrad)" stroke="#0a3318" strokeWidth="2.5"
           style={{filter:"drop-shadow(0 6px 18px rgba(0,0,0,0.7))"}}/>
 
-        {/* PCB grid */}
         {Array.from({length:31}).map((_,i)=>(
           <line key={`v${i}`} x1={16*i+8} y1="3" x2={16*i+8} y2="557" stroke="#fff" strokeWidth="0.4" opacity="0.04"/>
         ))}
@@ -448,7 +387,6 @@ function BoardNode() {
           <line key={`h${i}`} x1="3" y1={16*i+8} x2="497" y2={16*i+8} stroke="#fff" strokeWidth="0.4" opacity="0.04"/>
         ))}
 
-        {/* ── Corner holes ── */}
         {[[18,18],[482,18],[18,542],[482,542]].map(([cx,cy],i)=>(
           <g key={i}>
             <circle cx={cx} cy={cy} r="11" fill="#0a1f0e" stroke="#143d1c" strokeWidth="1"/>
@@ -458,10 +396,8 @@ function BoardNode() {
           </g>
         ))}
 
-        {/* ── GPIO header label (above header) ── */}
         <BoardLabel x={210} y={18} text="GPIO  01 – 13" color="#4ade80"/>
 
-        {/* ── GPIO header (2 rows, 13 cols) ── */}
         <rect x="78" y="22" width="264" height="28" rx="3" fill="#111" stroke="#333" strokeWidth="1.2"/>
         {Array.from({length:13}).map((_,i)=>(
           <g key={i}>
@@ -469,13 +405,11 @@ function BoardNode() {
             <rect x={83+i*19} y="35" width="16" height="10" rx="1.2" fill="#0a0a0a" stroke="#222" strokeWidth="0.6"/>
           </g>
         ))}
-        {/* GPIO pin numbers */}
         {["GND","13","11","12","10","09","07","06","05","04","03","02","01"].map((lbl,i)=>(
           <text key={i} x={91+i*19} y="58" textAnchor="middle" fontSize="7" fill="#4ade80"
             fontFamily="'Courier New',monospace" opacity="0.75" fontWeight="bold">{lbl}</text>
         ))}
 
-        {/* ── Battery connector ── */}
         <BoardLabel x={420} y={18} text="BATTERY" color="#60a5fa"/>
         <rect x="374" y="22" width="56" height="24" rx="3" fill="#ddd" stroke="#bbb" strokeWidth="1.2"/>
         <rect x="378" y="25" width="48" height="18" rx="2" fill="#ccc"/>
@@ -486,7 +420,6 @@ function BoardNode() {
           </g>
         ))}
 
-        {/* ── Left side connectors ── */}
         {[
           {y:72, label:"NEOPIXEL", pins:3, color:"#a855f7"},
           {y:116, label:"I2S",      pins:3, color:"#f97316"},
@@ -498,9 +431,7 @@ function BoardNode() {
           const w = pins*14+10;
           return (
             <g key={label}>
-              {/* Label to the right of connector */}
               <BoardLabel x={w+20} y={y+14} text={label} color={color} anchor="start"/>
-              {/* JST housing */}
               <rect x="6" y={y} width={w} height="26" rx="3" fill="#e8e8e8" stroke="#bbb" strokeWidth="1.2"/>
               <rect x="9" y={y+3} width={w-6} height="20" rx="2" fill="#d0d0d0"/>
               {Array.from({length:pins}).map((_,i)=>(
@@ -513,10 +444,8 @@ function BoardNode() {
           );
         })}
 
-        {/* ── ESP32-S3 module ── */}
         <rect x="145" y="130" width="220" height="210" rx="5" fill="url(#espGrad)" stroke="#888" strokeWidth="2"/>
         <rect x="150" y="135" width="210" height="200" rx="4" fill="#c4c4c4"/>
-        {/* Shielding lines */}
         {Array.from({length:11}).map((_,i)=>(
           <line key={i} x1={154+i*18} y1="135" x2={154+i*18} y2="335" stroke="#b4b4b4" strokeWidth="0.6" opacity="0.5"/>
         ))}
@@ -526,15 +455,12 @@ function BoardNode() {
         <text x="255" y="210" textAnchor="middle" fontSize="16" fill="#1a1a1a" fontFamily="Arial" fontWeight="900">ESP32-S3</text>
         <text x="255" y="230" textAnchor="middle" fontSize="11" fill="#333" fontFamily="Arial">WROOM-1  N16R8</text>
         <text x="255" y="248" textAnchor="middle" fontSize="9" fill="#555" fontFamily="Arial">FCC ID: 2AC7Z-ESP32S3</text>
-        {/* Antenna */}
         <rect x="348" y="138" width="24" height="166" rx="3" fill="#b8b8b8"/>
         <rect x="351" y="144" width="18" height="154" rx="2" fill="#adadad"/>
-        {/* SMD pads bottom */}
         {Array.from({length:22}).map((_,i)=>(
           <rect key={i} x={150+i*9} y="333" width="7" height="5" rx="0.6" fill="#888" stroke="#666" strokeWidth="0.4"/>
         ))}
 
-        {/* ── Capacitors ── */}
         {[[72,395,40],[128,395,32],[184,395,40]].map(([cx,cy,d],i)=>(
           <g key={i}>
             <circle cx={cx} cy={cy} r={d/2} fill="#222" stroke="#444" strokeWidth="2"/>
@@ -544,7 +470,6 @@ function BoardNode() {
           </g>
         ))}
 
-        {/* ── Servo header ── */}
         <BoardLabel x={420} y={358} text="SERVO" color="#eab308"/>
         <rect x="366" y="368" width="90" height="110" rx="3" fill="#111" stroke="#333" strokeWidth="1.2"/>
         {["S1","S2","S3","S4"].map((s,row)=>(
@@ -559,19 +484,16 @@ function BoardNode() {
           </g>
         ))}
 
-        {/* ── KOKOON LABS silkscreen ── */}
         <text x="150" y="388" fontSize="20" fill="rgba(255,255,255,0.1)" fontFamily="Arial"
           fontWeight="900" letterSpacing="4">KOKOON</text>
         <text x="150" y="414" fontSize="20" fill="rgba(255,255,255,0.1)" fontFamily="Arial"
           fontWeight="900" letterSpacing="8">LABS</text>
 
-        {/* ── LEDs ── */}
         <circle cx="456" cy="60" r="7" fill="#00e676" style={{filter:"drop-shadow(0 0 5px #00c853)"}}/>
         <circle cx="476" cy="60" r="7" fill="#ff1744" style={{filter:"drop-shadow(0 0 4px #ff1744)"}}/>
         <text x="456" y="74" textAnchor="middle" fontSize="7" fill="#4ade80" fontFamily="monospace">LED1</text>
         <text x="476" y="74" textAnchor="middle" fontSize="7" fill="#f87171" fontFamily="monospace">LED2</text>
 
-        {/* ── RST + BOOT buttons ── */}
         {[{label:"RST",x:390,y:82},{label:"BOOT",x:432,y:82}].map(({label,x,y})=>(
           <g key={label}>
             <rect x={x} y={y} width="30" height="22" rx="3" fill="#2a2a2a" stroke="#555" strokeWidth="1.2"/>
@@ -580,15 +502,12 @@ function BoardNode() {
           </g>
         ))}
 
-        {/* ── USB-C ── */}
         <rect x="490" y="76" width="12" height="36" rx="4" fill="#2a2a2a" stroke="#555" strokeWidth="1.2"/>
         <rect x="493" y="81" width="6" height="26" rx="2" fill="#111" stroke="#222" strokeWidth="0.6"/>
         <BoardLabel x={478} y={70} text="USB-C" color="#94a3b8" anchor="end"/>
 
-        {/* ── IMU label (right side) ── */}
         <BoardLabel x={478} y={128} text="IMU" color="#06b6d4" anchor="end"/>
 
-        {/* ── Bottom JST connectors ── */}
         {[
           {label:"OLED",  x:20,  pins:4, color:"#6366f1"},
           {label:"I2C-2", x:96,  pins:4, color:"#8b5cf6"},
@@ -598,9 +517,7 @@ function BoardNode() {
           const w = pins*16+10;
           return (
             <g key={label}>
-              {/* Label above connector */}
               <BoardLabel x={x+w/2} y={522} text={label} color={color}/>
-              {/* JST housing */}
               <rect x={x} y="530" width={w} height="28" rx="3" fill="#e8e8e8" stroke="#bbb" strokeWidth="1.2"/>
               <rect x={x+3} y="533" width={w-6} height="22" rx="2" fill="#d0d0d0"/>
               {Array.from({length:pins}).map((_,i)=>(
@@ -614,7 +531,6 @@ function BoardNode() {
         })}
       </svg>
 
-      {/* React Flow handles */}
       {BOARD_PORTS.map((port)=>(
         <Handle
           key={port.id}
@@ -636,31 +552,119 @@ function BoardNode() {
   );
 }
 
-// ─── Component node ────────────────────────────────────────────────────────────
+// ─── Component node — bare floating image, no card wrapper ───────────────────
 
-function ComponentNode({ data }: { data: { hwComp: HwComponent; color: string } }) {
+function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; color: string; enabled?: boolean } }) {
   const Icon = data.hwComp.icon;
+  const { setNodes, getEdges } = useReactFlow();
+  const enabled = data.enabled !== false;
+
+  const handleToggle = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newEnabled = !enabled;
+
+    if (!newEnabled) {
+      const logicId = _hwToLogic[id];
+      if (logicId) {
+        _canvasRefGlobal?.current?.removeNode(logicId);
+        delete _logicToHw[logicId];
+        delete _hwToLogic[id];
+        _usedPorts.delete((_edges.find(e => e.source === id)?.targetHandle) ?? "");
+      }
+    } else {
+      const edges = getEdges();
+      const edge = edges.find(e => e.source === id);
+      const portId = edge?.targetHandle ?? "";
+      if (portId && _canvasRefGlobal?.current) {
+        const factory = PORT_TO_NODE[portId];
+        const { type, data: nodeData } = factory
+          ? factory(data.hwComp)
+          : { type: data.hwComp.nodeType, data: data.hwComp.defaultData };
+        const logicId = _canvasRefGlobal.current.addNode(type, nodeData as Record<string, unknown>) ?? "";
+        _hwToLogic[id] = logicId;
+        _logicToHw[logicId] = id;
+        _suppressSyncIds.add(logicId);
+        _usedPorts.add(portId);
+      }
+    }
+
+    setNodes(ns => ns.map(n => n.id === id ? { ...n, data: { ...n.data, enabled: newEnabled } } : n));
+  }, [id, enabled, data.hwComp, getEdges, setNodes]);
+
+  const isWired = getEdges().some(e => e.source === id);
+
   return (
-    <div className="rounded-xl border flex flex-col items-center gap-1 select-none relative group" style={{
-      width:140, padding:"10px 8px 8px",
-      background:"linear-gradient(160deg,#0f172a,#1e1b4b)",
-      borderColor: data.color + "60",
-      boxShadow:`0 8px 32px rgba(0,0,0,0.7), 0 0 0 1px ${data.color}20`,
-    }}>
-      <div style={{width:110,height:72}}><Icon /></div>
-      <span className="text-[11px] font-bold text-center leading-tight" style={{color:data.color}}>
+    <div
+      className="relative select-none group"
+      style={{
+        width: 120,
+        opacity: enabled ? 1 : 0.35,
+        filter: enabled ? "none" : "grayscale(0.8)",
+        transition: "opacity 0.2s, filter 0.2s",
+      }}
+    >
+      {/* Bare component image — no card, no background */}
+      <div
+        style={{
+          width: 120, height: 80,
+          filter: `drop-shadow(0 4px 16px ${data.color}55) drop-shadow(0 0 6px ${data.color}30)`,
+        }}
+      >
+        <Icon />
+      </div>
+
+      {/* Label — subtle, below the image */}
+      <div
+        className="text-center mt-1 text-[9px] font-bold tracking-wide leading-none"
+        style={{ color: data.color + "cc" }}
+      >
         {data.hwComp.label}
-      </span>
-      <span className="text-[9px] text-center opacity-60" style={{color:data.color}}>
-        {data.hwComp.portHint}
-      </span>
+      </div>
+
+      {/* Enable/disable toggle pill — only when wired */}
+      {isWired && (
+        <button
+          className="nodrag absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold transition-all"
+          onClick={handleToggle}
+          title={enabled ? "Disable" : "Enable"}
+          style={{
+            background: enabled ? data.color + "22" : "#ffffff0a",
+            border: `1px solid ${enabled ? data.color + "55" : "#ffffff18"}`,
+            color: enabled ? data.color : "#666",
+            backdropFilter: "blur(4px)",
+          }}
+        >
+          <div
+            className="rounded-full transition-colors"
+            style={{
+              width: 20, height: 10,
+              background: enabled ? data.color + "aa" : "#444",
+              position: "relative",
+            }}
+          >
+            <div
+              className="absolute top-[1px] rounded-full bg-white shadow"
+              style={{
+                width: 8, height: 8,
+                left: enabled ? 10 : 1,
+                transition: "left 0.15s",
+              }}
+            />
+          </div>
+          <span>{enabled ? "ON" : "OFF"}</span>
+        </button>
+      )}
+
+      {/* Connection handle */}
       <Handle
         type="source"
         position={Position.Right}
         style={{
-          background: data.color, width:14, height:14,
-          border:`3px solid ${data.color}60`,
-          boxShadow:`0 0 8px ${data.color}80`,
+          background: data.color,
+          width: 12, height: 12,
+          border: `2.5px solid ${data.color}50`,
+          boxShadow: `0 0 8px ${data.color}80`,
+          top: "40%",
         }}
       />
     </div>
@@ -669,108 +673,304 @@ function ComponentNode({ data }: { data: { hwComp: HwComponent; color: string } 
 
 // ─── Node types ───────────────────────────────────────────────────────────────
 
-const NODE_TYPES: NodeTypes = { board:BoardNode, hw_component:ComponentNode };
+const NODE_TYPES: NodeTypes = { board: BoardNode, hw_component: ComponentNode };
 
-// ─── Port → logic node map ────────────────────────────────────────────────────
+// ─── Port → logic node factory ────────────────────────────────────────────────
 
-const PORT_TO_NODE: Record<string,(c:HwComponent)=>{type:string;data:Record<string,unknown>}> = {
-  gpio:      (c)=>({type:c.nodeType,       data:c.defaultData}),
-  neopixel:  ()=> ({type:"neopixel_led",   data:{pin:NEOPIXEL.pin,count:NEOPIXEL.count}}),
-  motor_fr:  ()=> ({type:"dc_motor_single",data:{motor:"frontRight",pwm:MOTORS.frontRight.pwm,dir:MOTORS.frontRight.dir}}),
-  motor_fl:  ()=> ({type:"dc_motor_single",data:{motor:"frontLeft", pwm:MOTORS.frontLeft.pwm, dir:MOTORS.frontLeft.dir}}),
-  motor_rr:  ()=> ({type:"dc_motor_single",data:{motor:"rearRight", pwm:MOTORS.rearRight.pwm, dir:MOTORS.rearRight.dir}}),
-  motor_rl:  ()=> ({type:"dc_motor_single",data:{motor:"rearLeft",  pwm:MOTORS.rearLeft.pwm,  dir:MOTORS.rearLeft.dir}}),
-  servo_s1:  ()=> ({type:"servo_motor",    data:{port:"S1",pin:SERVO_PORTS.S1.pin}}),
-  servo_s2:  ()=> ({type:"servo_motor",    data:{port:"S2",pin:SERVO_PORTS.S2.pin}}),
-  servo_s3:  ()=> ({type:"servo_motor",    data:{port:"S3",pin:SERVO_PORTS.S3.pin}}),
-  servo_s4:  ()=> ({type:"servo_motor",    data:{port:"S4",pin:SERVO_PORTS.S4.pin}}),
-  oled:      ()=> ({type:"oled_display",   data:{scl:OLED.scl,sda:OLED.sda}}),
-  i2c2:      (c)=>({type:c.nodeType,       data:{scl:SENSOR_PORTS["2"].scl,sda:SENSOR_PORTS["2"].sda}}),
-  sensor1:   (c)=>({type:c.nodeType,       data:{port:"1",trig:SENSOR_PORTS["1"].trig,echo:SENSOR_PORTS["1"].echo}}),
-  sensor2:   (c)=>({type:c.nodeType,       data:{port:"2",trig:SENSOR_PORTS["2"].trig,echo:SENSOR_PORTS["2"].echo}}),
-  imu:       ()=> ({type:"imu_sensor",     data:{scl:ONBOARD_IMU.scl,sda:ONBOARD_IMU.sda}}),
+const PORT_TO_NODE: Record<string, (c: HwComponent) => { type: string; data: Record<string, unknown> }> = {
+  gpio:      (c) => ({ type: c.nodeType,          data: c.defaultData }),
+  neopixel:  ()  => ({ type: "neopixel_led",       data: { pin: NEOPIXEL.pin, count: NEOPIXEL.count } }),
+  motor_fr:  ()  => ({ type: "dc_motor_single",    data: { motor: "frontRight", pwm: MOTORS.frontRight.pwm, dir: MOTORS.frontRight.dir } }),
+  motor_fl:  ()  => ({ type: "dc_motor_single",    data: { motor: "frontLeft",  pwm: MOTORS.frontLeft.pwm,  dir: MOTORS.frontLeft.dir } }),
+  motor_rr:  ()  => ({ type: "dc_motor_single",    data: { motor: "rearRight",  pwm: MOTORS.rearRight.pwm,  dir: MOTORS.rearRight.dir } }),
+  motor_rl:  ()  => ({ type: "dc_motor_single",    data: { motor: "rearLeft",   pwm: MOTORS.rearLeft.pwm,   dir: MOTORS.rearLeft.dir } }),
+  servo_s1:  ()  => ({ type: "servo_motor",         data: { port: "S1", pin: SERVO_PORTS.S1.pin } }),
+  servo_s2:  ()  => ({ type: "servo_motor",         data: { port: "S2", pin: SERVO_PORTS.S2.pin } }),
+  servo_s3:  ()  => ({ type: "servo_motor",         data: { port: "S3", pin: SERVO_PORTS.S3.pin } }),
+  servo_s4:  ()  => ({ type: "servo_motor",         data: { port: "S4", pin: SERVO_PORTS.S4.pin } }),
+  oled:      ()  => ({ type: "oled_display",        data: { scl: OLED.scl, sda: OLED.sda } }),
+  i2c2:      (c) => ({ type: c.nodeType,            data: { scl: SENSOR_PORTS["2"].scl, sda: SENSOR_PORTS["2"].sda } }),
+  sensor1:   (c) => ({ type: c.nodeType,            data: { port: "1", trig: SENSOR_PORTS["1"].trig, echo: SENSOR_PORTS["1"].echo } }),
+  sensor2:   (c) => ({ type: c.nodeType,            data: { port: "2", trig: SENSOR_PORTS["2"].trig, echo: SENSOR_PORTS["2"].echo } }),
+  imu:       ()  => ({ type: "imu_sensor",          data: { scl: ONBOARD_IMU.scl, sda: ONBOARD_IMU.sda } }),
 };
 
-// ─── Module-level persistence ─────────────────────────────────────────────────
+// ─── nodeType → HwComponent lookup (for blocks→hardware sync) ─────────────────
 
-const BOARD_NODE: Node = {
-  id:"board", type:"board",
-  position:{x:300,y:30},
-  data:{}, draggable:false, selectable:false,
-};
-let _nodes:Node[] = [BOARD_NODE];
-let _edges:Edge[] = [];
-let _wired:{label:string;color:string}[] = [];
-let _hwToLogic:Record<string,string> = {};
-
-// ─── Inner canvas ─────────────────────────────────────────────────────────────
-
-interface InnerProps {
-  canvasRef:React.RefObject<NodeCanvasRef|null>;
-  onWired:(label:string,color:string)=>void;
+const _nodeTypeToHwComp: Record<string, HwComponent> = {};
+for (const comp of HW_COMPONENTS) {
+  _nodeTypeToHwComp[comp.nodeType] = comp;
 }
 
-function HardwareCanvas({canvasRef,onWired}:InnerProps) {
-  const [nodes,setNodes,onNodesChange] = useNodesState(_nodes);
-  const [edges,setEdges,onEdgesChange] = useEdgesState<Edge>(_edges);
-  const {screenToFlowPosition} = useReactFlow();
+// ─── Port auto-assignment helpers ─────────────────────────────────────────────
 
-  useEffect(()=>{_nodes=nodes;},[nodes]);
-  useEffect(()=>{_edges=edges;},[edges]);
+const _leftPorts  = new Set(["neopixel","i2s","motor_fr","motor_fl","motor_rr","motor_rl"]);
+const _rightPorts = new Set(["imu","servo_s1","servo_s2","servo_s3","servo_s4"]);
 
-  const onConnect = useCallback((connection:Connection)=>{
-    const src = nodes.find(n=>n.id===connection.source);
-    if (!src||src.type!=="hw_component") return;
-    const hwComp = (src.data as {hwComp:HwComponent}).hwComp;
-    const portId = connection.targetHandle??"";
-    if (hwComp.compatiblePorts.length&&!hwComp.compatiblePorts.includes(portId)) return;
-    setEdges(eds=>addEdge({...connection,animated:true,style:{stroke:hwComp.color,strokeWidth:2.5}},eds));
+function _getBestPort(nodeType: string, data: Record<string, unknown>): string | null {
+  switch (nodeType) {
+    case "dc_motor_single": {
+      const motorMap: Record<string, string> = {
+        frontRight: "motor_fr", frontLeft: "motor_fl",
+        rearRight: "motor_rr", rearLeft: "motor_rl",
+      };
+      const specific = motorMap[data.motor as string];
+      if (specific && !_usedPorts.has(specific)) return specific;
+      return ["motor_fr","motor_fl","motor_rr","motor_rl"].find(p => !_usedPorts.has(p)) ?? null;
+    }
+    case "servo_motor": {
+      const servoMap: Record<string, string> = { S1:"servo_s1", S2:"servo_s2", S3:"servo_s3", S4:"servo_s4" };
+      const specific = servoMap[data.port as string];
+      if (specific && !_usedPorts.has(specific)) return specific;
+      return ["servo_s1","servo_s2","servo_s3","servo_s4"].find(p => !_usedPorts.has(p)) ?? null;
+    }
+    case "neopixel_led":  return _usedPorts.has("neopixel") ? null : "neopixel";
+    case "oled_display":  return _usedPorts.has("oled") ? (_usedPorts.has("i2c2") ? null : "i2c2") : "oled";
+    case "imu_sensor":    return _usedPorts.has("imu") ? null : "imu";
+    case "ultrasonic":
+    case "soil_moisture":
+    case "analog_sensor": {
+      const pref = (data.port as string) === "2" ? "sensor2" : "sensor1";
+      const alt  = pref === "sensor2" ? "sensor1" : "sensor2";
+      if (!_usedPorts.has(pref)) return pref;
+      if (!_usedPorts.has(alt)) return alt;
+      return null;
+    }
+    case "ir_sensor":
+    case "push_button":   return "gpio"; // gpio can host multiple (best-effort)
+    default: return null;
+  }
+}
+
+function _getAutoPosition(portId: string): { x: number; y: number } {
+  const hwCount = _nodes.filter(n => n.type === "hw_component").length;
+  if (_leftPorts.has(portId))  return { x: 20,  y: 60 + hwCount * 200 };
+  if (_rightPorts.has(portId)) return { x: 980, y: 60 + hwCount * 200 };
+  return { x: 60 + hwCount * 200, y: 720 };
+}
+
+// ─── Module-level persistence & cross-canvas sync state ───────────────────────
+
+const BOARD_NODE: Node = {
+  id: "board", type: "board",
+  position: { x: 300, y: 30 },
+  data: {}, draggable: false, selectable: false,
+};
+
+let _nodes: Node[] = [BOARD_NODE];
+let _edges: Edge[] = [];
+let _wired: { label: string; color: string }[] = [];
+
+// hw canvas id → logic canvas id (hw-initiated wiring)
+let _hwToLogic: Record<string, string> = {};
+// logic canvas id → hw canvas id (blocks-initiated or after sync)
+let _logicToHw: Record<string, string> = {};
+// ports currently in use
+let _usedPorts: Set<string> = new Set();
+// logic node IDs to skip in the next onFlowChange diff (prevent circular sync)
+let _suppressSyncIds: Set<string> = new Set();
+
+// Live setters — registered by HardwareCanvas when mounted
+let _setNodesRef: ((fn: (ns: Node[]) => Node[]) => void) | null = null;
+let _setEdgesRef: ((fn: (es: Edge[]) => Edge[]) => void) | null = null;
+// Global canvas ref so ComponentNode toggle can call addNode/removeNode
+let _canvasRefGlobal: React.RefObject<NodeCanvasRef | null> | null = null;
+
+// ─── Exported sync API (called from EditorPage) ───────────────────────────────
+
+/** Returns true if this logic node was just created by hardware wiring (skip blocks→hw sync). */
+export function isFlowSyncSuppressed(logicId: string): boolean {
+  if (_suppressSyncIds.has(logicId)) {
+    _suppressSyncIds.delete(logicId);
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Called from EditorPage when a node is added to the blocks canvas by the user.
+ * Creates the matching hw component node + edge to the best available board port.
+ */
+export function syncAddHwNode(logicId: string, nodeType: string, data: Record<string, unknown>): void {
+  if (_logicToHw[logicId]) return; // Already synced
+
+  const hwComp = _nodeTypeToHwComp[nodeType];
+  if (!hwComp) return; // Not a hw-mappable type
+
+  const portId = _getBestPort(nodeType, data);
+  if (!portId) return; // No available port
+
+  const hwId = `hw_${crypto.randomUUID().slice(0, 8)}`;
+  const newNode: Node = {
+    id: hwId, type: "hw_component",
+    position: _getAutoPosition(portId),
+    data: { hwComp, label: hwComp.label, color: hwComp.color, enabled: true },
+  };
+  const newEdge: Edge = {
+    id: `e_${hwId}_board`,
+    source: hwId, target: "board",
+    sourceHandle: null, targetHandle: portId,
+    animated: true,
+    style: { stroke: hwComp.color, strokeWidth: 2.5 },
+  };
+
+  _logicToHw[logicId] = hwId;
+  _hwToLogic[hwId] = logicId;
+  _usedPorts.add(portId);
+
+  if (_setNodesRef) {
+    _setNodesRef(ns => [...ns, newNode]);
+    _setEdgesRef?.(es => [...es, newEdge]);
+  } else {
+    _nodes = [..._nodes, newNode];
+    _edges = [..._edges, newEdge];
+  }
+}
+
+/**
+ * Called from EditorPage when a node is removed from the blocks canvas.
+ * Removes the matching hw component node (if any).
+ */
+export function syncRemoveHwNode(logicId: string): void {
+  const hwId = _logicToHw[logicId];
+  if (!hwId) return; // No hw counterpart
+
+  const portId = _edges.find(e => e.source === hwId)?.targetHandle ?? "";
+  if (portId) _usedPorts.delete(portId);
+
+  delete _logicToHw[logicId];
+  delete _hwToLogic[hwId];
+
+  if (_setNodesRef) {
+    _setNodesRef(ns => ns.filter(n => n.id !== hwId));
+    _setEdgesRef?.(es => es.filter(e => e.source !== hwId && e.target !== hwId));
+  } else {
+    _nodes = _nodes.filter(n => n.id !== hwId);
+    _edges = _edges.filter(e => e.source !== hwId && e.target !== hwId);
+  }
+}
+
+// ─── Inner hardware canvas ────────────────────────────────────────────────────
+
+interface InnerProps {
+  canvasRef: React.RefObject<NodeCanvasRef | null>;
+  onWired: (label: string, color: string) => void;
+}
+
+function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
+  const [nodes, setNodes, onNodesChange] = useNodesState(_nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(_edges);
+  const { screenToFlowPosition } = useReactFlow();
+
+  // Persist state to module-level so it survives unmount
+  useEffect(() => { _nodes = nodes; }, [nodes]);
+  useEffect(() => { _edges = edges; }, [edges]);
+
+  // Register live setters and global canvas ref
+  useEffect(() => {
+    _setNodesRef = setNodes;
+    _setEdgesRef = setEdges;
+    _canvasRefGlobal = canvasRef;
+
+    // Rebuild _usedPorts and _logicToHw from persisted state
+    _usedPorts = new Set(
+      _edges.filter(e => e.target === "board" && e.targetHandle).map(e => e.targetHandle as string)
+    );
+    _logicToHw = {};
+    for (const [hwId, logicId] of Object.entries(_hwToLogic)) {
+      _logicToHw[logicId] = hwId;
+    }
+
+    return () => {
+      _setNodesRef = null;
+      _setEdgesRef = null;
+      _canvasRefGlobal = null;
+    };
+  }, [setNodes, setEdges, canvasRef]);
+
+  const onConnect = useCallback((connection: Connection) => {
+    const src = nodes.find(n => n.id === connection.source);
+    if (!src || src.type !== "hw_component") return;
+    const hwComp = (src.data as { hwComp: HwComponent }).hwComp;
+    const portId = connection.targetHandle ?? "";
+    if (hwComp.compatiblePorts.length && !hwComp.compatiblePorts.includes(portId)) return;
+
+    setEdges(eds => addEdge({ ...connection, animated: true, style: { stroke: hwComp.color, strokeWidth: 2.5 } }, eds));
+    _usedPorts.add(portId);
+
     const factory = PORT_TO_NODE[portId];
-    const {type,data} = factory?factory(hwComp):{type:hwComp.nodeType,data:hwComp.defaultData};
-    const logicId = canvasRef.current?.addNode(type,data)??"";
+    const { type, data } = factory ? factory(hwComp) : { type: hwComp.nodeType, data: hwComp.defaultData };
+    const logicId = canvasRef.current?.addNode(type, data) ?? "";
+
     _hwToLogic[src.id] = logicId;
-    onWired(hwComp.label,hwComp.color);
-  },[nodes,canvasRef,onWired,setEdges]);
+    _logicToHw[logicId] = src.id;
+    _suppressSyncIds.add(logicId); // Prevent EditorPage from re-adding hw node
 
-  const onNodesDelete = useCallback((deleted:Node[])=>{
-    deleted.forEach(n=>{
+    onWired(hwComp.label, hwComp.color);
+  }, [nodes, canvasRef, onWired, setEdges]);
+
+  const onNodesDelete = useCallback((deleted: Node[]) => {
+    deleted.forEach(n => {
       const logicId = _hwToLogic[n.id];
-      if (logicId) { canvasRef.current?.removeNode(logicId); delete _hwToLogic[n.id]; }
+      if (logicId) {
+        const portId = _edges.find(e => e.source === n.id)?.targetHandle ?? "";
+        if (portId) _usedPorts.delete(portId);
+        canvasRef.current?.removeNode(logicId);
+        delete _logicToHw[logicId];
+        delete _hwToLogic[n.id];
+      }
     });
-  },[canvasRef]);
+  }, [canvasRef]);
 
-  const onDragOver = useCallback((e:React.DragEvent)=>{
-    e.preventDefault(); e.dataTransfer.dropEffect="move";
-  },[]);
+  const onEdgesDelete = useCallback((deleted: Edge[]) => {
+    deleted.forEach(e => {
+      if (e.target === "board" && e.targetHandle) {
+        _usedPorts.delete(e.targetHandle);
+      }
+      // When edge removed but node kept: remove logic node too
+      const logicId = _hwToLogic[e.source];
+      if (logicId) {
+        canvasRef.current?.removeNode(logicId);
+        delete _logicToHw[logicId];
+        delete _hwToLogic[e.source];
+      }
+    });
+  }, [canvasRef]);
 
-  const onDrop = useCallback((e:React.DragEvent)=>{
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); e.dataTransfer.dropEffect = "move";
+  }, []);
+
+  const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     const raw = e.dataTransfer.getData("application/hw-component");
     if (!raw) return;
-    const full = HW_COMPONENTS.find(c=>c.id===JSON.parse(raw).id);
+    const full = HW_COMPONENTS.find(c => c.id === JSON.parse(raw).id);
     if (!full) return;
-    const position = screenToFlowPosition({x:e.clientX,y:e.clientY});
-    setNodes(nds=>[...nds,{
-      id:`hw_${crypto.randomUUID().slice(0,8)}`,
-      type:"hw_component", position,
-      data:{hwComp:full,label:full.label,color:full.color},
+    const position = screenToFlowPosition({ x: e.clientX, y: e.clientY });
+    setNodes(nds => [...nds, {
+      id: `hw_${crypto.randomUUID().slice(0, 8)}`,
+      type: "hw_component", position,
+      data: { hwComp: full, label: full.label, color: full.color, enabled: true },
     }]);
-  },[screenToFlowPosition,setNodes]);
+  }, [screenToFlowPosition, setNodes]);
 
   return (
     <div className="flex-1 h-full" onDragOver={onDragOver} onDrop={onDrop}>
       <ReactFlow
         nodes={nodes} edges={edges}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-        onConnect={onConnect} onNodesDelete={onNodesDelete}
+        onConnect={onConnect}
+        onNodesDelete={onNodesDelete}
+        onEdgesDelete={onEdgesDelete}
         nodeTypes={NODE_TYPES}
-        deleteKeyCode={["Delete","Backspace"]}
-        fitView fitViewOptions={{padding:0.12}}
-        proOptions={{hideAttribution:true}}
+        deleteKeyCode={["Delete", "Backspace"]}
+        fitView fitViewOptions={{ padding: 0.12 }}
+        proOptions={{ hideAttribution: true }}
       >
-        <Background color="#0a0f0a" gap={24} size={1} variant={"dots" as any}/>
+        <Background color="#0a0f0a" gap={24} size={1} variant={"dots" as any} />
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full px-5 py-2 text-[11px] text-hint border border-subtle bg-panel/90 shadow pointer-events-none backdrop-blur-sm">
-          Drag a component → drop → wire handle to board port · Select + Delete removes it from both views
+          Drag a component · wire handle to board port · toggle ON/OFF · Delete removes from both views
         </div>
       </ReactFlow>
     </div>
@@ -779,46 +979,46 @@ function HardwareCanvas({canvasRef,onWired}:InnerProps) {
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 
-interface HardwareViewProps { canvasRef:React.RefObject<NodeCanvasRef|null> }
+interface HardwareViewProps { canvasRef: React.RefObject<NodeCanvasRef | null> }
 
-export function HardwareView({canvasRef}:HardwareViewProps) {
-  const [wired,setWired] = useState<{label:string;color:string}[]>(_wired);
-  const handleWired = useCallback((label:string,color:string)=>{
-    setWired(prev=>{const next=[...prev,{label,color}];_wired=next;return next;});
-  },[]);
+export function HardwareView({ canvasRef }: HardwareViewProps) {
+  const [wired, setWired] = useState<{ label: string; color: string }[]>(_wired);
+  const handleWired = useCallback((label: string, color: string) => {
+    setWired(prev => { const next = [...prev, { label, color }]; _wired = next; return next; });
+  }, []);
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#080c08]">
       {/* Palette */}
-      <aside className="w-56 shrink-0 border-r border-white/5 flex flex-col overflow-hidden" style={{background:"#0d120d"}}>
+      <aside className="w-56 shrink-0 border-r border-white/5 flex flex-col overflow-hidden" style={{ background: "#0d120d" }}>
         <div className="px-4 py-3 border-b border-white/5">
           <p className="text-[11px] font-bold text-white/80 uppercase tracking-widest">Components</p>
-          <p className="text-[10px] text-white/30 mt-0.5">Drag · Drop · Wire</p>
+          <p className="text-[10px] text-white/30 mt-0.5">Drag · Drop · Wire · Toggle</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
-          {HW_COMPONENTS.map(comp=>{
+          {HW_COMPONENTS.map(comp => {
             const Icon = comp.icon;
             return (
               <div
                 key={comp.id}
                 draggable
-                onDragStart={e=>{
-                  e.dataTransfer.setData("application/hw-component",JSON.stringify({id:comp.id}));
-                  e.dataTransfer.effectAllowed="move";
+                onDragStart={e => {
+                  e.dataTransfer.setData("application/hw-component", JSON.stringify({ id: comp.id }));
+                  e.dataTransfer.effectAllowed = "move";
                 }}
                 className="flex items-center gap-3 rounded-xl border cursor-grab active:cursor-grabbing transition-all hover:scale-[1.02] p-2.5"
                 style={{
-                  background:`linear-gradient(135deg,${comp.color}08,${comp.color}04)`,
-                  borderColor:comp.color+"25",
-                  boxShadow:`0 2px 8px rgba(0,0,0,0.4)`,
+                  background: `linear-gradient(135deg,${comp.color}08,${comp.color}04)`,
+                  borderColor: comp.color + "25",
+                  boxShadow: `0 2px 8px rgba(0,0,0,0.4)`,
                 }}
               >
-                <div className="shrink-0 rounded-lg overflow-hidden" style={{width:52,height:40,background:"#111"}}>
+                <div className="shrink-0 rounded-lg overflow-hidden" style={{ width: 52, height: 40, background: "#111" }}>
                   <Icon />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] font-bold leading-tight" style={{color:comp.color}}>{comp.label}</div>
+                  <div className="text-[10px] font-bold leading-tight" style={{ color: comp.color }}>{comp.label}</div>
                   <div className="text-[9px] text-white/30 leading-tight mt-0.5">{comp.portHint}</div>
                 </div>
               </div>
@@ -826,13 +1026,13 @@ export function HardwareView({canvasRef}:HardwareViewProps) {
           })}
         </div>
 
-        {wired.length>0&&(
+        {wired.length > 0 && (
           <div className="border-t border-white/5 p-3">
-            <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">Wired</p>
+            <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">Connected</p>
             <div className="space-y-1 max-h-32 overflow-y-auto">
-              {wired.slice().reverse().map((w,i)=>(
+              {wired.slice().reverse().map((w, i) => (
                 <div key={i} className="flex items-center gap-2 text-[9px]">
-                  <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{background:w.color}}/>
+                  <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: w.color }} />
                   <span className="text-white/40 truncate">{w.label}</span>
                 </div>
               ))}
@@ -843,7 +1043,7 @@ export function HardwareView({canvasRef}:HardwareViewProps) {
 
       {/* Canvas */}
       <ReactFlowProvider>
-        <HardwareCanvas canvasRef={canvasRef} onWired={handleWired}/>
+        <HardwareCanvas canvasRef={canvasRef} onWired={handleWired} />
       </ReactFlowProvider>
     </div>
   );
