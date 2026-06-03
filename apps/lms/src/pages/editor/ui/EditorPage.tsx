@@ -23,10 +23,11 @@ import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { NodeActionsProvider } from "@/shared/context/NodeActionsContext";
 import { ESP32FilesPanel } from "@/features/editor/esp32-files/ui/ESP32FilesPanel";
+import { HardwareView } from "@/widgets/hardware-view/ui/HardwareView";
 import { removeAnim, markOnDevice } from "@/shared/lib/animRegistry";
 
 export type LessonContext = EditorLaunchContext;
-export type ViewMode = "blocks" | "split" | "code";
+export type ViewMode = "blocks" | "split" | "code" | "hardware";
 
 interface EditorPageProps {
   launchContext?: EditorLaunchContext;
@@ -291,22 +292,29 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
       {/* Main content */}
       <div className="flex flex-1 overflow-hidden relative">
+        {viewMode === "hardware" && (
+          <div className="absolute inset-0 z-10">
+            <HardwareView canvasRef={canvasRef} />
+          </div>
+        )}
+
+        {/* Node canvas — always mounted so canvasRef stays valid */}
         <div
-          className={`overflow-hidden transition-all duration-300 ${viewMode === "code" ? "w-0" : "flex-1"}`}
+          className={`overflow-hidden transition-all duration-300 ${
+            viewMode === "code" || viewMode === "hardware" ? "w-0" : "flex-1"
+          }`}
           onContextMenu={handleContextMenu}
         >
-          {viewMode !== "code" && (
-            <NodeCanvas
-              ref={canvasRef}
-              onCodeChange={setGeneratedCode}
-              onFlowChange={(nds, eds) => {
-                tutorial.setActiveFlowNodes(nds);
-                tutorial.setActiveFlowEdges(eds);
-              }}
-              allowedCategories={launchRestrictions.allowedCategories}
-              allowedNodeTypes={launchRestrictions.allowedNodeTypes}
-            />
-          )}
+          <NodeCanvas
+            ref={canvasRef}
+            onCodeChange={setGeneratedCode}
+            onFlowChange={(nds, eds) => {
+              tutorial.setActiveFlowNodes(nds);
+              tutorial.setActiveFlowEdges(eds);
+            }}
+            allowedCategories={launchRestrictions.allowedCategories}
+            allowedNodeTypes={launchRestrictions.allowedNodeTypes}
+          />
         </div>
 
         {(viewMode === "split" || viewMode === "code") && (

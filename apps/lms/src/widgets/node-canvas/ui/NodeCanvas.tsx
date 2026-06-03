@@ -31,7 +31,8 @@ export interface NodeCanvasRef {
   getCode: () => string;
   getWorkspace: () => { nodes: Node[]; edges: Edge[] };
   setWorkspace: (workspace: { nodes: Node[]; edges: Edge[] }) => void;
-  addNode: (type: string, data?: Record<string, unknown>) => void;
+  addNode: (type: string, data?: Record<string, unknown>) => string;
+  removeNode: (id: string) => void;
   getRequiredLibraries: () => string[];
 }
 
@@ -112,25 +113,24 @@ function NodeCanvasInner({
     getWorkspace: () => ({ nodes, edges }),
     setWorkspace: (ws) => { setNodes(ws.nodes || []); setEdges(ws.edges || []); },
     addNode: (type: string, data: Record<string, unknown> = {}) => {
-      // Place the new node at the center of the current viewport so it appears
-      // right where the user is looking, without jumping existing nodes off-screen.
       let position = { x: 200, y: 200 };
       if (wrapperRef.current) {
         const rect = wrapperRef.current.getBoundingClientRect();
         const { x: vpX, y: vpY, zoom } = getViewport();
-        // Convert screen center → flow coordinates
         position = {
           x: (rect.width  / 2 - vpX) / zoom,
           y: (rect.height / 2 - vpY) / zoom,
         };
-        // Small random jitter so stacked nodes don't perfectly overlap
         position.x += (Math.random() - 0.5) * 40;
         position.y += (Math.random() - 0.5) * 40;
       }
-      setNodes((nds) => [
-        ...nds,
-        { id: getId(), type, position, data: { label: type, ...data } },
-      ]);
+      const id = getId();
+      setNodes((nds) => [...nds, { id, type, position, data: { label: type, ...data } }]);
+      return id;
+    },
+    removeNode: (id: string) => {
+      setNodes((nds) => nds.filter((n) => n.id !== id));
+      setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
     },
     getRequiredLibraries: () => {
       const code = generatePythonFromFlow(nodes, edges);

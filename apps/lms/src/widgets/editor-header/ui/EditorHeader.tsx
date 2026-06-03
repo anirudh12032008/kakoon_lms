@@ -1,4 +1,4 @@
-import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft } from "lucide-react";
+import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu } from "lucide-react";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 
@@ -25,8 +25,9 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
     ),
     label: "Blocks",
   },
-  { mode: "split", icon: <SplitSquareHorizontal className="h-3.5 w-3.5" />, label: "Split" },
-  { mode: "code",  icon: <Code2 className="h-3.5 w-3.5" />,               label: "Code"  },
+  { mode: "split",    icon: <SplitSquareHorizontal className="h-3.5 w-3.5" />, label: "Split"    },
+  { mode: "code",     icon: <Code2 className="h-3.5 w-3.5" />,                label: "Code"     },
+  { mode: "hardware", icon: <Cpu className="h-3.5 w-3.5" />,                  label: "Hardware" },
 ];
 
 export function EditorHeader({
