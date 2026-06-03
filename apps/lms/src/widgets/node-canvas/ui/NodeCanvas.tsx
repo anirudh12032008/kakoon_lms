@@ -9,8 +9,11 @@ import {
 import {
   ReactFlow,
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
+  BaseEdge,
+  getBezierPath,
   applyNodeChanges,
   applyEdgeChanges,
   addEdge,
@@ -19,13 +22,60 @@ import {
   type NodeChange,
   type EdgeChange,
   type Connection,
+  type EdgeProps,
+  type EdgeTypes,
   ReactFlowProvider,
   useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { motion, AnimatePresence } from "framer-motion";
 import { NODE_TYPES } from "@/entities/node/model";
 import { generatePythonFromFlow } from "@/entities/node/lib/codegen";
 import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/entities/custom-node/model/customNodes";
+
+// ─── Glow edge — selected edges get a colored halo via Framer Motion ──────────
+
+function GlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, style, markerEnd }: EdgeProps) {
+  const [edgePath] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
+  const baseStroke = (style?.stroke as string) ?? "#7c3aed";
+  const sel = selected ?? false;
+  const activeStroke = "#c4b5fd";
+
+  return (
+    <>
+      <AnimatePresence>
+        {sel && (
+          <motion.path
+            key={`halo-${id}`}
+            d={edgePath}
+            fill="none"
+            stroke={activeStroke}
+            strokeWidth={16}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.22 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            style={{ filter: "blur(7px)", pointerEvents: "none" }}
+          />
+        )}
+      </AnimatePresence>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{
+          ...style,
+          stroke: sel ? activeStroke : baseStroke,
+          strokeWidth: sel ? 2.5 : ((style?.strokeWidth as number) ?? 2),
+          filter: sel ? `drop-shadow(0 0 5px ${activeStroke}99)` : "none",
+          transition: "stroke 0.18s ease, stroke-width 0.18s ease, filter 0.18s ease",
+        }}
+      />
+    </>
+  );
+}
+
+const EDGE_TYPES: EdgeTypes = { default: GlowEdge };
 
 export interface NodeCanvasRef {
   getCode: () => string;
@@ -165,15 +215,17 @@ function NodeCanvasInner({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
         fitView
         fitViewOptions={{ padding: 0.6, maxZoom: FIT_VIEW_MAX_ZOOM }}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
         deleteKeyCode={["Backspace", "Delete"]}
-        connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2 }}
+        connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2, filter: "drop-shadow(0 0 6px #7c3aed88)" }}
         defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}
       >
-        <Background color="#1f1f23" gap={24} size={1.5} style={{ backgroundColor: "#09090b" }} />
+        <Background id="dots" color="#7c3aed28" gap={24} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#07070b" }} />
+        <Background id="lines" color="#ffffff05" gap={96} size={0.5} variant={BackgroundVariant.Lines} />
         <Controls style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
         <MiniMap
           nodeColor="#8b5cf6"

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  ReactFlow, ReactFlowProvider, Background,
+  ReactFlow, ReactFlowProvider, Background, BackgroundVariant, MiniMap,
   useNodesState, useEdgesState, addEdge,
   type Node, type Edge, type Connection, type NodeTypes,
   Handle, Position, useReactFlow,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import { motion, AnimatePresence } from "framer-motion";
 import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import {
   NEOPIXEL, SERVO_PORTS, MOTORS, SENSOR_PORTS, OLED, ONBOARD_IMU,
@@ -78,22 +79,26 @@ function ServoImg() {
 function MotorImg() {
   return (
     <svg viewBox="0 0 120 75" className="w-full h-full">
-      <rect x="20" y="8" width="65" height="52" rx="5" fill="#f57f17" stroke="#e65100" strokeWidth="2"/>
-      <rect x="23" y="11" width="59" height="46" rx="4" fill="#fb8c00"/>
-      <text x="52" y="30" textAnchor="middle" fontSize="8" fill="#bf360c" fontFamily="Arial" fontWeight="900">TT</text>
-      <text x="52" y="42" textAnchor="middle" fontSize="6" fill="#e64a19" fontFamily="Arial" fontWeight="bold">MOTOR</text>
-      <rect x="5" y="14" width="18" height="40" rx="3" fill="#795548" stroke="#5d4037" strokeWidth="1.5"/>
-      <rect x="7" y="16" width="14" height="36" rx="2" fill="#8d6e63"/>
-      {[18,24,30,36,42].map(y=>(
-        <rect key={y} x="5" y={y} width="3" height="4" rx="0.5" fill="#6d4c41"/>
+      <rect x="18" y="9" width="70" height="50" rx="6" fill="#f9d423" stroke="#b7791f" strokeWidth="2"/>
+      <rect x="21" y="12" width="64" height="44" rx="5" fill="#ffd84d" stroke="#d19a1f" strokeWidth="1"/>
+      <rect x="28" y="16" width="28" height="30" rx="3" fill="#ffea7a" stroke="#d4a21f" strokeWidth="0.8"/>
+      <rect x="32" y="20" width="20" height="10" rx="2" fill="#1f1f1f" opacity="0.18"/>
+      <text x="42" y="28" textAnchor="middle" fontSize="8" fill="#7a4a00" fontFamily="Arial" fontWeight="900">BO</text>
+      <text x="42" y="38" textAnchor="middle" fontSize="5.5" fill="#8a5b00" fontFamily="Arial" fontWeight="bold">MOTOR</text>
+      <rect x="8" y="18" width="20" height="30" rx="3" fill="#5c4b1e" stroke="#3f3213" strokeWidth="1.2"/>
+      <rect x="10" y="20" width="16" height="26" rx="2" fill="#776124"/>
+      {[21,27,33,39,45].map(y=>(
+        <rect key={y} x="8" y={y} width="4" height="3.5" rx="0.5" fill="#2c2410" opacity="0.9"/>
       ))}
-      <rect x="0" y="30" width="8" height="8" rx="1" fill="#bdbdbd" stroke="#9e9e9e" strokeWidth="0.8"/>
-      <rect x="85" y="20" width="14" height="12" rx="2" fill="#212121" stroke="#424242" strokeWidth="0.8"/>
-      <rect x="87" y="22" width="4" height="8" rx="1" fill="#d32f2f"/>
-      <rect x="93" y="22" width="4" height="8" rx="1" fill="#1565c0"/>
-      <rect x="85" y="36" width="14" height="20" rx="2" fill="#263238" stroke="#37474f" strokeWidth="0.8"/>
-      <circle cx="92" cy="46" r="5" fill="#37474f" stroke="#546e7a" strokeWidth="0.5"/>
-      <circle cx="92" cy="46" r="2" fill="#263238"/>
+      <rect x="1" y="29" width="10" height="10" rx="1.2" fill="#c7c7c7" stroke="#9b9b9b" strokeWidth="0.8"/>
+      <rect x="88" y="21" width="14" height="10" rx="2" fill="#222" stroke="#444" strokeWidth="0.8"/>
+      <rect x="90" y="23" width="4" height="6" rx="1" fill="#e53935"/>
+      <rect x="96" y="23" width="4" height="6" rx="1" fill="#1565c0"/>
+      <rect x="84" y="34" width="16" height="18" rx="2" fill="#2b2b2b" stroke="#4a4a4a" strokeWidth="0.8"/>
+      <circle cx="92" cy="43" r="5" fill="#5a5a5a" stroke="#8a8a8a" strokeWidth="0.5"/>
+      <circle cx="92" cy="43" r="2" fill="#222"/>
+      <rect x="102" y="31" width="16" height="4" rx="1" fill="#b7791f"/>
+      <line x1="118" y1="33" x2="120" y2="33" stroke="#b7791f" strokeWidth="2"/>
     </svg>
   );
 }
@@ -594,26 +599,30 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
   const isWired = getEdges().some(e => e.source === id);
 
   return (
-    <div
-      className="relative select-none group"
-      style={{
-        width: 120,
+    <motion.div
+      className="relative select-none"
+      initial={{ opacity: 0, scale: 0.75, y: 12 }}
+      animate={{
         opacity: enabled ? 1 : 0.35,
+        scale: 1,
+        y: 0,
         filter: enabled ? "none" : "grayscale(0.8)",
-        transition: "opacity 0.2s, filter 0.2s",
       }}
+      whileHover={{ scale: 1.06, y: -2 }}
+      transition={{ type: "spring", stiffness: 340, damping: 22, mass: 0.7 }}
+      style={{ width: 120 }}
     >
-      {/* Bare component image — no card, no background */}
+      {/* Bare component image — glow via drop-shadow filter */}
       <div
         style={{
           width: 120, height: 80,
-          filter: `drop-shadow(0 4px 16px ${data.color}55) drop-shadow(0 0 6px ${data.color}30)`,
+          filter: `drop-shadow(0 4px 18px ${data.color}60) drop-shadow(0 0 8px ${data.color}35)`,
         }}
       >
         <Icon />
       </div>
 
-      {/* Label — subtle, below the image */}
+      {/* Label */}
       <div
         className="text-center mt-1 text-[9px] font-bold tracking-wide leading-none"
         style={{ color: data.color + "cc" }}
@@ -621,39 +630,51 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
         {data.hwComp.label}
       </div>
 
-      {/* Enable/disable toggle pill — only when wired */}
-      {isWired && (
-        <button
-          className="nodrag absolute -top-4 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold transition-all"
-          onClick={handleToggle}
-          title={enabled ? "Disable" : "Enable"}
-          style={{
-            background: enabled ? data.color + "22" : "#ffffff0a",
-            border: `1px solid ${enabled ? data.color + "55" : "#ffffff18"}`,
-            color: enabled ? data.color : "#666",
-            backdropFilter: "blur(4px)",
-          }}
-        >
-          <div
-            className="rounded-full transition-colors"
-            style={{
-              width: 20, height: 10,
-              background: enabled ? data.color + "aa" : "#444",
-              position: "relative",
-            }}
+      {/* Enable/disable toggle pill — shown when wired */}
+      <AnimatePresence>
+        {isWired && (
+          <motion.div
+            key="toggle-wrap"
+            className="nodrag absolute -top-5 left-0 w-full flex justify-center pointer-events-none"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15 }}
           >
-            <div
-              className="absolute top-[1px] rounded-full bg-white shadow"
+            <button
+              className="pointer-events-auto flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[8px] font-bold"
+              onClick={handleToggle}
+              title={enabled ? "Disable" : "Enable"}
               style={{
-                width: 8, height: 8,
-                left: enabled ? 10 : 1,
-                transition: "left 0.15s",
+                background: enabled ? data.color + "22" : "#ffffff0a",
+                border: `1px solid ${enabled ? data.color + "55" : "#ffffff18"}`,
+                color: enabled ? data.color : "#666",
+                backdropFilter: "blur(4px)",
+                transition: "background 0.15s, color 0.15s, border-color 0.15s",
               }}
-            />
-          </div>
-          <span>{enabled ? "ON" : "OFF"}</span>
-        </button>
-      )}
+            >
+              {/* Toggle track */}
+              <span
+                className="relative inline-block rounded-full"
+                style={{
+                  width: 20, height: 10,
+                  background: enabled ? data.color + "aa" : "#444",
+                  transition: "background 0.15s",
+                  flexShrink: 0,
+                }}
+              >
+                <motion.span
+                  className="absolute top-[1px] rounded-full bg-white shadow"
+                  animate={{ left: enabled ? 10 : 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  style={{ width: 8, height: 8, position: "absolute" }}
+                />
+              </span>
+              <span>{enabled ? "ON" : "OFF"}</span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Connection handle */}
       <Handle
@@ -667,7 +688,7 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
           top: "40%",
         }}
       />
-    </div>
+    </motion.div>
   );
 }
 
@@ -968,7 +989,13 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
         fitView fitViewOptions={{ padding: 0.12 }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#0a0f0a" gap={24} size={1} variant={"dots" as any} />
+        <Background id="hw-dots" color="#22c55e1a" gap={24} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#07090a" }} />
+        <Background id="hw-lines" color="#22c55e06" gap={96} size={0.5} variant={BackgroundVariant.Lines} />
+        <MiniMap
+          nodeColor="#8b5cf6"
+          maskColor="rgba(8, 12, 8, 0.85)"
+          style={{ backgroundColor: "#101510", border: "1px solid #1f2a1f", borderRadius: "8px" }}
+        />
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full px-5 py-2 text-[11px] text-hint border border-subtle bg-panel/90 shadow pointer-events-none backdrop-blur-sm">
           Drag a component · wire handle to board port · toggle ON/OFF · Delete removes from both views
         </div>

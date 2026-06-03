@@ -1,5 +1,6 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
-import { Handle, Position, useNodeId, useNodes, useReactFlow } from "@xyflow/react";
+import { Handle, Position, useNodeId, useNodes, useReactFlow, useStore } from "@xyflow/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "@/shared/context/ModalContext";
 import { PlusCircle } from "lucide-react";
 import { saveCustomSubflowFromSelection } from "@/entities/custom-node/model/customNodes";
@@ -301,11 +302,26 @@ export function BaseNode({
 }) {
   const hs = makeHandleStyle(color);
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
+  const nodeId = useNodeId();
+  const isSelected = useStore(s => nodeId ? (s.nodes.find(n => n.id === nodeId)?.selected ?? false) : false);
 
   if (circular) {
     return (
-      <div className="relative flex flex-col items-center justify-center"
-        style={{ width: "130px", height: "130px", borderRadius: "50%", background: "#111113", border: `3px solid ${color}`, opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
+      <motion.div
+        className="relative flex flex-col items-center justify-center"
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: disabled ? 0.55 : 1, scale: 1 }}
+        transition={{ type: "spring", stiffness: 380, damping: 26 }}
+        style={{
+          width: "130px", height: "130px", borderRadius: "50%",
+          background: "#111113",
+          border: `3px solid ${isSelected ? color : color + "80"}`,
+          filter: disabled ? "saturate(0.6)" : "none",
+          boxShadow: isSelected
+            ? `0 0 0 2px ${color}cc, 0 0 32px ${color}55, 0 0 72px ${color}20`
+            : `0 6px 24px rgba(0,0,0,0.5)`,
+          transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+        }}
       >
         <SelectionToolbar />
         <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
@@ -315,13 +331,26 @@ export function BaseNode({
         {children}
         {hasBottomHandle && <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />}
         {hasRightHandle && <Handle type="source" position={Position.Right} id="right" style={{ ...hs, right: -7 }} />}
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="relative overflow-visible rounded-xl shadow-2xl"
-      style={{ width, background: "#111113", border: "1px solid #222228", minWidth: "160px", opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
+    <motion.div
+      className="relative overflow-visible rounded-xl"
+      initial={{ opacity: 0, scale: 0.88, y: 8 }}
+      animate={{ opacity: disabled ? 0.55 : 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      style={{
+        width, minWidth: "160px",
+        background: "#111113",
+        border: `1px solid ${isSelected ? color + "aa" : "#222228"}`,
+        filter: disabled ? "saturate(0.6)" : "none",
+        boxShadow: isSelected
+          ? `0 0 0 1px ${color}88, 0 0 28px ${color}45, 0 0 64px ${color}18, 0 8px 32px rgba(0,0,0,0.5)`
+          : "0 8px 32px rgba(0,0,0,0.4)",
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+      }}
     >
       <SelectionToolbar />
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
@@ -337,7 +366,7 @@ export function BaseNode({
         {icon && <span className="text-white opacity-90">{icon}</span>}
       </div>
       <div className="w-full py-1.5 flex flex-col gap-0.5">{children}</div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -349,9 +378,24 @@ export function LoopNode({
 }) {
   const hs = makeHandleStyle(color);
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
+  const nodeId = useNodeId();
+  const isSelected = useStore(s => nodeId ? (s.nodes.find(n => n.id === nodeId)?.selected ?? false) : false);
   return (
-    <div className="relative overflow-visible"
-      style={{ width, background: "#111113", border: `2.5px solid ${color}`, borderRadius: "18px", opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
+    <motion.div
+      className="relative overflow-visible"
+      initial={{ opacity: 0, scale: 0.88, y: 8 }}
+      animate={{ opacity: disabled ? 0.55 : 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      style={{
+        width, background: "#111113",
+        border: `2.5px solid ${isSelected ? color : color + "66"}`,
+        borderRadius: "18px",
+        filter: disabled ? "saturate(0.6)" : "none",
+        boxShadow: isSelected
+          ? `0 0 0 1px ${color}88, 0 0 28px ${color}45, 0 0 64px ${color}18`
+          : "0 8px 32px rgba(0,0,0,0.4)",
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+      }}
     >
       <SelectionToolbar />
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
@@ -368,7 +412,7 @@ export function LoopNode({
           <div className="py-1.5 flex flex-col gap-0.5">{children}</div>
         </>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -376,9 +420,23 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
   const color = "#008cff";
   const hs = { width: 12, height: 12, background: "#111113", border: "2.5px solid #3f3f46", borderRadius: "50%", zIndex: 10 };
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
+  const nodeId = useNodeId();
+  const isSelected = useStore(s => nodeId ? (s.nodes.find(n => n.id === nodeId)?.selected ?? false) : false);
   return (
-    <div className="relative overflow-visible rounded-xl shadow-2xl"
-      style={{ width: "260px", background: "#111113", border: "1px solid #222228", opacity: disabled ? 0.55 : 1, filter: disabled ? "saturate(0.6)" : "none" }}
+    <motion.div
+      className="relative overflow-visible rounded-xl"
+      initial={{ opacity: 0, scale: 0.88, y: 8 }}
+      animate={{ opacity: disabled ? 0.55 : 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      style={{
+        width: "260px", background: "#111113",
+        border: `1px solid ${isSelected ? color + "aa" : "#222228"}`,
+        filter: disabled ? "saturate(0.6)" : "none",
+        boxShadow: isSelected
+          ? `0 0 0 1px ${color}88, 0 0 28px ${color}45, 0 0 64px ${color}18, 0 8px 32px rgba(0,0,0,0.5)`
+          : "0 8px 32px rgba(0,0,0,0.4)",
+        transition: "box-shadow 0.2s ease, border-color 0.2s ease",
+      }}
     >
       <SelectionToolbar />
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
@@ -397,6 +455,9 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
       <div className="py-4 px-3 flex items-center justify-center">{children}</div>
       <div className="absolute text-xs text-[#9ca3af] font-semibold select-none" style={{ left: "-42px", top: "calc(50% + 16px)", transform: "translateY(-50%)" }}>False</div>
       <div className="absolute text-xs text-[#9ca3af] font-semibold select-none" style={{ right: "-38px", top: "calc(50% + 16px)", transform: "translateY(-50%)" }}>True</div>
-    </div>
+    </motion.div>
   );
 }
+
+// Suppress unused import warning — AnimatePresence reserved for future node exit animations
+void AnimatePresence;
