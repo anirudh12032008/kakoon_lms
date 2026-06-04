@@ -184,6 +184,16 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
     });
   };
 
+  const deleteFrame = () => {
+    setFrames((prev) => {
+      if (prev.length <= 1) return prev;
+      const next = prev.filter((_, i) => i !== curFrame);
+      setCurFrame((c) => Math.min(c, next.length - 1));
+      return next;
+    });
+    setPlaying(false);
+  };
+
   const loadEffect = (id: string) => {
     // Police is authored for an 8-LED strip — switch to that so it looks right.
     if (id === "police" && mode === "strip" && ledCount !== 8) setLedCount(8);
@@ -365,10 +375,16 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
               {i + 1}
             </button>
           ))}
-          <button onClick={() => setFrames((p) => [...p, [...p[p.length-1]]])}
+          <button onClick={() => { setFrames((p) => [...p, [...p[p.length-1]]]); setCurFrame(frames.length); setPlaying(false); }}
             className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32] hover:border-green-500/30">
             + Frame
           </button>
+          {frames.length > 1 && (
+            <button onClick={deleteFrame} title={`Delete frame ${curFrame + 1}`}
+              className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-red-400 border border-[#2a2a32] hover:border-red-500/30">
+              <Trash2 className="w-3 h-3" /> Frame
+            </button>
+          )}
           {frames.length > 1 && (
             <button onClick={() => setPlaying(!playing)}
               className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold ${playing ? "bg-amber-500/20 text-amber-400" : "bg-violet-500/20 text-violet-300"}`}>
