@@ -10,6 +10,8 @@ import {
   COLORS,
 } from "./BaseNode";
 import { AngleDial, MotorIcon } from "./_shared";
+import { SERVO_MODELS, SERVO_MODEL_ORDER } from "@/entities/board";
+import type { ServoModelId, ServoType } from "@/entities/board";
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
 const SERVO_PORTS = {
@@ -22,6 +24,55 @@ const SERVO_PORTS = {
 type ServoKey = keyof typeof SERVO_PORTS;
 
 const SERVO_OPTIONS = (Object.keys(SERVO_PORTS) as ServoKey[]).map(k => ({ label: SERVO_PORTS[k].label, value: k }));
+
+const SERVO_MODEL_OPTIONS = SERVO_MODEL_ORDER.map(k => ({ label: SERVO_MODELS[k].label, value: k }));
+
+// Servo model + travel-type selector, shared by the servo nodes.
+function ServoModelFields({
+  model, onModelChange, servoType, onTypeChange,
+}: {
+  model: ServoModelId;
+  onModelChange: (v: ServoModelId) => void;
+  servoType: ServoType;
+  onTypeChange: (v: ServoType) => void;
+}) {
+  return (
+    <>
+      <NodeField label="Servo Model">
+        <SelectInput value={model} onChange={v => onModelChange(v as ServoModelId)} compact options={SERVO_MODEL_OPTIONS} />
+      </NodeField>
+      <NodeField label="Type">
+        <ToggleInput
+          value={servoType === "360"}
+          onChange={on => onTypeChange(on ? "360" : "180")}
+          leftLabel="180° pos"
+          rightLabel="360° cont"
+        />
+      </NodeField>
+    </>
+  );
+}
+
+// Continuous-rotation (360°) speed slider: -100…100, 0 = stop.
+function ContinuousSpeed({ speed, onChange, color }: { speed: number; onChange: (v: number) => void; color: string }) {
+  return (
+    <div className="px-3 py-1">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+        <span className="text-[10px] font-mono text-orange-400">
+          {speed === 0 ? "STOP" : speed > 0 ? `+${speed}%` : `${speed}%`}
+        </span>
+      </div>
+      <input type="range" min={-100} max={100} step={5} value={speed}
+        onChange={e => onChange(Number(e.target.value))}
+        className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: color }} />
+      <div className="flex justify-between mt-0.5">
+        <span className="text-[8px] text-zinc-600">← Reverse</span>
+        <span className="text-[8px] text-zinc-600">Forward →</span>
+      </div>
+    </div>
+  );
+}
 
 function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
   return (
@@ -39,15 +90,21 @@ function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
 
 // ─── Servo Motor ──────────────────────────────────────────────────────────────
 export function ServoMotorNode() {
-  const [servoPort, setServoPort] = useNodeField<ServoKey>("servoPort", "S1");
-  const [angle, setAngle]         = useNodeField<number>("angle", 90);
+  const [servoPort, setServoPort]   = useNodeField<ServoKey>("servoPort", "S1");
+  const [servoModel, setServoModel] = useNodeField<ServoModelId>("servoModel", "mg90s");
+  const [servoType, setServoType]   = useNodeField<ServoType>("servoType", "180");
+  const [angle, setAngle]           = useNodeField<number>("angle", 90);
+  const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 0);
   return (
     <BaseNode title="Servo Motor" color={COLORS.orange} icon={<MotorIcon />} width="240px">
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
       <ServoPinInfo servoKey={servoPort} />
-      <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />
+      <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
+      {servoType === "360"
+        ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
+        : <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />}
     </BaseNode>
   );
 }

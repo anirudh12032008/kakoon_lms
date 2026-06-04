@@ -399,8 +399,8 @@ function BoardNode() {
         <PortLeft y={392} label="MTR  RL"  color="#ef4444"/>
 
         {/* ─── CENTER: ESP32-S3 WROOM module ─── */}
-        <rect x="145" y="130" width="220" height="210" rx="5" fill="url(#espGrad)" stroke="#888" strokeWidth="2"/>
-        <rect x="150" y="135" width="210" height="200" rx="4" fill="#c4c4c4"/>
+        {/* MCU module: use external image placed in apps/lms/public/assets/esp32.png */}
+        <image href="/assets/esp32.png" x="145" y="130" width="220" height="210" preserveAspectRatio="xMidYMid meet" />
         {Array.from({length:11}).map((_,i)=>(
           <line key={i} x1={154+i*18} y1="135" x2={154+i*18} y2="335" stroke="#b4b4b4" strokeWidth="0.6" opacity="0.5"/>
         ))}

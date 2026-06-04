@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect } from "react";
-import { Play, Pause, Copy, PlusCircle } from "lucide-react";
+import { Play, Pause, Copy, PlusCircle, Save, Trash2 } from "lucide-react";
 
 function copyText(s: string) { navigator.clipboard.writeText(s).catch(() => {}); }
 
 type RGB = [number, number, number];
+
+const OFF: RGB = [0, 0, 0];
 
 const PALETTE: RGB[] = [
   [255,0,0],[255,165,0],[255,255,0],[0,255,0],[0,255,255],
@@ -17,7 +19,37 @@ const NEOPIXEL_EFFECTS = [
   { id: "twinkle",      name: "✨ Twinkle" },
   { id: "fire",         name: "🔥 Fire" },
   { id: "ocean",        name: "🌊 Ocean" },
+  { id: "police",       name: "🚓 Police" },
 ];
+
+// 8-LED police strobe: blue half / red half with a sweeping grey "off" wipe
+const B: RGB = [0, 0, 255], R: RGB = [255, 0, 0], G: RGB = [128, 128, 128];
+const POLICE_FRAMES: RGB[][] = [
+  [B, B, B, B, R, R, R, R],
+  [G, B, B, B, R, R, R, G],
+  [G, G, B, B, R, R, G, G],
+  [G, G, G, B, R, G, G, G],
+  [G, G, G, G, G, G, G, G],
+  [G, G, G, B, R, G, G, G],
+  [G, G, B, B, R, R, G, G],
+  [G, B, B, B, R, R, R, G],
+  [B, B, B, B, R, R, R, R],
+];
+
+// ─── Saved animations (localStorage) ──────────────────────────────────────────
+const SAVED_KEY = "neopixel_saved_designs";
+interface SavedDesign {
+  id: string; name: string; mode: "strip" | "grid";
+  ledCount: number; gridRows: number; gridCols: number;
+  dataPin: number; fps: number; frames: RGB[][];
+}
+function loadSavedDesigns(): SavedDesign[] {
+  try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? "[]"); }
+  catch { return []; }
+}
+function persistSavedDesigns(designs: SavedDesign[]) {
+  try { localStorage.setItem(SAVED_KEY, JSON.stringify(designs)); } catch { /* ignore quota */ }
+}
 
 function wheel(pos: number): RGB {
   pos = 255 - (pos % 256);
@@ -65,6 +97,11 @@ function buildEffectFrames(id: string, count: number): RGB[][] {
           const v = Math.round(((Math.sin((i + f) * 0.5) + 1) / 2) * 200);
           return [0, Math.round(v * 0.3), v] as RGB;
         }));
+    case "police":
+      // Map the 8-LED police pattern across whatever count is configured.
+      return POLICE_FRAMES.map((frame) =>
+        Array.from({ length: count }, (_, i) =>
+          frame[Math.floor((i * frame.length) / count)] ?? OFF));
     default: return [Array(count).fill([0,0,0] as RGB)];
   }
 }
@@ -113,6 +150,8 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
   const [designName, setDesignName] = useState("MyEffect");
   const [copied, setCopied] = useState(false);
   const [addedToCanvas, setAddedToCanvas] = useState(false);
+  const [savedDesigns, setSavedDesigns] = useState<SavedDesign[]>(() => loadSavedDesigns());
+  const [justSaved, setJustSaved] = useState(false);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const effectiveLedCount = mode === "grid" ? gridRows * gridCols : ledCount;
@@ -146,10 +185,49 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
   };
 
   const loadEffect = (id: string) => {
-    const ef = buildEffectFrames(id, effectiveLedCount);
+    // Police is authored for an 8-LED strip — switch to that so it looks right.
+    if (id === "police" && mode === "strip" && ledCount !== 8) setLedCount(8);
+    const ef = buildEffectFrames(id, id === "police" && mode === "strip" ? 8 : effectiveLedCount);
     setFrames(ef);
     setCurFrame(0);
     setPlaying(false);
+  };
+
+  const saveDesign = () => {
+    const design: SavedDesign = {
+      id: `${Date.now()}`, name: designName, mode,
+      ledCount, gridRows, gridCols, dataPin, fps,
+      frames: frames.map((f) => f.map((c) => [...c] as RGB)),
+    };
+    setSavedDesigns((prev) => {
+      // Overwrite a same-named design instead of piling up duplicates.
+      const next = [...prev.filter((d) => d.name !== design.name), design];
+      persistSavedDesigns(next);
+      return next;
+    });
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 1500);
+  };
+
+  const loadDesign = (d: SavedDesign) => {
+    setPlaying(false);
+    setMode(d.mode);
+    setLedCount(d.ledCount);
+    setGridRows(d.gridRows);
+    setGridCols(d.gridCols);
+    setDataPin(d.dataPin);
+    setFps(d.fps);
+    setDesignName(d.name);
+    setFrames(d.frames.map((f) => f.map((c) => [...c] as RGB)));
+    setCurFrame(0);
+  };
+
+  const deleteDesign = (id: string) => {
+    setSavedDesigns((prev) => {
+      const next = prev.filter((d) => d.id !== id);
+      persistSavedDesigns(next);
+      return next;
+    });
   };
 
   const displayFrame = playing ? frames[playFrame % frames.length] : frames[curFrame];
@@ -215,6 +293,15 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
               setSelectedColor([parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]);
             }}
             className="w-full h-7 rounded-lg cursor-pointer border border-[#2a2a32]" />
+          <button
+            onClick={() => { setSelectedColor(OFF); setCustomHex("#000000"); }}
+            className={`mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
+              JSON.stringify(selectedColor) === JSON.stringify(OFF)
+                ? "bg-white/10 border-white/40 text-white"
+                : "bg-[#0c0c10] border-[#2a2a32] text-zinc-400 hover:text-white"
+            }`}>
+            ⬛ Off (LED dark)
+          </button>
         </div>
 
         <div>
@@ -231,7 +318,38 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Name</div>
           <input value={designName} onChange={(e) => setDesignName(e.target.value)}
             className="w-full text-[10px] bg-[#0c0c10] border border-[#1e1e26] rounded px-2 py-1 text-white outline-none" />
+          <button
+            onClick={saveDesign}
+            disabled={!designName.trim()}
+            className={`mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border disabled:opacity-40 ${
+              justSaved
+                ? "bg-green-500/20 border-green-500/40 text-green-400"
+                : "bg-violet-500/15 border-violet-500/40 text-violet-400 hover:bg-violet-500/25"
+            }`}>
+            <Save className="w-3 h-3" />{justSaved ? "Saved! ✓" : "Save Animation"}
+          </button>
         </div>
+
+        {savedDesigns.length > 0 && (
+          <div>
+            <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1.5 font-bold">Saved Animations</div>
+            <div className="flex flex-col gap-1">
+              {savedDesigns.map((d) => (
+                <div key={d.id} className="group flex items-center gap-1">
+                  <button onClick={() => loadDesign(d)}
+                    title={`${d.frames.length} frame${d.frames.length !== 1 ? "s" : ""} · ${d.mode}`}
+                    className="flex-1 min-w-0 text-left text-[10px] text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all truncate">
+                    {d.name} <span className="text-zinc-600">· {d.frames.length}f</span>
+                  </button>
+                  <button onClick={() => deleteDesign(d.id)} title="Delete"
+                    className="flex-shrink-0 p-1 rounded text-zinc-600 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">FPS: {fps}</div>
           <input type="range" min={1} max={30} value={fps} onChange={(e) => setFps(+e.target.value)} className="w-full accent-violet-500" />

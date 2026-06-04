@@ -55,7 +55,7 @@ const DEFAULTS: Record<string, Record<string, any>> = {
   four_channel_touch:  { port: "1", pin1: 4, pin2: 5, pin3: 6, pin4: 7, t1: "touch1", t2: "touch2", t3: "touch3", t4: "touch4" },
   if_else:             { left: "", op: "==", right: 0 },
   map_range:           { value: "", fromMin: 0, fromMax: 4095, toMin: 0, toMax: 180, varName: "mapped_value" },
-  servo_motor:         { pin: 4, angle: 90 },
+  servo_motor:         { servoPort: "S1", angle: 90 },
   dc_motor_single:     { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" },
   oled_display:        { mode: "text", line1: "Hello", line2: "World!", driver: false },
   ble_mode:            { deviceName: "ESP32-BLE", rawVarName: "ble_data", enableCmdMap: true, enableTx: false, txVarName: "ble_tx" },
@@ -87,6 +87,8 @@ const FIELD_LABELS: Record<string, string> = {
   in1:          "IN1 Pin",
   in2:          "IN2 Pin",
   enPin:        "Enable Pin",
+  servoPort:    "Servo Port",
+  motorPort:    "Motor Port",
 };
 
 // ─── Built-in Tutorial Definitions ───────────────────────────────────────────
@@ -154,16 +156,16 @@ const tankEdges: Edge[] = [
 
 // ─── BT Forklift ──────────────────────────────────────────────────────────────
 // BLE command map:
-//  cmd_0 "F" → Forward  (motor fwd 0.75 s then brake)
-//  cmd_1 "B" → Backward (motor bwd 0.75 s then brake)
-//  cmd_2 "R" → Right    (motor 0.5 s)
-//  cmd_3 "L" → Left     (motor 0.5 s)
+//  cmd_0 "F" → Forward  (all 4 motors fwd 80% for 0.75 s then brake)
+//  cmd_1 "B" → Backward (all 4 motors rev 80% for 0.75 s then brake)
+//  cmd_2 "R" → Right    (left fwd + right rev 70% for 0.5 s, then brake)
+//  cmd_3 "L" → Left     (left rev + right fwd 70% for 0.5 s, then brake)
 //  cmd_4 "+" → Speed up (variable speed = 100)
 //  cmd_5 "-" → Speed down (variable speed = 40)
 //  cmd_6 "N" → NeoPixel LED strip (8 LEDs, cyan)
 //  cmd_7 "O" → OLED status display
-//  cmd_8 "U" → Fork up   (servo 0°)
-//  cmd_9 "D" → Fork down (servo 90°)
+//  cmd_8 "U" → Fork up   (servo S1 → 0°)
+//  cmd_9 "D" → Fork down (servo S1 → 90°)
 
 const BT_CMD_MAP = [
   { trigger: "F", varName: "", value: "" },
@@ -186,63 +188,67 @@ const forkliftNodes: Node[] = [
     cmdMap: BT_CMD_MAP, enableTx: false, txVarName: "ble_tx",
   }},
 
-  // ── Forward: 'F' ──────────────────────────────────────────────────────────
-  { id: "fk_n3",  type: "dc_motor_single", position: { x: 700, y: 140  }, data: { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" } },
-  { id: "fk_n4",  type: "sleep",           position: { x: 980, y: 140  }, data: { seconds: 0.75 } },
-  { id: "fk_n5",  type: "dc_motor_single", position: { x: 1260,y: 140  }, data: { in1: 13, in2: 14, enPin: 12, speed: 0,  direction: "Brake",   driver: "L298N" } },
+  // ── Forward: 'F' — all 4 motors fwd 80%, sleep 0.75 s, then brake ────────
+  { id: "fk_n3",  type: "multi_motor_controller", position: { x: 700,  y: 140  }, data: { syncMode: true, l1speed: 80, l1dir: "Forward" } },
+  { id: "fk_n4",  type: "sleep",                  position: { x: 980,  y: 140  }, data: { seconds: 0.75 } },
+  { id: "fk_n5",  type: "multi_motor_controller", position: { x: 1260, y: 140  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
-  // ── Backward: 'B' ─────────────────────────────────────────────────────────
-  { id: "fk_n6",  type: "dc_motor_single", position: { x: 700, y: 340  }, data: { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Backward", driver: "L298N" } },
-  { id: "fk_n7",  type: "sleep",           position: { x: 980, y: 340  }, data: { seconds: 0.75 } },
-  { id: "fk_n8",  type: "dc_motor_single", position: { x: 1260,y: 340  }, data: { in1: 13, in2: 14, enPin: 12, speed: 0,  direction: "Brake",   driver: "L298N" } },
+  // ── Backward: 'B' — all 4 motors rev 80%, sleep 0.75 s, then brake ───────
+  { id: "fk_n6",  type: "multi_motor_controller", position: { x: 700,  y: 340  }, data: { syncMode: true, l1speed: 80, l1dir: "Reverse" } },
+  { id: "fk_n7",  type: "sleep",                  position: { x: 980,  y: 340  }, data: { seconds: 0.75 } },
+  { id: "fk_n8",  type: "multi_motor_controller", position: { x: 1260, y: 340  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
-  // ── Right turn: 'R' ───────────────────────────────────────────────────────
-  { id: "fk_n9",  type: "dc_motor_single", position: { x: 700, y: 540  }, data: { in1: 15, in2: 16, enPin: 17, speed: 70, direction: "Forward", driver: "L298N" } },
-  { id: "fk_n10", type: "sleep",           position: { x: 980, y: 540  }, data: { seconds: 0.5  } },
+  // ── Right turn: 'R' — left fwd + right rev 70%, sleep 0.5 s, then brake ──
+  { id: "fk_n9",  type: "multi_motor_controller", position: { x: 700,  y: 540  }, data: { pairMode: true, leftSpeed: 70, leftDir: "Forward", rightSpeed: 70, rightDir: "Reverse" } },
+  { id: "fk_n10", type: "sleep",                  position: { x: 980,  y: 540  }, data: { seconds: 0.5 } },
+  { id: "fk_n9b", type: "multi_motor_controller", position: { x: 1260, y: 540  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
-  // ── Left turn: 'L' ────────────────────────────────────────────────────────
-  { id: "fk_n11", type: "dc_motor_single", position: { x: 700, y: 720  }, data: { in1: 15, in2: 16, enPin: 17, speed: 70, direction: "Backward", driver: "L298N" } },
-  { id: "fk_n12", type: "sleep",           position: { x: 980, y: 720  }, data: { seconds: 0.5  } },
+  // ── Left turn: 'L' — left rev + right fwd 70%, sleep 0.5 s, then brake ───
+  { id: "fk_n11",  type: "multi_motor_controller", position: { x: 700,  y: 720  }, data: { pairMode: true, leftSpeed: 70, leftDir: "Reverse", rightSpeed: 70, rightDir: "Forward" } },
+  { id: "fk_n12",  type: "sleep",                  position: { x: 980,  y: 720  }, data: { seconds: 0.5 } },
+  { id: "fk_n12b", type: "multi_motor_controller", position: { x: 1260, y: 720  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
   // ── Speed control: '+' / '-' ──────────────────────────────────────────────
-  { id: "fk_n13", type: "variable",        position: { x: 700, y: 920  }, data: { name: "speed", value: 100 } },
-  { id: "fk_n14", type: "variable",        position: { x: 700, y: 1080 }, data: { name: "speed", value: 40  } },
+  { id: "fk_n13", type: "variable",               position: { x: 700, y: 920  }, data: { name: "speed", value: 100 } },
+  { id: "fk_n14", type: "variable",               position: { x: 700, y: 1080 }, data: { name: "speed", value: 40  } },
 
-  // ── NeoPixel LED strip: 'N' ───────────────────────────────────────────────
-  { id: "fk_n15", type: "neopixel_led",    position: { x: 700, y: 1260 }, data: { numLeds: 8, brightness: 80, color: "#00c8ff" } },
+  // ── NeoPixel LED strip: 'N' — 8 LEDs, cyan ───────────────────────────────
+  { id: "fk_n15", type: "neopixel_led",            position: { x: 700, y: 1260 }, data: { numLeds: 8, brightness: 80, color: "#00c8ff" } },
 
   // ── OLED status display: 'O' ──────────────────────────────────────────────
-  { id: "fk_n16", type: "oled_display",    position: { x: 700, y: 1460 }, data: { mode: "text", line1: "Forklift OK", line2: "BT Ready", driver: false } },
+  { id: "fk_n16", type: "oled_display",            position: { x: 700, y: 1460 }, data: { mode: "text", line1: "Forklift OK", line2: "BT Ready", driver: false } },
 
-  // ── Fork servo up: 'U' ────────────────────────────────────────────────────
-  { id: "fk_n17", type: "servo_motor",     position: { x: 700, y: 1660 }, data: { pin: 4, angle: 0  } },
+  // ── Fork servo up: 'U' — S1 (pin 21) to 0° ───────────────────────────────
+  { id: "fk_n17", type: "servo_motor",             position: { x: 700, y: 1660 }, data: { servoPort: "S1", angle: 0  } },
 
-  // ── Fork servo down: 'D' ──────────────────────────────────────────────────
-  { id: "fk_n18", type: "servo_motor",     position: { x: 700, y: 1840 }, data: { pin: 4, angle: 90 } },
+  // ── Fork servo down: 'D' — S1 (pin 21) to 90° ────────────────────────────
+  { id: "fk_n18", type: "servo_motor",             position: { x: 700, y: 1840 }, data: { servoPort: "S1", angle: 90 } },
 ];
 
 const forkliftEdges: Edge[] = [
   { id: "fk_e1",  source: "fk_n1",  target: "fk_n2",  sourceHandle: "body"  },
 
-  // BLE 'F' → forward chain
+  // BLE 'F' → forward chain: motors → sleep → brake
   { id: "fk_e2",  source: "fk_n2",  target: "fk_n3",  sourceHandle: "cmd_0" },
   { id: "fk_e3",  source: "fk_n3",  target: "fk_n4"  },
   { id: "fk_e4",  source: "fk_n4",  target: "fk_n5"  },
 
-  // BLE 'B' → backward chain
+  // BLE 'B' → backward chain: motors → sleep → brake
   { id: "fk_e5",  source: "fk_n2",  target: "fk_n6",  sourceHandle: "cmd_1" },
   { id: "fk_e6",  source: "fk_n6",  target: "fk_n7"  },
   { id: "fk_e7",  source: "fk_n7",  target: "fk_n8"  },
 
-  // BLE 'R' → right turn
+  // BLE 'R' → right turn: motors → sleep → brake
   { id: "fk_e8",  source: "fk_n2",  target: "fk_n9",  sourceHandle: "cmd_2" },
   { id: "fk_e9",  source: "fk_n9",  target: "fk_n10" },
+  { id: "fk_e9b", source: "fk_n10", target: "fk_n9b" },
 
-  // BLE 'L' → left turn
-  { id: "fk_e10", source: "fk_n2",  target: "fk_n11", sourceHandle: "cmd_3" },
-  { id: "fk_e11", source: "fk_n11", target: "fk_n12" },
+  // BLE 'L' → left turn: motors → sleep → brake
+  { id: "fk_e10",  source: "fk_n2",  target: "fk_n11",  sourceHandle: "cmd_3" },
+  { id: "fk_e11",  source: "fk_n11", target: "fk_n12"  },
+  { id: "fk_e12b", source: "fk_n12", target: "fk_n12b" },
 
-  // BLE '+' / '-' → speed
+  // BLE '+' / '-' → speed variable
   { id: "fk_e12", source: "fk_n2",  target: "fk_n13", sourceHandle: "cmd_4" },
   { id: "fk_e13", source: "fk_n2",  target: "fk_n14", sourceHandle: "cmd_5" },
 
@@ -418,7 +424,7 @@ export const BUILTIN_TUTORIALS: Tutorial[] = [
     "BT Forklift",
     "Control a Bluetooth forklift from your phone. Send commands to drive forward/backward (0.75 s bursts), turn, adjust speed, control 8 NeoPixel LEDs, update an OLED display, and raise or lower the servo fork arm.",
     "Hard",
-    ["ble_mode", "dc_motor_single", "servo_motor", "neopixel_led", "oled_display", "forever_loop"],
+    ["ble_mode", "multi_motor_controller", "servo_motor", "neopixel_led", "oled_display", "forever_loop"],
     forkliftNodes,
     forkliftEdges
   ),

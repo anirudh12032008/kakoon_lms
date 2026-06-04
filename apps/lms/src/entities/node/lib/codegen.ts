@@ -1,7 +1,7 @@
 import type { Node, Edge } from "@xyflow/react";
 import {
   ONBOARD_IMU, OLED, NEOPIXEL, SENSOR_PORTS,
-  SERVO_PORTS, SERVO_PORT_ORDER, MOTORS,
+  SERVO_PORTS, SERVO_PORT_ORDER, SERVO_MODELS, MOTORS,
   PIR_SENSOR, MATRIX,
 } from "@/entities/board";
 
@@ -26,7 +26,7 @@ interface NodeData {
   times?: number; expression?: string; interval?: number;
   // NeoPixel
   color?: string; brightness?: number; red?: number; green?: number; blue?: number;
-  ledCount?: number; fps?: number; frames?: number[][][]; pattern?: string;
+  numLeds?: number; ledCount?: number; fps?: number; frames?: number[][][]; pattern?: string;
   // MAX7219 matrix
   matrixFrames?: number[][]; modules?: number; designName?: string;
   // OLED
@@ -36,7 +36,8 @@ interface NodeData {
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
   // Servo
-  servoPort?: string; angle?: number; startAngle?: number; endAngle?: number;
+  servoPort?: string; servoModel?: string; servoType?: string;
+  angle?: number; startAngle?: number; endAngle?: number;
   steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
   sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
   // Motors
@@ -179,6 +180,8 @@ class Servo:
     def center(self):  self.angle(90)
     def min_pos(self): self.angle(self._lo)
     def max_pos(self): self.angle(self._hi)
+    def speed(self, pct):  # 360° continuous-rotation: -100..100, 0 = stop
+        self.angle(90 + max(-100, min(100, pct)) * 0.9)
 
 def _servo_pull_down(pin):
     Pin(pin, Pin.IN, Pin.PULL_DOWN)
@@ -186,24 +189,38 @@ def _servo_pull_down(pin):
 ${servoLines}`;
   };
 
-  const DRV8833_HELPER = `# --- DRV8833 motors (1 PWM + 1 digital per motor) ---
+    const DRV8833_HELPER = `# --- DRV8833 motors (dual PWM per channel) ---
 class DRV8833:
     MAX = 65535
-    def __init__(self, a_pwm, a_dir, b_pwm, b_dir):
-        self.ap, self.ad, self.bp, self.bd = a_pwm, a_dir, b_pwm, b_dir
-    def throttle_a(self, t): self._drv(self.ap, self.ad, t)
-    def throttle_b(self, t): self._drv(self.bp, self.bd, t)
-    def stop_a(self): self.ad.value(0); self.ap.duty_u16(0)
-    def stop_b(self): self.bd.value(0); self.bp.duty_u16(0)
-    def _drv(self, pwm, d, t):
-        d.value(0 if t >= 0 else 1)
-        duty = int(abs(t) * self.MAX)
-        pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
 
-def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
-def _dp(pin): return Pin(pin, Pin.OUT)
-front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))  # FR=a, FL=b
-rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))   # RR=a, RL=b`;
+    def __init__(self, a1, a2, b1, b2):
+        self.a1 = a1
+        self.a2 = a2
+        self.b1 = b1
+        self.b2 = b2
+
+    def _drv(self, p1, p2, t):
+        duty = int(abs(t) * self.MAX)
+        if t >= 0:
+            p1.duty_u16(duty)
+            p2.duty_u16(0)
+        else:
+            p1.duty_u16(0)
+            p2.duty_u16(duty)
+
+    def throttle_a(self, t): self._drv(self.a1, self.a2, t)
+    def throttle_b(self, t): self._drv(self.b1, self.b2, t)
+
+    def stop_a(self): self.a1.duty_u16(0); self.a2.duty_u16(0)
+    def stop_b(self): self.b1.duty_u16(0); self.b2.duty_u16(0)
+    def stop_all(self): self.stop_a(); self.stop_b()
+
+def _mp(pin):
+    return PWM(Pin(pin, Pin.OUT), freq=5000, duty_u16=0)
+
+front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _mp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _mp(${MOTORS.frontLeft.dir}))
+rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _mp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _mp(${MOTORS.rearLeft.dir}))
+`;
 
   // Helper: emit a shared helper block only once per script
   const emitOnce = (key: string, code: string) => {
@@ -386,14 +403,20 @@ time.sleep(0.1)`);
       case "neopixel_led":
         imports.add("from machine import Pin");
         imports.add("import neopixel");
-        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), 1)`);
         {
-          const c = d.color ?? "#ff0000";
-          const r = parseInt(c.slice(1, 3), 16);
-          const g = parseInt(c.slice(3, 5), 16);
-          const b = parseInt(c.slice(5, 7), 16);
+          const npN  = d.numLeds ?? d.ledCount ?? 1;
+          setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), ${npN})`);
+          const c  = d.color ?? "#ff0000";
+          const rV = parseInt(c.slice(1, 3), 16);
+          const gV = parseInt(c.slice(3, 5), 16);
+          const bV = parseInt(c.slice(5, 7), 16);
           const br = (d.brightness ?? 50) / 100;
-          chunkLines.push(`${indent}np[0] = (${Math.round(r * br)}, ${Math.round(g * br)}, ${Math.round(b * br)})`);
+          const rgb = `(${Math.round(rV * br)}, ${Math.round(gV * br)}, ${Math.round(bV * br)})`;
+          if (npN === 1) {
+            chunkLines.push(`${indent}np[0] = ${rgb}`);
+          } else {
+            chunkLines.push(`${indent}for _i in range(${npN}): np[_i] = ${rgb}`);
+          }
           chunkLines.push(`${indent}np.write()`);
         }
         break;
@@ -667,8 +690,18 @@ time.sleep(0.1)`);
         imports.add("from machine import Pin, PWM");
         emitOnce("servo_class", buildServoHelperBlock());
         const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
-        const sv1 = PORT_TO_SV[(d.servoPort as string) ?? "S1"] ?? "s1";
-        chunkLines.push(`${indent}${sv1}.angle(${d.angle ?? 90})  # ${d.servoPort ?? "S1"}`);
+        const smPort = (d.servoPort as string) ?? "S1";
+        const sv1    = PORT_TO_SV[smPort] ?? "s1";
+        const smModelKey = (d.servoModel as keyof typeof SERVO_MODELS) ?? "mg90s";
+        const smModel    = SERVO_MODELS[smModelKey] ?? SERVO_MODELS.mg90s;
+        // Re-create the servo with the selected model's pulse range.
+        chunkLines.push(`${indent}${sv1} = Servo(${SERVO_PIN_MAP[smPort] ?? 21}, mn=${smModel.pulseMin}, mx=${smModel.pulseMax})  # ${smModel.label}`);
+        if (d.servoType === "360") {
+          const spd = d.contSpeed ?? 0;
+          chunkLines.push(`${indent}${sv1}.speed(${spd})  # ${smPort} 360° continuous ${spd}%`);
+        } else {
+          chunkLines.push(`${indent}${sv1}.angle(${d.angle ?? 90})  # ${smPort} → ${d.angle ?? 90}°`);
+        }
         break;
       }
       case "servo_motor_advance": {
@@ -741,22 +774,7 @@ time.sleep(0.1)`);
       // ─── Motor nodes ───────────────────────────────────────────────────────
       case "robot_drive": {
         imports.add("from machine import Pin, PWM");
-        emitOnce("drv8833_class", `class DRV8833:
-    MAX = 65535
-    def __init__(self, a_pwm, a_dir, b_pwm, b_dir):
-        self.ap, self.ad, self.bp, self.bd = a_pwm, a_dir, b_pwm, b_dir
-    def throttle_a(self, t): self._drv(self.ap, self.ad, t)
-    def throttle_b(self, t): self._drv(self.bp, self.bd, t)
-    def stop_a(self): self.ad.value(0); self.ap.duty_u16(0)
-    def stop_b(self): self.bd.value(0); self.bp.duty_u16(0)
-    def _drv(self, pwm, d, t):
-        d.value(0 if t >= 0 else 1)
-        duty = int(abs(t) * self.MAX)
-        pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
-def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
-def _dp(pin): return Pin(pin, Pin.OUT)
-    front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))  # FR=a, FL=b
-    rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))   # RR=a, RL=b`);
+        emitOnce("drv8833_class", DRV8833_HELPER);
         const move = (d.move as string) ?? "forward";
         const t    = ((d.speed ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
         const ti   = (((d.speed ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
@@ -774,20 +792,19 @@ def _dp(pin): return Pin(pin, Pin.OUT)
         } else if (move === "spin_right") {
           chunkLines.push(`${indent}front.throttle_a(-${t}); front.throttle_b(${t}); rear.throttle_a(-${t}); rear.throttle_b(${t})`);
         } else {
-          chunkLines.push(`${indent}front.stop_a(); front.stop_b(); rear.stop_a(); rear.stop_b()`);
+          chunkLines.push(`${indent}front.stop_all(); rear.stop_all()`);
         }
         break;
       }
       case "dc_motor_single": {
-        // Maps node port keys (L1/L2/R1/R2) → DRV8833 object + method
         // L1=FL(front.b), L2=RL(rear.b), R1=FR(front.a), R2=RR(rear.a)
         imports.add("from machine import Pin, PWM");
         emitOnce("drv8833_class", DRV8833_HELPER);
         const portToDRV: Record<string, { obj: string; fn: string }> = {
-          L1: { obj: "front", fn: "b" },  // FL
-          L2: { obj: "rear",  fn: "b" },  // RL
-          R1: { obj: "front", fn: "a" },  // FR
-          R2: { obj: "rear",  fn: "a" },  // RR
+          L1: { obj: "front", fn: "b" },
+          L2: { obj: "rear",  fn: "b" },
+          R1: { obj: "front", fn: "a" },
+          R2: { obj: "rear",  fn: "a" },
         };
         const mKey  = (d.motorPort as string) ?? "L1";
         const drv   = portToDRV[mKey] ?? portToDRV["L1"];
@@ -1197,10 +1214,16 @@ def _dp(pin): return Pin(pin, Pin.OUT)
   }
 
   // Assemble the Python code
+  // Always clear the onboard NeoPixel at startup to prevent floating/glitch state
+  imports.add("from machine import Pin");
+  imports.add("import neopixel");
   if (imports.size > 0) {
     lines.push(...Array.from(imports));
     lines.push("");
   }
+  lines.push(`_led = neopixel.NeoPixel(Pin(${NEOPIXEL.pin}, Pin.OUT), ${NEOPIXEL.count})`);
+  lines.push(`_led.fill((0, 0, 0)); _led.write()  # clear onboard LED`);
+  lines.push("");
   if (setupLines.length > 0) {
     // Unique the setup lines
     const uniqueSetups = Array.from(new Set(setupLines));
