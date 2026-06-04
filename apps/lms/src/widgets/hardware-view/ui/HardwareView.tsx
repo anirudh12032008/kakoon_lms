@@ -35,12 +35,6 @@ function UltrasonicImg() {
       <circle cx="93" cy="39" r="4" fill="#1c2529"/>
       <ellipse cx="93" cy="39" rx="10" ry="2.5" fill="none" stroke="#607d8b" strokeWidth="0.5" opacity="0.6"/>
       <ellipse cx="93" cy="39" rx="6" ry="1.5" fill="none" stroke="#607d8b" strokeWidth="0.5" opacity="0.6"/>
-      {["VCC","TRG","ECH","GND"].map((p,i)=>(
-        <g key={p}>
-          <rect x={40+i*9} y="55" width="7" height="8" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-          <text x={43.5+i*9} y="61" textAnchor="middle" fontSize="3.5" fill="#333" fontFamily="monospace">{p}</text>
-        </g>
-      ))}
     </svg>
   );
 }
@@ -65,13 +59,6 @@ function ServoImg() {
       <rect x="80" y="18" width="10" height="36" rx="2" fill="#455a64" stroke="#37474f" strokeWidth="1"/>
       <circle cx="85" cy="26" r="3" fill="#263238" stroke="#607d8b" strokeWidth="0.5"/>
       <circle cx="85" cy="46" r="3" fill="#263238" stroke="#607d8b" strokeWidth="0.5"/>
-      <rect x="90" y="28" width="12" height="20" rx="2" fill="#f5f5f5" stroke="#bdbdbd" strokeWidth="0.8"/>
-      <rect x="92" y="31" width="8" height="5" rx="0.5" fill="#ff6d00"/>
-      <rect x="92" y="38" width="8" height="5" rx="0.5" fill="#d32f2f"/>
-      <rect x="92" y="44" width="8" height="5" rx="0.5" fill="#424242"/>
-      <line x1="102" y1="33" x2="130" y2="30" stroke="#ff6d00" strokeWidth="2"/>
-      <line x1="102" y1="40" x2="130" y2="42" stroke="#d32f2f" strokeWidth="2"/>
-      <line x1="102" y1="47" x2="130" y2="54" stroke="#424242" strokeWidth="2"/>
     </svg>
   );
 }
@@ -91,14 +78,6 @@ function MotorImg() {
         <rect key={y} x="8" y={y} width="4" height="3.5" rx="0.5" fill="#2c2410" opacity="0.9"/>
       ))}
       <rect x="1" y="29" width="10" height="10" rx="1.2" fill="#c7c7c7" stroke="#9b9b9b" strokeWidth="0.8"/>
-      <rect x="88" y="21" width="14" height="10" rx="2" fill="#222" stroke="#444" strokeWidth="0.8"/>
-      <rect x="90" y="23" width="4" height="6" rx="1" fill="#e53935"/>
-      <rect x="96" y="23" width="4" height="6" rx="1" fill="#1565c0"/>
-      <rect x="84" y="34" width="16" height="18" rx="2" fill="#2b2b2b" stroke="#4a4a4a" strokeWidth="0.8"/>
-      <circle cx="92" cy="43" r="5" fill="#5a5a5a" stroke="#8a8a8a" strokeWidth="0.5"/>
-      <circle cx="92" cy="43" r="2" fill="#222"/>
-      <rect x="102" y="31" width="16" height="4" rx="1" fill="#b7791f"/>
-      <line x1="118" y1="33" x2="120" y2="33" stroke="#b7791f" strokeWidth="2"/>
     </svg>
   );
 }
@@ -123,17 +102,6 @@ function NeoPixelImg() {
               transform={`rotate(${angle},${cx},${cy})`}/>
             <circle cx={cx} cy={cy} r="3.5" fill={colors[i]}
               style={{filter:`drop-shadow(0 0 4px ${colors[i]})`}} opacity="0.95"/>
-          </g>
-        );
-      })}
-      {["DI","5V","GND","DO"].map((p,i)=>{
-        const angle=(i*90-45)*Math.PI/180;
-        return (
-          <g key={p}>
-            <rect x={45+14*Math.cos(angle)-6} y={45+14*Math.sin(angle)-4} width="12" height="8" rx="1"
-              fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-            <text x={45+14*Math.cos(angle)} y={45+14*Math.sin(angle)+1.5}
-              textAnchor="middle" fontSize="4" fill="#333" fontFamily="monospace">{p}</text>
           </g>
         );
       })}
@@ -162,12 +130,6 @@ function IRSensorImg() {
       <text x="98" y="26" textAnchor="middle" fontSize="4" fill="#666">PWR</text>
       <circle cx="93" cy="35" r="6" fill="#37474f" stroke="#546e7a" strokeWidth="0.8"/>
       <line x1="93" y1="29" x2="95" y2="35" stroke="#90a4ae" strokeWidth="1.2"/>
-      {["VCC","GND","DO","AO"].map((p,i)=>(
-        <g key={p}>
-          <rect x={8+i*14} y="47" width="10" height="9" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-          <text x={13+i*14} y="54" textAnchor="middle" fontSize="4" fill="#333" fontFamily="monospace">{p}</text>
-        </g>
-      ))}
     </svg>
   );
 }
@@ -209,12 +171,6 @@ function OLEDImg() {
         <line key={y} x1="13" y1={y} x2="107" y2={y} stroke="#58a6ff" strokeWidth="0.15" opacity="0.08"/>
       ))}
       <rect x="38" y="56" width="44" height="10" rx="1" fill="#21262d" stroke="#30363d" strokeWidth="0.5"/>
-      {["GND","VCC","SCL","SDA"].map((p,i)=>(
-        <g key={p}>
-          <rect x={40+i*11} y="57" width="9" height="8" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-          <text x={44.5+i*11} y="63" textAnchor="middle" fontSize="3.5" fill="#333" fontFamily="monospace">{p}</text>
-        </g>
-      ))}
     </svg>
   );
 }
@@ -229,12 +185,6 @@ function SoilImg() {
       <circle cx="52" cy="14" r="5" fill="#ff4081" opacity="0.9" style={{filter:"drop-shadow(0 0 3px #ff4081)"}}/>
       <circle cx="18" cy="35" r="7" fill="#263238" stroke="#37474f" strokeWidth="1"/>
       <line x1="18" y1="28" x2="20" y2="35" stroke="#90a4ae" strokeWidth="1.2"/>
-      {["AO","DO","GND","VCC"].map((p,i)=>(
-        <g key={p}>
-          <rect x={8+i*14} y="46" width="10" height="8" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-          <text x={13+i*14} y="52" textAnchor="middle" fontSize="3.5" fill="#333" fontFamily="monospace">{p}</text>
-        </g>
-      ))}
       <line x1="35" y1="52" x2="35" y2="58" stroke="#90a4ae" strokeWidth="2"/>
       <rect x="12" y="58" width="46" height="10" rx="2" fill="#004d40" stroke="#00332a" strokeWidth="1"/>
       <rect x="18" y="68" width="8" height="30" rx="4" fill="#78909c" stroke="#607d8b" strokeWidth="1"/>
@@ -261,12 +211,6 @@ function AnalogImg() {
       <text x="90" y="28" textAnchor="middle" fontSize="4" fill="#80cbc4">PWR</text>
       <circle cx="90" cy="40" r="8" fill="#263238" stroke="#455a64" strokeWidth="1"/>
       <line x1="90" y1="32" x2="93" y2="40" stroke="#90a4ae" strokeWidth="1.2"/>
-      {["AO","DO","GND","VCC"].map((p,i)=>(
-        <g key={p}>
-          <rect x={5+i*20} y="52" width="14" height="10" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-          <text x={12+i*20} y="59" textAnchor="middle" fontSize="4" fill="#333" fontFamily="monospace">{p}</text>
-        </g>
-      ))}
     </svg>
   );
 }
@@ -297,12 +241,6 @@ function IMUImg() {
       <polygon points="72,28 69,26 69,30" fill="#66bb6a"/>
       <text x="45" y="1" textAnchor="middle" fontSize="4" fill="#ef5350" fontFamily="monospace">Z</text>
       <text x="73" y="30" fontSize="4" fill="#66bb6a" fontFamily="monospace">X</text>
-      {["VCC","GND","SCL","SDA"].map((p,i)=>(
-        <g key={p}>
-          <rect x={5+i*21} y="61" width="14" height="9" rx="0.5" fill="#ffd700" stroke="#b8860b" strokeWidth="0.5"/>
-          <text x={12+i*21} y="68" textAnchor="middle" fontSize="4" fill="#333" fontFamily="monospace">{p}</text>
-        </g>
-      ))}
     </svg>
   );
 }
