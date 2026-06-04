@@ -2,13 +2,23 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import "./styles/App.css";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { AnimationProvider } from "@/shared/context/AnimationContext";
+import { AdminPage } from "@/pages/admin/ui/AdminPage";
 
 const EditorLaunchDashboard = lazy(() => import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard })));
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
 
 const LAUNCH_STORAGE_KEY = "kakoon-editor-launch-context";
 
+function isAdminRoute() {
+  return (
+    window.location.hash === "#admin" ||
+    new URLSearchParams(window.location.search).has("admin")
+  );
+}
+
 export default function App() {
+  const [showAdmin, setShowAdmin] = useState(isAdminRoute);
+
   const [launchContext, setLaunchContext] = useState<EditorLaunchContext | null>(() => {
     try {
       const saved = localStorage.getItem(LAUNCH_STORAGE_KEY);
@@ -25,10 +35,19 @@ export default function App() {
       } else {
         localStorage.removeItem(LAUNCH_STORAGE_KEY);
       }
-    } catch {
-      // Ignore storage errors in private browsing or locked-down browsers.
-    }
+    } catch { }
   }, [launchContext]);
+
+  if (showAdmin) {
+    return (
+      <AnimationProvider>
+        <AdminPage onBack={() => {
+          history.replaceState(null, "", window.location.pathname);
+          setShowAdmin(false);
+        }} />
+      </AnimationProvider>
+    );
+  }
 
   return (
     <AnimationProvider>

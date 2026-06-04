@@ -48,3 +48,17 @@
 @keyframes i2cScan {
   to { width: 100%; }
 }
+
+/* ── Admin page shared input/button classes ─────────────────────────────── */
+.input-sm {
+  @apply w-full bg-[#0a0a0d] border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-700 outline-none focus:border-zinc-600 transition-colors;
+}
+.input-md {
+  @apply w-full bg-[#0a0a0d] border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors;
+}
+.section-heading {
+  @apply text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3;
+}
+.btn-sm {
+  @apply text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all;
+}

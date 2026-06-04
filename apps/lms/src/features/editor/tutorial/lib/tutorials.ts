@@ -7,6 +7,8 @@ export interface TutorialStep {
   actionType: "add_node" | "connect" | "edit_field";
   nodeType?: string;
   nodeLabel?: string;
+  /** Minimum count of this nodeType required before step completes */
+  minCount?: number;
   sourceType?: string;
   sourceHandle?: string;
   targetType?: string;
@@ -32,46 +34,59 @@ export interface Tutorial {
 }
 
 const DEFAULTS: Record<string, Record<string, any>> = {
-  forever_loop: {},
-  gpio_pin: { pin: 2, mode: "OUT" },
-  pin_write: { port: "1", pin: 4, value: false },
-  pin_read: { port: "1", pin: 4, varName: "value" },
-  pwm: { pin: 2, freq: 1000, duty: 512 },
-  adc: { pin: 34, varName: "value" },
-  push_button: { port: "1", pin: 4, varName: "value" },
-  buzzer_tone: { port: "1", pin: 46, tone: "1" },
-  neopixel_led: { pin: 45, brightness: 50, color: "#ff0000" },
-  neopixel_rgb: { pin: 45, brightness: 50, red: 255, green: 0, blue: 0 },
-  print: { text: "'Hello world'" },
-  variable: { name: "x", value: 0 },
-  sleep: { seconds: 1 },
-  ultrasonic_sensor: { port: "1", trigPin: 1, echoPin: 5, varName: "distance" },
-  touch_sensor: { port: "1", pin: 4, varName: "touch_value" },
-  soil_moisture: { port: "1", pin: 4, varName: "value" },
-  ir_receiver: { port: "1", pin: 5, varName: "ir_cmd" },
-  ir_sensor: { port: "1", pin: 4, varName: "ir_value" },
-  four_channel_touch: { port: "1", pin1: 4, pin2: 5, pin3: 6, pin4: 7, t1: "touch1", t2: "touch2", t3: "touch3", t4: "touch4" },
-  if_else: { left: "", op: "==", right: 0 },
-  map_range: { value: "", fromMin: 0, fromMax: 4095, toMin: 0, toMax: 180, varName: "mapped_value" },
-  servo_motor: { pin: 4, angle: 90 }
+  forever_loop:        {},
+  gpio_pin:            { pin: 2, mode: "OUT" },
+  pin_write:           { port: "1", pin: 4, value: false },
+  pin_read:            { port: "1", pin: 4, varName: "value" },
+  pwm:                 { pin: 2, freq: 1000, duty: 512 },
+  adc:                 { pin: 34, varName: "value" },
+  push_button:         { port: "1", pin: 4, varName: "value" },
+  buzzer_tone:         { port: "1", pin: 46, tone: "1" },
+  neopixel_led:        { numLeds: 8, brightness: 50, color: "#ff0000" },
+  neopixel_rgb:        { pin: 45, brightness: 50, red: 255, green: 0, blue: 0 },
+  print:               { text: "'Hello world'" },
+  variable:            { name: "x", value: 0 },
+  sleep:               { seconds: 1 },
+  ultrasonic_sensor:   { port: "1", trigPin: 1, echoPin: 5, varName: "distance" },
+  touch_sensor:        { port: "1", pin: 4, varName: "touch_value" },
+  soil_moisture:       { port: "1", pin: 4, varName: "value" },
+  ir_receiver:         { port: "1", pin: 5, varName: "ir_cmd" },
+  ir_sensor:           { port: "1", pin: 4, varName: "ir_value" },
+  four_channel_touch:  { port: "1", pin1: 4, pin2: 5, pin3: 6, pin4: 7, t1: "touch1", t2: "touch2", t3: "touch3", t4: "touch4" },
+  if_else:             { left: "", op: "==", right: 0 },
+  map_range:           { value: "", fromMin: 0, fromMax: 4095, toMin: 0, toMax: 180, varName: "mapped_value" },
+  servo_motor:         { pin: 4, angle: 90 },
+  dc_motor_single:     { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" },
+  oled_display:        { mode: "text", line1: "Hello", line2: "World!", driver: false },
+  ble_mode:            { deviceName: "ESP32-BLE", rawVarName: "ble_data", enableCmdMap: true, enableTx: false, txVarName: "ble_tx" },
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  port: "Port",
-  pin: "Pin Number",
-  varName: "Variable Name",
-  name: "Variable Name",
-  value: "Value",
-  left: "Condition Variable",
-  right: "Condition Value",
-  op: "Operator",
-  angle: "Servo Angle",
-  seconds: "Sleep Duration",
-  brightness: "Brightness",
-  color: "Color",
-  red: "Red Value",
-  green: "Green Value",
-  blue: "Blue Value"
+  port:         "Port",
+  pin:          "Pin Number",
+  varName:      "Variable Name",
+  name:         "Variable Name",
+  value:        "Value",
+  left:         "Condition Variable",
+  right:        "Condition Value",
+  op:           "Operator",
+  angle:        "Servo Angle",
+  seconds:      "Sleep Duration",
+  brightness:   "Brightness",
+  color:        "Color",
+  red:          "Red Value",
+  green:        "Green Value",
+  blue:         "Blue Value",
+  speed:        "Speed",
+  direction:    "Direction",
+  numLeds:      "Number of LEDs",
+  line1:        "Line 1 Text",
+  line2:        "Line 2 Text",
+  deviceName:   "BLE Device Name",
+  rawVarName:   "Receive Variable",
+  in1:          "IN1 Pin",
+  in2:          "IN2 Pin",
+  enPin:        "Enable Pin",
 };
 
 // ─── Built-in Tutorial Definitions ───────────────────────────────────────────
@@ -137,24 +152,109 @@ const tankEdges: Edge[] = [
   { id: "tank_e5", source: "tank_n5", target: "tank_n6" },
 ];
 
-// ─── Forklift ─────────────────────────────────────────────────────────────────
+// ─── BT Forklift ──────────────────────────────────────────────────────────────
+// BLE command map:
+//  cmd_0 "F" → Forward  (motor fwd 0.75 s then brake)
+//  cmd_1 "B" → Backward (motor bwd 0.75 s then brake)
+//  cmd_2 "R" → Right    (motor 0.5 s)
+//  cmd_3 "L" → Left     (motor 0.5 s)
+//  cmd_4 "+" → Speed up (variable speed = 100)
+//  cmd_5 "-" → Speed down (variable speed = 40)
+//  cmd_6 "N" → NeoPixel LED strip (8 LEDs, cyan)
+//  cmd_7 "O" → OLED status display
+//  cmd_8 "U" → Fork up   (servo 0°)
+//  cmd_9 "D" → Fork down (servo 90°)
+
+const BT_CMD_MAP = [
+  { trigger: "F", varName: "", value: "" },
+  { trigger: "B", varName: "", value: "" },
+  { trigger: "R", varName: "", value: "" },
+  { trigger: "L", varName: "", value: "" },
+  { trigger: "+", varName: "", value: "" },
+  { trigger: "-", varName: "", value: "" },
+  { trigger: "N", varName: "", value: "" },
+  { trigger: "O", varName: "", value: "" },
+  { trigger: "U", varName: "", value: "" },
+  { trigger: "D", varName: "", value: "" },
+];
+
 const forkliftNodes: Node[] = [
-  { id: "fork_n1", type: "forever_loop",   position: { x: 100, y: 100 }, data: {} },
-  { id: "fork_n2", type: "push_button",    position: { x: 360, y: 80  }, data: { port: "1", pin: 1, varName: "drive_btn" } },
-  { id: "fork_n3", type: "dc_motor_single", position: { x: 360, y: 230 }, data: { in1: 13, in2: 14, enPin: 12, speed: 70, direction: "Forward", driver: "L298N" } },
-  { id: "fork_n4", type: "push_button",    position: { x: 360, y: 390 }, data: { port: "1", pin: 2, varName: "lift_btn" } },
-  { id: "fork_n5", type: "push_button",    position: { x: 360, y: 540 }, data: { port: "1", pin: 3, varName: "lower_btn" } },
-  { id: "fork_n6", type: "servo_motor",    position: { x: 360, y: 690 }, data: { pin: 5, angle: 90 } },
-  { id: "fork_n7", type: "sleep",          position: { x: 360, y: 850 }, data: { seconds: 0.05 } },
+  // ── Entry ──────────────────────────────────────────────────────────────────
+  { id: "fk_n1",  type: "forever_loop", position: { x: 60,   y: 0    }, data: {} },
+  { id: "fk_n2",  type: "ble_mode",     position: { x: 340,  y: 0    }, data: {
+    deviceName: "Forklift", rawVarName: "cmd", enableCmdMap: true,
+    cmdMap: BT_CMD_MAP, enableTx: false, txVarName: "ble_tx",
+  }},
+
+  // ── Forward: 'F' ──────────────────────────────────────────────────────────
+  { id: "fk_n3",  type: "dc_motor_single", position: { x: 700, y: 140  }, data: { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" } },
+  { id: "fk_n4",  type: "sleep",           position: { x: 980, y: 140  }, data: { seconds: 0.75 } },
+  { id: "fk_n5",  type: "dc_motor_single", position: { x: 1260,y: 140  }, data: { in1: 13, in2: 14, enPin: 12, speed: 0,  direction: "Brake",   driver: "L298N" } },
+
+  // ── Backward: 'B' ─────────────────────────────────────────────────────────
+  { id: "fk_n6",  type: "dc_motor_single", position: { x: 700, y: 340  }, data: { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Backward", driver: "L298N" } },
+  { id: "fk_n7",  type: "sleep",           position: { x: 980, y: 340  }, data: { seconds: 0.75 } },
+  { id: "fk_n8",  type: "dc_motor_single", position: { x: 1260,y: 340  }, data: { in1: 13, in2: 14, enPin: 12, speed: 0,  direction: "Brake",   driver: "L298N" } },
+
+  // ── Right turn: 'R' ───────────────────────────────────────────────────────
+  { id: "fk_n9",  type: "dc_motor_single", position: { x: 700, y: 540  }, data: { in1: 15, in2: 16, enPin: 17, speed: 70, direction: "Forward", driver: "L298N" } },
+  { id: "fk_n10", type: "sleep",           position: { x: 980, y: 540  }, data: { seconds: 0.5  } },
+
+  // ── Left turn: 'L' ────────────────────────────────────────────────────────
+  { id: "fk_n11", type: "dc_motor_single", position: { x: 700, y: 720  }, data: { in1: 15, in2: 16, enPin: 17, speed: 70, direction: "Backward", driver: "L298N" } },
+  { id: "fk_n12", type: "sleep",           position: { x: 980, y: 720  }, data: { seconds: 0.5  } },
+
+  // ── Speed control: '+' / '-' ──────────────────────────────────────────────
+  { id: "fk_n13", type: "variable",        position: { x: 700, y: 920  }, data: { name: "speed", value: 100 } },
+  { id: "fk_n14", type: "variable",        position: { x: 700, y: 1080 }, data: { name: "speed", value: 40  } },
+
+  // ── NeoPixel LED strip: 'N' ───────────────────────────────────────────────
+  { id: "fk_n15", type: "neopixel_led",    position: { x: 700, y: 1260 }, data: { numLeds: 8, brightness: 80, color: "#00c8ff" } },
+
+  // ── OLED status display: 'O' ──────────────────────────────────────────────
+  { id: "fk_n16", type: "oled_display",    position: { x: 700, y: 1460 }, data: { mode: "text", line1: "Forklift OK", line2: "BT Ready", driver: false } },
+
+  // ── Fork servo up: 'U' ────────────────────────────────────────────────────
+  { id: "fk_n17", type: "servo_motor",     position: { x: 700, y: 1660 }, data: { pin: 4, angle: 0  } },
+
+  // ── Fork servo down: 'D' ──────────────────────────────────────────────────
+  { id: "fk_n18", type: "servo_motor",     position: { x: 700, y: 1840 }, data: { pin: 4, angle: 90 } },
 ];
 
 const forkliftEdges: Edge[] = [
-  { id: "fork_e1", source: "fork_n1", target: "fork_n2", sourceHandle: "body" },
-  { id: "fork_e2", source: "fork_n2", target: "fork_n3" },
-  { id: "fork_e3", source: "fork_n3", target: "fork_n4" },
-  { id: "fork_e4", source: "fork_n4", target: "fork_n5" },
-  { id: "fork_e5", source: "fork_n5", target: "fork_n6" },
-  { id: "fork_e6", source: "fork_n6", target: "fork_n7" },
+  { id: "fk_e1",  source: "fk_n1",  target: "fk_n2",  sourceHandle: "body"  },
+
+  // BLE 'F' → forward chain
+  { id: "fk_e2",  source: "fk_n2",  target: "fk_n3",  sourceHandle: "cmd_0" },
+  { id: "fk_e3",  source: "fk_n3",  target: "fk_n4"  },
+  { id: "fk_e4",  source: "fk_n4",  target: "fk_n5"  },
+
+  // BLE 'B' → backward chain
+  { id: "fk_e5",  source: "fk_n2",  target: "fk_n6",  sourceHandle: "cmd_1" },
+  { id: "fk_e6",  source: "fk_n6",  target: "fk_n7"  },
+  { id: "fk_e7",  source: "fk_n7",  target: "fk_n8"  },
+
+  // BLE 'R' → right turn
+  { id: "fk_e8",  source: "fk_n2",  target: "fk_n9",  sourceHandle: "cmd_2" },
+  { id: "fk_e9",  source: "fk_n9",  target: "fk_n10" },
+
+  // BLE 'L' → left turn
+  { id: "fk_e10", source: "fk_n2",  target: "fk_n11", sourceHandle: "cmd_3" },
+  { id: "fk_e11", source: "fk_n11", target: "fk_n12" },
+
+  // BLE '+' / '-' → speed
+  { id: "fk_e12", source: "fk_n2",  target: "fk_n13", sourceHandle: "cmd_4" },
+  { id: "fk_e13", source: "fk_n2",  target: "fk_n14", sourceHandle: "cmd_5" },
+
+  // BLE 'N' → NeoPixel
+  { id: "fk_e14", source: "fk_n2",  target: "fk_n15", sourceHandle: "cmd_6" },
+
+  // BLE 'O' → OLED
+  { id: "fk_e15", source: "fk_n2",  target: "fk_n16", sourceHandle: "cmd_7" },
+
+  // BLE 'U'/'D' → servo
+  { id: "fk_e16", source: "fk_n2",  target: "fk_n17", sourceHandle: "cmd_8" },
+  { id: "fk_e17", source: "fk_n2",  target: "fk_n18", sourceHandle: "cmd_9" },
 ];
 
 // ─── Turret ───────────────────────────────────────────────────────────────────
@@ -191,19 +291,34 @@ export function generateStepsFromFlow(nodes: Node[], edges: Edge[]): TutorialSte
   const getReadableLabel = (type: string) =>
     type.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+  // Pre-count how many nodes of each type exist so we can number duplicates
+  const nodeTypeTotals: Record<string, number> = {};
+  for (const n of nodes) {
+    const t = n.type || "";
+    nodeTypeTotals[t] = (nodeTypeTotals[t] || 0) + 1;
+  }
+  const nodeTypeCurrentIdx: Record<string, number> = {};
+
   const queuePlaceNode = (node: Node) => {
     if (placedNodeIds.has(node.id)) return;
     placedNodeIds.add(node.id);
 
-    const label = getReadableLabel(node.type || "");
+    const t = node.type || "";
+    nodeTypeCurrentIdx[t] = (nodeTypeCurrentIdx[t] || 0) + 1;
+    const count = nodeTypeCurrentIdx[t];
+    const total = nodeTypeTotals[t] || 1;
+
+    const label = getReadableLabel(t);
+    const suffix = total > 1 ? ` #${count}` : "";
     steps.push({
       id: `step_${stepCounter++}`,
-      title: `Place a ${label} block`,
-      description: `Drag and place the "${label}" block from the sidebar onto the canvas workspace.`,
+      title: `Place a ${label}${suffix} block`,
+      description: `Drag the "${label}" block from the sidebar panel onto the canvas. ${total > 1 ? `(This is block ${count} of ${total} of this type.)` : ""}`.trim(),
       actionType: "add_node",
       nodeType: node.type,
       nodeLabel: label,
       nodeId: node.id,
+      minCount: count,
     });
 
     if (node.data) {
@@ -211,13 +326,15 @@ export function generateStepsFromFlow(nodes: Node[], edges: Edge[]): TutorialSte
       for (const key of Object.keys(node.data)) {
         const targetVal = node.data[key];
         const defaultVal = defaultsForType[key];
+        // Skip complex objects (cmdMap arrays, etc.) — only simple primitives
+        if (typeof targetVal === "object" && targetVal !== null) continue;
         if (defaultVal !== undefined && String(targetVal) !== String(defaultVal)) {
           const fieldLabel = FIELD_LABELS[key] || key;
-          const actionText = key === "port" ? "Select" : "Type";
+          const actionText = key === "port" || key === "direction" || key === "mode" ? "Select" : "Set";
           steps.push({
             id: `step_${stepCounter++}`,
-            title: `${actionText} "${targetVal}" in ${label}`,
-            description: `${actionText} "${targetVal}" into the "${fieldLabel}" input field inside the ${label} block.`,
+            title: `${actionText} ${fieldLabel} to "${targetVal}" in ${label}${suffix}`,
+            description: `Inside the ${label}${suffix} block, ${actionText.toLowerCase()} the "${fieldLabel}" field to "${targetVal}".`,
             actionType: "edit_field",
             nodeType: node.type,
             nodeLabel: label,
@@ -298,10 +415,10 @@ export const BUILTIN_TUTORIALS: Tutorial[] = [
   ),
   makeTutorial(
     "builtin_forklift",
-    "Forklift Robot",
-    "Drive a forklift robot with a DC drive motor and raise/lower a servo-powered fork arm using dedicated lift and lower buttons.",
-    "Medium",
-    ["push_button", "dc_motor_single", "servo_motor", "forever_loop"],
+    "BT Forklift",
+    "Control a Bluetooth forklift from your phone. Send commands to drive forward/backward (0.75 s bursts), turn, adjust speed, control 8 NeoPixel LEDs, update an OLED display, and raise or lower the servo fork arm.",
+    "Hard",
+    ["ble_mode", "dc_motor_single", "servo_motor", "neopixel_led", "oled_display", "forever_loop"],
     forkliftNodes,
     forkliftEdges
   ),

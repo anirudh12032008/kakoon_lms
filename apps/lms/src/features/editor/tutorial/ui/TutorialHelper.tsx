@@ -124,7 +124,9 @@ export function TutorialHelper({
     if (!step) { setIsCompleted(true); return; }
 
     if (step.actionType === "add_node") {
-      if (nodes.some((n) => n.type === step.nodeType)) onStepComplete();
+      const required = step.minCount ?? 1;
+      const present = nodes.filter((n) => n.type === step.nodeType).length;
+      if (present >= required) onStepComplete();
     } else if (step.actionType === "edit_field" && step.fieldName) {
       const liveNode = nodes.find((n) => n.type === step.nodeType);
       if (liveNode) {
