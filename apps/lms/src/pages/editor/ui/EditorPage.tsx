@@ -7,6 +7,7 @@ import { NodeCanvas, type NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCan
 import { useSerialConnection } from "@/features/editor/serial-connect/model/useSerial";
 import { TutorialsDashboard } from "@/features/editor/tutorial/ui/TutorialsDashboard";
 import { TutorialHelper } from "@/features/editor/tutorial/ui/TutorialHelper";
+import { SaveAsTutorialModal } from "@/features/editor/tutorial/ui/SaveAsTutorialModal";
 import { LibraryManager } from "@/features/editor/install-library/ui/LibraryManager";
 import { DesignerHub } from "@/features/editor/designer-hub/ui/DesignerHub";
 import { FirmwareFlasher } from "@/features/editor/flash-firmware/ui/FirmwareFlasher";
@@ -59,6 +60,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const [showTerminal, setShowTerminal] = useState(false);
   const [showLibraryManager, setShowLibraryManager] = useState(false);
   const [showDesignerHub, setShowDesignerHub] = useState(false);
+  const [showSaveAsTutorial, setShowSaveAsTutorial] = useState(false);
   const [designerTab, setDesignerTab] = useState<"oled" | "neopixel" | "matrix">("oled");
   const [showESP32Files, setShowESP32Files] = useState(false);
   const [showFirmwareFlasher, setShowFirmwareFlasher] = useState(false);
@@ -300,6 +302,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         showTutorialsCatalog={tutorial.showTutorialsCatalog}
         onToggleTutorials={() => tutorial.setShowTutorialsCatalog(!tutorial.showTutorialsCatalog)}
         onBackToDashboard={onBackToDashboard}
+        onSaveAsTutorial={() => setShowSaveAsTutorial(true)}
       />
 
       <FeatureToolbar
@@ -506,6 +509,13 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
       {showRadarViz && (
         <RadarPanel logs={logs} onClose={() => setShowRadarViz(false)} />
+      )}
+
+      {showSaveAsTutorial && (
+        <SaveAsTutorialModal
+          onClose={() => setShowSaveAsTutorial(false)}
+          getWorkspace={() => canvasRef.current?.getWorkspace() ?? { nodes: [], edges: [] }}
+        />
       )}
     </div>
     </NodeActionsProvider>

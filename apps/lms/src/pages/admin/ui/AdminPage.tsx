@@ -104,8 +104,8 @@ function LoginScreen({ onAuth }: { onAuth: () => void }) {
 
 // ─── Node builder row ─────────────────────────────────────────────────────────
 
-function NodeRowEditor({ row, onChange, onRemove, allIds }: {
-  row: NodeRow; onChange: (r: NodeRow) => void; onRemove: () => void; allIds: string[]
+function NodeRowEditor({ row, onChange, onRemove }: {
+  row: NodeRow; onChange: (r: NodeRow) => void; onRemove: () => void;
 }) {
   const jsonValid = useMemo(() => { try { JSON.parse(row.dataJson); return true; } catch { return false; } }, [row.dataJson]);
 
@@ -338,7 +338,6 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                   <NodeRowEditor key={r.id + i} row={r}
                     onChange={(updated) => setNodeRows((rows) => rows.map((x, j) => j === i ? updated : x))}
                     onRemove={() => setNodeRows((rows) => rows.filter((_, j) => j !== i))}
-                    allIds={nodeRows.map((x) => x.id)}
                   />
                 ))}
                 {nodeRows.length === 0 && <p className="text-xs text-zinc-600 py-2">No nodes yet.</p>}

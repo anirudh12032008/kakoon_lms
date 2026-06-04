@@ -1,4 +1,4 @@
-import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles } from "lucide-react";
+import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
@@ -12,6 +12,7 @@ interface EditorHeaderProps {
   showTutorialsCatalog: boolean;
   onToggleTutorials: () => void;
   onBackToDashboard?: () => void;
+  onSaveAsTutorial?: () => void;
 }
 
 const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
@@ -35,6 +36,7 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
 export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
   launchContext, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
+  onSaveAsTutorial,
 }: EditorHeaderProps) {
   const title      = launchContext?.title      ?? "Full Workshop";
   const launchType = launchContext?.launchType ?? "mode";
@@ -100,6 +102,17 @@ export function EditorHeader({
           <Sparkles className={`h-4 w-4 transition-all ${animationsEnabled ? "fill-current opacity-90" : "opacity-40"}`} />
           <span className="hidden md:inline text-xs">{animationsEnabled ? "Anim" : "Anim"}</span>
         </button>
+
+        {onSaveAsTutorial && (
+          <button
+            onClick={onSaveAsTutorial}
+            title="Save current canvas as a tutorial"
+            className="btn btn-ghost btn-sm gap-1.5 text-sub hover:text-emerald-400 transition-colors"
+          >
+            <GraduationCap className="h-4 w-4" />
+            <span className="hidden md:inline text-xs">Save Tutorial</span>
+          </button>
+        )}
 
         <button
           onClick={onToggleTutorials}
