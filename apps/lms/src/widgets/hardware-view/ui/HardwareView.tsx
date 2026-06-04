@@ -365,6 +365,36 @@ function BoardLabel({ x, y, text, color, anchor = "middle" }: { x: number; y: nu
   );
 }
 
+// Clean white port connector box — left edge
+function PortLeft({ y, label, color }: { y: number; label: string; color: string }) {
+  const w = 62; const h = 22;
+  return (
+    <g>
+      <rect x="2" y={y - h / 2} width={w} height={h} rx="3"
+        fill="#e8e8e8" stroke={color} strokeWidth="1.3"/>
+      <rect x="4" y={y - h / 2 + 2} width={w - 4} height={h - 4} rx="2"
+        fill="#f2f2f2"/>
+      <text x={w / 2 + 2} y={y + 4} textAnchor="middle" fontSize="8"
+        fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">{label}</text>
+    </g>
+  );
+}
+
+// Clean white port connector box — bottom edge
+function PortBottom({ x, label, color }: { x: number; label: string; color: string }) {
+  const w = 54; const h = 26;
+  return (
+    <g>
+      <rect x={x - w / 2} y="528" width={w} height={h} rx="3"
+        fill="#e8e8e8" stroke={color} strokeWidth="1.3"/>
+      <rect x={x - w / 2 + 2} y="530" width={w - 4} height={h - 4} rx="2"
+        fill="#f2f2f2"/>
+      <text x={x} y="544" textAnchor="middle" fontSize="8"
+        fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">{label}</text>
+    </g>
+  );
+}
+
 function BoardNode() {
   return (
     <div className="relative select-none" style={{width:500,height:560}}>
@@ -401,8 +431,8 @@ function BoardNode() {
           </g>
         ))}
 
+        {/* ─── TOP: GPIO header ─── */}
         <BoardLabel x={210} y={18} text="GPIO  01 – 13" color="#4ade80"/>
-
         <rect x="78" y="22" width="264" height="28" rx="3" fill="#111" stroke="#333" strokeWidth="1.2"/>
         {Array.from({length:13}).map((_,i)=>(
           <g key={i}>
@@ -415,40 +445,22 @@ function BoardNode() {
             fontFamily="'Courier New',monospace" opacity="0.75" fontWeight="bold">{lbl}</text>
         ))}
 
-        <BoardLabel x={420} y={18} text="BATTERY" color="#60a5fa"/>
-        <rect x="374" y="22" width="56" height="24" rx="3" fill="#ddd" stroke="#bbb" strokeWidth="1.2"/>
-        <rect x="378" y="25" width="48" height="18" rx="2" fill="#ccc"/>
-        {[380,400].map(x=>(
-          <g key={x}>
-            <rect x={x} y="27" width="14" height="13" rx="1" fill="#eee" stroke="#aaa" strokeWidth="0.6"/>
-            <rect x={x+3} y="29" width="8" height="9" rx="0.4" fill="#ffd700"/>
-          </g>
-        ))}
+        {/* ─── TOP RIGHT: Battery port box ─── */}
+        <rect x="374" y="20" width="52" height="24" rx="3"
+          fill="#e8e8e8" stroke="#3b82f6" strokeWidth="1.3"/>
+        <rect x="376" y="22" width="48" height="20" rx="2" fill="#f2f2f2"/>
+        <text x="400" y="35" textAnchor="middle" fontSize="8"
+          fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">BATTERY</text>
 
-        {[
-          {y:72, label:"NEOPIXEL", pins:3, color:"#a855f7"},
-          {y:116, label:"I2S",      pins:3, color:"#f97316"},
-          {y:178, label:"MTR  FR",  pins:4, color:"#ef4444"},
-          {y:224, label:"MTR  FL",  pins:4, color:"#ef4444"},
-          {y:270, label:"MTR  RR",  pins:4, color:"#ef4444"},
-          {y:316, label:"MTR  RL",  pins:4, color:"#ef4444"},
-        ].map(({y,label,pins,color})=>{
-          const w = pins*14+10;
-          return (
-            <g key={label}>
-              <BoardLabel x={w+20} y={y+14} text={label} color={color} anchor="start"/>
-              <rect x="6" y={y} width={w} height="26" rx="3" fill="#e8e8e8" stroke="#bbb" strokeWidth="1.2"/>
-              <rect x="9" y={y+3} width={w-6} height="20" rx="2" fill="#d0d0d0"/>
-              {Array.from({length:pins}).map((_,i)=>(
-                <g key={i}>
-                  <rect x={11+i*14} y={y+5} width="10" height="15" rx="0.8" fill="#f0f0f0" stroke="#aaa" strokeWidth="0.6"/>
-                  <rect x={13+i*14} y={y+6} width="6" height="13" rx="0.5" fill="#ffd700"/>
-                </g>
-              ))}
-            </g>
-          );
-        })}
+        {/* ─── LEFT EDGE: port boxes ─── */}
+        <PortLeft y={78}  label="NEOPIXEL" color="#a855f7"/>
+        <PortLeft y={134} label="I2S"      color="#f97316"/>
+        <PortLeft y={207} label="MTR  FR"  color="#ef4444"/>
+        <PortLeft y={269} label="MTR  FL"  color="#ef4444"/>
+        <PortLeft y={330} label="MTR  RR"  color="#ef4444"/>
+        <PortLeft y={392} label="MTR  RL"  color="#ef4444"/>
 
+        {/* ─── CENTER: ESP32-S3 WROOM module ─── */}
         <rect x="145" y="130" width="220" height="210" rx="5" fill="url(#espGrad)" stroke="#888" strokeWidth="2"/>
         <rect x="150" y="135" width="210" height="200" rx="4" fill="#c4c4c4"/>
         {Array.from({length:11}).map((_,i)=>(
@@ -466,6 +478,7 @@ function BoardNode() {
           <rect key={i} x={150+i*9} y="333" width="7" height="5" rx="0.6" fill="#888" stroke="#666" strokeWidth="0.4"/>
         ))}
 
+        {/* ─── Electrolytic capacitors ─── */}
         {[[72,395,40],[128,395,32],[184,395,40]].map(([cx,cy,d],i)=>(
           <g key={i}>
             <circle cx={cx} cy={cy} r={d/2} fill="#222" stroke="#444" strokeWidth="2"/>
@@ -475,30 +488,34 @@ function BoardNode() {
           </g>
         ))}
 
-        <BoardLabel x={420} y={358} text="SERVO" color="#eab308"/>
-        <rect x="366" y="368" width="90" height="110" rx="3" fill="#111" stroke="#333" strokeWidth="1.2"/>
-        {["S1","S2","S3","S4"].map((s,row)=>(
-          <g key={s}>
-            <text x="362" y={388+row*26} textAnchor="end" fontSize="10" fill="#eab308"
-              fontFamily="'Courier New',monospace" fontWeight="bold">{s}</text>
-            {[0,1,2].map(col=>(
-              <rect key={col} x={369+col*14} y={376+row*26} width="12" height="12" rx="1.5"
-                fill={col===0?"#111":col===1?"#7f1d1d":"#3f3f3f"}
-                stroke={col===0?"#555":col===1?"#ef4444":"#777"} strokeWidth="1"/>
-            ))}
-          </g>
-        ))}
+        {/* ─── Servo ports (right side) — simple labeled boxes ─── */}
+        {(["S1","S2","S3","S4"] as const).map((s, i) => {
+          const yPct = [48,60,72,84][i];
+          const yPx = (yPct / 100) * 560;
+          return (
+            <g key={s}>
+              <rect x="434" y={yPx - 11} width="58" height="22" rx="3"
+                fill="#e8e8e8" stroke="#eab308" strokeWidth="1.3"/>
+              <rect x="436" y={yPx - 9} width="54" height="18" rx="2" fill="#f2f2f2"/>
+              <text x="463" y={yPx + 4} textAnchor="middle" fontSize="8"
+                fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">{`SERVO ${s}`}</text>
+            </g>
+          );
+        })}
 
+        {/* ─── KOKOON LABS watermark ─── */}
         <text x="150" y="388" fontSize="20" fill="rgba(255,255,255,0.1)" fontFamily="Arial"
           fontWeight="900" letterSpacing="4">KOKOON</text>
         <text x="150" y="414" fontSize="20" fill="rgba(255,255,255,0.1)" fontFamily="Arial"
           fontWeight="900" letterSpacing="8">LABS</text>
 
+        {/* ─── LEDs ─── */}
         <circle cx="456" cy="60" r="7" fill="#00e676" style={{filter:"drop-shadow(0 0 5px #00c853)"}}/>
         <circle cx="476" cy="60" r="7" fill="#ff1744" style={{filter:"drop-shadow(0 0 4px #ff1744)"}}/>
         <text x="456" y="74" textAnchor="middle" fontSize="7" fill="#4ade80" fontFamily="monospace">LED1</text>
         <text x="476" y="74" textAnchor="middle" fontSize="7" fill="#f87171" fontFamily="monospace">LED2</text>
 
+        {/* ─── RST / BOOT buttons ─── */}
         {[{label:"RST",x:390,y:82},{label:"BOOT",x:432,y:82}].map(({label,x,y})=>(
           <g key={label}>
             <rect x={x} y={y} width="30" height="22" rx="3" fill="#2a2a2a" stroke="#555" strokeWidth="1.2"/>
@@ -507,33 +524,25 @@ function BoardNode() {
           </g>
         ))}
 
-        <rect x="490" y="76" width="12" height="36" rx="4" fill="#2a2a2a" stroke="#555" strokeWidth="1.2"/>
-        <rect x="493" y="81" width="6" height="26" rx="2" fill="#111" stroke="#222" strokeWidth="0.6"/>
-        <BoardLabel x={478} y={70} text="USB-C" color="#94a3b8" anchor="end"/>
+        {/* USB-C port box */}
+        <rect x="434" y={Math.round(0.12*560) - 11} width="58" height="22" rx="3"
+          fill="#e8e8e8" stroke="#94a3b8" strokeWidth="1.3"/>
+        <rect x="436" y={Math.round(0.12*560) - 9} width="54" height="18" rx="2" fill="#f2f2f2"/>
+        <text x="463" y={Math.round(0.12*560) + 4} textAnchor="middle" fontSize="8"
+          fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">USB-C</text>
 
-        <BoardLabel x={478} y={128} text="IMU" color="#06b6d4" anchor="end"/>
+        {/* IMU port box on right edge */}
+        <rect x="434" y={Math.round(0.26*560) - 11} width="58" height="22" rx="3"
+          fill="#e8e8e8" stroke="#06b6d4" strokeWidth="1.3"/>
+        <rect x="436" y={Math.round(0.26*560) - 9} width="54" height="18" rx="2" fill="#f2f2f2"/>
+        <text x="463" y={Math.round(0.26*560) + 4} textAnchor="middle" fontSize="8"
+          fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">IMU</text>
 
-        {[
-          {label:"OLED",  x:20,  pins:4, color:"#6366f1"},
-          {label:"I2C-2", x:96,  pins:4, color:"#8b5cf6"},
-          {label:"SNS-2", x:234, pins:4, color:"#14b8a6"},
-          {label:"SNS-1", x:344, pins:4, color:"#14b8a6"},
-        ].map(({label,x,pins,color})=>{
-          const w = pins*16+10;
-          return (
-            <g key={label}>
-              <BoardLabel x={x+w/2} y={522} text={label} color={color}/>
-              <rect x={x} y="530" width={w} height="28" rx="3" fill="#e8e8e8" stroke="#bbb" strokeWidth="1.2"/>
-              <rect x={x+3} y="533" width={w-6} height="22" rx="2" fill="#d0d0d0"/>
-              {Array.from({length:pins}).map((_,i)=>(
-                <g key={i}>
-                  <rect x={x+5+i*16} y="535" width="12" height="16" rx="0.8" fill="#f0f0f0" stroke="#aaa" strokeWidth="0.6"/>
-                  <rect x={x+7+i*16} y="537" width="8" height="12" rx="0.5" fill="#ffd700"/>
-                </g>
-              ))}
-            </g>
-          );
-        })}
+        {/* ─── BOTTOM EDGE: port boxes ─── */}
+        <PortBottom x={60}  label="OLED"  color="#6366f1"/>
+        <PortBottom x={145} label="I2C-2" color="#8b5cf6"/>
+        <PortBottom x={280} label="SNS-2" color="#14b8a6"/>
+        <PortBottom x={390} label="SNS-1" color="#14b8a6"/>
       </svg>
 
       {BOARD_PORTS.map((port)=>(
