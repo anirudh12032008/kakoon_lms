@@ -144,6 +144,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
   const [copied, setCopied] = useState(false);
   const [addedToCanvas, setAddedToCanvas] = useState(false);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dragFrame = useRef<number | null>(null);
 
   const W = modules * 8;
 
@@ -176,6 +177,24 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
       setCurFrame((c) => Math.min(c >= idx ? c - 1 : c, next.length - 1));
       return next;
     });
+    setPlaying(false);
+  };
+
+  const duplicateFrame = (idx: number) => {
+    setFrames((prev) => [...prev.slice(0, idx + 1), [...prev[idx]], ...prev.slice(idx + 1)]);
+    setCurFrame(idx + 1);
+    setPlaying(false);
+  };
+
+  const moveFrame = (from: number, to: number) => {
+    if (from === to) return;
+    setFrames((prev) => {
+      const next = [...prev];
+      const [m] = next.splice(from, 1);
+      next.splice(to, 0, m);
+      return next;
+    });
+    setCurFrame(to);
     setPlaying(false);
   };
 
@@ -248,7 +267,12 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1a1a20]">
           {frames.slice(0, 30).map((_, i) => (
-            <div key={i} className="flex items-center gap-0.5">
+            <div key={i} draggable
+              onDragStart={() => { dragFrame.current = i; }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => { if (dragFrame.current !== null) moveFrame(dragFrame.current, i); dragFrame.current = null; }}
+              title="Drag to reorder"
+              className="flex items-center gap-0.5 cursor-move">
               <button onClick={() => { setCurFrame(i); setPlaying(false); }}
                 className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${i===curFrame ? "bg-amber-500/20 text-amber-400 border border-amber-500/40" : "text-zinc-600 hover:text-zinc-400"}`}>
                 {i+1}
@@ -263,6 +287,10 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           <button onClick={() => { setFrames((p) => [...p, [...p[p.length-1]]]); setCurFrame(frames.length); setPlaying(false); }}
             className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32]">
             + Frame
+          </button>
+          <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-amber-400 border border-[#2a2a32] hover:border-amber-500/30">
+            <Copy className="w-3 h-3" /> Dup
           </button>
           {frames.length > 1 && (
             <button onClick={() => setPlaying(!playing)}

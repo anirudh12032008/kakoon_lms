@@ -118,6 +118,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   const [saveDeviceState, setSaveDeviceState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [registry, setRegistry] = useState<AnimEntry[]>(() => loadAnimRegistry());
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const dragFrame = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -367,6 +368,22 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
     setFrames((prev) => prev.filter((_, idx) => idx !== i));
     if (curFrame >= frames.length - 1) setCurFrame(frames.length - 2);
   };
+  const duplicateFrame = (i: number) => {
+    pushHistory(frames);
+    setFrames((prev) => [...prev.slice(0, i + 1), [...prev[i]], ...prev.slice(i + 1)]);
+    setCurFrame(i + 1);
+  };
+  const moveFrame = (from: number, to: number) => {
+    if (from === to) return;
+    pushHistory(frames);
+    setFrames((prev) => {
+      const next = [...prev];
+      const [m] = next.splice(from, 1);
+      next.splice(to, 0, m);
+      return next;
+    });
+    setCurFrame(to);
+  };
   const clearFrame = () => {
     pushHistory(frames);
     setFrames((prev) => { const u=[...prev]; u[curFrame]=new Array(OLED_W*OLED_H).fill(0); return u; });
@@ -555,7 +572,12 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         <div className="w-full flex items-center gap-2 px-3 py-2 border-b border-[#1a1a20] bg-[#0a0a0d] flex-shrink-0 flex-wrap">
           <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mr-1">Frames</span>
           {frames.map((_, i) => (
-            <div key={i} className="flex items-center gap-0.5">
+            <div key={i} draggable
+              onDragStart={() => { dragFrame.current = i; }}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => { if (dragFrame.current !== null) moveFrame(dragFrame.current, i); dragFrame.current = null; }}
+              title="Drag to reorder"
+              className="flex items-center gap-0.5 cursor-move">
               <button onClick={() => { setCurFrame(i); setPlaying(false); }}
                 className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-zinc-300"}`}>
                 {i + 1}
@@ -568,6 +590,10 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           <button onClick={addFrame}
             className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32] hover:border-green-500/30 transition-all">
             <Plus className="w-2.5 h-2.5" />Add
+          </button>
+          <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-violet-400 border border-[#2a2a32] hover:border-violet-500/30 transition-all">
+            <Copy className="w-2.5 h-2.5" />Dup
           </button>
 
           <button onClick={() => setShowImport(v => !v)}

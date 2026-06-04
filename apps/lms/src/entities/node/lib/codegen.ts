@@ -189,37 +189,33 @@ def _servo_pull_down(pin):
 ${servoLines}`;
   };
 
-    const DRV8833_HELPER = `# --- DRV8833 motors (dual PWM per channel) ---
+    const DRV8833_HELPER = `# --- DRV8833 motors (1 PWM + 1 DIR per channel) ---
 class DRV8833:
     MAX = 65535
 
-    def __init__(self, a1, a2, b1, b2):
-        self.a1 = a1
-        self.a2 = a2
-        self.b1 = b1
-        self.b2 = b2
+    def __init__(self, a_pwm, a_dir, b_pwm, b_dir):
+        self.ap = a_pwm
+        self.ad = a_dir
+        self.bp = b_pwm
+        self.bd = b_dir
 
-    def _drv(self, p1, p2, t):
+    def _drv(self, pwm, d, t):
+        d.value(0 if t >= 0 else 1)
         duty = int(abs(t) * self.MAX)
-        if t >= 0:
-            p1.duty_u16(duty)
-            p2.duty_u16(0)
-        else:
-            p1.duty_u16(0)
-            p2.duty_u16(duty)
+        pwm.duty_u16(duty if t >= 0 else self.MAX - duty)
 
-    def throttle_a(self, t): self._drv(self.a1, self.a2, t)
-    def throttle_b(self, t): self._drv(self.b1, self.b2, t)
+    def throttle_a(self, t): self._drv(self.ap, self.ad, t)
+    def throttle_b(self, t): self._drv(self.bp, self.bd, t)
 
-    def stop_a(self): self.a1.duty_u16(0); self.a2.duty_u16(0)
-    def stop_b(self): self.b1.duty_u16(0); self.b2.duty_u16(0)
+    def stop_a(self): self.ap.duty_u16(0); self.ad.value(0)
+    def stop_b(self): self.bp.duty_u16(0); self.bd.value(0)
     def stop_all(self): self.stop_a(); self.stop_b()
 
-def _mp(pin):
-    return PWM(Pin(pin, Pin.OUT), freq=5000, duty_u16=0)
+def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
+def _dp(pin): return Pin(pin, Pin.OUT)
 
-front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _mp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _mp(${MOTORS.frontLeft.dir}))
-rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _mp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _mp(${MOTORS.rearLeft.dir}))
+front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))
+rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))
 `;
 
   // Helper: emit a shared helper block only once per script
@@ -709,17 +705,32 @@ time.sleep(0.1)`);
         imports.add("import time");
         emitOnce("servo_class", buildServoHelperBlock());
         const PORT_TO_SV2: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
-        const sv2     = PORT_TO_SV2[(d.servoPort as string) ?? "S1"] ?? "s1";
-        const svStart = d.startAngle ?? 0;
-        const svEnd   = d.endAngle ?? 90;
-        const svSteps = Math.max(1, d.steps ?? 10);
-        const svDelay = Math.max(5, Math.round(200 / (d.speed ?? 50) * 10));
-        const svStep  = Math.max(1, Math.round(Math.abs(svEnd - svStart) / svSteps));
-        const svDir   = svEnd >= svStart ? 1 : -1;
-        chunkLines.push(`${indent}# Sweep ${d.servoPort ?? "S1"}: ${svStart}° → ${svEnd}°`);
-        chunkLines.push(`${indent}for _a in range(${svStart}, ${svEnd + svDir}, ${svStep * svDir}):`);
-        chunkLines.push(`${indent}    ${sv2}.angle(_a)`);
-        chunkLines.push(`${indent}    time.sleep_ms(${svDelay})`);
+        const swPort = (d.servoPort as string) ?? "S1";
+        const sv2    = PORT_TO_SV2[swPort] ?? "s1";
+        const swModelKey = (d.servoModel as keyof typeof SERVO_MODELS) ?? "mg90s";
+        const swModel    = SERVO_MODELS[swModelKey] ?? SERVO_MODELS.mg90s;
+        // Re-create the servo with the selected model's pulse range.
+        chunkLines.push(`${indent}${sv2} = Servo(${SERVO_PIN_MAP[swPort] ?? 21}, mn=${swModel.pulseMin}, mx=${swModel.pulseMax})  # ${swModel.label}`);
+        if (d.servoType === "360") {
+          // Continuous-rotation servo: oscillate forward then reverse.
+          const swSpeed  = Math.abs(d.contSpeed ?? 60);
+          const swPeriod = Math.max(5, d.sweepPeriod ?? 1000);
+          chunkLines.push(`${indent}# Oscillate ${swPort}: ±${swSpeed}% every ${swPeriod}ms`);
+          chunkLines.push(`${indent}${sv2}.speed(${swSpeed}); time.sleep_ms(${swPeriod})`);
+          chunkLines.push(`${indent}${sv2}.speed(${-swSpeed}); time.sleep_ms(${swPeriod})`);
+          chunkLines.push(`${indent}${sv2}.speed(0)  # stop`);
+        } else {
+          const svStart = d.startAngle ?? 0;
+          const svEnd   = d.endAngle ?? 90;
+          const svSteps = Math.max(1, d.steps ?? 10);
+          const svDelay = Math.max(5, Math.round(200 / (d.speed ?? 50) * 10));
+          const svStep  = Math.max(1, Math.round(Math.abs(svEnd - svStart) / svSteps));
+          const svDir   = svEnd >= svStart ? 1 : -1;
+          chunkLines.push(`${indent}# Sweep ${swPort}: ${svStart}° → ${svEnd}°`);
+          chunkLines.push(`${indent}for _a in range(${svStart}, ${svEnd + svDir}, ${svStep * svDir}):`);
+          chunkLines.push(`${indent}    ${sv2}.angle(_a)`);
+          chunkLines.push(`${indent}    time.sleep_ms(${svDelay})`);
+        }
         break;
       }
       case "l298n_motor":
@@ -825,9 +836,18 @@ time.sleep(0.1)`);
         const PORT_TO_SVC: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
         const scPort = (d.servoPort as string) ?? "S1";
         const scObj  = PORT_TO_SVC[scPort] ?? "s1";
-        const pulseMin = d.pulseMin ?? 600;
-        const pulseMax = d.pulseMax ?? 2400;
-        if (d.mode === "sweep") {
+        const scModelKey = (d.servoModel as keyof typeof SERVO_MODELS) ?? "mg90s";
+        const scModel    = SERVO_MODELS[scModelKey] ?? SERVO_MODELS.mg90s;
+        const pulseMin = d.pulseMin ?? scModel.pulseMin;
+        const pulseMax = d.pulseMax ?? scModel.pulseMax;
+        // Re-create with the configured pulse range (model preset or fine-tuned) if non-default.
+        if (pulseMin !== 600 || pulseMax !== 2400) {
+          chunkLines.push(`${indent}${scObj} = Servo(${SERVO_PIN_MAP[scPort] ?? 21}, mn=${pulseMin}, mx=${pulseMax})  # ${scModel.label}`);
+        }
+        if (d.servoType === "360") {
+          const spd = d.contSpeed ?? 50;
+          chunkLines.push(`${indent}${scObj}.speed(${spd})  # ${scPort} 360° continuous ${spd}%`);
+        } else if (d.mode === "sweep") {
           imports.add("import time");
           const swMin = d.sweepMin ?? 0;
           const swMax = d.sweepMax ?? 180;
@@ -836,16 +856,8 @@ time.sleep(0.1)`);
           chunkLines.push(`${indent}for _a in range(${swMin}, ${swMax + 1}, 1):`);
           chunkLines.push(`${indent}    ${scObj}.angle(_a)`);
           chunkLines.push(`${indent}    time.sleep_ms(${stepMs})`);
-        } else if (d.mode === "continuous") {
-          const spd = d.contSpeed ?? 50;
-          const angle = Math.max(0, Math.min(180, 90 + Math.round(spd * 0.9)));
-          chunkLines.push(`${indent}${scObj}.angle(${angle})  # continuous ${scPort} speed ${spd}%`);
         } else {
           const pulseRange = pulseMax - pulseMin;
-          // Create a custom Servo with user-defined pulse range if different from defaults
-          if (pulseMin !== 600 || pulseMax !== 2400) {
-            chunkLines.push(`${indent}${scObj} = Servo(${SERVO_PIN_MAP[scPort] ?? 21}, mn=${pulseMin}, mx=${pulseMax})`);
-          }
           chunkLines.push(`${indent}${scObj}.angle(${d.angle ?? 90})  # ${scPort} → ${d.angle ?? 90}° (pulse ${Math.round(pulseMin + ((d.angle ?? 90) / 180) * pulseRange)} µs)`);
         }
         break;

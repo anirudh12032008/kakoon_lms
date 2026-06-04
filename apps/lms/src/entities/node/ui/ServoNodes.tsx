@@ -104,7 +104,14 @@ export function ServoMotorNode() {
       <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
       {servoType === "360"
         ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
-        : <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />}
+        : (
+          <>
+            <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />
+            <NodeField label="Set Angle (°)">
+              <NumberInput value={angle} onChange={v => setAngle(Math.max(0, Math.min(180, v)))} />
+            </NodeField>
+          </>
+        )}
     </BaseNode>
   );
 }
@@ -112,10 +119,14 @@ export function ServoMotorNode() {
 // ─── Servo Motor Advance ──────────────────────────────────────────────────────
 export function ServoMotorAdvanceNode() {
   const [servoPort, setServoPort] = useNodeField<ServoKey>("servoPort", "S1");
+  const [servoModel, setServoModel] = useNodeField<ServoModelId>("servoModel", "mg90s");
+  const [servoType, setServoType]   = useNodeField<ServoType>("servoType", "180");
   const [startAngle, setStartAngle] = useNodeField<number>("startAngle", 0);
   const [endAngle, setEndAngle]     = useNodeField<number>("endAngle", 90);
   const [speed, setSpeed]           = useNodeField<number>("speed", 50);
   const [steps, setSteps]           = useNodeField<number>("steps", 10);
+  const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 60);
+  const [sweepPeriod, setSweepPeriod] = useNodeField<number>("sweepPeriod", 1000);
 
   return (
     <BaseNode title="Servo Sweep" color={COLORS.orange} icon={<MotorIcon />} width="240px">
@@ -123,30 +134,44 @@ export function ServoMotorAdvanceNode() {
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
       <ServoPinInfo servoKey={servoPort} />
+      <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
 
-      {/* Dual dial preview */}
-      <div className="flex px-2 gap-2 pb-1">
-        <div className="flex flex-col items-center flex-1">
-          <span className="text-[9px] text-zinc-500 mb-0.5">Start</span>
-          <AngleDial angle={startAngle} onChange={setStartAngle} max={endAngle} color="#60a5fa" />
-        </div>
-        <div className="flex flex-col items-center flex-1">
-          <span className="text-[9px] text-zinc-500 mb-0.5">End</span>
-          <AngleDial angle={endAngle} onChange={setEndAngle} min={startAngle} color={COLORS.orange} />
-        </div>
-      </div>
+      {servoType === "360" ? (
+        <>
+          {/* Continuous servo: oscillate forward ↔ reverse */}
+          <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
+          <NodeField label="Period (ms)"><NumberInput value={sweepPeriod} onChange={setSweepPeriod} /></NodeField>
+          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+            <p className="text-[9px] text-zinc-500">Oscillates {Math.abs(contSpeed)}% forward then reverse, {sweepPeriod}ms each way.</p>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Dual dial preview */}
+          <div className="flex px-2 gap-2 pb-1">
+            <div className="flex flex-col items-center flex-1">
+              <span className="text-[9px] text-zinc-500 mb-0.5">Start</span>
+              <AngleDial angle={startAngle} onChange={setStartAngle} max={endAngle} color="#60a5fa" />
+            </div>
+            <div className="flex flex-col items-center flex-1">
+              <span className="text-[9px] text-zinc-500 mb-0.5">End</span>
+              <AngleDial angle={endAngle} onChange={setEndAngle} min={startAngle} color={COLORS.orange} />
+            </div>
+          </div>
 
-      <div className="px-3 pb-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
-          <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
-        </div>
-        <input type="range" min={1} max={100} step={1} value={speed}
-          onChange={e => setSpeed(Number(e.target.value))}
-          className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
-      </div>
+          <div className="px-3 pb-1">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+              <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
+            </div>
+            <input type="range" min={1} max={100} step={1} value={speed}
+              onChange={e => setSpeed(Number(e.target.value))}
+              className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
+          </div>
 
-      <NodeField label="Steps"><NumberInput value={steps} onChange={setSteps} /></NodeField>
+          <NodeField label="Steps"><NumberInput value={steps} onChange={setSteps} /></NodeField>
+        </>
+      )}
     </BaseNode>
   );
 }
@@ -154,6 +179,8 @@ export function ServoMotorAdvanceNode() {
 // ─── Servo Controller ─────────────────────────────────────────────────────────
 export function ServoControllerNode() {
   const [servoPort, setServoPort]   = useNodeField<ServoKey>("servoPort", "S1");
+  const [servoModel, setServoModel] = useNodeField<ServoModelId>("servoModel", "mg90s");
+  const [servoType, setServoType]   = useNodeField<ServoType>("servoType", "180");
   const [mode, setMode]             = useNodeField<string>("mode", "standard");
   const [angle, setAngle]           = useNodeField<number>("angle", 90);
   const [sweepMin, setSweepMin]     = useNodeField<number>("sweepMin", 0);
@@ -165,25 +192,38 @@ export function ServoControllerNode() {
 
   const pulseUs = Math.round(pulseMin + (angle / 180) * (pulseMax - pulseMin));
 
+  // Picking a model presets the pulse-width fine-tune fields to that servo's range.
+  const applyModel = (m: ServoModelId) => {
+    setServoModel(m);
+    setPulseMin(SERVO_MODELS[m].pulseMin);
+    setPulseMax(SERVO_MODELS[m].pulseMax);
+  };
+
   return (
     <BaseNode title="Servo Controller" color={COLORS.orange} icon={<MotorIcon />} width="260px">
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
       <ServoPinInfo servoKey={servoPort} />
+      <ServoModelFields model={servoModel} onModelChange={applyModel} servoType={servoType} onTypeChange={setServoType} />
 
-      <NodeField label="Mode">
-        <SelectInput value={mode} onChange={setMode} compact
-          options={[
-            { label: "Standard (0–180°)", value: "standard" },
-            { label: "Continuous Rotation", value: "continuous" },
-            { label: "Sweep Animation", value: "sweep" },
-          ]} />
-      </NodeField>
+      {/* 360° continuous servos are speed-controlled — mode selection only applies to 180° */}
+      {servoType === "180" && (
+        <NodeField label="Mode">
+          <SelectInput value={mode} onChange={setMode} compact
+            options={[
+              { label: "Standard (0–180°)", value: "standard" },
+              { label: "Sweep Animation", value: "sweep" },
+            ]} />
+        </NodeField>
+      )}
 
-      {mode === "standard" && (
+      {servoType === "180" && mode === "standard" && (
         <>
           <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />
+          <NodeField label="Set Angle (°)">
+            <NumberInput value={angle} onChange={v => setAngle(Math.max(0, Math.min(180, v)))} />
+          </NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] flex items-center justify-between">
             <span className="text-[9px] text-zinc-500">Pulse @ {angle}°</span>
             <span className="text-[10px] font-mono text-orange-400">{pulseUs} µs</span>
@@ -191,7 +231,7 @@ export function ServoControllerNode() {
         </>
       )}
 
-      {mode === "continuous" && (
+      {servoType === "360" && (
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
@@ -209,7 +249,7 @@ export function ServoControllerNode() {
         </div>
       )}
 
-      {mode === "sweep" && (
+      {servoType === "180" && mode === "sweep" && (
         <>
           <div className="px-3 pb-1 flex gap-4">
             <div className="flex flex-col items-center">
