@@ -184,11 +184,11 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
     });
   };
 
-  const deleteFrame = () => {
+  const removeFrame = (idx: number) => {
     setFrames((prev) => {
       if (prev.length <= 1) return prev;
-      const next = prev.filter((_, i) => i !== curFrame);
-      setCurFrame((c) => Math.min(c, next.length - 1));
+      const next = prev.filter((_, i) => i !== idx);
+      setCurFrame((c) => Math.min(c >= idx ? c - 1 : c, next.length - 1));
       return next;
     });
     setPlaying(false);
@@ -370,21 +370,21 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1a1a20]">
           {frames.map((_, i) => (
-            <button key={i} onClick={() => { setCurFrame(i); setPlaying(false); }}
-              className={`px-2 py-0.5 rounded text-[10px] font-bold ${i === curFrame ? "bg-violet-500/25 text-violet-300" : "text-zinc-500"}`}>
-              {i + 1}
-            </button>
+            <div key={i} className="flex items-center gap-0.5">
+              <button onClick={() => { setCurFrame(i); setPlaying(false); }}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-zinc-300"}`}>
+                {i + 1}
+              </button>
+              {frames.length > 1 && (
+                <button onClick={() => removeFrame(i)} title="Delete frame"
+                  className="text-zinc-700 hover:text-red-400 text-[10px]">×</button>
+              )}
+            </div>
           ))}
           <button onClick={() => { setFrames((p) => [...p, [...p[p.length-1]]]); setCurFrame(frames.length); setPlaying(false); }}
             className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32] hover:border-green-500/30">
             + Frame
           </button>
-          {frames.length > 1 && (
-            <button onClick={deleteFrame} title={`Delete frame ${curFrame + 1}`}
-              className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-red-400 border border-[#2a2a32] hover:border-red-500/30">
-              <Trash2 className="w-3 h-3" /> Frame
-            </button>
-          )}
           {frames.length > 1 && (
             <button onClick={() => setPlaying(!playing)}
               className={`ml-auto flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-bold ${playing ? "bg-amber-500/20 text-amber-400" : "bg-violet-500/20 text-violet-300"}`}>
