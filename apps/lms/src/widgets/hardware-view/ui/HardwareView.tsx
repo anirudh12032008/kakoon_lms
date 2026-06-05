@@ -267,221 +267,48 @@ const HW_COMPONENTS: HwComponent[] = [
 ];
 
 // ─── Board port positions ─────────────────────────────────────────────────────
+// x/y are percentages of the 480×480 board image (top-left = 0,0).
+// `side` controls the direction connection lines exit the handle.
 
-const BOARD_PORTS = [
-  { id:"gpio",     label:"GPIO 01–13", side:Position.Top,    offset:40, color:"#22c55e" },
-  { id:"battery",  label:"Battery",    side:Position.Top,    offset:80, color:"#3b82f6" },
-  { id:"neopixel", label:"NeoPixel",   side:Position.Left,   offset:14, color:"#a855f7" },
-  { id:"i2s",      label:"I2S",        side:Position.Left,   offset:24, color:"#f97316" },
-  { id:"motor_fr", label:"Motor FR",   side:Position.Left,   offset:37, color:"#ef4444" },
-  { id:"motor_fl", label:"Motor FL",   side:Position.Left,   offset:48, color:"#ef4444" },
-  { id:"motor_rr", label:"Motor RR",   side:Position.Left,   offset:59, color:"#ef4444" },
-  { id:"motor_rl", label:"Motor RL",   side:Position.Left,   offset:70, color:"#ef4444" },
-  { id:"usbc",     label:"USB-C",      side:Position.Right,  offset:12, color:"#64748b" },
-  { id:"imu",      label:"IMU",        side:Position.Right,  offset:26, color:"#06b6d4" },
-  { id:"servo_s1", label:"Servo S1",   side:Position.Right,  offset:48, color:"#eab308" },
-  { id:"servo_s2", label:"Servo S2",   side:Position.Right,  offset:60, color:"#eab308" },
-  { id:"servo_s3", label:"Servo S3",   side:Position.Right,  offset:72, color:"#eab308" },
-  { id:"servo_s4", label:"Servo S4",   side:Position.Right,  offset:84, color:"#eab308" },
-  { id:"oled",     label:"OLED",       side:Position.Bottom, offset:12, color:"#6366f1" },
-  { id:"i2c2",     label:"I2C-2",      side:Position.Bottom, offset:29, color:"#8b5cf6" },
-  { id:"sensor2",  label:"Sensor 2",   side:Position.Bottom, offset:56, color:"#14b8a6" },
-  { id:"sensor1",  label:"Sensor 1",   side:Position.Bottom, offset:78, color:"#14b8a6" },
+interface BoardPort {
+  id: string; label: string; side: Position;
+  x: number; y: number; color: string;
+}
+
+const BOARD_PORTS: BoardPort[] = [
+  // Centers from rendered 579×579 image scan — these ARE the exact CSS percentages
+  { id:"gpio",     label:"GPIO PINS", side:Position.Top,    x:57,  y:8,  color:"#22c55e" },
+  { id:"motor_fl", label:"ML1",       side:Position.Left,   x:7,  y:21,  color:"#ef4444" },
+  { id:"motor_rl", label:"ML2",       side:Position.Left,   x:7,  y:32,  color:"#ef4444" },
+  { id:"motor_fr", label:"MR1",       side:Position.Left,   x:7,  y:62,  color:"#ef4444" },
+  { id:"motor_rr", label:"MR2",       side:Position.Left,   x:7,  y:74,  color:"#ef4444" },
+  { id:"neopixel", label:"WSB LED",   side:Position.Left,   x:27,  y:23,  color:"#a855f7" },
+  { id:"servo_s1", label:"Servo S1",  side:Position.Bottom, x:63,  y:79,  color:"#eab308" },
+  { id:"servo_s2", label:"Servo S2",  side:Position.Bottom, x:69,  y:79,  color:"#eab308" },
+  { id:"servo_s3", label:"Servo S3",  side:Position.Bottom, x:75,  y:79,  color:"#eab308" },
+  { id:"servo_s4", label:"Servo S4",  side:Position.Bottom, x:80,  y:79,  color:"#eab308" },
+  { id:"i2c2",     label:"I2C",       side:Position.Bottom, x:24,  y:92,  color:"#8b5cf6" },
+  { id:"oled",     label:"OLED",      side:Position.Bottom, x:41,  y:92,  color:"#6366f1" },
+  { id:"sensor1",  label:"Sensor 1",  side:Position.Bottom, x:58,  y:92,  color:"#14b8a6" },
+  { id:"sensor2",  label:"Sensor 2",  side:Position.Bottom, x:75,  y:92,  color:"#14b8a6" },
 ];
 
-// ─── Board node (close PCB replica) ──────────────────────────────────────────
-
-function BoardLabel({ x, y, text, color, anchor = "middle" }: { x: number; y: number; text: string; color: string; anchor?: "inherit" | "end" | "middle" | "start" }) {
-  const w = text.length * 6.2 + 10;
-  return (
-    <g>
-      <rect x={anchor === "end" ? x - w : anchor === "start" ? x : x - w/2} y={y - 9} width={w} height={13} rx="3"
-        fill={color} opacity="0.18"/>
-      <text x={x} y={y} textAnchor={anchor} fontSize="8.5" fontWeight="bold" fill={color}
-        fontFamily="'Courier New',monospace" letterSpacing="0.5">{text}</text>
-    </g>
-  );
-}
-
-// Clean white port connector box — left edge
-function PortLeft({ y, label, color }: { y: number; label: string; color: string }) {
-  const w = 62; const h = 22;
-  return (
-    <g>
-      <rect x="2" y={y - h / 2} width={w} height={h} rx="3"
-        fill="#e8e8e8" stroke={color} strokeWidth="1.3"/>
-      <rect x="4" y={y - h / 2 + 2} width={w - 4} height={h - 4} rx="2"
-        fill="#f2f2f2"/>
-      <text x={w / 2 + 2} y={y + 4} textAnchor="middle" fontSize="8"
-        fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">{label}</text>
-    </g>
-  );
-}
-
-// Clean white port connector box — bottom edge
-function PortBottom({ x, label, color }: { x: number; label: string; color: string }) {
-  const w = 54; const h = 26;
-  return (
-    <g>
-      <rect x={x - w / 2} y="528" width={w} height={h} rx="3"
-        fill="#e8e8e8" stroke={color} strokeWidth="1.3"/>
-      <rect x={x - w / 2 + 2} y="530" width={w - 4} height={h - 4} rx="2"
-        fill="#f2f2f2"/>
-      <text x={x} y="544" textAnchor="middle" fontSize="8"
-        fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">{label}</text>
-    </g>
-  );
-}
+// ─── Board node — uses real Kokoon Labs PCB image ─────────────────────────────
 
 function BoardNode() {
   return (
-    <div className="relative select-none" style={{width:500,height:560}}>
-      <svg viewBox="0 0 500 560" className="absolute inset-0 w-full h-full">
-        <defs>
-          <linearGradient id="pcbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1d7038"/>
-            <stop offset="45%" stopColor="#145228"/>
-            <stop offset="100%" stopColor="#1d7038"/>
-          </linearGradient>
-          <linearGradient id="espGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#cdcdcd"/>
-            <stop offset="100%" stopColor="#ababab"/>
-          </linearGradient>
-        </defs>
-
-        <rect x="3" y="3" width="494" height="554" rx="12"
-          fill="url(#pcbGrad)" stroke="#0a3318" strokeWidth="2.5"
-          style={{filter:"drop-shadow(0 6px 18px rgba(0,0,0,0.7))"}}/>
-
-        {Array.from({length:31}).map((_,i)=>(
-          <line key={`v${i}`} x1={16*i+8} y1="3" x2={16*i+8} y2="557" stroke="#fff" strokeWidth="0.4" opacity="0.04"/>
-        ))}
-        {Array.from({length:35}).map((_,i)=>(
-          <line key={`h${i}`} x1="3" y1={16*i+8} x2="497" y2={16*i+8} stroke="#fff" strokeWidth="0.4" opacity="0.04"/>
-        ))}
-
-        {[[18,18],[482,18],[18,542],[482,542]].map(([cx,cy],i)=>(
-          <g key={i}>
-            <circle cx={cx} cy={cy} r="11" fill="#0a1f0e" stroke="#143d1c" strokeWidth="1"/>
-            <circle cx={cx} cy={cy} r="7" fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="0.8"/>
-            <line x1={cx-4} y1={cy} x2={cx+4} y2={cy} stroke="#555" strokeWidth="1.2"/>
-            <line x1={cx} y1={cy-4} x2={cx} y2={cy+4} stroke="#555" strokeWidth="1.2"/>
-          </g>
-        ))}
-
-        {/* ─── TOP: GPIO header ─── */}
-        <BoardLabel x={210} y={18} text="GPIO  01 – 13" color="#4ade80"/>
-        <rect x="78" y="22" width="264" height="28" rx="3" fill="#111" stroke="#333" strokeWidth="1.2"/>
-        {Array.from({length:13}).map((_,i)=>(
-          <g key={i}>
-            <rect x={83+i*19} y="24" width="16" height="10" rx="1.2" fill="#0a0a0a" stroke="#222" strokeWidth="0.6"/>
-            <rect x={83+i*19} y="35" width="16" height="10" rx="1.2" fill="#0a0a0a" stroke="#222" strokeWidth="0.6"/>
-          </g>
-        ))}
-        {["GND","13","11","12","10","09","07","06","05","04","03","02","01"].map((lbl,i)=>(
-          <text key={i} x={91+i*19} y="58" textAnchor="middle" fontSize="7" fill="#4ade80"
-            fontFamily="'Courier New',monospace" opacity="0.75" fontWeight="bold">{lbl}</text>
-        ))}
-
-        {/* ─── TOP RIGHT: Battery port box ─── */}
-        <rect x="374" y="20" width="52" height="24" rx="3"
-          fill="#e8e8e8" stroke="#3b82f6" strokeWidth="1.3"/>
-        <rect x="376" y="22" width="48" height="20" rx="2" fill="#f2f2f2"/>
-        <text x="400" y="35" textAnchor="middle" fontSize="8"
-          fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">BATTERY</text>
-
-        {/* ─── LEFT EDGE: port boxes ─── */}
-        <PortLeft y={78}  label="NEOPIXEL" color="#a855f7"/>
-        <PortLeft y={134} label="I2S"      color="#f97316"/>
-        <PortLeft y={207} label="MTR  FR"  color="#ef4444"/>
-        <PortLeft y={269} label="MTR  FL"  color="#ef4444"/>
-        <PortLeft y={330} label="MTR  RR"  color="#ef4444"/>
-        <PortLeft y={392} label="MTR  RL"  color="#ef4444"/>
-
-        {/* ─── CENTER: ESP32-S3 WROOM module ─── */}
-        {/* MCU module: use external image placed in apps/lms/public/assets/esp32.png */}
-        <image href="/assets/esp32.png" x="145" y="130" width="220" height="210" preserveAspectRatio="xMidYMid meet" />
-        {Array.from({length:11}).map((_,i)=>(
-          <line key={i} x1={154+i*18} y1="135" x2={154+i*18} y2="335" stroke="#b4b4b4" strokeWidth="0.6" opacity="0.5"/>
-        ))}
-        {Array.from({length:7}).map((_,i)=>(
-          <line key={i} x1="150" y1={140+i*28} x2="360" y2={140+i*28} stroke="#b4b4b4" strokeWidth="0.6" opacity="0.5"/>
-        ))}
-        <text x="255" y="210" textAnchor="middle" fontSize="16" fill="#1a1a1a" fontFamily="Arial" fontWeight="900">ESP32-S3</text>
-        <text x="255" y="230" textAnchor="middle" fontSize="11" fill="#333" fontFamily="Arial">WROOM-1  N16R8</text>
-        <text x="255" y="248" textAnchor="middle" fontSize="9" fill="#555" fontFamily="Arial">FCC ID: 2AC7Z-ESP32S3</text>
-        <rect x="348" y="138" width="24" height="166" rx="3" fill="#b8b8b8"/>
-        <rect x="351" y="144" width="18" height="154" rx="2" fill="#adadad"/>
-        {Array.from({length:22}).map((_,i)=>(
-          <rect key={i} x={150+i*9} y="333" width="7" height="5" rx="0.6" fill="#888" stroke="#666" strokeWidth="0.4"/>
-        ))}
-
-        {/* ─── Electrolytic capacitors ─── */}
-        {[[72,395,40],[128,395,32],[184,395,40]].map(([cx,cy,d],i)=>(
-          <g key={i}>
-            <circle cx={cx} cy={cy} r={d/2} fill="#222" stroke="#444" strokeWidth="2"/>
-            <circle cx={cx} cy={cy} r={d/2-4} fill="#1a1a1a"/>
-            <text x={cx} y={cy-3} textAnchor="middle" fontSize="7.5" fill="#999" fontFamily="monospace">{["1000","470","1000"][i]}</text>
-            <text x={cx} y={cy+8} textAnchor="middle" fontSize="6" fill="#777" fontFamily="monospace">µF 16V</text>
-          </g>
-        ))}
-
-        {/* ─── Servo ports (right side) — simple labeled boxes ─── */}
-        {(["S1","S2","S3","S4"] as const).map((s, i) => {
-          const yPct = [48,60,72,84][i];
-          const yPx = (yPct / 100) * 560;
-          return (
-            <g key={s}>
-              <rect x="434" y={yPx - 11} width="58" height="22" rx="3"
-                fill="#e8e8e8" stroke="#eab308" strokeWidth="1.3"/>
-              <rect x="436" y={yPx - 9} width="54" height="18" rx="2" fill="#f2f2f2"/>
-              <text x="463" y={yPx + 4} textAnchor="middle" fontSize="8"
-                fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">{`SERVO ${s}`}</text>
-            </g>
-          );
-        })}
-
-        {/* ─── KOKOON LABS watermark ─── */}
-        <text x="150" y="388" fontSize="20" fill="rgba(255,255,255,0.1)" fontFamily="Arial"
-          fontWeight="900" letterSpacing="4">KOKOON</text>
-        <text x="150" y="414" fontSize="20" fill="rgba(255,255,255,0.1)" fontFamily="Arial"
-          fontWeight="900" letterSpacing="8">LABS</text>
-
-        {/* ─── LEDs ─── */}
-        <circle cx="456" cy="60" r="7" fill="#00e676" style={{filter:"drop-shadow(0 0 5px #00c853)"}}/>
-        <circle cx="476" cy="60" r="7" fill="#ff1744" style={{filter:"drop-shadow(0 0 4px #ff1744)"}}/>
-        <text x="456" y="74" textAnchor="middle" fontSize="7" fill="#4ade80" fontFamily="monospace">LED1</text>
-        <text x="476" y="74" textAnchor="middle" fontSize="7" fill="#f87171" fontFamily="monospace">LED2</text>
-
-        {/* ─── RST / BOOT buttons ─── */}
-        {[{label:"RST",x:390,y:82},{label:"BOOT",x:432,y:82}].map(({label,x,y})=>(
-          <g key={label}>
-            <rect x={x} y={y} width="30" height="22" rx="3" fill="#2a2a2a" stroke="#555" strokeWidth="1.2"/>
-            <rect x={x+4} y={y+4} width="22" height="14" rx="2" fill="#1a1a1a"/>
-            <text x={x+15} y={y+36} textAnchor="middle" fontSize="8" fill="#888" fontFamily="monospace">{label}</text>
-          </g>
-        ))}
-
-        {/* USB-C port box */}
-        <rect x="434" y={Math.round(0.12*560) - 11} width="58" height="22" rx="3"
-          fill="#e8e8e8" stroke="#94a3b8" strokeWidth="1.3"/>
-        <rect x="436" y={Math.round(0.12*560) - 9} width="54" height="18" rx="2" fill="#f2f2f2"/>
-        <text x="463" y={Math.round(0.12*560) + 4} textAnchor="middle" fontSize="8"
-          fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">USB-C</text>
-
-        {/* IMU port box on right edge */}
-        <rect x="434" y={Math.round(0.26*560) - 11} width="58" height="22" rx="3"
-          fill="#e8e8e8" stroke="#06b6d4" strokeWidth="1.3"/>
-        <rect x="436" y={Math.round(0.26*560) - 9} width="54" height="18" rx="2" fill="#f2f2f2"/>
-        <text x="463" y={Math.round(0.26*560) + 4} textAnchor="middle" fontSize="8"
-          fill="#333" fontFamily="'Courier New',monospace" fontWeight="bold">IMU</text>
-
-        {/* ─── BOTTOM EDGE: port boxes ─── */}
-        <PortBottom x={60}  label="OLED"  color="#6366f1"/>
-        <PortBottom x={145} label="I2C-2" color="#8b5cf6"/>
-        <PortBottom x={280} label="SNS-2" color="#14b8a6"/>
-        <PortBottom x={390} label="SNS-1" color="#14b8a6"/>
-      </svg>
+    <div className="relative select-none" style={{width:480,height:480}}>
+      <img
+        src="/assets/kokoon-board.png"
+        alt="Kokoon Labs Board"
+        draggable={false}
+        style={{
+          width:"100%", height:"100%",
+          objectFit:"contain",
+          userSelect:"none", pointerEvents:"none",
+          filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.7))",
+        }}
+      />
 
       {BOARD_PORTS.map((port)=>(
         <Handle
@@ -490,11 +317,13 @@ function BoardNode() {
           id={port.id}
           position={port.side}
           style={{
-            [port.side===Position.Left||port.side===Position.Right?"top":"left"]:`${port.offset}%`,
+            top: `${port.y}%`,
+            left: `${port.x}%`,
+            transform: "translate(-50%, -50%)",
             background: port.color,
-            width:18, height:18,
+            width:16, height:16,
             border:`3px solid ${port.color}70`,
-            boxShadow:`0 0 12px ${port.color}90, 0 0 24px ${port.color}30`,
+            boxShadow:`0 0 10px ${port.color}90, 0 0 20px ${port.color}30`,
             zIndex:10,
           }}
           title={port.label}
@@ -672,8 +501,8 @@ for (const comp of HW_COMPONENTS) {
 
 // ─── Port auto-assignment helpers ─────────────────────────────────────────────
 
-const _leftPorts  = new Set(["neopixel","i2s","motor_fr","motor_fl","motor_rr","motor_rl"]);
-const _rightPorts = new Set(["imu","servo_s1","servo_s2","servo_s3","servo_s4"]);
+const _leftPorts  = new Set(["neopixel","motor_fr","motor_fl","motor_rr","motor_rl"]);
+const _bottomPorts = new Set(["servo_s1","servo_s2","servo_s3","servo_s4","i2c2","oled","sensor1","sensor2"]);
 
 function _getBestPort(nodeType: string, data: Record<string, unknown>): string | null {
   switch (nodeType) {
@@ -712,9 +541,9 @@ function _getBestPort(nodeType: string, data: Record<string, unknown>): string |
 
 function _getAutoPosition(portId: string): { x: number; y: number } {
   const hwCount = _nodes.filter(n => n.type === "hw_component").length;
-  if (_leftPorts.has(portId))  return { x: 20,  y: 60 + hwCount * 200 };
-  if (_rightPorts.has(portId)) return { x: 980, y: 60 + hwCount * 200 };
-  return { x: 60 + hwCount * 200, y: 720 };
+  if (_leftPorts.has(portId))   return { x: 20,  y: 60 + hwCount * 200 };
+  if (_bottomPorts.has(portId)) return { x: 60 + hwCount * 200, y: 720 };
+  return { x: 980, y: 60 + hwCount * 200 };
 }
 
 // ─── Module-level persistence & cross-canvas sync state ───────────────────────
