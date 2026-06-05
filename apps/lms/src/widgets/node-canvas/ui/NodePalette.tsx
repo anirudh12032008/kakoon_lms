@@ -3,6 +3,7 @@ import { PencilLine, Trash2, Search } from "lucide-react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "@/entities/node/model";
 import { useCustomNodes, type CustomNodeTemplate, isCustomNodeTemplateAllowed } from "@/entities/custom-node/model/customNodes";
 import { useModal } from "@/shared/context/ModalContext";
+import { GlobalAdvancedToggle } from "@/shared/context/NodeModeContext";
 
 // Color accent per category id — purely visual, easy to change
 const CAT_COLORS: Record<string, { dot: string; text: string; bg: string }> = {
@@ -207,6 +208,7 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
           </div>
         </div>
       </div>
+      <GlobalAdvancedToggle />
     </div>
   );
 }

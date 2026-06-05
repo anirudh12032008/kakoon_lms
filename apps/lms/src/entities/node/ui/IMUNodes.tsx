@@ -8,6 +8,7 @@ import {
   ToggleInput,
   useNodeField,
   makeHandleStyle,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { SensorIcon } from "./_shared";
@@ -108,18 +109,20 @@ export function IMUSensorNode() {
 
   return (
     <BaseNode title="Onboard IMU" color={COLORS.purple} icon={<SensorIcon />} width="260px">
-      {/* Fixed I2C pin info */}
-      <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Onboard SoftI2C — fixed GPIO</span>
-          <span className="text-[9px] font-mono text-purple-400">locked</span>
+      <AdvancedSection>
+        {/* Fixed I2C pin info */}
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Onboard SoftI2C — fixed GPIO</span>
+            <span className="text-[9px] font-mono text-purple-400">locked</span>
+          </div>
+          <div className="flex gap-4 mt-0.5">
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
+            <span className="text-[10px] text-zinc-500">Addr <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.address}</span></span>
+          </div>
         </div>
-        <div className="flex gap-4 mt-0.5">
-          <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
-          <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
-          <span className="text-[10px] text-zinc-500">Addr <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.address}</span></span>
-        </div>
-      </div>
+      </AdvancedSection>
 
       <NodeField label="Variable Name">
         <TextInput value={varName} onChange={setVarName} />
@@ -133,9 +136,11 @@ export function IMUSensorNode() {
         ]} />
       </NodeField>
 
-      <NodeField label="Loop Delay (ms)">
-        <NumberInput value={loopDelay} onChange={setLoopDelay} />
-      </NodeField>
+      <AdvancedSection>
+        <NodeField label="Loop Delay (ms)">
+          <NumberInput value={loopDelay} onChange={setLoopDelay} />
+        </NodeField>
+      </AdvancedSection>
 
       {/* Format hint */}
       <div className="mx-3 mb-2 px-2 py-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5">
@@ -164,30 +169,31 @@ export function PIRSensorNode() {
   return (
     <BaseNode title="PIR Motion Sensor" color={COLORS.green} icon={<SensorIcon />} width="260px">
       <NodeField label="GPIO Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Pull-up">
-        <ToggleInput value={pullup} onChange={setPullup} leftLabel="None" rightLabel="↑ Up" />
-      </NodeField>
 
       {/* Live radar display */}
       <PIRRadarDisplay detected={detected} live={live} />
 
-      {/* Debounce */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Debounce</span>
-          <span className="text-[10px] font-mono text-green-400">{debounce} ms</span>
+      <AdvancedSection>
+        <NodeField label="Pull-up">
+          <ToggleInput value={pullup} onChange={setPullup} leftLabel="None" rightLabel="↑ Up" />
+        </NodeField>
+        {/* Debounce */}
+        <div className="px-3 py-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#9ca3af] font-medium">Debounce</span>
+            <span className="text-[10px] font-mono text-green-400">{debounce} ms</span>
+          </div>
+          <input
+            type="range" min={0} max={500} step={10} value={debounce}
+            onChange={e => setDebounce(Number(e.target.value))}
+            className="nodrag w-full h-1 cursor-pointer"
+            style={{ accentColor: COLORS.green }}
+          />
         </div>
-        <input
-          type="range" min={0} max={500} step={10} value={debounce}
-          onChange={e => setDebounce(Number(e.target.value))}
-          className="nodrag w-full h-1 cursor-pointer"
-          style={{ accentColor: COLORS.green }}
-        />
-      </div>
-
-      <NodeField label="Send to Viz">
-        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
-      </NodeField>
+        <NodeField label="Send to Viz">
+          <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
+        </NodeField>
+      </AdvancedSection>
 
       {/* Output handle */}
       <NodeField label="detected">

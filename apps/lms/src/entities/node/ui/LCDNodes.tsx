@@ -6,6 +6,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { DisplayIcon } from "./_shared";
@@ -201,7 +202,7 @@ export function LCD16x2Node() {
             <SelectInput value={sensorPort} onChange={setSensorPort} compact
               options={[{ label: "Port 1 (SCL 4 / SDA 5)", value: "1" }, { label: "Port 2 (SCL 1 / SDA 2)", value: "2" }]} />
           </NodeField>
-          <PinInfo label="SCL / SDA" value={`GPIO ${pins.scl} / ${pins.sda}`} />
+          <AdvancedSection><PinInfo label="SCL / SDA" value={`GPIO ${pins.scl} / ${pins.sda}`} /></AdvancedSection>
         </>}
 
         {/* Mini LCD preview */}

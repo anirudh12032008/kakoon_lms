@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import {
   BaseNode, NodeField, TextInput, NumberInput, SelectInput,
-  useNodeField, COLORS,
+  useNodeField, useAdvancedMode, COLORS,
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
@@ -56,6 +56,7 @@ export function HTTPClientNode() {
   const isPost = method === "POST" || method === "PUT" || method === "PATCH";
   const methodColor: Record<string, string> = { GET: "#22c55e", POST: "#f97316", PUT: "#3b82f6", PATCH: "#8b5cf6", DELETE: "#ef4444" };
   const mc = methodColor[method] ?? COLORS.cyan;
+  const isAdvanced = useAdvancedMode();
 
   return (
     <BaseNode title="HTTP Client" color={COLORS.cyan} icon={<HTTPIcon />} width="285px">
@@ -88,8 +89,8 @@ export function HTTPClientNode() {
         </NodeField>
       )}
 
-      {/* headers */}
-      <div className="px-3 mt-0.5">
+      {/* headers — advanced only */}
+      {isAdvanced && <div className="px-3 mt-0.5">
         <button onClick={() => setShowHeaders(!showHeaders)}
           className="nodrag w-full flex items-center justify-between py-1 text-[9px] text-zinc-500 hover:text-cyan-400 transition-colors">
           <span className="font-bold uppercase tracking-wider">Headers ({headers.length})</span>
@@ -117,10 +118,10 @@ export function HTTPClientNode() {
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
-      {/* JSON body builder for POST/PUT/PATCH */}
-      {isPost && (
+      {/* JSON body builder for POST/PUT/PATCH — advanced only */}
+      {isAdvanced && isPost && (
         <div className="px-3 mt-0.5">
           <button onClick={() => setShowBody(!showBody)}
             className="nodrag w-full flex items-center justify-between py-1 text-[9px] text-zinc-500 hover:text-orange-400 transition-colors">

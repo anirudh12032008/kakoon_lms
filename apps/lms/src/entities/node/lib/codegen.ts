@@ -616,7 +616,7 @@ time.sleep(0.1)`);
         setupLines.push(`oled = ${dLib}.${dClass}(${oledW}, ${oledH}, i2c)`);
 
         // Animation file stored on device — generate file-reading code
-        if (d.animFile) {
+        if (d.mode !== "text" && d.animFile) {
           imports.add(`import ${dLib}, framebuf, time`);
           emitOnce("oled_anim_player",
             `def _play_oled(oled, path):\n` +

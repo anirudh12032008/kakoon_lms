@@ -5,6 +5,7 @@ import {
   NumberInput,
   SelectInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { ChipIcon } from "./_shared";
@@ -45,12 +46,14 @@ export function NeoPixelLEDNode() {
   const [color, setColor] = useNodeField<string>("color", "#ff0000");
   return (
     <BaseNode title="NeoPixel LED" color={COLORS.cyan} icon={<ChipIcon />} width="230px">
-      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
-          <span className="text-[9px] font-mono text-cyan-400">fixed</span>
+      <AdvancedSection>
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
+            <span className="text-[9px] font-mono text-cyan-400">fixed</span>
+          </div>
         </div>
-      </div>
+      </AdvancedSection>
       <NodeField label="LED Count"><NumberInput value={numLeds} onChange={setNumLeds} /></NodeField>
       <NodeField label="Brightness"><NumberInput value={brightness} onChange={setBrightness} /></NodeField>
       <NodeField label="Color">
@@ -209,7 +212,7 @@ export function RGBLEDMatrixNode() {
 
       {/* Per-pixel editor (Solid pattern, ≤64 LEDs) */}
       {showPixelPalette && (
-        <>
+        <AdvancedSection>
           <div className="px-3 pt-1 pb-0.5 flex items-center justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Per-pixel Colors</span>
             <button onClick={() => setShowPixelEditor(v => !v)}
@@ -221,7 +224,7 @@ export function RGBLEDMatrixNode() {
             <PixelPalette colors={pixelColors.slice(0, ledCount)}
               onChange={c => setPixelColors(c)} />
           )}
-        </>
+        </AdvancedSection>
       )}
     </BaseNode>
   );
@@ -236,12 +239,14 @@ export function NeoPixelRGBNode() {
   const [blue, setBlue] = useNodeField<number>("blue", 0);
   return (
     <BaseNode title="NeoPixel RGB (Advanced)" color={COLORS.violet} icon={<ChipIcon />} width="250px">
-      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
-          <span className="text-[9px] font-mono text-violet-400">fixed</span>
+      <AdvancedSection>
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
+            <span className="text-[9px] font-mono text-violet-400">fixed</span>
+          </div>
         </div>
-      </div>
+      </AdvancedSection>
       <NodeField label="LED Count"><NumberInput value={numLeds} onChange={setNumLeds} /></NodeField>
       <NodeField label="Brightness"><NumberInput value={brightness} onChange={setBrightness} /></NodeField>
       <NodeField label="Red (0–255)"><NumberInput value={red} onChange={setRed} /></NodeField>

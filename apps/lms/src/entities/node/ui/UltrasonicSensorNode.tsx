@@ -6,6 +6,7 @@ import {
   SelectInput,
   useNodeField,
   makeHandleStyle,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
@@ -76,12 +77,14 @@ export function UltrasonicSensorNode() {
       <NodeField label="Sensor Port">
         <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
       </NodeField>
-      <PortPinBadge port={port} mode="ultrasonic" />
 
-      {/* Echo pulse visualiser */}
-      <div className="px-3 pt-1 pb-0.5">
-        <EchoPulseDisplay />
-      </div>
+      <AdvancedSection>
+        <PortPinBadge port={port} mode="ultrasonic" />
+        {/* Echo pulse visualiser */}
+        <div className="px-3 pt-1 pb-0.5">
+          <EchoPulseDisplay />
+        </div>
+      </AdvancedSection>
 
       {/* Distance display */}
       <div className="px-3 py-1 flex items-center gap-2 bg-[#0d0d10] mx-3 rounded-lg border border-[#2a2a30]">
@@ -96,22 +99,23 @@ export function UltrasonicSensorNode() {
         </div>
       </div>
 
-      {/* Proximity zone designer */}
-      <div className="px-3 pt-2 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold px-0">Proximity Zones</span>
-      </div>
-      <ZoneRow label="Near" color={nearColor} dist={nearDist} setDist={setNearDist} nodeColor={nearColor} onColorChange={setNearColor} />
-      <ZoneRow label="Mid" color={midColor} dist={midDist} setDist={setMidDist} nodeColor={midColor} onColorChange={setMidColor} />
-      <ZoneRow label="Far" color={farColor} dist={farDist} setDist={setFarDist} nodeColor={farColor} onColorChange={setFarColor} />
-
-      {/* Zone bar preview */}
-      <div className="px-3 pb-1 pt-0.5">
-        <div className="flex w-full h-2 rounded-full overflow-hidden gap-px">
-          <div className="rounded-l-full" style={{ flex: nearDist, background: nearColor, opacity: 0.8 }} />
-          <div style={{ flex: midDist - nearDist, background: midColor, opacity: 0.8 }} />
-          <div className="rounded-r-full" style={{ flex: Math.max(1, farDist - midDist), background: farColor, opacity: 0.8 }} />
+      <AdvancedSection>
+        {/* Proximity zone designer */}
+        <div className="px-3 pt-2 pb-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold px-0">Proximity Zones</span>
         </div>
-      </div>
+        <ZoneRow label="Near" color={nearColor} dist={nearDist} setDist={setNearDist} nodeColor={nearColor} onColorChange={setNearColor} />
+        <ZoneRow label="Mid" color={midColor} dist={midDist} setDist={setMidDist} nodeColor={midColor} onColorChange={setMidColor} />
+        <ZoneRow label="Far" color={farColor} dist={farDist} setDist={setFarDist} nodeColor={farColor} onColorChange={setFarColor} />
+        {/* Zone bar preview */}
+        <div className="px-3 pb-1 pt-0.5">
+          <div className="flex w-full h-2 rounded-full overflow-hidden gap-px">
+            <div className="rounded-l-full" style={{ flex: nearDist, background: nearColor, opacity: 0.8 }} />
+            <div style={{ flex: midDist - nearDist, background: midColor, opacity: 0.8 }} />
+            <div className="rounded-r-full" style={{ flex: Math.max(1, farDist - midDist), background: farColor, opacity: 0.8 }} />
+          </div>
+        </div>
+      </AdvancedSection>
 
       {/* Outputs */}
       <NodeField label="distance">

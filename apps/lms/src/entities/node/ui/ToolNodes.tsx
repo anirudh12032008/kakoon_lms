@@ -4,6 +4,7 @@ import {
   NodeField,
   NumberInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 
@@ -82,8 +83,10 @@ export function I2CScannerNode() {
 
   return (
     <BaseNode title="I2C Scanner" color={COLORS.blue} icon={<ToolIcon />} width="260px">
-      <NodeField label="SDA Pin"><NumberInput value={sda} onChange={setSda} /></NodeField>
-      <NodeField label="SCL Pin"><NumberInput value={scl} onChange={setScl} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="SDA Pin"><NumberInput value={sda} onChange={setSda} /></NodeField>
+        <NodeField label="SCL Pin"><NumberInput value={scl} onChange={setScl} /></NodeField>
+      </AdvancedSection>
 
       {/* Demo notice */}
       <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-amber-500/20 bg-amber-500/5">

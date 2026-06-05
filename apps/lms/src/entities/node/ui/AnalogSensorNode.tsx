@@ -6,6 +6,7 @@ import {
   NumberInput,
   useNodeField,
   makeHandleStyle,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { SensorIcon } from "./_shared";
@@ -66,31 +67,30 @@ export function AnalogSensorNode() {
   return (
     <BaseNode title="Analog Sensor" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       <NodeField label="ADC Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Sample (ms)"><NumberInput value={sampleRate} onChange={setSampleRate} /></NodeField>
 
-      {/* Live scrolling waveform */}
-      <div className="px-3 pt-1 pb-0.5">
-        <WaveformDisplay color={COLORS.purple} />
-      </div>
-
-      {/* Gauge */}
-      <div className="px-3 pt-1 pb-0.5">
-        <GaugeBar pct={50} color={COLORS.purple} />
-        <div className="flex justify-between mt-0.5">
-          <span className="text-[9px] text-zinc-600 font-mono">0 raw</span>
-          <span className="text-[9px] text-zinc-600 font-mono">4095 / 3.3V</span>
+      <AdvancedSection>
+        <NodeField label="Sample (ms)"><NumberInput value={sampleRate} onChange={setSampleRate} /></NodeField>
+        {/* Live scrolling waveform */}
+        <div className="px-3 pt-1 pb-0.5">
+          <WaveformDisplay color={COLORS.purple} />
         </div>
-      </div>
-
-      {/* Min / Max / Avg */}
-      <div className="px-3 py-1 flex gap-1.5">
-        <StatChip label="Min" value="—" color="#60a5fa" />
-        <StatChip label="Max" value="—" color="#f87171" />
-        <StatChip label="Avg" value="—" color="#34d399" />
-      </div>
-
-      {/* Threshold */}
-      <NodeField label="Threshold"><NumberInput value={threshold} onChange={setThreshold} /></NodeField>
+        {/* Gauge */}
+        <div className="px-3 pt-1 pb-0.5">
+          <GaugeBar pct={50} color={COLORS.purple} />
+          <div className="flex justify-between mt-0.5">
+            <span className="text-[9px] text-zinc-600 font-mono">0 raw</span>
+            <span className="text-[9px] text-zinc-600 font-mono">4095 / 3.3V</span>
+          </div>
+        </div>
+        {/* Min / Max / Avg */}
+        <div className="px-3 py-1 flex gap-1.5">
+          <StatChip label="Min" value="—" color="#60a5fa" />
+          <StatChip label="Max" value="—" color="#f87171" />
+          <StatChip label="Avg" value="—" color="#34d399" />
+        </div>
+        {/* Threshold */}
+        <NodeField label="Threshold"><NumberInput value={threshold} onChange={setThreshold} /></NodeField>
+      </AdvancedSection>
 
       {/* Value output */}
       <NodeField label="value">
@@ -98,12 +98,14 @@ export function AnalogSensorNode() {
         <Handle type="source" position={Position.Right} id="value" style={{ ...outHS, right: -6 }} />
       </NodeField>
 
-      {/* Threshold trigger output */}
-      <NodeField label="thresh →">
-        <TextInput value={threshVar} onChange={setThreshVar} green />
-        <Handle type="source" position={Position.Right} id="threshold"
-          style={{ ...outHS, right: -6, border: "2.5px solid #f97316" }} />
-      </NodeField>
+      <AdvancedSection>
+        {/* Threshold trigger output */}
+        <NodeField label="thresh →">
+          <TextInput value={threshVar} onChange={setThreshVar} green />
+          <Handle type="source" position={Position.Right} id="threshold"
+            style={{ ...outHS, right: -6, border: "2.5px solid #f97316" }} />
+        </NodeField>
+      </AdvancedSection>
     </BaseNode>
   );
 }

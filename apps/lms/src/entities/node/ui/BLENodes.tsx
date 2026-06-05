@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import {
   BaseNode, NodeField, TextInput, ToggleInput,
-  useNodeField, COLORS,
+  useNodeField, useAdvancedMode, COLORS,
 } from "./BaseNode";
 
 function BLEIcon() {
@@ -41,7 +40,7 @@ export function BLEModeNode() {
   const [cmdMap,      setCmdMap]      = useNodeField<typeof DEFAULT_CMDS>("cmdMap", DEFAULT_CMDS);
   const [txVarName,   setTxVarName]   = useNodeField<string>("txVarName",   "ble_tx");
   const [enableTx,    setEnableTx]    = useNodeField<boolean>("enableTx",   false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const isAdvanced = useAdvancedMode();
 
   const addCmd = () => setCmdMap([...cmdMap, { trigger: "", varName: "", value: "" }]);
   const removeCmd = (i: number) => setCmdMap(cmdMap.filter((_, idx) => idx !== i));
@@ -117,18 +116,9 @@ export function BLEModeNode() {
         )}
       </div>
 
-      {/* Advanced (collapsed by default) */}
-      <div className="px-3 pb-2">
-        <button onClick={() => setShowAdvanced(!showAdvanced)}
-          className="nodrag w-full flex items-center justify-between py-0.5 text-[9px] text-zinc-600 hover:text-zinc-400 transition-colors">
-          <span className="uppercase tracking-wider font-semibold">Advanced</span>
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-            style={{ transform: showAdvanced ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
-
-        {showAdvanced && (
+      {/* Advanced fields (shown in advanced mode) */}
+      {isAdvanced && (
+        <div className="px-3 pb-2">
           <div className="mt-1 space-y-0.5">
             <NodeField label="Raw var"><TextInput value={rawVarName} onChange={setRawVarName} wide /></NodeField>
             <NodeField label="Service UUID"><TextInput value={serviceUUID} onChange={setServiceUUID} wide /></NodeField>
@@ -144,8 +134,8 @@ export function BLEModeNode() {
               <span className="text-[8px] text-zinc-600">on disconnect</span>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
     </BaseNode>
   );

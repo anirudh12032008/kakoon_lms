@@ -8,6 +8,7 @@ import {
   ToggleInput,
   useNodeField,
   makeHandleStyle,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
@@ -23,7 +24,7 @@ export function TouchSensorNode() {
       <NodeField label="Sensor Port">
         <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
       </NodeField>
-      <PortPinBadge port={port} mode="i2c" />
+      <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>
       <NodeField label="Touch Value">
         <TextInput value={varName} onChange={setVarName} green />
         <Handle type="source" position={Position.Right} id="touch" style={{ ...outHS, right: -6 }} />
@@ -41,7 +42,7 @@ export function SoilMoistureSensorNode() {
       <NodeField label="Sensor Port">
         <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
       </NodeField>
-      <PortPinBadge port={port} mode="i2c" />
+      <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>
       <NodeField label="Value">
         <TextInput value={varName} onChange={setVarName} green />
         <Handle type="source" position={Position.Right} id="value" style={{ ...outHS, right: -6 }} />
@@ -69,26 +70,27 @@ export function ButtonDigitalInputNode() {
     <BaseNode title="Button / Digital Input" color={COLORS.blue} icon={<SensorIcon />} width="260px">
       <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
       <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Pull-up"><ToggleInput value={pullup} onChange={setPullup} leftLabel="↓ Down" rightLabel="↑ Up" /></NodeField>
 
-      {/* Debounce slider */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Debounce</span>
-          <span className="text-[10px] font-mono text-blue-400">{debounce} ms</span>
+      <AdvancedSection>
+        <NodeField label="Pull-up"><ToggleInput value={pullup} onChange={setPullup} leftLabel="↓ Down" rightLabel="↑ Up" /></NodeField>
+        {/* Debounce slider */}
+        <div className="px-3 py-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#9ca3af] font-medium">Debounce</span>
+            <span className="text-[10px] font-mono text-blue-400">{debounce} ms</span>
+          </div>
+          <input type="range" min={0} max={200} step={5} value={debounce}
+            onChange={e => setDebounce(Number(e.target.value))}
+            className="nodrag w-full h-1 accent-blue-500 cursor-pointer"
+            style={{ accentColor: COLORS.blue }}
+          />
+          <div className="flex justify-between mt-0.5">
+            <span className="text-[8px] text-zinc-600">0 ms</span>
+            <span className="text-[8px] text-zinc-600">200 ms</span>
+          </div>
         </div>
-        <input type="range" min={0} max={200} step={5} value={debounce}
-          onChange={e => setDebounce(Number(e.target.value))}
-          className="nodrag w-full h-1 accent-blue-500 cursor-pointer"
-          style={{ accentColor: COLORS.blue }}
-        />
-        <div className="flex justify-between mt-0.5">
-          <span className="text-[8px] text-zinc-600">0 ms</span>
-          <span className="text-[8px] text-zinc-600">200 ms</span>
-        </div>
-      </div>
-
-      <NodeField label="Hold (ms)"><NumberInput value={holdDuration} onChange={setHoldDuration} /></NodeField>
+        <NodeField label="Hold (ms)"><NumberInput value={holdDuration} onChange={setHoldDuration} /></NodeField>
+      </AdvancedSection>
 
       {/* Three output events */}
       <div className="px-3 pt-1 pb-0.5">
@@ -134,10 +136,12 @@ export function FourChannelTouchNode() {
   return (
     <BaseNode title="4-Channel Touch Sensor" color={COLORS.cyan} icon={<SensorIcon />} width="260px">
       <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
-      <NodeField label="Touch Pin 1"><NumberInput value={pin1} onChange={setPin1} /></NodeField>
-      <NodeField label="Touch Pin 2"><NumberInput value={pin2} onChange={setPin2} /></NodeField>
-      <NodeField label="Touch Pin 3"><NumberInput value={pin3} onChange={setPin3} /></NodeField>
-      <NodeField label="Touch Pin 4"><NumberInput value={pin4} onChange={setPin4} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="Touch Pin 1"><NumberInput value={pin1} onChange={setPin1} /></NodeField>
+        <NodeField label="Touch Pin 2"><NumberInput value={pin2} onChange={setPin2} /></NodeField>
+        <NodeField label="Touch Pin 3"><NumberInput value={pin3} onChange={setPin3} /></NodeField>
+        <NodeField label="Touch Pin 4"><NumberInput value={pin4} onChange={setPin4} /></NodeField>
+      </AdvancedSection>
       {outputs.map((row) => (
         <NodeField key={row.id} label={row.label}>
           <TextInput value={row.val} onChange={row.set} green />

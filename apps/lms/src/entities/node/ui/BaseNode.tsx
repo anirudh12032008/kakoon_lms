@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "@/shared/context/ModalContext";
 import { PlusCircle } from "lucide-react";
 import { saveCustomSubflowFromSelection } from "@/entities/custom-node/model/customNodes";
+import { useNodeMode } from "@/shared/context/NodeModeContext";
 
 function TrashIcon() {
   return (
@@ -154,6 +155,44 @@ export function useNodeField<T>(key: string, defaultValue: T): [T, (val: T) => v
     [nodeId, key, setNodes]
   );
   return [value, setValue];
+}
+
+export function useAdvancedMode(): boolean {
+  const { globalAdvanced } = useNodeMode();
+  const [nodeAdvanced] = useNodeField<boolean>("advancedMode", false);
+  return globalAdvanced || nodeAdvanced;
+}
+
+export function AdvancedSection({ children }: { children: ReactNode }) {
+  const isAdvanced = useAdvancedMode();
+  if (!isAdvanced) return null;
+  return <>{children}</>;
+}
+
+export function NodeAdvancedButton({ className = "" }: { className?: string }) {
+  const { globalAdvanced } = useNodeMode();
+  const [nodeAdvanced, setNodeAdvanced] = useNodeField<boolean>("advancedMode", false);
+  const isAdvanced = globalAdvanced || nodeAdvanced;
+
+  return (
+    <button
+      type="button"
+      title={isAdvanced ? "Switch to Basic Mode" : "Unlock Advanced Fields"}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (!globalAdvanced) setNodeAdvanced(!nodeAdvanced);
+      }}
+      className={`nodrag inline-flex items-center justify-center rounded px-1 h-5 text-[9px] font-bold uppercase tracking-wider border transition-all ${
+        isAdvanced
+          ? globalAdvanced
+            ? "border-violet-500/60 text-violet-400 bg-violet-500/15"
+            : "border-amber-400/60 text-amber-400 bg-amber-400/10"
+          : "border-zinc-700 text-zinc-600 bg-transparent hover:border-zinc-500 hover:text-zinc-400"
+      } ${globalAdvanced ? "cursor-default" : ""} ${className}`}
+    >
+      adv
+    </button>
+  );
 }
 
 export function makeHandleStyle(color: string) {
@@ -353,13 +392,16 @@ export function BaseNode({
       }}
     >
       <SelectionToolbar />
-      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
+      <div className="absolute right-3 top-3 z-20 flex items-center gap-1">
+        <NodeAdvancedButton />
+        <NodeToggleButton value={disabled} onChange={setDisabled} />
+      </div>
       {hasTopHandle && <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />}
       {hasBottomHandle && <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />}
       {hasLeftHandle && <Handle type="target" position={Position.Left} id="left" style={{ ...hs, left: -7 }} />}
       {hasRightHandle && <Handle type="source" position={Position.Right} id="right" style={{ ...hs, right: -7 }} />}
 
-      <div className="flex items-center justify-between px-3 py-2 pr-14"
+      <div className="flex items-center justify-between px-3 py-2 pr-20"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
         <span className="text-sm font-bold text-white leading-none">{title}</span>
@@ -398,11 +440,14 @@ export function LoopNode({
       }}
     >
       <SelectionToolbar />
-      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
+      <div className="absolute right-3 top-3 z-20 flex items-center gap-1">
+        <NodeAdvancedButton />
+        <NodeToggleButton value={disabled} onChange={setDisabled} />
+      </div>
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       {hasRightHandle && <Handle type="source" position={Position.Right} id="body" style={{ ...hs, right: -7 }} />}
-      <div className="flex items-center justify-between px-4 py-3 pr-14">
+      <div className="flex items-center justify-between px-4 py-3 pr-20">
         <span className="text-sm font-bold text-white">{title}</span>
         {icon && <span style={{ color }}>{icon}</span>}
       </div>

@@ -4,6 +4,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { MotorIcon } from "./_shared";
@@ -164,14 +165,16 @@ export function RobotDriveNode() {
         </div>
       )}
 
-      {/* Hardware info */}
-      <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — all 4 motors</span>
-        <div className="flex gap-3 mt-0.5 flex-wrap">
-          <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-zinc-400 font-mono">left</span></span>
-          <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-zinc-400 font-mono">right</span></span>
+      <AdvancedSection>
+        {/* Hardware info */}
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — all 4 motors</span>
+          <div className="flex gap-3 mt-0.5 flex-wrap">
+            <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-zinc-400 font-mono">left</span></span>
+            <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-zinc-400 font-mono">right</span></span>
+          </div>
         </div>
-      </div>
+      </AdvancedSection>
     </BaseNode>
   );
 }
@@ -187,7 +190,7 @@ export function DCMotorSingleNode() {
       <NodeField label="Motor Port">
         <SelectInput value={motorPort} onChange={v => setMotorPort(v as MotorKey)} compact options={MOTOR_OPTIONS} />
       </NodeField>
-      <MotorPinInfo motorKey={motorPort} />
+      <AdvancedSection><MotorPinInfo motorKey={motorPort} /></AdvancedSection>
 
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
@@ -295,15 +298,17 @@ export function MultiMotorControllerNode() {
         motors.map(m => <SpeedRow key={m.label} {...m} />)
       )}
 
-      <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
-        <div className="flex gap-3 mt-0.5 flex-wrap">
-          <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">45/46</span></span>
-          <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">15/16</span></span>
-          <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">17/18</span></span>
-          <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">37/38</span></span>
+      <AdvancedSection>
+        <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
+          <div className="flex gap-3 mt-0.5 flex-wrap">
+            <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">45/46</span></span>
+            <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">15/16</span></span>
+            <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">17/18</span></span>
+            <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">37/38</span></span>
+          </div>
         </div>
-      </div>
+      </AdvancedSection>
     </BaseNode>
   );
 }

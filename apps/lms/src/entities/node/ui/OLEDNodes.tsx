@@ -6,6 +6,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { DisplayIcon, ROTATE_OPTIONS } from "./_shared";
@@ -45,17 +46,19 @@ export function OLEDDisplayNode() {
   return (
     <>
       <BaseNode title="OLED Display" color={COLORS.purple} icon={<DisplayIcon />} width="250px">
-        {/* Fixed port info */}
-        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-          <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Dedicated I2C Port</span>
-            <span className="text-[9px] font-mono text-purple-400">fixed</span>
+        <AdvancedSection>
+          {/* Fixed port info */}
+          <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+            <div className="flex items-center justify-between">
+              <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Dedicated I2C Port</span>
+              <span className="text-[9px] font-mono text-purple-400">fixed</span>
+            </div>
+            <div className="flex gap-3 mt-0.5">
+              <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
+              <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+            </div>
           </div>
-          <div className="flex gap-3 mt-0.5">
-            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
-            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
-          </div>
-        </div>
+        </AdvancedSection>
 
         {/* Mode toggle */}
         <NodeField label="Mode">
@@ -143,9 +146,11 @@ export function OLEDDisplayNode() {
           </div>
         )}
 
-        <NodeField label="Driver">
-          <ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" />
-        </NodeField>
+        <AdvancedSection>
+          <NodeField label="Driver">
+            <ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" />
+          </NodeField>
+        </AdvancedSection>
       </BaseNode>
     </>
   );
@@ -158,15 +163,17 @@ export function PlayAnimationNode() {
   const [folder, setFolder] = useNodeField<string>("folder", "animation");
   return (
     <BaseNode title="Play Animation" color={COLORS.purple} icon={<DisplayIcon />} width="230px">
-      {/* Uses dedicated OLED port — pins fixed */}
-      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
-        <div className="flex gap-3 mt-0.5">
-          <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
-          <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+      <AdvancedSection>
+        {/* Uses dedicated OLED port — pins fixed */}
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
+          <div className="flex gap-3 mt-0.5">
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+          </div>
         </div>
-      </div>
-      <NodeField label="Driver"><ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" /></NodeField>
+        <NodeField label="Driver"><ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" /></NodeField>
+      </AdvancedSection>
       <NodeField label="Rotate"><SelectInput value={rotate} onChange={setRotate} options={ROTATE_OPTIONS} compact /></NodeField>
       <NodeField label="Folder name"><TextInput value={folder} onChange={setFolder} /></NodeField>
     </BaseNode>
@@ -180,14 +187,16 @@ export function ShowImageNode() {
   const [imageFile, setImageFile] = useNodeField<string>("imageFile", "image.pbm");
   return (
     <BaseNode title="Show Image" color={COLORS.purple} icon={<DisplayIcon />} width="220px">
-      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
-        <div className="flex gap-3 mt-0.5">
-          <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
-          <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+      <AdvancedSection>
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
+          <div className="flex gap-3 mt-0.5">
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+          </div>
         </div>
-      </div>
-      <NodeField label="Driver"><ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" /></NodeField>
+        <NodeField label="Driver"><ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" /></NodeField>
+      </AdvancedSection>
       <NodeField label="Rotate"><SelectInput value={rotate} onChange={setRotate} options={ROTATE_OPTIONS} compact /></NodeField>
       <NodeField label="Image file"><TextInput value={imageFile} onChange={setImageFile} /></NodeField>
     </BaseNode>

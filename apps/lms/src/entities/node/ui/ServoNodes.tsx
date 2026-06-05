@@ -7,6 +7,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { AngleDial, MotorIcon } from "./_shared";
@@ -100,8 +101,10 @@ export function ServoMotorNode() {
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
-      <ServoPinInfo servoKey={servoPort} />
-      <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
+      <AdvancedSection>
+        <ServoPinInfo servoKey={servoPort} />
+        <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
+      </AdvancedSection>
       {servoType === "360"
         ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
         : (
@@ -133,8 +136,10 @@ export function ServoMotorAdvanceNode() {
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
-      <ServoPinInfo servoKey={servoPort} />
-      <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
+      <AdvancedSection>
+        <ServoPinInfo servoKey={servoPort} />
+        <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
+      </AdvancedSection>
 
       {servoType === "360" ? (
         <>
@@ -169,7 +174,7 @@ export function ServoMotorAdvanceNode() {
               className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
           </div>
 
-          <NodeField label="Steps"><NumberInput value={steps} onChange={setSteps} /></NodeField>
+          <AdvancedSection><NodeField label="Steps"><NumberInput value={steps} onChange={setSteps} /></NodeField></AdvancedSection>
         </>
       )}
     </BaseNode>
@@ -204,8 +209,10 @@ export function ServoControllerNode() {
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
-      <ServoPinInfo servoKey={servoPort} />
-      <ServoModelFields model={servoModel} onModelChange={applyModel} servoType={servoType} onTypeChange={setServoType} />
+      <AdvancedSection>
+        <ServoPinInfo servoKey={servoPort} />
+        <ServoModelFields model={servoModel} onModelChange={applyModel} servoType={servoType} onTypeChange={setServoType} />
+      </AdvancedSection>
 
       {/* 360° continuous servos are speed-controlled — mode selection only applies to 180° */}
       {servoType === "180" && (
@@ -265,18 +272,20 @@ export function ServoControllerNode() {
         </>
       )}
 
-      <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Pulse Width Fine-tune</span>
-      </div>
-      <NodeField label="Min (µs)"><NumberInput value={pulseMin} onChange={setPulseMin} /></NodeField>
-      <NodeField label="Max (µs)"><NumberInput value={pulseMax} onChange={setPulseMax} /></NodeField>
-      <div className="mx-3 mb-2 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
-        <div className="flex justify-between text-[9px]">
-          <span className="text-zinc-500">{pulseMin} µs @ 0°</span>
-          <span className="text-zinc-500">{pulseMax} µs @ 180°</span>
+      <AdvancedSection>
+        <div className="px-3 pt-1 pb-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Pulse Width Fine-tune</span>
         </div>
-        <p className="text-[9px] text-zinc-600 mt-0.5">Standard: 600–2400 µs · SG90: 500–2400 µs</p>
-      </div>
+        <NodeField label="Min (µs)"><NumberInput value={pulseMin} onChange={setPulseMin} /></NodeField>
+        <NodeField label="Max (µs)"><NumberInput value={pulseMax} onChange={setPulseMax} /></NodeField>
+        <div className="mx-3 mb-2 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+          <div className="flex justify-between text-[9px]">
+            <span className="text-zinc-500">{pulseMin} µs @ 0°</span>
+            <span className="text-zinc-500">{pulseMax} µs @ 180°</span>
+          </div>
+          <p className="text-[9px] text-zinc-600 mt-0.5">Standard: 600–2400 µs · SG90: 500–2400 µs</p>
+        </div>
+      </AdvancedSection>
     </BaseNode>
   );
 }
@@ -358,6 +367,7 @@ export function MultiServoSequencerNode() {
       <NodeField label="Step delay (ms)"><NumberInput value={keyframeDelay} onChange={setKeyframeDelay} /></NodeField>
       <NodeField label="Playback"><ToggleInput value={loop} onChange={setLoop} leftLabel="One-shot" rightLabel="Loop" /></NodeField>
 
+      <AdvancedSection>
       <div className="px-3 pt-2 pb-0.5">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Timeline ({keyframes.length} keyframes · {totalDuration}ms)</span>
       </div>
@@ -456,6 +466,7 @@ export function MultiServoSequencerNode() {
           ⎘ Export
         </button>
       </div>
+      </AdvancedSection>
     </BaseNode>
   );
 }

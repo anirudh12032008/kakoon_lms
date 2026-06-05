@@ -1,7 +1,7 @@
 import { Handle, Position } from "@xyflow/react";
 import {
   BaseNode, NodeField, TextInput, NumberInput, ToggleInput,
-  useNodeField, COLORS,
+  useNodeField, AdvancedSection, COLORS,
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
@@ -58,17 +58,19 @@ export function MQTTNode() {
 
       {/* broker config */}
       <NodeField label="Broker"><TextInput value={broker} onChange={setBroker} wide /></NodeField>
-      <NodeField label="Port"><NumberInput value={port} onChange={setPort} /></NodeField>
-      <NodeField label="Client ID"><TextInput value={clientId} onChange={setClientId} wide /></NodeField>
-      <NodeField label="TLS / SSL"><ToggleInput value={useTLS} onChange={setUseTLS} leftLabel="Off" rightLabel="On" /></NodeField>
-      <NodeField label="Auth">
-        <ToggleInput value={useAuth} onChange={setUseAuth} leftLabel="Off" rightLabel="On" />
-        <span className="text-[9px] text-zinc-600 ml-1">Keep-alive: {keepAlive}s</span>
-      </NodeField>
-      {useAuth && (<>
-        <NodeField label="Username"><TextInput value={username} onChange={setUsername} wide /></NodeField>
-        <NodeField label="Password"><TextInput value={mqttPass} onChange={setMqttPass} wide /></NodeField>
-      </>)}
+      <AdvancedSection>
+        <NodeField label="Port"><NumberInput value={port} onChange={setPort} /></NodeField>
+        <NodeField label="Client ID"><TextInput value={clientId} onChange={setClientId} wide /></NodeField>
+        <NodeField label="TLS / SSL"><ToggleInput value={useTLS} onChange={setUseTLS} leftLabel="Off" rightLabel="On" /></NodeField>
+        <NodeField label="Auth">
+          <ToggleInput value={useAuth} onChange={setUseAuth} leftLabel="Off" rightLabel="On" />
+          <span className="text-[9px] text-zinc-600 ml-1">Keep-alive: {keepAlive}s</span>
+        </NodeField>
+        {useAuth && (<>
+          <NodeField label="Username"><TextInput value={username} onChange={setUsername} wide /></NodeField>
+          <NodeField label="Password"><TextInput value={mqttPass} onChange={setMqttPass} wide /></NodeField>
+        </>)}
+      </AdvancedSection>
 
       <div className="mx-3 mt-1 mb-0.5 border-t border-[#1c1c20]" />
 
@@ -144,24 +146,26 @@ export function MQTTNode() {
         </div>
       </div>
 
-      {/* LWT */}
-      <div className="px-3 pb-2">
-        <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Last Will & Testament</div>
-        <div className="flex gap-1.5">
-          <input value={lwtTopic} onChange={(e) => setLwtTopic(e.target.value)}
-            className="nodrag flex-1 text-[10px] font-mono bg-[#0a0a0d] border border-[#1c1c20] rounded px-1.5 py-1 text-zinc-400 outline-none" />
-          <input value={lwtMsg} onChange={(e) => setLwtMsg(e.target.value)}
-            className="nodrag w-[60px] text-[10px] font-mono bg-[#0a0a0d] border border-[#1c1c20] rounded px-1.5 py-1 text-red-400 outline-none" />
+      <AdvancedSection>
+        {/* LWT */}
+        <div className="px-3 pb-2">
+          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Last Will & Testament</div>
+          <div className="flex gap-1.5">
+            <input value={lwtTopic} onChange={(e) => setLwtTopic(e.target.value)}
+              className="nodrag flex-1 text-[10px] font-mono bg-[#0a0a0d] border border-[#1c1c20] rounded px-1.5 py-1 text-zinc-400 outline-none" />
+            <input value={lwtMsg} onChange={(e) => setLwtMsg(e.target.value)}
+              className="nodrag w-[60px] text-[10px] font-mono bg-[#0a0a0d] border border-[#1c1c20] rounded px-1.5 py-1 text-red-400 outline-none" />
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Handle type="source" position={Position.Right} id="connected"
+              style={{ ...outHS(COLORS.green), right: -6, position: "relative", display: "inline-block" }} />
+            <span className="text-[8px] text-zinc-600">connected</span>
+            <Handle type="source" position={Position.Right} id="error"
+              style={{ ...outHS(COLORS.red), right: -6, position: "relative", display: "inline-block", marginLeft: 8 }} />
+            <span className="text-[8px] text-zinc-600">error</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 mt-1">
-          <Handle type="source" position={Position.Right} id="connected"
-            style={{ ...outHS(COLORS.green), right: -6, position: "relative", display: "inline-block" }} />
-          <span className="text-[8px] text-zinc-600">connected</span>
-          <Handle type="source" position={Position.Right} id="error"
-            style={{ ...outHS(COLORS.red), right: -6, position: "relative", display: "inline-block", marginLeft: 8 }} />
-          <span className="text-[8px] text-zinc-600">error</span>
-        </div>
-      </div>
+      </AdvancedSection>
     </BaseNode>
   );
 }

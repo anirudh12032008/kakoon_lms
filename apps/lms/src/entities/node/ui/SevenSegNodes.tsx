@@ -5,6 +5,7 @@ import {
   SelectInput,
   ToggleInput,
   useNodeField,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { DisplayIcon } from "./_shared";
@@ -25,8 +26,10 @@ export function SevenSegNode() {
   return (
     <BaseNode title="7-Seg Display TM1637" color={COLORS.red} icon={<DisplayIcon />} width="230px">
       <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
-      <NodeField label="DIO Pin"><NumberInput value={dio} onChange={setDio} /></NodeField>
-      <NodeField label="CLK Pin"><NumberInput value={clk} onChange={setClk} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="DIO Pin"><NumberInput value={dio} onChange={setDio} /></NodeField>
+        <NodeField label="CLK Pin"><NumberInput value={clk} onChange={setClk} /></NodeField>
+      </AdvancedSection>
       <NodeField label="Number"><NumberInput value={number} onChange={setNumber} /></NodeField>
       <NodeField label="Colon"><ToggleInput value={colon} onChange={setColon} leftLabel="0" rightLabel="1" /></NodeField>
     </BaseNode>

@@ -7,6 +7,7 @@ import {
   ToggleInput,
   useNodeField,
   makeHandleStyle,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { SensorIcon } from "./_shared";
@@ -95,16 +96,20 @@ export function IRSensorNode() {
 
   return (
     <BaseNode title="IR Sensor" color={COLORS.orange} icon={<SensorIcon />} width="250px">
-      <NodeField label="GPIO Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Invert">
-        <ToggleInput value={invert} onChange={setInvert} leftLabel="LOW=blocked" rightLabel="HIGH=blocked" />
-      </NodeField>
+      <AdvancedSection>
+        <NodeField label="GPIO Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
+        <NodeField label="Invert">
+          <ToggleInput value={invert} onChange={setInvert} leftLabel="LOW=blocked" rightLabel="HIGH=blocked" />
+        </NodeField>
+      </AdvancedSection>
 
       <IRBeamDisplay blocked={blocked} live={live} />
 
-      <NodeField label="Send to Viz">
-        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
-      </NodeField>
+      <AdvancedSection>
+        <NodeField label="Send to Viz">
+          <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
+        </NodeField>
+      </AdvancedSection>
       <NodeField label="IR Value">
         <TextInput value={varName} onChange={setVarName} green />
         <Handle type="source" position={Position.Right} id="ir" style={{ ...outHS, right: -6 }} />

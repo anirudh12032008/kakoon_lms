@@ -8,6 +8,7 @@ import {
   ToggleInput,
   useNodeField,
   makeHandleStyle,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { ChipIcon } from "./_shared";
@@ -74,8 +75,10 @@ export function PWMNode() {
   return (
     <BaseNode title="PWM" color={COLORS.purple} icon={<ChipIcon />} width="210px">
       <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
-      <NodeField label="Frequency"><NumberInput value={freq} onChange={setFreq} /></NodeField>
       <NodeField label="Duty Cycle"><NumberInput value={duty} onChange={setDuty} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="Frequency"><NumberInput value={freq} onChange={setFreq} /></NodeField>
+      </AdvancedSection>
     </BaseNode>
   );
 }
@@ -144,23 +147,25 @@ export function PWMOutputNode() {
     <BaseNode title="PWM Output" color={COLORS.purple} icon={<ChipIcon />} width="260px">
       <NodeField label="GPIO Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
 
-      {/* Frequency with quick presets */}
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Frequency</span>
-          <NumberInput value={freq} onChange={setFreq} />
+      <AdvancedSection>
+        {/* Frequency with quick presets */}
+        <div className="px-3 py-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[#9ca3af] font-medium">Frequency</span>
+            <NumberInput value={freq} onChange={setFreq} />
+          </div>
+          <div className="flex gap-1 mt-1 flex-wrap">
+            {[50, 500, 1000, 5000, 20000, 40000].map(v => (
+              <button key={v} onClick={() => freqPreset(v)}
+                className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all ${
+                  freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[#2d2d35] text-zinc-500 hover:border-zinc-600 bg-[#111116]"
+                }`}
+              >{v >= 1000 ? `${v / 1000}k` : v}Hz</button>
+            ))}
+          </div>
+          <p className="text-[9px] text-zinc-600 mt-1">Range: 1 Hz – 40 kHz</p>
         </div>
-        <div className="flex gap-1 mt-1 flex-wrap">
-          {[50, 500, 1000, 5000, 20000, 40000].map(v => (
-            <button key={v} onClick={() => freqPreset(v)}
-              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all ${
-                freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[#2d2d35] text-zinc-500 hover:border-zinc-600 bg-[#111116]"
-              }`}
-            >{v >= 1000 ? `${v / 1000}k` : v}Hz</button>
-          ))}
-        </div>
-        <p className="text-[9px] text-zinc-600 mt-1">Range: 1 Hz – 40 kHz</p>
-      </div>
+      </AdvancedSection>
 
       {/* Duty cycle slider */}
       <div className="px-3 py-1">
@@ -177,39 +182,40 @@ export function PWMOutputNode() {
         </div>
       </div>
 
-      {/* PWM waveform mini-preview */}
-      <div className="px-3 pb-1">
-        <svg width="100%" height="28" viewBox="0 0 200 28" preserveAspectRatio="none" className="rounded-lg overflow-hidden border border-[#2d2d35]" style={{ background: "#0a0a0d" }}>
-          {/* One cycle */}
-          {[0, 100].map(offset => {
-            const onW = duty * 2;
-            const offW = 200 - onW;
-            return (
-              <g key={offset}>
-                <polyline
-                  points={`${offset},24 ${offset},4 ${offset + onW},4 ${offset + onW},24 ${offset + onW + offW},24`}
-                  fill="none" stroke={COLORS.purple} strokeWidth="1.5" opacity="0.8"
-                />
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+      <AdvancedSection>
+        {/* PWM waveform mini-preview */}
+        <div className="px-3 pb-1">
+          <svg width="100%" height="28" viewBox="0 0 200 28" preserveAspectRatio="none" className="rounded-lg overflow-hidden border border-[#2d2d35]" style={{ background: "#0a0a0d" }}>
+            {[0, 100].map(offset => {
+              const onW = duty * 2;
+              const offW = 200 - onW;
+              return (
+                <g key={offset}>
+                  <polyline
+                    points={`${offset},24 ${offset},4 ${offset + onW},4 ${offset + onW},24 ${offset + onW + offW},24`}
+                    fill="none" stroke={COLORS.purple} strokeWidth="1.5" opacity="0.8"
+                  />
+                </g>
+              );
+            })}
+          </svg>
+        </div>
 
-      {/* Sensor input binding */}
-      <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Auto-modulate from Sensor</span>
-      </div>
-      <NodeField label="Sensor var">
-        <TextInput value={sensorBind} onChange={setSensorBind} />
-      </NodeField>
-      {sensorBind.trim() !== "" && (
-        <>
-          <NodeField label="Sensor min"><NumberInput value={sensorMin} onChange={setSensorMin} /></NodeField>
-          <NodeField label="Sensor max"><NumberInput value={sensorMax} onChange={setSensorMax} /></NodeField>
-          <p className="text-[9px] text-zinc-600 px-3 pb-1">Maps <span className="font-mono text-zinc-400">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
-        </>
-      )}
+        {/* Sensor input binding */}
+        <div className="px-3 pt-1 pb-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Auto-modulate from Sensor</span>
+        </div>
+        <NodeField label="Sensor var">
+          <TextInput value={sensorBind} onChange={setSensorBind} />
+        </NodeField>
+        {sensorBind.trim() !== "" && (
+          <>
+            <NodeField label="Sensor min"><NumberInput value={sensorMin} onChange={setSensorMin} /></NodeField>
+            <NodeField label="Sensor max"><NumberInput value={sensorMax} onChange={setSensorMax} /></NodeField>
+            <p className="text-[9px] text-zinc-600 px-3 pb-1">Maps <span className="font-mono text-zinc-400">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
+          </>
+        )}
+      </AdvancedSection>
     </BaseNode>
   );
 }
