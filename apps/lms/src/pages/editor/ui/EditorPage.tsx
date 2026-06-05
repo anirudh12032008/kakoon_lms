@@ -285,6 +285,63 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     if (success) addLog("💾 Code saved to ESP32! It will run on boot.");
   }, [getCurrentCode, isConnected, uploadCode, addLog]);
 
+  // ── Export / Import ───────────────────────────────────────────────────────────
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExportProject = useCallback(() => {
+    const workspace = canvasRef.current?.getWorkspace();
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      flowData: workspace ? JSON.stringify(workspace) : "",
+      generatedCode,
+      editableCode,
+      hasManualEdits,
+      viewMode,
+      isEditing,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kakoon-project-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [canvasRef, generatedCode, editableCode, hasManualEdits, viewMode, isEditing]);
+
+  const handleImportProject = useCallback(() => {
+    importInputRef.current?.click();
+  }, []);
+
+  const handleImportFile = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        if (data.editableCode !== undefined) setEditableCode(data.editableCode);
+        if (data.hasManualEdits !== undefined) setHasManualEdits(data.hasManualEdits);
+        if (data.viewMode) setViewMode(data.viewMode);
+        if (data.isEditing !== undefined) setIsEditing(data.isEditing);
+        if (data.generatedCode !== undefined) setGeneratedCode(data.generatedCode);
+        if (data.flowData) {
+          try {
+            const workspace = JSON.parse(data.flowData);
+            requestAnimationFrame(() => {
+              canvasRef.current?.setWorkspace(workspace);
+            });
+          } catch { /* corrupted flow data */ }
+        }
+      } catch {
+        addLog("❌ Failed to import project — invalid JSON file.");
+      }
+    };
+    reader.readAsText(file);
+    // Reset so the same file can be imported again if needed
+    e.target.value = "";
+  }, [canvasRef, setEditableCode, setHasManualEdits, setViewMode, setIsEditing, setGeneratedCode, addLog]);
+
   return (
     <NodeActionsProvider
       openMatrixDesigner={() => { setDesignerTab("matrix"); setShowDesignerHub(true); }}
@@ -294,6 +351,13 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
       className="flex h-screen flex-col bg-page"
       onClick={() => setContextMenu(null)}
     >
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
       <EditorHeader
         viewMode={viewMode}
         setViewMode={setViewMode}
@@ -303,6 +367,8 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         onToggleTutorials={() => tutorial.setShowTutorialsCatalog(!tutorial.showTutorialsCatalog)}
         onBackToDashboard={onBackToDashboard}
         onSaveAsTutorial={() => setShowSaveAsTutorial(true)}
+        onExportProject={handleExportProject}
+        onImportProject={handleImportProject}
       />
 
       <FeatureToolbar

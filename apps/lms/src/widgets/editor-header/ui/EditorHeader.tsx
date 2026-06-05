@@ -1,4 +1,4 @@
-import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap } from "lucide-react";
+import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap, Download, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
@@ -13,6 +13,8 @@ interface EditorHeaderProps {
   onToggleTutorials: () => void;
   onBackToDashboard?: () => void;
   onSaveAsTutorial?: () => void;
+  onExportProject?: () => void;
+  onImportProject?: () => void;
 }
 
 const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
@@ -36,7 +38,7 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
 export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
   launchContext, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
-  onSaveAsTutorial,
+  onSaveAsTutorial, onExportProject, onImportProject,
 }: EditorHeaderProps) {
   const title      = launchContext?.title      ?? "Full Workshop";
   const launchType = launchContext?.launchType ?? "mode";
@@ -102,6 +104,28 @@ export function EditorHeader({
           <Sparkles className={`h-4 w-4 transition-all ${animationsEnabled ? "fill-current opacity-90" : "opacity-40"}`} />
           <span className="hidden md:inline text-xs">{animationsEnabled ? "Anim" : "Anim"}</span>
         </button>
+
+        {onImportProject && (
+          <button
+            onClick={onImportProject}
+            title="Import project from JSON"
+            className="btn btn-ghost btn-sm gap-1.5 text-sub hover:text-sky-400 transition-colors"
+          >
+            <Upload className="h-4 w-4" />
+            <span className="hidden md:inline text-xs">Import</span>
+          </button>
+        )}
+
+        {onExportProject && (
+          <button
+            onClick={onExportProject}
+            title="Export project as JSON"
+            className="btn btn-ghost btn-sm gap-1.5 text-sub hover:text-violet-400 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden md:inline text-xs">Export</span>
+          </button>
+        )}
 
         {onSaveAsTutorial && (
           <button
