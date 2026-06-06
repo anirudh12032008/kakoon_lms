@@ -130,6 +130,8 @@ export function ServoMotorAdvanceNode() {
   const [steps, setSteps]           = useNodeField<number>("steps", 10);
   const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 60);
   const [sweepPeriod, setSweepPeriod] = useNodeField<number>("sweepPeriod", 1000);
+  const [bounce, setBounce]         = useNodeField<boolean>("bounce", false);
+  const [loop, setLoop]             = useNodeField<boolean>("loop", false);
 
   return (
     <BaseNode title="Servo Sweep" color={COLORS.orange} icon={<MotorIcon />} width="240px">
@@ -172,6 +174,23 @@ export function ServoMotorAdvanceNode() {
             <input type="range" min={1} max={100} step={1} value={speed}
               onChange={e => setSpeed(Number(e.target.value))}
               className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
+          </div>
+
+          {/* Bounce & Loop toggles */}
+          <NodeField label="Bounce back">
+            <ToggleInput value={bounce} onChange={setBounce} leftLabel="One-way" rightLabel="↩ Return" />
+          </NodeField>
+          <NodeField label="Loop">
+            <ToggleInput value={loop} onChange={setLoop} leftLabel="Once" rightLabel="∞ Loop" />
+          </NodeField>
+
+          {/* Pattern hint */}
+          <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+            <p className="text-[9px] text-zinc-500 font-mono">
+              {bounce
+                ? `${startAngle}° → ${endAngle}° → ${startAngle}°${loop ? " (repeating)" : ""}`
+                : `${startAngle}° → ${endAngle}°${loop ? " (repeating)" : ""}`}
+            </p>
           </div>
 
           <AdvancedSection><NodeField label="Steps"><NumberInput value={steps} onChange={setSteps} /></NodeField></AdvancedSection>

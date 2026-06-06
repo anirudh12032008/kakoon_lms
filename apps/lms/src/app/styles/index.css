@@ -5,6 +5,12 @@
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
+  /* Root font bump — scales all rem-based chrome/node text up ~6% for readability
+     (px-bracket values like text-[9px] stay fixed, so node layouts don't reflow). */
+  html {
+    font-size: 17px;
+  }
+
   html, body, #root {
     width: 100%;
     height: 100%;
@@ -25,6 +31,13 @@
 /* ReactFlow overrides */
 .react-flow__edge-path { stroke-width: 2 !important; }
 .react-flow__handle { cursor: crosshair !important; }
+
+/* Bring connecting wires in front of node bodies (both canvases).
+   Edges normally paint beneath nodes; elevating the edges layer keeps wires
+   visible on top — especially the hardware view where they hid behind the board. */
+.react-flow__edges { z-index: 1000 !important; }
+/* Handles must still sit above the elevated wires so they stay grabbable. */
+.react-flow__handle { z-index: 1001 !important; }
 .react-flow__controls button {
   background: var(--k-base-200) !important;
   border-color: var(--k-border) !important;

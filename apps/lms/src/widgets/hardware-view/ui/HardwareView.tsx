@@ -11,6 +11,7 @@ import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import {
   NEOPIXEL, SERVO_PORTS, MOTORS, SENSOR_PORTS, OLED, ONBOARD_IMU,
 } from "@/entities/board/model/hardwareConfig";
+import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
 // ─── Wokwi-quality component illustrations ────────────────────────────────────
 
@@ -452,16 +453,18 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
         )}
       </AnimatePresence>
 
-      {/* Connection handle */}
+      {/* Connection handle — anchored to the image's vertical center (image is 80px
+          tall), so it lines up with the component art regardless of label height. */}
       <Handle
         type="source"
         position={Position.Right}
         style={{
           background: data.color,
-          width: 12, height: 12,
+          width: 14, height: 14,
           border: `2.5px solid ${data.color}50`,
           boxShadow: `0 0 8px ${data.color}80`,
-          top: "40%",
+          top: 40,
+          transform: "translateY(-50%)",
         }}
       />
     </motion.div>
@@ -761,6 +764,7 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
         onNodesDelete={onNodesDelete}
         onEdgesDelete={onEdgesDelete}
         nodeTypes={NODE_TYPES}
+        connectionRadius={CONNECTION_RADIUS}
         deleteKeyCode={["Delete", "Backspace"]}
         fitView fitViewOptions={{ padding: 0.12 }}
         proOptions={{ hideAttribution: true }}

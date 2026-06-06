@@ -419,10 +419,16 @@ time.sleep(0.1)`);
       case "neopixel_rgb":
         imports.add("from machine import Pin");
         imports.add("import neopixel");
-        setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), 1)`);
         {
+          const npRgbN = d.numLeds ?? d.ledCount ?? 1;
+          setupLines.push(`np = neopixel.NeoPixel(Pin(${d.pin ?? NEOPIXEL.pin}), ${npRgbN})`);
           const br = (d.brightness ?? 50) / 100;
-          chunkLines.push(`${indent}np[0] = (${Math.round((d.red ?? 255) * br)}, ${Math.round((d.green ?? 0) * br)}, ${Math.round((d.blue ?? 0) * br)})`);
+          const rgbTuple = `(${Math.round((d.red ?? 255) * br)}, ${Math.round((d.green ?? 0) * br)}, ${Math.round((d.blue ?? 0) * br)})`;
+          if (npRgbN === 1) {
+            chunkLines.push(`${indent}np[0] = ${rgbTuple}`);
+          } else {
+            chunkLines.push(`${indent}for _i in range(${npRgbN}): np[_i] = ${rgbTuple}`);
+          }
           chunkLines.push(`${indent}np.write()`);
         }
         break;
@@ -720,16 +726,30 @@ time.sleep(0.1)`);
           chunkLines.push(`${indent}${sv2}.speed(${-swSpeed}); time.sleep_ms(${swPeriod})`);
           chunkLines.push(`${indent}${sv2}.speed(0)  # stop`);
         } else {
-          const svStart = d.startAngle ?? 0;
-          const svEnd   = d.endAngle ?? 90;
-          const svSteps = Math.max(1, d.steps ?? 10);
-          const svDelay = Math.max(5, Math.round(200 / (d.speed ?? 50) * 10));
-          const svStep  = Math.max(1, Math.round(Math.abs(svEnd - svStart) / svSteps));
-          const svDir   = svEnd >= svStart ? 1 : -1;
-          chunkLines.push(`${indent}# Sweep ${swPort}: ${svStart}° → ${svEnd}°`);
-          chunkLines.push(`${indent}for _a in range(${svStart}, ${svEnd + svDir}, ${svStep * svDir}):`);
-          chunkLines.push(`${indent}    ${sv2}.angle(_a)`);
-          chunkLines.push(`${indent}    time.sleep_ms(${svDelay})`);
+          const svStart  = d.startAngle ?? 0;
+          const svEnd    = d.endAngle ?? 90;
+          const svSteps  = Math.max(1, d.steps ?? 10);
+          const svDelay  = Math.max(5, Math.round(200 / (d.speed ?? 50) * 10));
+          const svStep   = Math.max(1, Math.round(Math.abs(svEnd - svStart) / svSteps));
+          const svDir    = svEnd >= svStart ? 1 : -1;
+          const svBounce = !!(d.bounce);
+          const svLoop   = !!(d.loop);
+          const bounceLabel = svBounce ? ` → ${svStart}°` : "";
+          const loopLabel   = svLoop   ? " (loop)" : "";
+          chunkLines.push(`${indent}# Sweep ${swPort}: ${svStart}° → ${svEnd}°${bounceLabel}${loopLabel}`);
+          // Wrap in while True if looping
+          const li = svLoop ? indent + "    " : indent;
+          if (svLoop) chunkLines.push(`${indent}while True:`);
+          // Forward pass
+          chunkLines.push(`${li}for _a in range(${svStart}, ${svEnd + svDir}, ${svStep * svDir}):`);
+          chunkLines.push(`${li}    ${sv2}.angle(_a)`);
+          chunkLines.push(`${li}    time.sleep_ms(${svDelay})`);
+          // Bounce (return) pass
+          if (svBounce) {
+            chunkLines.push(`${li}for _a in range(${svEnd}, ${svStart - svDir}, ${svStep * -svDir}):`);
+            chunkLines.push(`${li}    ${sv2}.angle(_a)`);
+            chunkLines.push(`${li}    time.sleep_ms(${svDelay})`);
+          }
         }
         break;
       }

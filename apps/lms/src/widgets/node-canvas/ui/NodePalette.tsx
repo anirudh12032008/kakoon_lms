@@ -37,10 +37,10 @@ function NodeItem({ node }: { node: NodeDef }) {
       draggable
       onDragStart={onDragStart}
       data-node-type={node.type}
-      className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-grab active:cursor-grabbing select-none transition-colors text-sub hover:bg-hover hover:text-body"
+      className="flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing select-none transition-colors text-sub hover:bg-hover hover:text-body border border-transparent hover:border-subtle"
     >
-      <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: node.previewDot }} />
-      <span className="text-[12px] font-medium truncate leading-none">{node.label}</span>
+      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: node.previewDot }} />
+      <span className="text-[13px] font-medium truncate leading-tight">{node.label}</span>
     </div>
   );
 }
@@ -62,8 +62,8 @@ function CustomNodeItem({ node, onRename, onDelete }: {
     >
       <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: node.previewDot }} />
       <div className="min-w-0 flex-1">
-        <span className="block text-[12px] font-medium truncate text-body">{node.label}</span>
-        <span className="block text-[10px] truncate text-hint">{node.sourceType} · {node.nodes.length}b</span>
+        <span className="block text-[13px] font-medium truncate text-body">{node.label}</span>
+        <span className="block text-[11px] truncate text-hint">{node.sourceType} · {node.nodes.length}b</span>
       </div>
       <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
         <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRename(node); }}
@@ -92,28 +92,31 @@ function CategorySection({ category, isOpen, onToggle, allowedNodeTypes }: {
   const c = CAT_COLORS[category.id] ?? fallbackColor();
 
   return (
-    <div className="overflow-hidden">
+    <div className={`overflow-hidden rounded-xl transition-colors ${isOpen ? "bg-[#0d0d12] border border-subtle" : "border border-transparent"}`}>
       <button
         onClick={onToggle}
-        className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg transition-colors group ${isOpen ? c.bg : "hover:bg-hover"}`}
+        className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-xl transition-colors group ${isOpen ? c.bg : "hover:bg-hover"}`}
       >
         <svg
-          className={`w-3 h-3 shrink-0 transition-transform duration-150 ${isOpen ? `rotate-90 ${c.text}` : "text-hint rotate-0"}`}
+          className={`w-3.5 h-3.5 shrink-0 transition-transform duration-150 ${isOpen ? `rotate-90 ${c.text}` : "text-hint rotate-0"}`}
           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
         >
           <polyline points="9 18 15 12 9 6"/>
         </svg>
-        <span className={`text-[13px] font-semibold leading-none transition-colors ${isOpen ? c.text : "text-sub group-hover:text-body"}`}>
+        <span className={`text-[14px] font-semibold leading-tight transition-colors ${isOpen ? c.text : "text-sub group-hover:text-body"}`}>
           {category.icon} {category.label}
         </span>
-        <span className={`ml-auto text-[10px] font-bold tabular-nums ${isOpen ? c.text : "text-hint"}`}>
+        <span className={`ml-auto text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${isOpen ? `${c.text} ${c.bg}` : "text-hint"}`}>
           {visibleNodes.length}
         </span>
       </button>
 
       {isOpen && (
-        <div className="grid grid-cols-2 gap-0.5 px-1 pb-1.5">
-          {visibleNodes.map((node) => <NodeItem key={node.type} node={node} />)}
+        <div className="pl-2.5 pr-1.5 pb-2">
+          {/* Indentation rail groups the category's nodes under its header */}
+          <div className="grid grid-cols-2 gap-1 border-l-2 pl-2" style={{ borderColor: c.dot + "40" }}>
+            {visibleNodes.map((node) => <NodeItem key={node.type} node={node} />)}
+          </div>
         </div>
       )}
     </div>
@@ -156,20 +159,20 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
       style={{ width: `${width}px` }}
     >
       {/* Header */}
-      <div className="px-3 pt-3 pb-2.5 border-b border-subtle">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-hint mb-2">Blocks</p>
-        <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5 bg-hover border border-subtle">
-          <Search className="w-3.5 h-3.5 shrink-0 text-hint" />
+      <div className="px-3 pt-3.5 pb-3 border-b border-subtle">
+        <p className="text-[12px] font-bold uppercase tracking-widest text-hint mb-2.5">Blocks</p>
+        <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-hover border border-subtle focus-within:border-primary/50 transition-colors">
+          <Search className="w-4 h-4 shrink-0 text-hint" />
           <input
-            type="text" placeholder="Search…"
+            type="text" placeholder="Search blocks…"
             value={search} onChange={(e) => setSearch(e.target.value)}
-            className="grow text-xs bg-transparent outline-none text-body placeholder:text-hint"
+            className="grow text-sm bg-transparent outline-none text-body placeholder:text-hint"
           />
         </div>
       </div>
 
       {/* Category list */}
-      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
+      <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
         {filtered.map((cat) => {
           const isOpen = search.trim() ? true : openCategoryId === cat.id;
           return (
@@ -180,10 +183,10 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
         })}
 
         {/* Custom nodes */}
-        <div className="mt-2 pt-2 border-t border-subtle">
-          <div className="flex items-center justify-between px-2 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-widest text-hint">Custom</span>
-            <span className="text-[10px] text-hint">{visibleCustomNodes.length} saved</span>
+        <div className="mt-3 pt-3 border-t border-subtle">
+          <div className="flex items-center justify-between px-2 mb-1.5">
+            <span className="text-[12px] font-bold uppercase tracking-widest text-hint">Custom</span>
+            <span className="text-[11px] text-hint">{visibleCustomNodes.length} saved</span>
           </div>
           <div className="space-y-0.5">
             {visibleCustomNodes.length > 0 ? (
@@ -201,7 +204,7 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
                 />
               ))
             ) : (
-              <p className="px-2 py-2 text-[11px] text-hint italic">
+              <p className="px-2 py-2 text-[12px] text-hint italic">
                 Save a node group to reuse it here.
               </p>
             )}

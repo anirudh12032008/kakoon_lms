@@ -11,10 +11,10 @@ import { MotorIcon } from "./_shared";
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
 const MOTOR_PORTS = {
-  L1: { pwm: 45, dir: 46, label: "L1 - Front Left"  },
-  L2: { pwm: 15, dir: 16, label: "L2 - Rear Left"   },
-  R1: { pwm: 17, dir: 18, label: "R1 - Front Right" },
-  R2: { pwm: 37, dir: 38, label: "R2 - Rear Right"  },
+  L1: { pwm: 17, dir: 18, label: "L1 - Front Left"  },
+  L2: { pwm: 37, dir: 38, label: "L2 - Rear Left"   },
+  R1: { pwm: 45, dir: 46, label: "R1 - Front Right" },
+  R2: { pwm: 15, dir: 16, label: "R2 - Rear Right"  },
 } as const;
 
 type MotorKey = keyof typeof MOTOR_PORTS;
@@ -302,10 +302,10 @@ export function MultiMotorControllerNode() {
         <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">45/46</span></span>
-            <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">15/16</span></span>
-            <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">17/18</span></span>
-            <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">37/38</span></span>
+            <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">17/18</span></span>
+            <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">37/38</span></span>
+            <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">45/46</span></span>
+            <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">15/16</span></span>
           </div>
         </div>
       </AdvancedSection>

@@ -109,6 +109,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   const [designName, setDesignName] = useState("MyDesign");
   const [drawing, setDrawing] = useState(false);
   const [lineStart, setLineStart] = useState<[number, number] | null>(null);
+  const [dragPos, setDragPos] = useState<[number, number] | null>(null); // current mouse pixel during shape drag
   const [playing, setPlaying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [addedToCanvas, setAddedToCanvas] = useState(false);
@@ -328,18 +329,20 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
     const val = tool === "eraser" ? 0 : 1;
     if (tool === "pen" || tool === "eraser") setPixel(x, y, val);
     else if (tool === "fill") floodFill(x, y, getPixel(x,y), val);
-    else setLineStart([x, y]);
+    else { setLineStart([x, y]); setDragPos([x, y]); }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!drawing) return;
     const [x, y] = getCanvasPos(e);
+    if (lineStart) setDragPos([x, y]); // track for live preview
+    if (!drawing) return;
     const val = tool === "eraser" ? 0 : 1;
     if (tool === "pen" || tool === "eraser") setPixel(x, y, val);
   };
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setDrawing(false);
+    setDragPos(null);
     if (!lineStart) return;
     const [x, y] = getCanvasPos(e);
     const [lx, ly] = lineStart;
@@ -657,25 +660,122 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
         {/* OLED canvas — explicit CSS width/height locks the 2:1 OLED aspect ratio */}
         <div className="flex-1 flex items-center justify-center p-4 overflow-auto min-h-0">
-          <canvas
-            ref={canvasRef}
-            width={OLED_W * scale}
-            height={OLED_H * scale}
-            className="cursor-crosshair flex-shrink-0"
-            style={{
-              width: `${OLED_W * scale}px`,
-              height: `${OLED_H * scale}px`,
-              imageRendering: "pixelated",
-              background: "#000000",
-              border: "2px solid #1a1a20",
-              borderRadius: "4px",
-              boxShadow: "0 0 30px rgba(100,120,255,0.15)",
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={() => setDrawing(false)}
-          />
+          {/* wrapper keeps canvas + SVG overlay perfectly aligned */}
+          <div className="relative flex-shrink-0" style={{ width: `${OLED_W * scale}px`, height: `${OLED_H * scale}px` }}>
+            <canvas
+              ref={canvasRef}
+              width={OLED_W * scale}
+              height={OLED_H * scale}
+              className="cursor-crosshair"
+              style={{
+                width: `${OLED_W * scale}px`,
+                height: `${OLED_H * scale}px`,
+                imageRendering: "pixelated",
+                background: "#000000",
+                border: "2px solid #2a2a3a",
+                borderRadius: "4px",
+                boxShadow: "0 0 0 1px #3a3a50, 0 0 30px rgba(100,120,255,0.18), inset 0 0 60px rgba(0,0,60,0.4)",
+                display: "block",
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={() => { setDrawing(false); setDragPos(null); }}
+            />
+
+            {/* Live shape preview overlay */}
+            {lineStart && dragPos && (() => {
+              const [lx, ly] = lineStart;
+              const [dx, dy] = dragPos;
+              const s = scale;
+              const x1 = lx * s, y1 = ly * s, x2 = dx * s, y2 = dy * s;
+
+              // Rect dimensions in pixels (OLED pixels, not screen px)
+              const rw = Math.abs(dx - lx) + 1;
+              const rh = Math.abs(dy - ly) + 1;
+              const rx = Math.min(lx, dx) * s;
+              const ry = Math.min(ly, dy) * s;
+              const rW = rw * s;
+              const rH = rh * s;
+
+              // Circle radius
+              const cr = Math.round(Math.sqrt((dx - lx) ** 2 + (dy - ly) ** 2));
+
+              // Dimension label position
+              const labelX = Math.max(x2, x1) * 1; // right of shape
+              const labelY = Math.min(y1, y2) - 6;
+
+              return (
+                <svg
+                  className="absolute inset-0 pointer-events-none"
+                  width={OLED_W * s}
+                  height={OLED_H * s}
+                  style={{ borderRadius: "4px" }}
+                >
+                  {tool === "rect" && (
+                    <>
+                      {/* Filled dim background */}
+                      <rect x={rx} y={ry} width={rW} height={rH}
+                        fill="rgba(167,139,250,0.07)" />
+                      {/* Outline */}
+                      <rect x={rx} y={ry} width={rW} height={rH}
+                        fill="none" stroke="#a78bfa" strokeWidth="1.5"
+                        strokeDasharray="4 2" />
+                      {/* Corner dots */}
+                      {[[rx,ry],[rx+rW,ry],[rx,ry+rH],[rx+rW,ry+rH]].map(([cx2,cy2],i) => (
+                        <circle key={i} cx={cx2} cy={cy2} r={2.5} fill="#a78bfa" />
+                      ))}
+                      {/* Size badge */}
+                      <rect x={rx} y={Math.max(0, ry - 16)} width={Math.max(36, String(`${rw}×${rh}`).length * 6 + 8)} height={14} rx={3} fill="#18181f" stroke="#3a3a55" strokeWidth="1" />
+                      <text x={rx + 4} y={Math.max(0, ry - 16) + 10} fill="#a78bfa" fontSize={9} fontFamily="monospace" fontWeight="bold">
+                        {rw}×{rh} px
+                      </text>
+                    </>
+                  )}
+                  {tool === "line" && (
+                    <>
+                      <line x1={x1 + s/2} y1={y1 + s/2} x2={x2 + s/2} y2={y2 + s/2}
+                        stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="4 2" />
+                      <circle cx={x1 + s/2} cy={y1 + s/2} r={3} fill="#a78bfa" />
+                      <circle cx={x2 + s/2} cy={y2 + s/2} r={3} fill="#a78bfa" />
+                      {/* Length badge */}
+                      {(() => {
+                        const len = Math.round(Math.sqrt((dx-lx)**2+(dy-ly)**2));
+                        const midX = (x1 + x2) / 2 + s/2;
+                        const midY = (y1 + y2) / 2 + s/2 - 8;
+                        return (
+                          <>
+                            <rect x={midX - 18} y={midY - 9} width={36} height={12} rx={3} fill="#18181f" stroke="#3a3a55" strokeWidth="1" />
+                            <text x={midX} y={midY} fill="#a78bfa" fontSize={9} fontFamily="monospace" fontWeight="bold" textAnchor="middle">{len}px</text>
+                          </>
+                        );
+                      })()}
+                    </>
+                  )}
+                  {tool === "circle" && (
+                    <>
+                      <circle cx={x1 + s/2} cy={y1 + s/2} r={cr * s}
+                        fill="rgba(167,139,250,0.06)" stroke="#a78bfa" strokeWidth="1.5" strokeDasharray="4 2" />
+                      <circle cx={x1 + s/2} cy={y1 + s/2} r={2.5} fill="#a78bfa" />
+                      {/* Radius badge */}
+                      <rect x={x1 + s/2 + 4} y={y1 + s/2 - 16} width={Math.max(36, String(`r=${cr}`).length * 6 + 8)} height={14} rx={3} fill="#18181f" stroke="#3a3a55" strokeWidth="1" />
+                      <text x={x1 + s/2 + 8} y={y1 + s/2 - 16 + 10} fill="#a78bfa" fontSize={9} fontFamily="monospace" fontWeight="bold">r={cr} px</text>
+                    </>
+                  )}
+                  {/* Cursor crosshair */}
+                  <line x1={x2 + s/2 - 5} y1={y2 + s/2} x2={x2 + s/2 + 5} y2={y2 + s/2} stroke="#a78bfa" strokeWidth="1" opacity="0.6" />
+                  <line x1={x2 + s/2} y1={y2 + s/2 - 5} x2={x2 + s/2} y2={y2 + s/2 + 5} stroke="#a78bfa" strokeWidth="1" opacity="0.6" />
+                </svg>
+              );
+            })()}
+
+            {/* Coordinate readout — bottom right corner of canvas */}
+            {dragPos && (
+              <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 border border-[#2a2a3a] text-[9px] font-mono text-violet-300 pointer-events-none">
+                {dragPos[0]}, {dragPos[1]}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Bottom bar */}

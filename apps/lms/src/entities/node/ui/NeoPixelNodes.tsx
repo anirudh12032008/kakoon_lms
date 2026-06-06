@@ -55,11 +55,27 @@ export function NeoPixelLEDNode() {
         </div>
       </AdvancedSection>
       <NodeField label="LED Count"><NumberInput value={numLeds} onChange={setNumLeds} /></NodeField>
-      <NodeField label="Brightness"><NumberInput value={brightness} onChange={setBrightness} /></NodeField>
       <NodeField label="Color">
         <input type="color" value={color} onChange={e => setColor(e.target.value)}
           className="nodrag w-10 h-6 rounded border border-[#2d2d35] cursor-pointer bg-transparent" />
       </NodeField>
+      {/* Brightness slider */}
+      <div className="px-3 py-1.5">
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-[#9ca3af] font-medium">Brightness</span>
+          <span className="text-[10px] font-mono text-cyan-400">{brightness}%</span>
+        </div>
+        <input
+          type="range" min={0} max={100} step={1} value={brightness}
+          onChange={e => setBrightness(Number(e.target.value))}
+          className="nodrag w-full h-1 cursor-pointer"
+          style={{ accentColor: COLORS.cyan }}
+        />
+        <div className="flex justify-between mt-0.5">
+          <span className="text-[8px] text-zinc-600">Off</span>
+          <span className="text-[8px] text-zinc-600">Full</span>
+        </div>
+      </div>
     </BaseNode>
   );
 }

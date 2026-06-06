@@ -32,6 +32,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NODE_TYPES } from "@/entities/node/model";
 import { generatePythonFromFlow } from "@/entities/node/lib/codegen";
 import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/entities/custom-node/model/customNodes";
+import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
 // ─── Glow edge — selected edges get a colored halo via Framer Motion ──────────
 
@@ -220,6 +221,7 @@ function NodeCanvasInner({
         fitViewOptions={{ padding: 0.6, maxZoom: FIT_VIEW_MAX_ZOOM }}
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
+        connectionRadius={CONNECTION_RADIUS}
         deleteKeyCode={["Backspace", "Delete"]}
         connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2, filter: "drop-shadow(0 0 6px #7c3aed88)" }}
         defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}

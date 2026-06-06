@@ -7,7 +7,7 @@ import {
   sendCodeToESP32,
   uploadCodeToESP32,
 } from "@/features/editor/serial-connect/lib/serial";
-import { tryParseSensorLine } from "@/shared/lib/sensorStore";
+import { tryParseSensorLine, useSensorStore } from "@/shared/lib/sensorStore";
 
 type ConnectionType = "usb" | "wifi";
 
@@ -74,7 +74,16 @@ export function useSerialConnection() {
         }
       }
     } catch {
-      // connection closed
+      // Physical disconnect — serial port threw; clean up state so the UI
+      // doesn't stay stuck in "running / connected" forever.
+    } finally {
+      // Whether we exited via done=true, the while condition, or an exception,
+      // make sure the UI reflects the real state.
+      connectionRef.current.isConnected = false;
+      setIsConnected(false);
+      setIsRunning(false);
+      useSensorStore.getState().clear();
+      addLog("🔌 Device disconnected");
     }
   }, [addLog]);
 
@@ -117,6 +126,10 @@ export function useSerialConnection() {
       return true;
     } catch (err: unknown) {
       addLog(`❌ Send failed: ${err instanceof Error ? err.message : String(err)}`);
+      // Write failed — device likely unplugged; don't leave UI stuck in "running"
+      setIsRunning(false);
+      setIsConnected(false);
+      connectionRef.current.isConnected = false;
       return false;
     }
   }, [addLog]);

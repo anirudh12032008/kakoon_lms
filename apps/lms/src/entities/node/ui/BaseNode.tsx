@@ -392,20 +392,20 @@ export function BaseNode({
       }}
     >
       <SelectionToolbar />
-      <div className="absolute right-3 top-3 z-20 flex items-center gap-1">
-        <NodeAdvancedButton />
-        <NodeToggleButton value={disabled} onChange={setDisabled} />
-      </div>
       {hasTopHandle && <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />}
       {hasBottomHandle && <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />}
       {hasLeftHandle && <Handle type="target" position={Position.Left} id="left" style={{ ...hs, left: -7 }} />}
       {hasRightHandle && <Handle type="source" position={Position.Right} id="right" style={{ ...hs, right: -7 }} />}
 
-      <div className="flex items-center justify-between px-3 py-2 pr-20"
+      <div className="flex items-center gap-2 px-3 py-2.5 z-20 relative"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
-        <span className="text-sm font-bold text-white leading-none">{title}</span>
-        {icon && <span className="text-white opacity-90">{icon}</span>}
+        <span className="text-sm font-bold text-white leading-tight truncate flex-1">{title}</span>
+        {icon && <span className="text-white opacity-90 shrink-0">{icon}</span>}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <NodeAdvancedButton />
+          <NodeToggleButton value={disabled} onChange={setDisabled} />
+        </div>
       </div>
       <div className="w-full py-1.5 flex flex-col gap-0.5">{children}</div>
     </motion.div>
@@ -440,16 +440,16 @@ export function LoopNode({
       }}
     >
       <SelectionToolbar />
-      <div className="absolute right-3 top-3 z-20 flex items-center gap-1">
-        <NodeAdvancedButton />
-        <NodeToggleButton value={disabled} onChange={setDisabled} />
-      </div>
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       {hasRightHandle && <Handle type="source" position={Position.Right} id="body" style={{ ...hs, right: -7 }} />}
-      <div className="flex items-center justify-between px-4 py-3 pr-20">
-        <span className="text-sm font-bold text-white">{title}</span>
-        {icon && <span style={{ color }}>{icon}</span>}
+      <div className="flex items-center gap-2 px-4 py-3 z-20 relative">
+        <span className="text-sm font-bold text-white truncate flex-1">{title}</span>
+        {icon && <span style={{ color }} className="shrink-0">{icon}</span>}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <NodeAdvancedButton />
+          <NodeToggleButton value={disabled} onChange={setDisabled} />
+        </div>
       </div>
       {children && (
         <>
@@ -484,18 +484,18 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
       }}
     >
       <SelectionToolbar />
-      <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3 z-20" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       <Handle type="source" position={Position.Left} id="false" style={{ ...hs, left: -7, top: "calc(50% + 16px)" }} />
       <Handle type="source" position={Position.Right} id="true" style={{ ...hs, right: -7, top: "calc(50% + 16px)" }} />
-      <div className="flex items-center justify-between px-4 py-2 pr-14"
+      <div className="flex items-center gap-2 px-4 py-2.5 z-20 relative"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
-        <span className="text-sm font-bold text-white tracking-wide">If-Else</span>
-        <svg className="w-5 h-5 text-white opacity-95" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <span className="text-sm font-bold text-white tracking-wide flex-1">If-Else</span>
+        <svg className="w-5 h-5 text-white opacity-95 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
+        <NodeToggleButton value={disabled} onChange={setDisabled} className="shrink-0" />
       </div>
       <div className="py-4 px-3 flex items-center justify-center">{children}</div>
       <div className="absolute text-xs text-[#9ca3af] font-semibold select-none" style={{ left: "-42px", top: "calc(50% + 16px)", transform: "translateY(-50%)" }}>False</div>
