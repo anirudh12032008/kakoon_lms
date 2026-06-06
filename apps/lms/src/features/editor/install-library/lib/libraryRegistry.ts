@@ -53,7 +53,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   {
     id: "lsm6ds3",
     name: "lsm6ds3.py",
-    description: "LSM6DS3 onboard 6-axis IMU — Kakoon ESP32-S3 (SCL=42, SDA=41)",
+    description: "LSM6DS3 onboard 6-axis IMU — Kokoon ESP32-S3 (SCL=42, SDA=41)",
     trigger: "lsm6ds3",
     path: "/libs/lsm6ds3.py",
     category: "Sensor",

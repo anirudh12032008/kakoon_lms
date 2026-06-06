@@ -30,8 +30,8 @@ export interface CustomNodeTemplate {
   edges: SavedCustomEdge[];
 }
 
-const STORAGE_KEY = "kakoon-custom-nodes";
-const CUSTOM_NODES_CHANGED_EVENT = "kakoon-custom-nodes-changed";
+const STORAGE_KEY = "kokoon-custom-nodes";
+const CUSTOM_NODES_CHANGED_EVENT = "kokoon-custom-nodes-changed";
 
 function cloneData<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;

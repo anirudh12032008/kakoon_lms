@@ -1,5 +1,5 @@
 # MPU6050 6-axis IMU driver for MicroPython
-# SCL=42, SDA=41 for Kakoon ESP32-S3 board
+# SCL=42, SDA=41 for Kokoon ESP32-S3 board
 import struct, math
 
 class MPU6050:

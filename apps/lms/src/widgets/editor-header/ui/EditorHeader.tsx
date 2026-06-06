@@ -1,7 +1,8 @@
-import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap, Download, Upload } from "lucide-react";
+import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
+import type { SyncState } from "@/features/editor/save-draft/model/useCourseSync";
 import { useAnimations } from "@/shared/context/AnimationContext";
 
 interface EditorHeaderProps {
@@ -9,12 +10,35 @@ interface EditorHeaderProps {
   setViewMode: (m: ViewMode) => void;
   setIsEditing: (v: boolean) => void;
   launchContext?: EditorLaunchContext;
+  isCourse?: boolean;
+  syncState?: SyncState;
   showTutorialsCatalog: boolean;
   onToggleTutorials: () => void;
   onBackToDashboard?: () => void;
   onSaveAsTutorial?: () => void;
   onExportProject?: () => void;
   onImportProject?: () => void;
+}
+
+/** Live "saved to your account" indicator for course sessions. */
+function SyncIndicator({ state }: { state: SyncState }) {
+  const map: Record<SyncState, { icon: React.ReactNode; label: string; cls: string }> = {
+    idle: { icon: <Cloud className="h-3.5 w-3.5" />, label: "Synced", cls: "text-hint" },
+    loading: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Loading…", cls: "text-hint" },
+    saving: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Saving…", cls: "text-sky-400" },
+    saved: { icon: <Check className="h-3.5 w-3.5" />, label: "Saved", cls: "text-emerald-400" },
+    error: { icon: <CloudOff className="h-3.5 w-3.5" />, label: "Save failed", cls: "text-error-c" },
+  };
+  const s = map[state];
+  return (
+    <div
+      className={`flex items-center gap-1.5 rounded-full border border-subtle bg-raised px-2.5 py-1 text-[11px] font-semibold ${s.cls}`}
+      title="Your work is saved to your Kokoon account"
+    >
+      {s.icon}
+      <span className="hidden sm:inline">{s.label}</span>
+    </div>
+  );
 }
 
 const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
@@ -37,11 +61,11 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
 
 export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
-  launchContext, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
+  launchContext, isCourse, syncState, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
   onSaveAsTutorial, onExportProject, onImportProject,
 }: EditorHeaderProps) {
   const title      = launchContext?.title      ?? "Full Workshop";
-  const launchType = launchContext?.launchType ?? "mode";
+  const launchType = isCourse ? "course" : (launchContext?.launchType ?? "mode");
   const { animationsEnabled, toggle: toggleAnimations } = useAnimations();
 
   return (
@@ -51,16 +75,18 @@ export function EditorHeader({
         <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
           <Blocks className="h-4 w-4 text-white" />
         </div>
-        <span className="text-sm font-bold text-body hidden sm:inline">Kakoon</span>
+        <span className="text-sm font-bold text-body hidden sm:inline">Kokoon</span>
       </div>
 
       {/* Centre breadcrumb */}
       <div className="hidden flex-1 items-center justify-center px-2 md:flex min-w-0">
         <div className="flex max-w-[42rem] items-center gap-2 rounded-full px-3 py-1.5 bg-raised border border-subtle">
+          {isCourse && <GraduationCap className="h-3.5 w-3.5 text-primary-c shrink-0" />}
           <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px] text-hint">
             {launchType}
           </span>
           <span className="text-xs font-semibold truncate text-body">{title}</span>
+          {isCourse && syncState && <SyncIndicator state={syncState} />}
         </div>
       </div>
 
@@ -151,9 +177,10 @@ export function EditorHeader({
           <button
             onClick={onBackToDashboard}
             className="btn btn-ghost btn-sm gap-1.5 text-sub hidden md:flex"
+            title={isCourse ? "Back to course" : "Back to dashboard"}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
-            <span className="text-xs">Dashboard</span>
+            <span className="text-xs">{isCourse ? "Course" : "Dashboard"}</span>
           </button>
         )}
       </div>

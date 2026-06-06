@@ -1,5 +1,5 @@
 # DRV8833 dual H-bridge motor driver for MicroPython
-# Tested on ESP32-S3 with Kakoon robot board
+# Tested on ESP32-S3 with Kokoon robot board
 # FR=front.a (PWM45/DIR46), FL=front.b (PWM15/DIR16)
 # RR=rear.a  (PWM17/DIR18), RL=rear.b  (PWM37/DIR38)
 from machine import Pin, PWM  # pyright: ignore[reportMissingImports]

@@ -5,7 +5,7 @@
  * uploaded to the device at any time, even without re-opening the designer.
  */
 
-export const ANIM_REGISTRY_KEY = "kakoon-oled-anims";
+export const ANIM_REGISTRY_KEY = "kokoon-oled-anims";
 
 export interface AnimEntry {
   name: string;

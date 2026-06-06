@@ -2,6 +2,7 @@
  * Idempotent seed script. Upserts the four robot courses.
  * Run with: pnpm --filter api seed   (or: tsx src/scripts/seed.ts)
  */
+import "dotenv/config";
 import { connectDB, disconnectDB } from "../config/db";
 import { Course } from "../models/Course";
 import { COURSE_SEED } from "../data/courseSeed";

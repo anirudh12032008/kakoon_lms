@@ -37,7 +37,7 @@ export function TutorialsDashboard({
   const tutorials = useMemo(() => {
     let custom: Tutorial[] = [];
     try {
-      const stored = localStorage.getItem("Kakoon-custom-tutorials");
+      const stored = localStorage.getItem("Kokoon-custom-tutorials");
       if (stored) custom = JSON.parse(stored) as Tutorial[];
     } catch { }
     // Builtins are always present; DB tutorials override by id if they share one
@@ -55,7 +55,7 @@ export function TutorialsDashboard({
       try {
         const json = JSON.parse(e.target?.result as string);
         if (!json.title || !json.nodes || !json.edges) {
-          alert("Invalid Kakoon Tutorial file format. Missing title, nodes, or edges.");
+          alert("Invalid Kokoon Tutorial file format. Missing title, nodes, or edges.");
           return;
         }
 
@@ -71,10 +71,10 @@ export function TutorialsDashboard({
           steps: json.steps || [],
         };
 
-        const stored = localStorage.getItem("Kakoon-custom-tutorials");
+        const stored = localStorage.getItem("Kokoon-custom-tutorials");
         const existing: Tutorial[] = stored ? JSON.parse(stored) : [];
         const updated = [...existing.filter((t) => t.id !== newTutorial.id), newTutorial];
-        localStorage.setItem("Kakoon-custom-tutorials", JSON.stringify(updated));
+        localStorage.setItem("Kokoon-custom-tutorials", JSON.stringify(updated));
         setCustomList(updated);
         alert(`Successfully imported: "${newTutorial.title}"! 🎉`);
       } catch {

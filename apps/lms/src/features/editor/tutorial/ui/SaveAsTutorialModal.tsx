@@ -4,8 +4,8 @@ import type { Node, Edge } from "@xyflow/react";
 import { generateStepsFromFlow, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
 
 const ADMIN_SECRET  = import.meta.env.VITE_ADMIN_SECRET as string | undefined;
-const SESSION_KEY   = "kakoon-admin-session";
-const CUSTOM_KEY    = "Kakoon-custom-tutorials";
+const SESSION_KEY   = "kokoon-admin-session";
+const CUSTOM_KEY    = "Kokoon-custom-tutorials";
 
 function isAdminAuthed() {
   return localStorage.getItem(SESSION_KEY) === "true";

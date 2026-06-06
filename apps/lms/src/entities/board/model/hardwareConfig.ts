@@ -1,11 +1,11 @@
 /**
- * Kakoon ESP32-S3 Board — Single source of truth for all GPIO pin assignments.
+ * Kokoon ESP32-S3 Board — Single source of truth for all GPIO pin assignments.
  *
  * Derived from the official board test script (board_test.py).
  * Every node, codegen case, and UI component must import from here.
  * Never hardcode GPIO numbers anywhere else.
  *
- * Board: Kakoon ESP32-S3 custom PCB
+ * Board: Kokoon ESP32-S3 custom PCB
  * Firmware: MicroPython 1.23+
  */
 

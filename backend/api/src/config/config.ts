@@ -20,7 +20,11 @@ const envSchema = z.object({
 
   MONGO_URI: z
     .string()
-    .default(devDefault("mongodb://127.0.0.1:27017/kakoon") as string),
+    .min(1, "MONGO_URI is required — paste your MongoDB Atlas connection string into backend/api/.env")
+    .refine(
+      (v) => v.startsWith("mongodb://") || v.startsWith("mongodb+srv://"),
+      "MONGO_URI must start with mongodb:// or mongodb+srv://"
+    ),
 
   // Redis is optional — only needed for future background jobs (BullMQ).
   REDIS_URL: z.string().optional(),

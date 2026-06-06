@@ -17,14 +17,14 @@ export function useAnimations() {
 
 export function AnimationProvider({ children }: { children: React.ReactNode }) {
   const [enabled, setEnabled] = useState(() => {
-    try { return localStorage.getItem("kakoon-animations") !== "false"; }
+    try { return localStorage.getItem("kokoon-animations") !== "false"; }
     catch { return true; }
   });
 
   const toggle = useCallback(() => {
     setEnabled(prev => {
       const next = !prev;
-      try { localStorage.setItem("kakoon-animations", String(next)); } catch {}
+      try { localStorage.setItem("kokoon-animations", String(next)); } catch {}
       return next;
     });
   }, []);

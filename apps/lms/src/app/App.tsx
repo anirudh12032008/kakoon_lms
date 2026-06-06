@@ -1,79 +1,104 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./styles/App.css";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { AnimationProvider } from "@/shared/context/AnimationContext";
 import { NodeModeProvider } from "@/shared/context/NodeModeContext";
 import { AdminPage } from "@/pages/admin/ui/AdminPage";
+import { ProtectedRoute, GuestOnlyRoute } from "@/shared/auth/ProtectedRoute";
+import { LoginPage } from "@/features/auth/ui/LoginPage";
+import { RegisterPage } from "@/features/auth/ui/RegisterPage";
+import { CoursesPage } from "@/pages/courses/ui/CoursesPage";
+import { CourseDetailPage } from "@/pages/courses/ui/CourseDetailPage";
+import { useLaunchStore } from "@/shared/launch/launchStore";
 
-const EditorLaunchDashboard = lazy(() => import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard })));
+const EditorLaunchDashboard = lazy(() =>
+  import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard }))
+);
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
 
-const LAUNCH_STORAGE_KEY = "kakoon-editor-launch-context";
-
-function isAdminRoute() {
+function PageLoader() {
   return (
-    window.location.hash === "#admin" ||
-    new URLSearchParams(window.location.search).has("admin")
+    <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
+      <div className="flex items-center gap-3">
+        <span className="text-2xl">⚡</span>
+        <span className="text-lg font-bold text-primary-c">Kokoon</span>
+      </div>
+      <span className="loading loading-spinner loading-md text-primary-c" />
+    </div>
   );
 }
 
-export default function App() {
-  const [showAdmin, setShowAdmin] = useState(isAdminRoute);
+// ── Editor route — reads the launch context from the store ────────────────────
+function EditorRoute() {
+  const navigate = useNavigate();
+  const context = useLaunchStore((s) => s.context);
+  const setContext = useLaunchStore((s) => s.setContext);
 
-  const [launchContext, setLaunchContext] = useState<EditorLaunchContext | null>(() => {
-    try {
-      const saved = localStorage.getItem(LAUNCH_STORAGE_KEY);
-      return saved ? JSON.parse(saved) as EditorLaunchContext : null;
-    } catch {
-      return null;
-    }
-  });
+  if (!context) return <Navigate to="/courses" replace />;
 
-  useEffect(() => {
-    try {
-      if (launchContext) {
-        localStorage.setItem(LAUNCH_STORAGE_KEY, JSON.stringify(launchContext));
-      } else {
-        localStorage.removeItem(LAUNCH_STORAGE_KEY);
-      }
-    } catch { }
-  }, [launchContext]);
-
-  if (showAdmin) {
-    return (
-      <AnimationProvider>
-        <AdminPage onBack={() => {
-          history.replaceState(null, "", window.location.pathname);
-          setShowAdmin(false);
-        }} />
-      </AnimationProvider>
-    );
-  }
+  const courseSlug = context.courseSlug;
 
   return (
-    <AnimationProvider>
-    <NodeModeProvider>
-    <Suspense
-      fallback={
-        <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">⚡</span>
-            <span className="text-lg font-bold text-primary-c">Kakoon</span>
-          </div>
-          <span className="loading loading-spinner loading-md text-primary-c" />
-        </div>
-      }
-    >
-      {launchContext ? (
-        <EditorPage
-          launchContext={launchContext}
-          onBackToDashboard={() => setLaunchContext(null)}
-        />
-      ) : (
-        <EditorLaunchDashboard onLaunch={setLaunchContext} />
-      )}
+    <Suspense fallback={<PageLoader />}>
+      <EditorPage
+        launchContext={context}
+        onBackToDashboard={() => {
+          setContext(null);
+          // Return to the specific course page when launched from a course.
+          navigate(courseSlug ? `/courses/${courseSlug}` : "/courses");
+        }}
+      />
     </Suspense>
-    </NodeModeProvider>
+  );
+}
+
+// ── Launch dashboard route — the mode/kit/custom workspace picker ─────────────
+function LaunchRoute() {
+  const navigate = useNavigate();
+  const setContext = useLaunchStore((s) => s.setContext);
+
+  const onLaunch = (ctx: EditorLaunchContext) => {
+    setContext(ctx);
+    navigate("/editor");
+  };
+
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <EditorLaunchDashboard onLaunch={onLaunch} />
+    </Suspense>
+  );
+}
+
+function AdminRoute() {
+  const navigate = useNavigate();
+  return <AdminPage onBack={() => navigate("/courses")} />;
+}
+
+export default function App() {
+  return (
+    <AnimationProvider>
+      <NodeModeProvider>
+        <Routes>
+          {/* Guest-only */}
+          <Route element={<GuestOnlyRoute />}>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+          </Route>
+
+          {/* Authenticated */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/courses" element={<CoursesPage />} />
+            <Route path="/courses/:slug" element={<CourseDetailPage />} />
+            <Route path="/launch" element={<LaunchRoute />} />
+            <Route path="/editor" element={<EditorRoute />} />
+            <Route path="/admin" element={<AdminRoute />} />
+          </Route>
+
+          <Route path="/" element={<Navigate to="/courses" replace />} />
+          <Route path="*" element={<Navigate to="/courses" replace />} />
+        </Routes>
+      </NodeModeProvider>
     </AnimationProvider>
   );
 }

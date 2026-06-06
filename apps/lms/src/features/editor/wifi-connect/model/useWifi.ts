@@ -8,8 +8,8 @@ import { useState, useEffect, useCallback } from "react";
  *   - Password             → React state only (never persisted anywhere)
  */
 
-const SSID_KEY = "kakoon-wifi-ssid";
-const SUBNET_KEY = "kakoon-wifi-subnet";
+const SSID_KEY = "kokoon-wifi-ssid";
+const SUBNET_KEY = "kokoon-wifi-subnet";
 
 interface UseWifiOptions {
   connectWifi: (ip: string, password: string) => Promise<void>;
@@ -65,7 +65,7 @@ export function useWifi({ connectWifi, setConnectionMode, addLog }: UseWifiOptio
         addLog(`📡 Trying ${userInput}...`);
         if (await tryConnect(userInput)) {
           addLog(`✅ Found ESP32 at ${userInput}`);
-          await connectWifi(userInput, "Kakoon");
+          await connectWifi(userInput, "Kokoon");
           setConnectionMode("wifi");
           setIsConfiguringWifi(false);
           return;
@@ -73,10 +73,10 @@ export function useWifi({ connectWifi, setConnectionMode, addLog }: UseWifiOptio
       }
     }
 
-    addLog("📡 Trying Kakoon.local...");
-    if (await tryConnect("Kakoon.local")) {
-      addLog("✅ Found ESP32 at Kakoon.local");
-      await connectWifi("Kakoon.local", "Kakoon");
+    addLog("📡 Trying Kokoon.local...");
+    if (await tryConnect("Kokoon.local")) {
+      addLog("✅ Found ESP32 at Kokoon.local");
+      await connectWifi("Kokoon.local", "Kokoon");
       setConnectionMode("wifi");
       setIsConfiguringWifi(false);
       return;

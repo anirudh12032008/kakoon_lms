@@ -156,7 +156,7 @@ export function EditorLaunchDashboard({ onLaunch }: Props) {
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient">
                 <Blocks className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xs font-bold uppercase tracking-widest text-hint">Kakoon LMS</span>
+              <span className="text-xs font-bold uppercase tracking-widest text-hint">Kokoon LMS</span>
             </div>
             <h1 className="text-4xl font-black tracking-tight text-body">
               Choose your workspace

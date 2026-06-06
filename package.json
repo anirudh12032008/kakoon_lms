@@ -1,15 +1,19 @@
 {
-  "name": "kakoon",
+  "name": "kokoon",
   "private": true,
   "workspaces": [
     "apps/*",
     "backend/*"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=apps/lms",
-    "build": "npm run build --workspace=apps/lms",
+    "dev": "pnpm --filter lms dev",
+    "build": "pnpm --filter lms build",
     "dev:api": "pnpm --filter api dev",
-    "build:api": "pnpm --filter api build"
+    "build:api": "pnpm --filter api build",
+    "seed": "pnpm --filter api seed"
   },
-  "packageManager": "pnpm@9.0.0"
+  "packageManager": "pnpm@9.0.0",
+  "dependencies": {
+    "mongodb": "^7.2.0"
+  }
 }

@@ -1,11 +1,11 @@
 ---
 name: project-overview
-description: Kakoon LMS — editor sub-module scope, stack, status, and team plans
+description: Kokoon LMS — editor sub-module scope, stack, status, and team plans
 metadata:
   type: project
 ---
 
-Kakoon is an LMS for a hardware kit company targeting ~50k users. Currently only the code editor sub-module is being built; the main LMS (courses, lessons, student dashboard) has not started.
+Kokoon is an LMS for a hardware kit company targeting ~50k users. Currently only the code editor sub-module is being built; the main LMS (courses, lessons, student dashboard) has not started.
 
 The editor lets students write MicroPython and flash it to an ESP32 via Web Serial API (browser → USB → ESP32 REPL). No cloud execution — everything is local.
 

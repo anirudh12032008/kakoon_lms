@@ -5,7 +5,7 @@ metadata:
   type: user
 ---
 
-Anirudh is the solo developer building Kakoon LMS. He moves fast — built the entire editor sub-module (40+ nodes, Web Serial, tutorials, data viz, designers) in approximately 2 days.
+Anirudh is the solo developer building Kokoon LMS. He moves fast — built the entire editor sub-module (40+ nodes, Web Serial, tutorials, data viz, designers) in approximately 2 days.
 
 He is comfortable with React, TypeScript, and full-stack JS (Express/MongoDB/Redis). He thinks in terms of product features and user flows, not just code.
 

@@ -1,6 +1,6 @@
 /*
  * ╔══════════════════════════════════════════════════════════════╗
- * ║          KAKOON COLOR CONFIG — edit this file to retheme     ║
+ * ║          KOKOON COLOR CONFIG — edit this file to retheme     ║
  * ║  Change the hex values in Section 1; everything else auto.   ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
@@ -50,7 +50,7 @@
 }
 
 /* ── 3. DAISYUI THEME ────────────────────────────────────────── */
-[data-theme="kakoon"] {
+[data-theme="kokoon"] {
   color-scheme: dark;
 
   --color-primary:          var(--k-primary);

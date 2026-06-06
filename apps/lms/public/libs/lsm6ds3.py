@@ -1,5 +1,5 @@
 # LSM6DS3 6-axis IMU driver for MicroPython
-# Onboard on Kakoon ESP32-S3 board: SoftI2C(scl=Pin(42), sda=Pin(41))
+# Onboard on Kokoon ESP32-S3 board: SoftI2C(scl=Pin(42), sda=Pin(41))
 # Address: 0x6A (SA0=GND) or 0x6B (SA0=VDD)
 import struct, math
 

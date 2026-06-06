@@ -3,7 +3,7 @@ import { generateStepsFromFlow, type Tutorial } from "@/features/editor/tutorial
 import type { Node, Edge } from "@xyflow/react";
 
 const ADMIN_SECRET = import.meta.env.VITE_ADMIN_SECRET as string | undefined;
-const CUSTOM_KEY   = "Kakoon-custom-tutorials";
+const CUSTOM_KEY   = "Kokoon-custom-tutorials";
 
 const NODE_TYPES = [
   "forever_loop","ble_mode","dc_motor_single","servo_motor","servo_motor_advance",
@@ -72,7 +72,7 @@ function LoginScreen({ onAuth }: { onAuth: () => void }) {
           <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-lg">🔐</div>
           <div>
             <p className="text-sm font-bold text-white">Admin Access</p>
-            <p className="text-xs text-zinc-500">Kakoon Tutorial Builder</p>
+            <p className="text-xs text-zinc-500">Kokoon Tutorial Builder</p>
           </div>
         </div>
 
@@ -202,7 +202,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
     const tutorial: Tutorial = {
       id: `custom_${Date.now()}`,
       title: title.trim(),
-      description: desc.trim() || "Custom Kakoon tutorial.",
+      description: desc.trim() || "Custom Kokoon tutorial.",
       difficulty,
       board: "Quark C3",
       components: components.split(",").map((s) => s.trim()).filter(Boolean),

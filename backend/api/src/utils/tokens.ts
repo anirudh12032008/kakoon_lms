@@ -32,7 +32,7 @@ export function verifyRefreshToken(token: string): RefreshPayload {
   return jwt.verify(token, config.JWT_REFRESH_SECRET) as RefreshPayload;
 }
 
-export const REFRESH_COOKIE = "kakoon_rt";
+export const REFRESH_COOKIE = "kokoon_rt";
 
 /** Cookie options for the httpOnly refresh token. */
 export function refreshCookieOptions() {

@@ -12,12 +12,12 @@ const NodeModeContext = createContext<NodeModeContextValue>({
 
 export function NodeModeProvider({ children }: { children: ReactNode }) {
   const [globalAdvanced, setGlobalAdvancedState] = useState(() => {
-    try { return localStorage.getItem("kakoon-global-adv") === "1"; } catch { return false; }
+    try { return localStorage.getItem("kokoon-global-adv") === "1"; } catch { return false; }
   });
 
   const setGlobalAdvanced = (v: boolean) => {
     setGlobalAdvancedState(v);
-    try { localStorage.setItem("kakoon-global-adv", v ? "1" : "0"); } catch {}
+    try { localStorage.setItem("kokoon-global-adv", v ? "1" : "0"); } catch {}
   };
 
   return (

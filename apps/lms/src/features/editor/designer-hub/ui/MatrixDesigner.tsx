@@ -139,7 +139,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
   const [playing, setPlaying] = useState(false);
   const [playFrame, setPlayFrame] = useState(0);
   const [tab, setTab] = useState<"draw" | "anims" | "text">("draw");
-  const [scrollText, setScrollText] = useState("KAKOON ");
+  const [scrollText, setScrollText] = useState("KOKOON ");
   const [designName, setDesignName] = useState("MatrixAnim");
   const [copied, setCopied] = useState(false);
   const [addedToCanvas, setAddedToCanvas] = useState(false);

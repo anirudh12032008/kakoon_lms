@@ -21,13 +21,13 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
   // Load tutorial state from localStorage on mount
   useEffect(() => {
     try {
-      const savedTutorial = localStorage.getItem("kakoon-active-tutorial");
+      const savedTutorial = localStorage.getItem("kokoon-active-tutorial");
       if (savedTutorial) {
         setActiveTutorial(JSON.parse(savedTutorial));
-        const savedStep = localStorage.getItem("kakoon-current-step-index");
+        const savedStep = localStorage.getItem("kokoon-current-step-index");
         if (savedStep) setCurrentStepIndex(parseInt(savedStep, 10));
       }
-      const completed = localStorage.getItem("kakoon-completed-tutorials");
+      const completed = localStorage.getItem("kokoon-completed-tutorials");
       if (completed) setCompletedTutorialIds(JSON.parse(completed));
     } catch { }
   }, []);
@@ -36,11 +36,11 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
   useEffect(() => {
     if (isLoadingDraft) return;
     if (activeTutorial) {
-      localStorage.setItem("kakoon-active-tutorial", JSON.stringify(activeTutorial));
-      localStorage.setItem("kakoon-current-step-index", currentStepIndex.toString());
+      localStorage.setItem("kokoon-active-tutorial", JSON.stringify(activeTutorial));
+      localStorage.setItem("kokoon-current-step-index", currentStepIndex.toString());
     } else {
-      localStorage.removeItem("kakoon-active-tutorial");
-      localStorage.removeItem("kakoon-current-step-index");
+      localStorage.removeItem("kokoon-active-tutorial");
+      localStorage.removeItem("kokoon-current-step-index");
     }
   }, [activeTutorial, currentStepIndex, isLoadingDraft]);
 
@@ -71,7 +71,7 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
     if (!activeTutorial) return;
     setCompletedTutorialIds((prev) => {
       const updated = Array.from(new Set([...prev, activeTutorial.id]));
-      localStorage.setItem("kakoon-completed-tutorials", JSON.stringify(updated));
+      localStorage.setItem("kokoon-completed-tutorials", JSON.stringify(updated));
       return updated;
     });
     addLog(`🎉 Congratulations! Completed tutorial: "${activeTutorial.title}"!`);

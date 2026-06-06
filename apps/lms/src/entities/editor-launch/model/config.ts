@@ -10,6 +10,8 @@ export interface EditorLaunchContext {
   mode: EditorWorkspaceMode;
   launchType: EditorLaunchType;
   kitId?: string;
+  /** Set when launched from an LMS course — enables backend workspace sync. */
+  courseSlug?: string;
   accent?: string;
   allowedCategories?: string[];
   allowedNodeTypes?: string[];
@@ -20,8 +22,8 @@ export type LaunchPreset = Omit<EditorLaunchContext, "id"> & { id: string };
 export type CustomLaunchPreset = EditorLaunchContext & { createdAt: number; updatedAt: number };
 
 const ALL_CATEGORY_IDS = NODE_CATEGORIES.map((category) => category.id);
-export const CUSTOM_PRESET_STORAGE_KEY = "kakoon-custom-editor-presets";
-export const ADMIN_UNLOCK_STORAGE_KEY = "kakoon-admin-unlocked";
+export const CUSTOM_PRESET_STORAGE_KEY = "kokoon-custom-editor-presets";
+export const ADMIN_UNLOCK_STORAGE_KEY = "kokoon-admin-unlocked";
 export const ADMIN_SECRET = "x";
 
 export const EDITOR_MODE_PRESETS: LaunchPreset[] = [

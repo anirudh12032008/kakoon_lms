@@ -4,6 +4,8 @@ import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 
 interface UseDraftOptions {
   canvasRef: RefObject<NodeCanvasRef | null>;
+  /** When false, local-draft persistence is skipped (course sessions sync to the LMS instead). */
+  enabled?: boolean;
   isLoadingDraft: boolean;
   setIsLoadingDraft: (v: boolean) => void;
   generatedCode: string;
@@ -20,14 +22,16 @@ interface UseDraftOptions {
 
 export function useDraft({
   canvasRef,
+  enabled = true,
   isLoadingDraft, setIsLoadingDraft,
   generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
   setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
 }: UseDraftOptions) {
   // Load draft on mount
   useEffect(() => {
+    if (!enabled) return;
     try {
-      const saved = localStorage.getItem("kakoon-draft");
+      const saved = localStorage.getItem("kokoon-draft");
       if (saved) {
         const draft = JSON.parse(saved);
         if (draft.editableCode) setEditableCode(draft.editableCode);
@@ -56,15 +60,15 @@ export function useDraft({
 
   // Save draft on change (debounced)
   useEffect(() => {
-    if (isLoadingDraft) return;
+    if (!enabled || isLoadingDraft) return;
     const timeout = setTimeout(() => {
       const workspace = canvasRef.current?.getWorkspace();
-      localStorage.setItem("kakoon-draft", JSON.stringify({
+      localStorage.setItem("kokoon-draft", JSON.stringify({
         flowData: workspace ? JSON.stringify(workspace) : "",
         generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
         timestamp: Date.now(),
       }));
     }, 1000);
     return () => clearTimeout(timeout);
-  }, [generatedCode, editableCode, hasManualEdits, viewMode, isEditing, isLoadingDraft, canvasRef]);
+  }, [enabled, generatedCode, editableCode, hasManualEdits, viewMode, isEditing, isLoadingDraft, canvasRef]);
 }

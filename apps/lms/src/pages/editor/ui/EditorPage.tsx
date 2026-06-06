@@ -21,6 +21,7 @@ import { EditorStatusBar } from "@/widgets/editor-statusbar/ui/EditorStatusBar";
 
 import { useWifi } from "@/features/editor/wifi-connect/model/useWifi";
 import { useDraft } from "@/features/editor/save-draft/model/useDraft";
+import { useCourseSync } from "@/features/editor/save-draft/model/useCourseSync";
 import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
@@ -76,11 +77,20 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     logs, addLog, clearLogs,
   } = useSerialConnection();
 
-  // ── Draft persistence ────────────────────────────────────────────────────────
+  // ── Persistence ──────────────────────────────────────────────────────────────
+  // Course sessions sync to the learner's LMS account; sandbox sessions keep a
+  // local draft.
+  const courseSlug = launchContext?.courseSlug;
+
   useDraft({
-    canvasRef, isLoadingDraft, setIsLoadingDraft,
+    canvasRef, enabled: !courseSlug, isLoadingDraft, setIsLoadingDraft,
     generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
     setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
+  });
+
+  const { syncState } = useCourseSync({
+    canvasRef, courseSlug, isLoadingDraft, setIsLoadingDraft,
+    generatedCode, editableCode,
   });
 
   // ── WiFi ─────────────────────────────────────────────────────────────────────
@@ -304,7 +314,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kakoon-project-${Date.now()}.json`;
+    a.download = `kokoon-project-${Date.now()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   }, [canvasRef, generatedCode, editableCode, hasManualEdits, viewMode, isEditing]);
@@ -363,6 +373,8 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         setViewMode={setViewMode}
         setIsEditing={setIsEditing}
         launchContext={launchContext}
+        isCourse={!!courseSlug}
+        syncState={syncState}
         showTutorialsCatalog={tutorial.showTutorialsCatalog}
         onToggleTutorials={() => tutorial.setShowTutorialsCatalog(!tutorial.showTutorialsCatalog)}
         onBackToDashboard={onBackToDashboard}
