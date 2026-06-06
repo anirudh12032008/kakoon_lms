@@ -40,6 +40,7 @@ interface NodeData {
   angle?: number; startAngle?: number; endAngle?: number;
   steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
   sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
+  bounce?: boolean; loop?: boolean;
   // Motors
   motorPort?: string; direction?: string;
   syncMode?: boolean; pairMode?: boolean;

@@ -51,8 +51,9 @@ const courseSchema = new Schema(
 
 courseSchema.set("toJSON", {
   transform: (_doc, ret) => {
-    delete ret.__v;
-    return ret;
+    const r = ret as Record<string, unknown>;
+    delete r.__v;
+    return r;
   },
 });
 

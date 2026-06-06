@@ -1,0 +1,21 @@
+# Local infrastructure for the Kakoon API.
+# Start with:  docker compose -f backend/docker-compose.yml up -d
+services:
+  mongo:
+    image: mongo:7
+    container_name: kakoon-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - kakoon_mongo_data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: kakoon-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+volumes:
+  kakoon_mongo_data:

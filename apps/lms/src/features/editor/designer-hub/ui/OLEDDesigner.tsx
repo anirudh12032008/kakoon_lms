@@ -701,10 +701,6 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               // Circle radius
               const cr = Math.round(Math.sqrt((dx - lx) ** 2 + (dy - ly) ** 2));
 
-              // Dimension label position
-              const labelX = Math.max(x2, x1) * 1; // right of shape
-              const labelY = Math.min(y1, y2) - 6;
-
               return (
                 <svg
                   className="absolute inset-0 pointer-events-none"

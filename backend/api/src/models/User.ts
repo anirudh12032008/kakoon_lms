@@ -1,8 +1,24 @@
-import { Schema, model, type InferSchemaType, type HydratedDocument } from "mongoose";
+import { Schema, model, type Model, type HydratedDocument } from "mongoose";
 import bcrypt from "bcryptjs";
 import { config } from "../config/config";
 
-const userSchema = new Schema(
+export interface IUser {
+  name: string;
+  email: string;
+  passwordHash: string;
+  role: "student" | "admin";
+  tokenVersion: number;
+  avatarColor: string;
+}
+
+export interface IUserMethods {
+  setPassword(plain: string): Promise<void>;
+  verifyPassword(plain: string): Promise<boolean>;
+}
+
+type UserModel = Model<IUser, Record<string, never>, IUserMethods>;
+
+const userSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
     name: { type: String, required: true, trim: true, maxlength: 80 },
     email: {
@@ -25,9 +41,10 @@ const userSchema = new Schema(
 // Never leak the hash in JSON responses.
 userSchema.set("toJSON", {
   transform: (_doc, ret) => {
-    delete ret.passwordHash;
-    delete ret.__v;
-    return ret;
+    const r = ret as unknown as Record<string, unknown>;
+    delete r.passwordHash;
+    delete r.__v;
+    return r;
   },
 });
 
@@ -39,12 +56,6 @@ userSchema.methods.verifyPassword = function (plain: string): Promise<boolean> {
   return bcrypt.compare(plain, this.passwordHash);
 };
 
-export type UserDoc = HydratedDocument<
-  InferSchemaType<typeof userSchema>,
-  {
-    setPassword(plain: string): Promise<void>;
-    verifyPassword(plain: string): Promise<boolean>;
-  }
->;
+export type UserDoc = HydratedDocument<IUser, IUserMethods>;
 
-export const User = model("User", userSchema);
+export const User = model<IUser, UserModel>("User", userSchema);
