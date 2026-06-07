@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Clock } from "lucide-react";
+import { ArrowRight, Check, Clock, Sparkles, Wrench } from "lucide-react";
 import { fetchCourses, type Course } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
+import { useLaunchStore } from "@/shared/launch/launchStore";
+import { buildLaunchContext, EDITOR_MODE_PRESETS } from "@/entities/editor-launch/model/config";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
 function CourseCard({ course, onOpen }: { course: Course; onOpen: () => void }) {
@@ -42,10 +44,47 @@ function CourseCard({ course, onOpen }: { course: Course; onOpen: () => void }) 
   );
 }
 
+/** Big call-to-action that opens the editor with every block unlocked. */
+function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
+  return (
+    <button
+      onClick={onOpen}
+      className="group relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-all hover:shadow-xl hover:shadow-primary/20"
+    >
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl">
+        🧰
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-xl font-black text-white">Full Workshop</h2>
+          <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            <Sparkles className="h-3 w-3" /> Everything unlocked
+          </span>
+        </div>
+        <p className="mt-1 text-sm text-white/85">
+          Open a free-build sandbox with every block, sensor, and tool available — no course, no limits.
+        </p>
+      </div>
+      <span className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-bold text-white transition-transform group-hover:translate-x-0.5">
+        <Wrench className="h-4 w-4" /> Open
+        <ArrowRight className="h-4 w-4" />
+      </span>
+    </button>
+  );
+}
+
 export function CoursesPage() {
   const navigate = useNavigate();
+  const setLaunchContext = useLaunchStore((s) => s.setContext);
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const openFullWorkshop = () => {
+    const preset = EDITOR_MODE_PRESETS.find((p) => p.id === "full-workshop") ?? EDITOR_MODE_PRESETS[0];
+    // No courseSlug → unrestricted blocks + local-draft persistence (sandbox).
+    setLaunchContext(buildLaunchContext(preset));
+    navigate("/editor");
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -62,12 +101,14 @@ export function CoursesPage() {
       <DashboardHeader />
 
       <main className="mx-auto max-w-6xl px-5 py-8">
-        <div className="mb-7">
+        <div className="mb-6">
           <h1 className="text-3xl font-black tracking-tight text-body">Robot Courses</h1>
           <p className="mt-1.5 text-[15px] text-sub">
             Pick a robot to build. Enroll for free and jump straight into the block editor.
           </p>
         </div>
+
+        <FullWorkshopBanner onOpen={openFullWorkshop} />
 
         {error && (
           <div className="rounded-xl border border-error-tint bg-error-tint px-4 py-3 text-sm font-medium text-error-c">

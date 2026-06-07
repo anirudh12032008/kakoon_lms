@@ -435,7 +435,18 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
       await onSaveToDevice(src.frames, src.fps, src.name, (pct) => setUploadProgress(pct));
       setUploadProgress(100);
       setSaveDeviceState("saved");
-      setRegistry(loadAnimRegistry()); // refresh onDevice badges
+      // Ensure the animation is in the library AND flagged on-device, so it
+      // shows up in the OLED node's animation picker (you select it there to
+      // play /anim/<name>.bin from the file). Without this, a device-only save
+      // would never appear and the animation couldn't be used.
+      upsertAnim({
+        name: toSafeName(src.name),
+        fps: src.fps,
+        frameCount: src.frames.length,
+        frames: src.frames.map((f) => [...f]),
+        onDevice: true,
+      });
+      setRegistry(loadAnimRegistry());
       setTimeout(() => setSaveDeviceState("idle"), 2500);
     } catch {
       setSaveDeviceState("failed");
