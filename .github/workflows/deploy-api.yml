@@ -1,0 +1,48 @@
+name: Deploy API to EC2
+
+on:
+  push:
+    branches: [main]
+    # Only redeploy when something the API cares about changes.
+    paths:
+      - "backend/**"
+      - "pnpm-lock.yaml"
+      - "ecosystem.config.cjs"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch: {} # allow manual "Run workflow" from the Actions tab
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
+          script: |
+            export PATH=$PATH:/usr/bin:/usr/local/bin
+            set -e
+            cd ~/kokoon_lms
+
+            echo "→ Pulling latest"
+            git fetch --all
+            git reset --hard origin/main
+
+            echo "→ Installing deps"
+            pnpm install --frozen-lockfile
+
+            echo "→ Building API"
+            pnpm --filter api build
+
+            echo "→ (Re)starting with PM2"
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save
+
+            echo "✅ Deploy complete"
