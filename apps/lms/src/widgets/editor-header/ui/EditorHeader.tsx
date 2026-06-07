@@ -4,6 +4,7 @@ import type { EditorLaunchContext } from "@/entities/editor-launch/model/config"
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 import type { SyncState } from "@/features/editor/save-draft/model/useCourseSync";
 import { useAnimations } from "@/shared/context/AnimationContext";
+import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
 
 interface EditorHeaderProps {
   viewMode: ViewMode;
@@ -121,6 +122,8 @@ export function EditorHeader({
 
       {/* Right actions */}
       <div className="flex items-center gap-1 shrink-0">
+        <ThemeSwitcher compact />
+
         {/* Animation toggle */}
         <button
           onClick={toggleAnimations}

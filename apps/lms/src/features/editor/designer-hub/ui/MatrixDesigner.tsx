@@ -204,8 +204,8 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
   return (
     <div className="flex h-full">
       {/* Left: tabs + controls */}
-      <div className="w-[160px] flex-shrink-0 border-r border-[#1a1a20] flex flex-col">
-        <div className="flex flex-col border-b border-[#1a1a20]">
+      <div className="w-[160px] flex-shrink-0 border-r border-[var(--k-border)] flex flex-col">
+        <div className="flex flex-col border-b border-[var(--k-border)]">
           {(["draw","anims","text"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`text-[10px] font-bold px-3 py-2 text-left transition-all ${tab===t ? "bg-violet-500/15 text-violet-400 border-l-2 border-violet-500" : "text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent"}`}>
@@ -219,7 +219,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
             <div className="flex gap-1">
               {[1,2,3,4].map((n) => (
                 <button key={n} onClick={() => setModules(n)}
-                  className={`flex-1 py-1 text-[10px] font-bold rounded transition-all ${n===modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[#2a2a32]"}`}>
+                  className={`flex-1 py-1 text-[10px] font-bold rounded transition-all ${n===modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[var(--k-border)]"}`}>
                   {n}
                 </button>
               ))}
@@ -242,7 +242,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
               <div>
                 <div className="text-[9px] text-zinc-600 mb-1">Text to scroll</div>
                 <input value={scrollText} onChange={(e) => setScrollText(e.target.value)}
-                  className="w-full text-[10px] font-mono bg-[#0c0c10] border border-[#1e1e26] rounded px-2 py-1.5 text-amber-400 uppercase outline-none" />
+                  className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1.5 text-amber-400 uppercase outline-none" />
               </div>
               <button onClick={() => { const f = textToMatrixFrames(scrollText, modules); setFrames(f); setCurFrame(0); setPlaying(false); }}
                 className="py-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold transition-all hover:bg-amber-500/30">
@@ -258,14 +258,14 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           <div>
             <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Name</div>
             <input value={designName} onChange={(e) => setDesignName(e.target.value)}
-              className="w-full text-[10px] bg-[#0c0c10] border border-[#1e1e26] rounded px-2 py-1 text-white outline-none" />
+              className="w-full text-[10px] bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
           </div>
         </div>
       </div>
 
       {/* Center: grid */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1a1a20]">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--k-border)]">
           {frames.slice(0, 30).map((_, i) => (
             <div key={i} draggable
               onDragStart={() => { dragFrame.current = i; }}
@@ -285,11 +285,11 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           ))}
           {frames.length > 30 && <span className="text-[9px] text-zinc-600">+{frames.length-30}</span>}
           <button onClick={() => { setFrames((p) => [...p, [...p[p.length-1]]]); setCurFrame(frames.length); setPlaying(false); }}
-            className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32]">
+            className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[var(--k-border)]">
             + Frame
           </button>
           <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-amber-400 border border-[#2a2a32] hover:border-amber-500/30">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-amber-400 border border-[var(--k-border)] hover:border-amber-500/30">
             <Copy className="w-3 h-3" /> Dup
           </button>
           {frames.length > 1 && (
@@ -325,19 +325,19 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
       </div>
 
       {/* Right: code */}
-      <div className="w-[260px] flex-shrink-0 border-l border-[#1a1a20] flex flex-col">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a1a20]">
+      <div className="w-[260px] flex-shrink-0 border-l border-[var(--k-border)] flex flex-col">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">MicroPython Code</span>
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-zinc-400 border border-[#2a2a32]"}`}>
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-zinc-400 border border-[var(--k-border)]"}`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy"}
           </button>
         </div>
-        <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono text-amber-400 leading-relaxed bg-[#050507]">
+        <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono text-amber-400 leading-relaxed bg-[var(--k-base-100)]">
           {code}
         </pre>
         {onAddNode && (
-          <div className="px-3 py-2.5 border-t border-[#1a1a20] space-y-2">
+          <div className="px-3 py-2.5 border-t border-[var(--k-border)] space-y-2">
             <button
               onClick={() => {
                 onAddNode("max7219", {

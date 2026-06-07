@@ -127,7 +127,7 @@ export function I2CScannerNode() {
       {/* Scanning progress animation */}
       {scanning && (
         <div className="px-3 pb-1">
-          <div className="w-full h-1 bg-[#1c1c20] rounded-full overflow-hidden border border-[#2d2d35]">
+          <div className="w-full h-1 bg-[var(--k-base-300)] rounded-full overflow-hidden border border-[var(--k-border)]">
             <div className="h-full bg-blue-500 rounded-full"
               style={{ animation: "i2cScan 1.4s linear forwards", width: "0%" }} />
           </div>
@@ -137,9 +137,9 @@ export function I2CScannerNode() {
       {/* Results panel */}
       {scanned && (
         <div className="px-3 pb-2">
-          <div className="rounded-lg border border-[#2d2d35] bg-[#0a0a0d] overflow-hidden">
+          <div className="rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#1c1c20]">
+            <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--k-base-300)]">
               <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Found Devices</span>
               <span className="text-[9px] font-mono text-blue-400 font-bold">{found.length} found</span>
             </div>
@@ -150,7 +150,7 @@ export function I2CScannerNode() {
               <div className="flex flex-col">
                 {found.map((dev) => (
                   <div key={dev.addr}
-                    className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#151518] last:border-0 hover:bg-[#111116] transition-colors group"
+                    className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#151518] last:border-0 hover:bg-[var(--k-base-200)] transition-colors group"
                   >
                     <div className="flex items-center gap-2">
                       {/* Address badge */}

@@ -30,9 +30,9 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
 
   return (
     <div
-      className="mx-3 mb-1 flex items-center gap-3 px-2.5 py-2 rounded-lg border bg-[#0a0a0d] transition-all duration-300"
+      className="mx-3 mb-1 flex items-center gap-3 px-2.5 py-2 rounded-lg border bg-[var(--k-base-100)] transition-all duration-300"
       style={{
-        borderColor: detected ? "#22c55e40" : "#2d2d35",
+        borderColor: detected ? "#22c55e40" : "var(--k-border)",
         boxShadow:   detected ? `0 0 12px ${glowColor}` : "none",
       }}
     >
@@ -93,7 +93,7 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
         </span>
         <div className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full inline-block"
-            style={{ background: live ? "#22c55e" : "#3f3f46", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
+            style={{ background: live ? "#22c55e" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
           <span className="text-[8px] text-zinc-600">{live ? "Live" : "Connect to see data"}</span>
         </div>
       </div>
@@ -111,7 +111,7 @@ export function IMUSensorNode() {
     <BaseNode title="Onboard IMU" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       <AdvancedSection>
         {/* Fixed I2C pin info */}
-        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Onboard SoftI2C — fixed GPIO</span>
             <span className="text-[9px] font-mono text-purple-400">locked</span>
@@ -180,7 +180,7 @@ export function PIRSensorNode() {
         {/* Debounce */}
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#9ca3af] font-medium">Debounce</span>
+            <span className="text-xs text-[var(--k-muted)] font-medium">Debounce</span>
             <span className="text-[10px] font-mono text-green-400">{debounce} ms</span>
           </div>
           <input

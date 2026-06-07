@@ -26,9 +26,9 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
 
   return (
     <div
-      className="mx-3 mb-1 px-3 py-2.5 rounded-xl border bg-[#0a0a0d] transition-all duration-300"
+      className="mx-3 mb-1 px-3 py-2.5 rounded-xl border bg-[var(--k-base-100)] transition-all duration-300"
       style={{
-        borderColor: !live ? "#2d2d35" : blocked ? "#ef444440" : "#22c55e40",
+        borderColor: !live ? "var(--k-border)" : blocked ? "#ef444440" : "#22c55e40",
         boxShadow:   !live ? "none"    : blocked ? "0 0 12px #ef444420" : "0 0 10px #22c55e18",
       }}
     >
@@ -74,7 +74,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
         </span>
         <div className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full"
-            style={{ background: live ? beamColor : "#3f3f46",
+            style={{ background: live ? beamColor : "var(--k-base-400)",
               animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
           <span className="text-[8px] text-zinc-600">{live ? "Live" : "Connect to see data"}</span>
         </div>
@@ -122,20 +122,20 @@ export function IRSensorNode() {
 function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
   const hex = code !== null ? `0x${code.toString(16).toUpperCase().padStart(4, "0")}` : "——";
   return (
-    <div className="mx-3 mb-1 px-3 py-2 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+    <div className="mx-3 mb-1 px-3 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
       {/* Code display */}
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[8px] uppercase tracking-wider text-zinc-600 font-bold">Last Code</span>
         <div className="flex items-center gap-1">
           <span className="w-1 h-1 rounded-full"
-            style={{ background: live ? "#f97316" : "#3f3f46", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
+            style={{ background: live ? "#f97316" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
           <span className="text-[8px] text-zinc-600 font-mono">{live ? "LIVE" : "no signal"}</span>
         </div>
       </div>
 
-      <div className="flex items-center justify-center py-1 px-3 rounded-md bg-[#111116] border border-[#2a2a30]">
+      <div className="flex items-center justify-center py-1 px-3 rounded-md bg-[var(--k-base-200)] border border-[var(--k-border)]">
         <span className="text-base font-mono font-bold tracking-widest"
-          style={{ color: live ? "#f97316" : "#3f3f46" }}>
+          style={{ color: live ? "#f97316" : "var(--k-base-400)" }}>
           {hex}
         </span>
       </div>

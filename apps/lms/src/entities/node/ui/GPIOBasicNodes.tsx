@@ -151,14 +151,14 @@ export function PWMOutputNode() {
         {/* Frequency with quick presets */}
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#9ca3af] font-medium">Frequency</span>
+            <span className="text-xs text-[var(--k-muted)] font-medium">Frequency</span>
             <NumberInput value={freq} onChange={setFreq} />
           </div>
           <div className="flex gap-1 mt-1 flex-wrap">
             {[50, 500, 1000, 5000, 20000, 40000].map(v => (
               <button key={v} onClick={() => freqPreset(v)}
                 className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all ${
-                  freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[#2d2d35] text-zinc-500 hover:border-zinc-600 bg-[#111116]"
+                  freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[var(--k-border)] text-zinc-500 hover:border-zinc-600 bg-[var(--k-base-200)]"
                 }`}
               >{v >= 1000 ? `${v / 1000}k` : v}Hz</button>
             ))}
@@ -170,7 +170,7 @@ export function PWMOutputNode() {
       {/* Duty cycle slider */}
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Duty Cycle</span>
+          <span className="text-xs text-[var(--k-muted)] font-medium">Duty Cycle</span>
           <span className="text-[10px] font-mono text-purple-400">{duty} %</span>
         </div>
         <input type="range" min={0} max={100} step={1} value={duty}
@@ -185,7 +185,7 @@ export function PWMOutputNode() {
       <AdvancedSection>
         {/* PWM waveform mini-preview */}
         <div className="px-3 pb-1">
-          <svg width="100%" height="28" viewBox="0 0 200 28" preserveAspectRatio="none" className="rounded-lg overflow-hidden border border-[#2d2d35]" style={{ background: "#0a0a0d" }}>
+          <svg width="100%" height="28" viewBox="0 0 200 28" preserveAspectRatio="none" className="rounded-lg overflow-hidden border border-[var(--k-border)]" style={{ background: "var(--k-base-100)" }}>
             {[0, 100].map(offset => {
               const onW = duty * 2;
               const offW = 200 - onW;

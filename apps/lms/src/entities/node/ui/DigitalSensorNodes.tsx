@@ -76,7 +76,7 @@ export function ButtonDigitalInputNode() {
         {/* Debounce slider */}
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#9ca3af] font-medium">Debounce</span>
+            <span className="text-xs text-[var(--k-muted)] font-medium">Debounce</span>
             <span className="text-[10px] font-mono text-blue-400">{debounce} ms</span>
           </div>
           <input type="range" min={0} max={200} step={5} value={debounce}

@@ -59,7 +59,7 @@ function ContinuousSpeed({ speed, onChange, color }: { speed: number; onChange: 
   return (
     <div className="px-3 py-1">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+        <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
         <span className="text-[10px] font-mono text-orange-400">
           {speed === 0 ? "STOP" : speed > 0 ? `+${speed}%` : `${speed}%`}
         </span>
@@ -77,7 +77,7 @@ function ContinuousSpeed({ speed, onChange, color }: { speed: number; onChange: 
 
 function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
   return (
-    <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+    <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Signal pin — fixed GPIO</span>
         <span className="text-[9px] font-mono text-orange-400">locked</span>
@@ -148,7 +148,7 @@ export function ServoMotorAdvanceNode() {
           {/* Continuous servo: oscillate forward ↔ reverse */}
           <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
           <NodeField label="Period (ms)"><NumberInput value={sweepPeriod} onChange={setSweepPeriod} /></NodeField>
-          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
             <p className="text-[9px] text-zinc-500">Oscillates {Math.abs(contSpeed)}% forward then reverse, {sweepPeriod}ms each way.</p>
           </div>
         </>
@@ -168,7 +168,7 @@ export function ServoMotorAdvanceNode() {
 
           <div className="px-3 pb-1">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+              <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
               <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
             </div>
             <input type="range" min={1} max={100} step={1} value={speed}
@@ -185,7 +185,7 @@ export function ServoMotorAdvanceNode() {
           </NodeField>
 
           {/* Pattern hint */}
-          <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+          <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
             <p className="text-[9px] text-zinc-500 font-mono">
               {bounce
                 ? `${startAngle}° → ${endAngle}° → ${startAngle}°${loop ? " (repeating)" : ""}`
@@ -250,7 +250,7 @@ export function ServoControllerNode() {
           <NodeField label="Set Angle (°)">
             <NumberInput value={angle} onChange={v => setAngle(Math.max(0, Math.min(180, v)))} />
           </NodeField>
-          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] flex items-center justify-between">
+          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] flex items-center justify-between">
             <span className="text-[9px] text-zinc-500">Pulse @ {angle}°</span>
             <span className="text-[10px] font-mono text-orange-400">{pulseUs} µs</span>
           </div>
@@ -260,7 +260,7 @@ export function ServoControllerNode() {
       {servoType === "360" && (
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+            <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
             <span className="text-[10px] font-mono text-orange-400">
               {contSpeed === 0 ? "STOP" : contSpeed > 0 ? `+${contSpeed}%` : `${contSpeed}%`}
             </span>
@@ -297,7 +297,7 @@ export function ServoControllerNode() {
         </div>
         <NodeField label="Min (µs)"><NumberInput value={pulseMin} onChange={setPulseMin} /></NodeField>
         <NodeField label="Max (µs)"><NumberInput value={pulseMax} onChange={setPulseMax} /></NodeField>
-        <div className="mx-3 mb-2 px-2.5 py-1 rounded-lg border border-[#2d2d35] bg-[#0a0a0d]">
+        <div className="mx-3 mb-2 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
           <div className="flex justify-between text-[9px]">
             <span className="text-zinc-500">{pulseMin} µs @ 0°</span>
             <span className="text-zinc-500">{pulseMax} µs @ 180°</span>
@@ -392,7 +392,7 @@ export function MultiServoSequencerNode() {
       </div>
 
       <div className="px-3 pb-1">
-        <div className="relative h-6 rounded-lg bg-[#0a0a0d] border border-[#2d2d35] overflow-hidden">
+        <div className="relative h-6 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-border)] overflow-hidden">
           {keyframes.map((kf, i) => {
             const pct = totalDuration > 0 ? (kf.time / totalDuration) * 100 : (i / keyframes.length) * 100;
             const isActive = playing && i === playIdx;
@@ -412,7 +412,7 @@ export function MultiServoSequencerNode() {
 
       <div className="max-h-48 overflow-y-auto px-3 flex flex-col gap-1.5 pb-1">
         {keyframes.map((kf, kfIdx) => (
-          <div key={kfIdx} className={`rounded-lg border p-2 transition-all ${playing && kfIdx === playIdx ? "border-purple-500/60 bg-purple-500/5" : "border-[#2d2d35] bg-[#0d0d10]"}`}>
+          <div key={kfIdx} className={`rounded-lg border p-2 transition-all ${playing && kfIdx === playIdx ? "border-purple-500/60 bg-purple-500/5" : "border-[var(--k-border)] bg-[#0d0d10]"}`}>
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[9px] font-bold text-zinc-400">KF {kfIdx + 1} @ {kf.time}ms</span>
               <button onClick={() => removeKeyframe(kfIdx)}
@@ -435,7 +435,7 @@ export function MultiServoSequencerNode() {
       </div>
 
       <div className="px-3 pb-1 pt-0.5">
-        <div className="rounded-lg border border-[#2d2d35] bg-[#0a0a0d] p-2">
+        <div className="rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] p-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Preview</span>
             <button onClick={playing ? stopPlay : startPlay}
@@ -481,7 +481,7 @@ export function MultiServoSequencerNode() {
             const arr = keyframes.map(kf => `{t:${kf.time}, a:[${kf.angles.join(",")}]}`).join(", ");
             navigator.clipboard.writeText(`[${arr}]`).catch(() => {});
           }}
-          className="nodrag flex-1 py-1 rounded-lg border border-[#2d2d35] text-zinc-400 text-[10px] font-bold hover:border-zinc-500 hover:text-white transition-all">
+          className="nodrag flex-1 py-1 rounded-lg border border-[var(--k-border)] text-zinc-400 text-[10px] font-bold hover:border-zinc-500 hover:text-white transition-all">
           ⎘ Export
         </button>
       </div>
@@ -528,7 +528,7 @@ export function ServoCalibrationNode() {
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
       </svg>
     } width="280px">
-      <div className="mx-3 mb-2 px-2.5 py-2 rounded-lg border border-[#2d2d35] bg-[#111116]">
+      <div className="mx-3 mb-2 px-2.5 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
         <div className="flex items-center justify-between">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Canvas Servo Nodes</span>
           <span className="text-[10px] font-mono text-cyan-400">{servoNodes.length} found</span>
@@ -560,7 +560,7 @@ export function ServoCalibrationNode() {
               const a = getAngle(n.id);
               const pulse = getPulse(n.id);
               return (
-                <div key={n.id} className="rounded-lg border border-[#2d2d35] bg-[#0d0d10] p-2">
+                <div key={n.id} className="rounded-lg border border-[var(--k-border)] bg-[#0d0d10] p-2">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] font-bold text-zinc-300">{portLabel(n)}</span>
                     <div className="flex items-center gap-1.5">

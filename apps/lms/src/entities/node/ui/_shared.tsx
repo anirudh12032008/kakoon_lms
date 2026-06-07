@@ -69,7 +69,7 @@ export const ROTATE_OPTIONS = [
 export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultrasonic" }) {
   const p = SENSOR_PORT_PINS[port as keyof typeof SENSOR_PORT_PINS] ?? SENSOR_PORT_PINS["1"];
   return (
-    <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+    <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Fixed GPIO — Port {port}</span>
         <span className="text-[9px] font-mono text-purple-400">locked</span>
@@ -144,10 +144,10 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
       <svg ref={svgRef} width={88} height={88} style={{ cursor: "crosshair", userSelect: "none", touchAction: "none" }}
         onMouseDown={e => { e.stopPropagation(); e.preventDefault(); dragging.current = true; polarToValue(e.clientX, e.clientY); }}
       >
-        {arcPath(0, 1, "#2d2d35", 5)}
+        {arcPath(0, 1, "var(--k-border)", 5)}
         {arcPath(0, pct, color, 5)}
         <circle cx={knobX} cy={knobY} r={6} fill={color} />
-        <circle cx={knobX} cy={knobY} r={3} fill="#0f0f12" />
+        <circle cx={knobX} cy={knobY} r={3} fill="var(--k-base-100)" />
         <text x={CX} y={CY - 4} textAnchor="middle" fill="white" fontSize={14} fontWeight="bold" fontFamily="monospace">{angle}</text>
         <text x={CX} y={CY + 9} textAnchor="middle" fill="#6b7280" fontSize={8}>degrees</text>
       </svg>

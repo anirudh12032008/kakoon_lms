@@ -93,7 +93,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
         <motion.div
-          className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-zinc-800 bg-[#0f0f12] shadow-2xl overflow-hidden"
+          className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-zinc-800 bg-[var(--k-base-100)] shadow-2xl overflow-hidden"
           initial={{ scale: 0.94, y: 12, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.94, y: 12, opacity: 0 }}
@@ -122,7 +122,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 onChange={(e) => { setSecret(e.target.value); setAuthError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && unlock()}
                 placeholder="Enter secret…"
-                className="w-full bg-[#0a0a0d] border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-violet-500 transition-colors"
+                className="w-full bg-[var(--k-base-100)] border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-violet-500 transition-colors"
               />
               {authError && <p className="text-xs text-red-400 mt-2">{authError}</p>}
 
@@ -177,7 +177,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                     autoFocus
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. BT Forklift Control"
-                    className="w-full bg-[#0a0a0d] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors"
+                    className="w-full bg-[var(--k-base-100)] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors"
                   />
                 </div>
 
@@ -188,7 +188,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                     onChange={(e) => setDesc(e.target.value)}
                     rows={2}
                     placeholder="What will students learn?"
-                    className="w-full bg-[#0a0a0d] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors resize-none"
+                    className="w-full bg-[var(--k-base-100)] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors resize-none"
                   />
                 </div>
 

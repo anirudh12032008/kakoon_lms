@@ -72,7 +72,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
     const error = p === "error";
     const cc = CATEGORY_COLORS[lib.category];
     return (
-      <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[#111116] last:border-0 hover:bg-[#0f0f12] transition-colors group">
+      <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--k-base-200)] last:border-0 hover:bg-[var(--k-base-100)] transition-colors group">
         <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm"
           style={{ background: `${cc}15`, border: `1px solid ${cc}30` }}>
           {done ? "✅" : error ? "❌" : "📄"}
@@ -85,7 +85,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
           <p className="text-[10px] text-zinc-500 leading-tight truncate">{lib.description}</p>
           {busy && (
             <div className="mt-1.5">
-              <div className="w-full h-1 rounded-full bg-[#1c1c20] overflow-hidden">
+              <div className="w-full h-1 rounded-full bg-[var(--k-base-300)] overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${p}%`, background: cc }} />
               </div>
@@ -117,10 +117,10 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-[#2a2a32] bg-[#0a0a0d] shadow-2xl flex flex-col">
+      <div className="w-full max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-100)] shadow-2xl flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a20] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--k-border)] bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
               <Package className="w-4 h-4 text-white" />
@@ -154,13 +154,13 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
                   {requiredLibs.length}
                 </span>
               </div>
-              <div className="rounded-xl border border-[#1e1e26] overflow-hidden bg-[#0c0c10]">
+              <div className="rounded-xl border border-[var(--k-base-400)] overflow-hidden bg-[var(--k-base-100)]">
                 {requiredLibs.map((lib) => <LibRow key={lib.id} lib={lib} />)}
               </div>
             </div>
           )}
           {requiredLibs.length === 0 && (
-            <div className="mx-4 mt-4 px-4 py-3 rounded-xl border border-[#1e1e26] bg-[#0c0c10] text-center">
+            <div className="mx-4 mt-4 px-4 py-3 rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] text-center">
               <p className="text-xs text-zinc-500">No external libraries detected in your current code. Add hardware blocks to see what's needed.</p>
             </div>
           )}
@@ -174,7 +174,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
               </span>
             </div>
             {/* Search */}
-            <div className="flex items-center gap-2 bg-[#0c0c10] border border-[#1e1e26] rounded-xl px-3 py-2 mb-3">
+            <div className="flex items-center gap-2 bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-xl px-3 py-2 mb-3">
               <Search className="w-3.5 h-3.5 text-zinc-500 flex-shrink-0" />
               <input
                 value={search} onChange={(e) => setSearch(e.target.value)}
@@ -190,7 +190,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
                   className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${
                     expandedCat === cat
                       ? "bg-violet-500/25 text-violet-300 border border-violet-500/40"
-                      : "bg-[#1a1a20] text-zinc-400 border border-[#2a2a32] hover:border-zinc-600"
+                      : "bg-[var(--k-border)] text-zinc-400 border border-[var(--k-border)] hover:border-zinc-600"
                   }`}>
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
                   {cat !== "all" && (
@@ -202,7 +202,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
               ))}
             </div>
 
-            <div className="rounded-xl border border-[#1e1e26] overflow-hidden bg-[#0c0c10]">
+            <div className="rounded-xl border border-[var(--k-base-400)] overflow-hidden bg-[var(--k-base-100)]">
               {filtered
                 .filter((l) => expandedCat === "all" || l.category === expandedCat)
                 .map((lib) => <LibRow key={lib.id} lib={lib} />)
@@ -223,7 +223,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
               className={`rounded-xl border-2 border-dashed p-6 text-center cursor-pointer transition-all ${
                 dragOver
                   ? "border-violet-400 bg-violet-500/10"
-                  : "border-[#2a2a32] bg-[#0c0c10] hover:border-zinc-600 hover:bg-[#0f0f13]"
+                  : "border-[var(--k-border)] bg-[var(--k-base-100)] hover:border-zinc-600 hover:bg-[#0f0f13]"
               }`}
             >
               <div className="text-3xl mb-2">📂</div>
@@ -237,13 +237,13 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
             </div>
 
             {customFile && (
-              <div className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[#1e1e26] bg-[#0c0c10]">
+              <div className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)]">
                 <span className="text-lg">📄</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-mono font-semibold text-white truncate">{customFile.name}</p>
                   <p className="text-[10px] text-zinc-600">{(customFile.size / 1024).toFixed(1)} KB</p>
                   {typeof customProgress === "number" && (
-                    <div className="mt-1.5 w-full h-1 rounded-full bg-[#1c1c20] overflow-hidden">
+                    <div className="mt-1.5 w-full h-1 rounded-full bg-[var(--k-base-300)] overflow-hidden">
                       <div className="h-full bg-violet-500 rounded-full transition-all duration-300"
                         style={{ width: `${customProgress}%` }} />
                     </div>

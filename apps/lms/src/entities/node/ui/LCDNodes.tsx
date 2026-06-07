@@ -22,9 +22,9 @@ function Modal({ title, onClose, children, wide }: {
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        className="relative flex flex-col rounded-2xl border border-[#2d2d35] shadow-2xl overflow-hidden"
+        className="relative flex flex-col rounded-2xl border border-[var(--k-border)] shadow-2xl overflow-hidden"
         style={{
-          background: "#0f0f12",
+          background: "var(--k-base-100)",
           width: wide ? "min(900px, 95vw)" : "min(600px, 95vw)",
           maxHeight: "90vh",
         }}
@@ -47,8 +47,8 @@ function Modal({ title, onClose, children, wide }: {
 function PinInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between px-3 py-0.5">
-      <span className="text-xs text-[#9ca3af] font-medium">{label}</span>
-      <span className="text-[10px] font-mono text-zinc-500 bg-[#1a1a20] border border-[#2d2d35] px-1.5 py-0.5 rounded">
+      <span className="text-xs text-[var(--k-muted)] font-medium">{label}</span>
+      <span className="text-[10px] font-mono text-zinc-500 bg-[var(--k-border)] border border-[var(--k-border)] px-1.5 py-0.5 rounded">
         {value}
       </span>
     </div>
@@ -93,11 +93,11 @@ function CharEditor({ pixels, onChange }: { pixels: LCDCharPixels; onChange: (p:
         onMouseUp={() => setDrawing(false)}
         onMouseLeave={() => setDrawing(false)}
       >
-        {Array.from({ length: 9 }, (_, i) => <line key={`h${i}`} x1={0} y1={i * CELL} x2={5 * CELL} y2={i * CELL} stroke="#2d2d35" strokeWidth="1" />)}
-        {Array.from({ length: 6 }, (_, i) => <line key={`v${i}`} x1={i * CELL} y1={0} x2={i * CELL} y2={8 * CELL} stroke="#2d2d35" strokeWidth="1" />)}
+        {Array.from({ length: 9 }, (_, i) => <line key={`h${i}`} x1={0} y1={i * CELL} x2={5 * CELL} y2={i * CELL} stroke="var(--k-border)" strokeWidth="1" />)}
+        {Array.from({ length: 6 }, (_, i) => <line key={`v${i}`} x1={i * CELL} y1={0} x2={i * CELL} y2={8 * CELL} stroke="var(--k-border)" strokeWidth="1" />)}
         {pixels.map((row, r) => row.map((on, c) => (
           <rect key={`${r}-${c}`} x={c * CELL + 1} y={r * CELL + 1} width={CELL - 2} height={CELL - 2}
-            fill={on ? "#60a5fa" : "#111116"} rx="2" />
+            fill={on ? "#60a5fa" : "var(--k-base-200)"} rx="2" />
         )))}
       </svg>
       <button onClick={() => onChange(makeBlankChar())} className="text-[10px] text-zinc-500 hover:text-red-400 transition-colors text-center">Clear</button>
@@ -120,7 +120,7 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
   return (
     <div className="flex flex-col gap-3">
       <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Character Grid — click any cell to type</span>
-      <div className="inline-flex flex-col gap-px rounded-lg overflow-hidden border border-[#2d2d35] bg-[#0a1a0a]">
+      <div className="inline-flex flex-col gap-px rounded-lg overflow-hidden border border-[var(--k-border)] bg-[#0a1a0a]">
         {[0, 1].map(row => (
           <div key={row} className="flex gap-px">
             {Array.from({ length: COLS }, (_, col) => {
@@ -149,7 +149,7 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
             <span className="text-[9px] text-zinc-500 w-10">Line {i + 1}</span>
             <input value={lines[i]} maxLength={16}
               onChange={e => { const l: [string, string] = [...lines] as [string, string]; l[i] = e.target.value; onLinesChange(l); }}
-              className="flex-1 bg-[#111116] border border-[#2d2d35] rounded-lg px-2 py-1 text-xs font-mono text-green-300 outline-none focus:border-blue-500/60"
+              className="flex-1 bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-xs font-mono text-green-300 outline-none focus:border-blue-500/60"
               placeholder={`Line ${i + 1} text…`}
             />
           </div>
@@ -229,7 +229,7 @@ export function LCD16x2Node() {
         </div>
         <div className="px-3 pb-1.5">
           <input value={formatStr} onChange={e => setFormatStr(e.target.value)}
-            className="nodrag w-full bg-[#111116] border border-[#2d2d35] rounded-lg px-2 py-1 text-[11px] font-mono text-green-300 outline-none focus:border-blue-500/60"
+            className="nodrag w-full bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-[11px] font-mono text-green-300 outline-none focus:border-blue-500/60"
             placeholder="e.g. Dist: {v} cm" />
           <p className="text-[9px] text-zinc-600 mt-1">Use <span className="font-mono text-zinc-400">{"{v}"}</span> for live sensor value</p>
         </div>
@@ -266,9 +266,9 @@ export function LCD16x2Node() {
               <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Slots</span>
               {customChars.map((ch, i) => (
                 <button key={i} onClick={() => setActiveChar(i)}
-                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-all ${i === activeChar ? "border-purple-500 bg-purple-500/10" : "border-[#2d2d35] hover:border-[#3d3d45] bg-[#111114]"}`}
+                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-all ${i === activeChar ? "border-purple-500 bg-purple-500/10" : "border-[var(--k-border)] hover:border-[#3d3d45] bg-[#111114]"}`}
                 >
-                  <div className="w-3 h-3 rounded-sm border border-[#2d2d35] flex-shrink-0"
+                  <div className="w-3 h-3 rounded-sm border border-[var(--k-border)] flex-shrink-0"
                     style={{ background: ch.some(r => r.some(v => v)) ? COLORS.blue : "transparent" }} />
                   <span className="text-[10px] text-zinc-400">Char {i}</span>
                 </button>

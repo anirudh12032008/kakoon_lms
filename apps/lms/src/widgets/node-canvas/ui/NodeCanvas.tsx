@@ -227,11 +227,11 @@ function NodeCanvasInner({
         defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}
       >
         <Background id="dots" color="#7c3aed" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#07070c" }} />
-        <Controls style={{ background: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }} />
+        <Controls style={{ background: "var(--k-base-300)", border: "1px solid var(--k-base-400)", borderRadius: "8px" }} />
         <MiniMap
           nodeColor="#8b5cf6"
           maskColor="rgba(9, 9, 11, 0.85)"
-          style={{ backgroundColor: "#18181b", border: "1px solid #27272a", borderRadius: "8px" }}
+          style={{ backgroundColor: "var(--k-base-300)", border: "1px solid var(--k-base-400)", borderRadius: "8px" }}
         />
       </ReactFlow>
     </div>
@@ -270,7 +270,7 @@ export const NodeCanvas = forwardRef<NodeCanvasRef, NodeCanvasProps>(
           <NodePaletteWrapper width={sidebarWidth} allowedCategories={allowedCategories} allowedNodeTypes={allowedNodeTypes} />
           <div
             onMouseDown={startResizing}
-            className="w-1 hover:w-1.5 bg-[#1f1f23] hover:bg-[#7c3aed]/50 active:bg-[#7c3aed] cursor-col-resize transition-all flex-shrink-0 z-50"
+            className="w-1 hover:w-1.5 bg-[#1f1f23] hover:bg-[var(--k-primary)]/50 active:bg-[var(--k-primary)] cursor-col-resize transition-all flex-shrink-0 z-50"
             style={{ marginRight: "-2px", marginLeft: "-2px" }}
           />
           <NodeCanvasInner onCodeChange={onCodeChange} onFlowChange={onFlowChange} allowedNodeTypes={allowedNodeTypes} canvasRef={ref} />

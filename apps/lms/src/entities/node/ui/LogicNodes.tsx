@@ -19,7 +19,7 @@ import {
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
-  width: 12, height: 12, background: "#111113",
+  width: 12, height: 12, background: "var(--k-base-200)",
   border: `2.5px solid ${color}`, borderRadius: "50%", zIndex: 10,
 });
 
@@ -81,7 +81,7 @@ export function TimerIntervalNode() {
       </NodeField>
 
       {/* freq readout */}
-      <div className="mx-3 mb-1 flex items-center justify-between px-2.5 py-1 rounded-lg bg-[#0a0a0d] border border-[#1c1c20]">
+      <div className="mx-3 mb-1 flex items-center justify-between px-2.5 py-1 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
         <span className="text-[9px] text-zinc-500">Period</span>
         <span className="text-[11px] font-mono font-bold text-cyan-400">{ms >= 1000 ? `${(ms/1000).toFixed(2)} s` : `${ms} ms`}</span>
         <span className="text-[9px] text-zinc-500">{hz} Hz</span>
@@ -150,7 +150,7 @@ export function VariableStateNode() {
       </div>
 
       {/* live value pill */}
-      <div className="mx-3 mb-2 flex items-center justify-center px-3 py-1.5 rounded-lg bg-[#0a0a0d] border border-[#1c1c20]">
+      <div className="mx-3 mb-2 flex items-center justify-center px-3 py-1.5 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
         <span className="text-[9px] text-zinc-500 mr-2">Current value:</span>
         <span className="text-xs font-mono font-bold" style={{ color: tc }}>{initVal}</span>
       </div>
@@ -212,7 +212,7 @@ export function MathTransformNode() {
       </NodeField>
 
       {op === "map" && (<>
-        <div className="mx-3 mt-0.5 rounded-lg border border-[#1c1c20] bg-[#0a0a0d] p-2">
+        <div className="mx-3 mt-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] p-2">
           <div className="text-[9px] text-zinc-500 mb-1.5 uppercase tracking-wider font-bold">Input Range → Output Range</div>
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-[9px] text-zinc-500 w-6">in</span>
@@ -234,7 +234,7 @@ export function MathTransformNode() {
       )}
 
       {op === "clamp" && (
-        <div className="mx-3 mt-0.5 rounded-lg border border-[#1c1c20] bg-[#0a0a0d] p-2">
+        <div className="mx-3 mt-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] p-2">
           <div className="text-[9px] text-zinc-500 mb-1.5 uppercase tracking-wider font-bold">Clamp Range</div>
           <div className="flex items-center gap-1.5">
             <NumberInput value={clampMin} onChange={setClampMin} style={{ width: 60 }} />
@@ -255,7 +255,7 @@ export function MathTransformNode() {
           Test with x = 2048
         </button>
         {preview && (
-          <div className="mt-1 text-center text-[10px] font-mono font-bold text-cyan-400 bg-[#0a0a0d] rounded px-2 py-1 border border-[#1c1c20]">
+          <div className="mt-1 text-center text-[10px] font-mono font-bold text-cyan-400 bg-[var(--k-base-100)] rounded px-2 py-1 border border-[var(--k-base-300)]">
             {preview}
           </div>
         )}

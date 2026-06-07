@@ -19,7 +19,7 @@ const DEFAULT_CMDS = [
 
 const cmdHandle = {
   width: 12, height: 12,
-  background: "#111113",
+  background: "var(--k-base-200)",
   border: "2.5px solid #3b82f6",
   borderRadius: "50%",
   position: "relative" as const,
@@ -53,7 +53,7 @@ export function BLEModeNode() {
       {/* Device name */}
       <NodeField label="Name"><TextInput value={deviceName} onChange={setDeviceName} wide /></NodeField>
 
-      <div className="mx-3 my-1 border-t border-[#1c1c20]" />
+      <div className="mx-3 my-1 border-t border-[var(--k-base-300)]" />
 
       {/* Raw incoming data variable */}
       <div className="px-3 pb-1">
@@ -62,11 +62,11 @@ export function BLEModeNode() {
           <input value={rawVarName} onChange={(e) => setRawVarName(e.target.value)}
             className="nodrag flex-1 text-[11px] font-mono bg-transparent text-blue-300 outline-none min-w-0" />
           <Handle type="source" position={Position.Right} id="ble_raw"
-            style={{ width: 12, height: 12, background: "#111113", border: "2.5px solid #3b82f6", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -14, top: "auto", transform: "none" }} />
+            style={{ width: 12, height: 12, background: "var(--k-base-200)", border: "2.5px solid #3b82f6", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -14, top: "auto", transform: "none" }} />
         </div>
       </div>
 
-      <div className="mx-3 my-1 border-t border-[#1c1c20]" />
+      <div className="mx-3 my-1 border-t border-[var(--k-base-300)]" />
 
       {/* Commands */}
       <div className="px-3 pb-1">
@@ -98,7 +98,7 @@ export function BLEModeNode() {
         </div>
       </div>
 
-      <div className="mx-3 my-1 border-t border-[#1c1c20]" />
+      <div className="mx-3 my-1 border-t border-[var(--k-base-300)]" />
 
       {/* Send back to phone */}
       <div className="px-3 pb-1">
@@ -109,7 +109,7 @@ export function BLEModeNode() {
         {enableTx && (
           <div className="flex items-center gap-2 mt-1.5">
             <Handle type="target" position={Position.Left} id="ble_tx"
-              style={{ width: 12, height: 12, background: "#111113", border: "2.5px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, left: -14, top: "auto", transform: "none" }} />
+              style={{ width: 12, height: 12, background: "var(--k-base-200)", border: "2.5px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, left: -14, top: "auto", transform: "none" }} />
             <input value={txVarName} onChange={(e) => setTxVarName(e.target.value)}
               className="nodrag flex-1 text-[10px] font-mono bg-[#0d0d10] border border-[#1e1e24] rounded-lg px-2 py-1 text-green-300 outline-none" />
           </div>
@@ -127,10 +127,10 @@ export function BLEModeNode() {
             {/* Status handles */}
             <div className="flex items-center gap-3 pt-1 px-1">
               <Handle type="source" position={Position.Right} id="connected"
-                style={{ width: 10, height: 10, background: "#111113", border: "2px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none" }} />
+                style={{ width: 10, height: 10, background: "var(--k-base-200)", border: "2px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none" }} />
               <span className="text-[8px] text-zinc-600">on connect</span>
               <Handle type="source" position={Position.Right} id="disconnected"
-                style={{ width: 10, height: 10, background: "#111113", border: "2px solid #ef4444", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none", marginLeft: 4 }} />
+                style={{ width: 10, height: 10, background: "var(--k-base-200)", border: "2px solid #ef4444", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none", marginLeft: 4 }} />
               <span className="text-[8px] text-zinc-600">on disconnect</span>
             </div>
           </div>

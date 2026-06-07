@@ -5,7 +5,7 @@ import {
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
-  width: 12, height: 12, background: "#111113",
+  width: 12, height: 12, background: "var(--k-base-200)",
   border: `2.5px solid ${color}`, borderRadius: "50%", zIndex: 10,
 });
 
@@ -72,7 +72,7 @@ export function MQTTNode() {
         </>)}
       </AdvancedSection>
 
-      <div className="mx-3 mt-1 mb-0.5 border-t border-[#1c1c20]" />
+      <div className="mx-3 mt-1 mb-0.5 border-t border-[var(--k-base-300)]" />
 
       {/* publish topics */}
       <div className="px-3 mb-0.5">
@@ -83,15 +83,15 @@ export function MQTTNode() {
             + Add
           </button>
         </div>
-        <div className="rounded-lg border border-[#1c1c20] bg-[#0a0a0d] overflow-hidden">
+        <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden">
           {pubTopics.map((t, i) => (
-            <div key={i} className="border-b border-[#111116] last:border-0 px-2 py-1.5">
+            <div key={i} className="border-b border-[var(--k-base-200)] last:border-0 px-2 py-1.5">
               <div className="flex items-center gap-1 mb-1">
                 <input value={t.topic} onChange={(e) => updatePub(i, "topic", e.target.value)}
                   placeholder="topic/path"
-                  className="nodrag flex-1 text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1.5 py-0.5 text-orange-400 outline-none" />
+                  className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-orange-400 outline-none" />
                 <select value={t.qos} onChange={(e) => updatePub(i, "qos", e.target.value)}
-                  className="nodrag text-[9px] bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-zinc-400 outline-none">
+                  className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 outline-none">
                   <option value="0">QoS 0</option><option value="1">QoS 1</option><option value="2">QoS 2</option>
                 </select>
                 <button onClick={() => removePub(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
@@ -101,7 +101,7 @@ export function MQTTNode() {
                   style={{ ...outHS(COLORS.orange), left: -22, top: "auto", position: "relative", display: "inline-block" }} />
                 <input value={t.varName} onChange={(e) => updatePub(i, "varName", e.target.value)}
                   placeholder="variable name"
-                  className="nodrag flex-1 text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
+                  className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
                 <label className="flex items-center gap-1 cursor-pointer nodrag">
                   <input type="checkbox" checked={t.retained}
                     onChange={(e) => updatePub(i, "retained", e.target.checked)}
@@ -124,19 +124,19 @@ export function MQTTNode() {
             + Add
           </button>
         </div>
-        <div className="rounded-lg border border-[#1c1c20] bg-[#0a0a0d] overflow-hidden">
+        <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden">
           {subTopics.map((t, i) => (
-            <div key={i} className="border-b border-[#111116] last:border-0 px-2 py-1.5 flex items-center gap-1">
+            <div key={i} className="border-b border-[var(--k-base-200)] last:border-0 px-2 py-1.5 flex items-center gap-1">
               <input value={t.topic} onChange={(e) => updateSub(i, "topic", e.target.value)}
                 placeholder="topic/path"
-                className="nodrag flex-1 text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
+                className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
               <select value={t.qos} onChange={(e) => updateSub(i, "qos", e.target.value)}
-                className="nodrag text-[9px] bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-zinc-400 outline-none">
+                className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 outline-none">
                 <option value="0">QoS 0</option><option value="1">QoS 1</option><option value="2">QoS 2</option>
               </select>
               <input value={t.varName} onChange={(e) => updateSub(i, "varName", e.target.value)}
                 placeholder="var"
-                className="nodrag w-[60px] text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1.5 py-0.5 text-green-400 outline-none" />
+                className="nodrag w-[60px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-green-400 outline-none" />
               <Handle type="source" position={Position.Right} id={`sub_${i}`}
                 style={{ ...outHS(COLORS.cyan), right: -22, top: "auto", position: "relative", display: "inline-block" }} />
               <button onClick={() => removeSub(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
@@ -152,9 +152,9 @@ export function MQTTNode() {
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Last Will & Testament</div>
           <div className="flex gap-1.5">
             <input value={lwtTopic} onChange={(e) => setLwtTopic(e.target.value)}
-              className="nodrag flex-1 text-[10px] font-mono bg-[#0a0a0d] border border-[#1c1c20] rounded px-1.5 py-1 text-zinc-400 outline-none" />
+              className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-300)] rounded px-1.5 py-1 text-zinc-400 outline-none" />
             <input value={lwtMsg} onChange={(e) => setLwtMsg(e.target.value)}
-              className="nodrag w-[60px] text-[10px] font-mono bg-[#0a0a0d] border border-[#1c1c20] rounded px-1.5 py-1 text-red-400 outline-none" />
+              className="nodrag w-[60px] text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-300)] rounded px-1.5 py-1 text-red-400 outline-none" />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <Handle type="source" position={Position.Right} id="connected"

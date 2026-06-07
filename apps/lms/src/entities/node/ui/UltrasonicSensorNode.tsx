@@ -16,23 +16,23 @@ const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "transl
 // ─── Echo Timing Pulse Visualiser ─────────────────────────────────────────────
 function EchoPulseDisplay() {
   return (
-    <div className="w-full h-10 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] overflow-hidden px-3 flex flex-col justify-center gap-0.5">
+    <div className="w-full h-10 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden px-3 flex flex-col justify-center gap-0.5">
       <div className="flex items-center gap-1">
         <span className="text-[8px] text-purple-400 font-mono w-7">TRIG</span>
         <div className="flex-1 flex items-center h-3">
-          <div className="h-[2px] flex-1 bg-[#2d2d35]" />
+          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
           <div className="h-3 w-4 border-t-2 border-l-2 border-r-2 border-purple-500 rounded-t-sm mx-0.5"
             style={{ animation: "trigPulse 1.6s ease-in-out infinite" }} />
-          <div className="h-[2px] flex-1 bg-[#2d2d35]" />
+          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
         </div>
       </div>
       <div className="flex items-center gap-1">
         <span className="text-[8px] text-cyan-400 font-mono w-7">ECHO</span>
         <div className="flex-1 flex items-center h-3">
-          <div className="h-[2px] w-5 bg-[#2d2d35]" />
+          <div className="h-[2px] w-5 bg-[var(--k-border)]" />
           <div className="h-3 border-t-2 border-l-2 border-r-2 border-cyan-500 rounded-t-sm mx-0.5"
             style={{ width: 24, animation: "trigPulse 1.6s ease-in-out 0.3s infinite" }} />
-          <div className="h-[2px] flex-1 bg-[#2d2d35]" />
+          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
         </div>
       </div>
     </div>
@@ -47,14 +47,14 @@ function ZoneRow({ label, color, dist, setDist, nodeColor, onColorChange }: {
   return (
     <div className="flex items-center gap-1.5 px-3 py-0.5">
       <div className="w-2 h-2 rounded-full flex-shrink-0 cursor-pointer relative"
-        style={{ background: color, border: "1.5px solid #3f3f46" }}>
+        style={{ background: color, border: "1.5px solid var(--k-base-400)" }}>
         <input type="color" value={color} onChange={e => onColorChange(e.target.value)}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer nodrag" />
       </div>
       <span className="text-[9px] font-bold uppercase tracking-wider flex-shrink-0" style={{ color: nodeColor, width: 22 }}>{label}</span>
       <span className="text-[9px] text-zinc-600 flex-shrink-0">&lt;</span>
       <input type="number" value={dist} onChange={e => setDist(Number(e.target.value))}
-        className="nodrag w-11 rounded bg-[#1c1c20] border border-[#2d2d35] text-[10px] text-center text-zinc-300 font-mono outline-none px-1 py-0.5" />
+        className="nodrag w-11 rounded bg-[var(--k-base-300)] border border-[var(--k-border)] text-[10px] text-center text-zinc-300 font-mono outline-none px-1 py-0.5" />
       <span className="text-[9px] text-zinc-600">cm</span>
     </div>
   );
@@ -87,12 +87,12 @@ export function UltrasonicSensorNode() {
       </AdvancedSection>
 
       {/* Distance display */}
-      <div className="px-3 py-1 flex items-center gap-2 bg-[#0d0d10] mx-3 rounded-lg border border-[#2a2a30]">
+      <div className="px-3 py-1 flex items-center gap-2 bg-[#0d0d10] mx-3 rounded-lg border border-[var(--k-border)]">
         <div className="flex-1 text-center">
           <div className="text-[9px] text-zinc-500 uppercase">cm</div>
           <div className="text-sm font-mono font-bold text-purple-400">—.-</div>
         </div>
-        <div className="w-px h-6 bg-[#2d2d35]" />
+        <div className="w-px h-6 bg-[var(--k-border)]" />
         <div className="flex-1 text-center">
           <div className="text-[9px] text-zinc-500 uppercase">in</div>
           <div className="text-sm font-mono font-bold text-cyan-400">—.-</div>

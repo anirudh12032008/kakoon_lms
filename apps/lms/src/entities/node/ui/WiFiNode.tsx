@@ -5,7 +5,7 @@ import {
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
-  width: 12, height: 12, background: "#111113",
+  width: 12, height: 12, background: "var(--k-base-200)",
   border: `2.5px solid ${color}`, borderRadius: "50%", zIndex: 10,
 });
 
@@ -44,7 +44,7 @@ export function WiFiNodeNode() {
       )}
       <NodeField label="Auto-reconnect"><ToggleInput value={reconnect} onChange={setReconnect} leftLabel="No" rightLabel="Yes" /></NodeField>
 
-      <div className="mx-3 mt-0.5 border-t border-[#1c1c20]" />
+      <div className="mx-3 mt-0.5 border-t border-[var(--k-base-300)]" />
 
       <NodeField label="IP Address">
         <TextInput value={varName} onChange={setVarName} green />
@@ -63,10 +63,10 @@ export function WiFiNodeNode() {
       </NodeField>
 
       {/* signal strength visual */}
-      <div className="mx-3 mb-2 mt-0.5 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#0a0a0d] border border-[#1c1c20]">
+      <div className="mx-3 mb-2 mt-0.5 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
         <div className="flex items-end gap-0.5">
           {[20, 40, 60, 80, 100].map((h, i) => (
-            <div key={i} className="w-1.5 rounded-sm" style={{ height: h * 0.12 + "px", background: i < 3 ? "#14b8a6" : "#1c1c20" }} />
+            <div key={i} className="w-1.5 rounded-sm" style={{ height: h * 0.12 + "px", background: i < 3 ? "#14b8a6" : "var(--k-base-300)" }} />
           ))}
         </div>
         <span className="text-[9px] text-zinc-500">Signal preview (live at runtime)</span>

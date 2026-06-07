@@ -268,7 +268,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
   return (
     <div className="flex h-full">
       {/* Left: settings */}
-      <div className="w-[160px] flex-shrink-0 border-r border-[#1a1a20] p-3 flex flex-col gap-3 overflow-y-auto">
+      <div className="w-[160px] flex-shrink-0 border-r border-[var(--k-border)] p-3 flex flex-col gap-3 overflow-y-auto">
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1.5 font-bold">Mode</div>
           <div className="flex flex-col gap-1">
@@ -285,19 +285,19 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
           <div>
             <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">LED Count</div>
             <input type="number" value={ledCount} min={1} max={64} onChange={(e) => setLedCount(+e.target.value)}
-              className="w-full text-[10px] font-mono bg-[#0c0c10] border border-[#1e1e26] rounded px-2 py-1 text-white outline-none" />
+              className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
           </div>
         ) : (
           <div className="flex gap-1.5">
             <div className="flex-1">
               <div className="text-[9px] text-zinc-600 mb-0.5">Rows</div>
               <input type="number" value={gridRows} min={1} max={16} onChange={(e) => setGridRows(+e.target.value)}
-                className="w-full text-[10px] bg-[#0c0c10] border border-[#1e1e26] rounded px-1.5 py-1 text-white outline-none" />
+                className="w-full text-[10px] bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-1.5 py-1 text-white outline-none" />
             </div>
             <div className="flex-1">
               <div className="text-[9px] text-zinc-600 mb-0.5">Cols</div>
               <input type="number" value={gridCols} min={1} max={16} onChange={(e) => setGridCols(+e.target.value)}
-                className="w-full text-[10px] bg-[#0c0c10] border border-[#1e1e26] rounded px-1.5 py-1 text-white outline-none" />
+                className="w-full text-[10px] bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-1.5 py-1 text-white outline-none" />
             </div>
           </div>
         )}
@@ -305,7 +305,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Data Pin</div>
           <input type="number" value={dataPin} onChange={(e) => setDataPin(+e.target.value)}
-            className="w-full text-[10px] font-mono bg-[#0c0c10] border border-[#1e1e26] rounded px-2 py-1 text-white outline-none" />
+            className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
           <div className="text-[8px] text-zinc-600 mt-0.5">On-board ring = GPIO 48</div>
         </div>
 
@@ -324,13 +324,13 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
               const hex = e.target.value.slice(1);
               setSelectedColor([parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]);
             }}
-            className="w-full h-7 rounded-lg cursor-pointer border border-[#2a2a32]" />
+            className="w-full h-7 rounded-lg cursor-pointer border border-[var(--k-border)]" />
           <button
             onClick={() => { setSelectedColor(OFF); setCustomHex("#000000"); }}
             className={`mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
               JSON.stringify(selectedColor) === JSON.stringify(OFF)
                 ? "bg-white/10 border-white/40 text-white"
-                : "bg-[#0c0c10] border-[#2a2a32] text-zinc-400 hover:text-white"
+                : "bg-[var(--k-base-100)] border-[var(--k-border)] text-zinc-400 hover:text-white"
             }`}>
             ⬛ Off (LED dark)
           </button>
@@ -349,7 +349,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Name</div>
           <input value={designName} onChange={(e) => setDesignName(e.target.value)}
-            className="w-full text-[10px] bg-[#0c0c10] border border-[#1e1e26] rounded px-2 py-1 text-white outline-none" />
+            className="w-full text-[10px] bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
           <button
             onClick={saveDesign}
             disabled={!designName.trim()}
@@ -390,7 +390,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
 
       {/* Center: LED canvas */}
       <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1a1a20]">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-[var(--k-border)]">
           {frames.map((_, i) => (
             <div key={i} draggable
               onDragStart={() => { dragFrame.current = i; }}
@@ -409,11 +409,11 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
             </div>
           ))}
           <button onClick={() => { setFrames((p) => [...p, [...p[p.length-1]]]); setCurFrame(frames.length); setPlaying(false); }}
-            className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32] hover:border-green-500/30">
+            className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[var(--k-border)] hover:border-green-500/30">
             + Frame
           </button>
           <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-violet-400 border border-[#2a2a32] hover:border-violet-500/30">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-violet-400 border border-[var(--k-border)] hover:border-violet-500/30">
             <Copy className="w-3 h-3" /> Dup
           </button>
           {frames.length > 1 && (
@@ -458,20 +458,20 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
       </div>
 
       {/* Right: code */}
-      <div className="w-[260px] flex-shrink-0 border-l border-[#1a1a20] flex flex-col">
-        <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a1a20]">
+      <div className="w-[260px] flex-shrink-0 border-l border-[var(--k-border)] flex flex-col">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
           <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">MicroPython Code</span>
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-zinc-400 border border-[#2a2a32]"}`}>
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-zinc-400 border border-[var(--k-border)]"}`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy"}
           </button>
         </div>
-        <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono leading-relaxed bg-[#050507]"
+        <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono leading-relaxed bg-[var(--k-base-100)]"
           style={{ color: `rgb(${selectedColor.join(",")})` }}>
           {code}
         </pre>
         {onAddNode && (
-          <div className="px-3 py-2.5 border-t border-[#1a1a20]">
+          <div className="px-3 py-2.5 border-t border-[var(--k-border)]">
             <button
               onClick={() => {
                 onAddNode("neopixel_designer", {

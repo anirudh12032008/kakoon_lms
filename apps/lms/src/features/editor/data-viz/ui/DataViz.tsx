@@ -57,7 +57,7 @@ function PanelShell({
   const { pos, onMouseDown } = useDrag(initialPos);
   return createPortal(
     <div
-      className="fixed z-[8888] overflow-hidden rounded-2xl border border-[#2a2a32] bg-[#09090b] shadow-2xl flex flex-col select-none"
+      className="fixed z-[8888] overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[#09090b] shadow-2xl flex flex-col select-none"
       style={{ left: pos.x, top: pos.y, width }}
     >
       <div
@@ -446,7 +446,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
           {(["3d","horizon","graphs"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                tab === t ? "border-violet-500/60 bg-violet-500/15 text-violet-300" : "border-[#2d2d35] text-zinc-500 hover:text-zinc-300"
+                tab === t ? "border-violet-500/60 bg-violet-500/15 text-violet-300" : "border-[var(--k-border)] text-zinc-500 hover:text-zinc-300"
               }`}>
               {t === "3d" ? "3D" : t === "horizon" ? "AH" : "≈"}
             </button>
@@ -457,7 +457,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
         <button
           onClick={clearHistory}
           title="Clear history"
-          className="ml-1 px-2 py-0.5 rounded border border-[#2d2d35] text-[9px] font-bold text-zinc-500 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-all"
+          className="ml-1 px-2 py-0.5 rounded border border-[var(--k-border)] text-[9px] font-bold text-zinc-500 hover:text-rose-400 hover:border-rose-500/40 hover:bg-rose-500/10 transition-all"
         >↺</button>
       </div>
 
@@ -480,7 +480,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
             </div>
 
             {/* Motion trail */}
-            <div className="rounded-xl border border-[#1e1e26] bg-[#080810] p-2.5">
+            <div className="rounded-xl border border-[var(--k-base-400)] bg-[#080810] p-2.5">
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Motion Trail</span>
                 <span className="text-[9px] font-mono text-zinc-600">{history.length} samples</span>
@@ -497,7 +497,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
                 { label: "Roll",  value: data.roll.toFixed(1)+"°",  color: "#ec4899" },
                 { label: "ω",     value: gyroTotal.toFixed(0)+"°/s", color: "#06b6d4" },
               ].map(s => (
-                <div key={s.label} className="rounded-lg border border-[#1e1e26] bg-[#0c0c12] p-2 text-center">
+                <div key={s.label} className="rounded-lg border border-[var(--k-base-400)] bg-[#0c0c12] p-2 text-center">
                   <div className="text-[9px] text-zinc-500 uppercase tracking-wider">{s.label}</div>
                   <div className="text-sm font-bold font-mono mt-0.5" style={{ color: s.color }}>{s.value}</div>
                 </div>
@@ -519,12 +519,12 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
                   { label: "Pitch", val: data.pitch, max: 90, color: "#8b5cf6", unit: "°" },
                   { label: "Roll",  val: data.roll,  max: 90, color: "#ec4899", unit: "°" },
                 ].map(s => (
-                  <div key={s.label} className="rounded-lg border border-[#1e1e26] bg-[#0c0c12] p-2">
+                  <div key={s.label} className="rounded-lg border border-[var(--k-base-400)] bg-[#0c0c12] p-2">
                     <div className="flex justify-between mb-1">
                       <span className="text-[9px] text-zinc-500">{s.label}</span>
                       <span className="text-[10px] font-mono font-bold" style={{color:s.color}}>{s.val.toFixed(1)}{s.unit}</span>
                     </div>
-                    <div className="relative h-1.5 rounded-full bg-[#1e1e26] overflow-hidden">
+                    <div className="relative h-1.5 rounded-full bg-[var(--k-base-400)] overflow-hidden">
                       <div className="absolute top-0 bottom-0 rounded-full transition-all"
                         style={{
                           left: "50%",
@@ -545,7 +545,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
         {tab === "graphs" && (
           <>
             {/* Accel */}
-            <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+            <div className="rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-2.5">
               <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Accelerometer (g)</div>
               {(["ax","ay","az"] as const).map((k, i) => {
                 const colors = ["#ef4444","#22c55e","#3b82f6"];
@@ -556,7 +556,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
                     <div className="flex-1 relative h-8 bg-[#080810] rounded overflow-hidden">
                       <Sparkline data={vals.length ? vals : [data[k]]} color={colors[i]} min={-4} max={4} height={32} />
                       {/* zero line */}
-                      <div className="absolute top-1/2 left-0 right-0 h-px bg-[#2d2d35]" />
+                      <div className="absolute top-1/2 left-0 right-0 h-px bg-[var(--k-border)]" />
                     </div>
                     <span className="text-[10px] font-mono font-bold w-12 text-right" style={{ color: colors[i] }}>
                       {data[k].toFixed(3)}
@@ -567,7 +567,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
             </div>
 
             {/* Gyro */}
-            <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+            <div className="rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-2.5">
               <div className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Gyroscope (°/s)</div>
               {(["gx","gy","gz"] as const).map((k, i) => {
                 const colors = ["#f97316","#eab308","#a855f7"];
@@ -577,7 +577,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
                     <span className="text-[9px] font-mono w-6 font-bold" style={{ color: colors[i] }}>{k.toUpperCase()}</span>
                     <div className="flex-1 relative h-8 bg-[#080810] rounded overflow-hidden">
                       <Sparkline data={vals.length ? vals : [data[k]]} color={colors[i]} min={-500} max={500} height={32} />
-                      <div className="absolute top-1/2 left-0 right-0 h-px bg-[#2d2d35]" />
+                      <div className="absolute top-1/2 left-0 right-0 h-px bg-[var(--k-border)]" />
                     </div>
                     <span className="text-[10px] font-mono font-bold w-12 text-right" style={{ color: colors[i] }}>
                       {data[k].toFixed(1)}
@@ -595,7 +595,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
         )}
 
         {!isLive && (
-          <div className="text-center py-2 text-[9px] text-zinc-600 border border-dashed border-[#1e1e26] rounded-xl space-y-1">
+          <div className="text-center py-2 text-[9px] text-zinc-600 border border-dashed border-[var(--k-base-400)] rounded-xl space-y-1">
             <p>Add an <span className="text-violet-400 font-bold">IMU Sensor</span> node inside a Forever Loop and run it.</p>
             <p className="font-mono text-[8px] text-zinc-700">Expected: <span className="text-violet-400">IMU,ax,ay,az,gx,gy,gz,pitch,roll</span></p>
           </div>
@@ -630,7 +630,7 @@ function ChannelHeader({ label, badge, color, live }: { label: string; badge: st
         style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}>{badge}</span>
       <div className="ml-auto flex items-center gap-1">
         <span className="w-1.5 h-1.5 rounded-full"
-          style={{ background: live ? color : "#3f3f46", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
+          style={{ background: live ? color : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
         <span className="text-[8px] text-zinc-600 font-mono">{live ? "LIVE" : "stale"}</span>
       </div>
     </div>
@@ -642,7 +642,7 @@ function DigitalTimeline({ values, color }: { values: number[]; color: string })
     <div className="flex items-end gap-px h-5 mt-1">
       {values.slice(-50).map((v, i) => (
         <div key={i} className="flex-1 rounded-sm transition-all"
-          style={{ height: v ? "100%" : "28%", background: v ? color : "#1e1e26" }} />
+          style={{ height: v ? "100%" : "28%", background: v ? color : "var(--k-base-400)" }} />
       ))}
     </div>
   );
@@ -659,7 +659,7 @@ function ArcGauge({ value, min, max, color }: { value: number; min: number; max:
   };
   return (
     <svg width="68" height="60" viewBox="0 0 68 60" className="flex-shrink-0">
-      <path d={arc(startAngle, startAngle + sweep)} fill="none" stroke="#1e1e26" strokeWidth="5" strokeLinecap="round" />
+      <path d={arc(startAngle, startAngle + sweep)} fill="none" stroke="var(--k-base-400)" strokeWidth="5" strokeLinecap="round" />
       <path d={arc(startAngle, startAngle + pct * sweep)} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round" />
       <text x="34" y="36" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" fontFamily="monospace">
         {value % 1 === 0 ? value.toFixed(0) : value.toFixed(1)}
@@ -672,8 +672,8 @@ function PIRCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   const detected = live && ch.latest === 1;
   const color    = detected ? "#22c55e" : "#52525b";
   return (
-    <div className="rounded-2xl border bg-[#0c0c10] p-3 transition-all duration-300"
-      style={{ borderColor: detected ? "#22c55e50" : "#1e1e26", boxShadow: detected ? "0 0 20px #22c55e22" : "none" }}>
+    <div className="rounded-2xl border bg-[var(--k-base-100)] p-3 transition-all duration-300"
+      style={{ borderColor: detected ? "#22c55e50" : "var(--k-base-400)", boxShadow: detected ? "0 0 20px #22c55e22" : "none" }}>
       <ChannelHeader label={ch.label} badge="PIR" color="#22c55e" live={live} />
       <div className="flex items-center gap-3">
         <svg width="52" height="40" viewBox="0 0 56 44" className="flex-shrink-0">
@@ -707,8 +707,8 @@ function IRBeamCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   const blocked = live && ch.latest === 0;
   const beamClr = blocked ? "#ef4444" : "#22c55e";
   return (
-    <div className="rounded-2xl border bg-[#0c0c10] p-3 transition-all duration-300"
-      style={{ borderColor: !live ? "#1e1e26" : blocked ? "#ef444440" : "#22c55e40",
+    <div className="rounded-2xl border bg-[var(--k-base-100)] p-3 transition-all duration-300"
+      style={{ borderColor: !live ? "var(--k-base-400)" : blocked ? "#ef444440" : "#22c55e40",
         boxShadow: !live ? "none" : blocked ? "0 0 16px #ef444418" : "0 0 14px #22c55e18" }}>
       <ChannelHeader label={ch.label} badge="IR Sensor" color="#f97316" live={live} />
       <div className="flex items-center gap-3 my-2">
@@ -751,12 +751,12 @@ function IRRemoteCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   const hex    = live ? `0x${ch.latest.toString(16).toUpperCase().padStart(4, "0")}` : "——";
   const recent = [...new Set(ch.values.slice(-10))].slice(0, 6);
   return (
-    <div className="rounded-2xl border border-[#1e1e26] bg-[#0c0c10] p-3">
+    <div className="rounded-2xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-3">
       <ChannelHeader label={ch.label} badge="IR Remote" color="#f97316" live={live} />
       <p className="text-[9px] text-zinc-600 mb-2">📱 Point your remote at the receiver</p>
-      <div className="flex items-center justify-center py-3 px-3 mb-2 rounded-xl bg-[#111116] border border-[#2a2a30]">
+      <div className="flex items-center justify-center py-3 px-3 mb-2 rounded-xl bg-[var(--k-base-200)] border border-[var(--k-border)]">
         <span className="text-2xl font-mono font-bold tracking-widest"
-          style={{ color: live ? "#f97316" : "#3f3f46",
+          style={{ color: live ? "#f97316" : "var(--k-base-400)",
             textShadow: live ? "0 0 20px #f9731655" : "none" }}>{hex}</span>
       </div>
       {recent.length > 0 && (
@@ -781,12 +781,12 @@ function DigitalCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   const label = !live ? "Waiting..." : on ? "It's ON!" : "It's OFF";
   const color = on ? "#22c55e" : "#52525b";
   return (
-    <div className="rounded-2xl border bg-[#0c0c10] p-3 transition-all"
-      style={{ borderColor: on ? "#22c55e35" : "#1e1e26", boxShadow: on ? "0 0 14px #22c55e15" : "none" }}>
+    <div className="rounded-2xl border bg-[var(--k-base-100)] p-3 transition-all"
+      style={{ borderColor: on ? "#22c55e35" : "var(--k-base-400)", boxShadow: on ? "0 0 14px #22c55e15" : "none" }}>
       <ChannelHeader label={ch.label} badge="digital" color="#22c55e" live={live} />
       <div className="flex items-center gap-3 mb-2">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl transition-all"
-          style={{ background: on ? "#22c55e18" : "#1a1a20", border: `2px solid ${on ? "#22c55e40" : "#2d2d35"}`,
+          style={{ background: on ? "#22c55e18" : "var(--k-border)", border: `2px solid ${on ? "#22c55e40" : "var(--k-border)"}`,
             boxShadow: on ? "0 0 12px #22c55e22" : "none" }}>
           {emoji}
         </div>
@@ -804,12 +804,12 @@ function AngleCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   const cx = 50, cy = 50, r = 36;
   const ex = cx + r * Math.cos(Math.PI - rad), ey = cy - r * Math.sin(Math.PI - rad);
   return (
-    <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+    <div className="rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-2.5">
       <ChannelHeader label={ch.label} badge="angle" color={color} live={live} />
       <div className="flex items-center gap-3">
         <svg width="72" height="48" viewBox="0 0 100 60" className="flex-shrink-0">
           <path d={`M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`}
-            fill="none" stroke="#1e1e26" strokeWidth="4" strokeLinecap="round" />
+            fill="none" stroke="var(--k-base-400)" strokeWidth="4" strokeLinecap="round" />
           <path d={`M ${cx} ${cy} L ${cx + r} ${cy} A ${r} ${r} 0 ${angle > 90 ? 1 : 0} 0 ${ex} ${ey} Z`}
             fill={`${color}15`} />
           <line x1={cx} y1={cy} x2={ex} y2={ey} stroke={color} strokeWidth="2.5" strokeLinecap="round"
@@ -831,7 +831,7 @@ function AnalogCard({ ch, live, color }: { ch: SensorChannel; live: boolean; col
   const min = Math.min(...ch.values), max = Math.max(...ch.values);
   const avg = ch.values.reduce((a, b) => a + b, 0) / ch.values.length;
   return (
-    <div className="rounded-xl border border-[#1e1e26] bg-[#0c0c10] p-2.5">
+    <div className="rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-2.5">
       <ChannelHeader label={ch.label} badge={ch.type} color={color} live={live} />
       <div className="flex items-start gap-3">
         <ArcGauge value={ch.latest} min={min === max ? min - 1 : min} max={min === max ? max + 1 : max} color={color} />
@@ -992,15 +992,15 @@ export function RadarPanel({ logs, onClose }: { logs: string[]; onClose: () => v
 
         {/* Info bar */}
         <div className="flex items-center gap-3 mt-1">
-          <div className="flex-1 px-2.5 py-2 rounded-xl bg-[#0c0c10] border border-[#1e1e26]">
+          <div className="flex-1 px-2.5 py-2 rounded-xl bg-[var(--k-base-100)] border border-[var(--k-base-400)]">
             <div className="text-[9px] text-zinc-600 mb-0.5">Angle</div>
             <div className="text-sm font-mono font-bold text-cyan-400">{latest ? `${latest.angle.toFixed(0)}°` : "—"}</div>
           </div>
-          <div className="flex-1 px-2.5 py-2 rounded-xl bg-[#0c0c10] border border-[#1e1e26]">
+          <div className="flex-1 px-2.5 py-2 rounded-xl bg-[var(--k-base-100)] border border-[var(--k-base-400)]">
             <div className="text-[9px] text-zinc-600 mb-0.5">Distance</div>
             <div className="text-sm font-mono font-bold text-cyan-400">{latest ? `${latest.distance.toFixed(0)} cm` : "—"}</div>
           </div>
-          <div className="flex-1 px-2.5 py-2 rounded-xl bg-[#0c0c10] border border-[#1e1e26] text-center">
+          <div className="flex-1 px-2.5 py-2 rounded-xl bg-[var(--k-base-100)] border border-[var(--k-base-400)] text-center">
             <div className="text-[9px] text-zinc-600 mb-0.5">Zone</div>
             <div className="text-[10px] font-bold">{zone}</div>
           </div>

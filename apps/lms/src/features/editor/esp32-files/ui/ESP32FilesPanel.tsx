@@ -184,7 +184,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
 
   return createPortal(
     <div
-      className="fixed z-[8800] flex flex-col overflow-hidden rounded-2xl border border-[#2a2a32] bg-[#09090b] shadow-2xl select-none"
+      className="fixed z-[8800] flex flex-col overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[#09090b] shadow-2xl select-none"
       style={{ left: pos.x, top: pos.y, width: 380, maxHeight: "72vh" }}
     >
       {/* Header */}
@@ -203,7 +203,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       </div>
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-0.5 px-3 py-2 bg-[#0e0e14] border-b border-[#1a1a20] flex-shrink-0 flex-wrap min-h-[36px]">
+      <div className="flex items-center gap-0.5 px-3 py-2 bg-[#0e0e14] border-b border-[var(--k-border)] flex-shrink-0 flex-wrap min-h-[36px]">
         {crumbs.map((c, i) => {
           const isLast = i === crumbs.length - 1;
           return (
@@ -230,7 +230,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
 
       {/* Not connected banner */}
       {!isConnected && (
-        <div className="px-3 py-2 text-[10px] text-amber-400 bg-amber-500/10 border-b border-[#1a1a20] flex-shrink-0">
+        <div className="px-3 py-2 text-[10px] text-amber-400 bg-amber-500/10 border-b border-[var(--k-border)] flex-shrink-0">
           ⚡ Connect to ESP32 to browse files
         </div>
       )}
@@ -260,7 +260,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
               className={`flex items-center gap-2.5 px-2.5 py-2 rounded-xl border transition-all ${
                 entry.isDir
                   ? "border-transparent hover:border-amber-500/20 hover:bg-amber-500/5 cursor-pointer"
-                  : "border-transparent hover:border-[#1e1e26] hover:bg-[#0c0c10]"
+                  : "border-transparent hover:border-[var(--k-base-400)] hover:bg-[var(--k-base-100)]"
               }`}
               onClick={() => navigate(entry)}
             >
@@ -302,7 +302,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       </div>
 
       {/* Status bar */}
-      <div className="px-3 py-1.5 border-t border-[#1a1a20] bg-[#0a0a0d] flex items-center justify-between flex-shrink-0">
+      <div className="px-3 py-1.5 border-t border-[var(--k-border)] bg-[var(--k-base-100)] flex items-center justify-between flex-shrink-0">
         <span className="text-[9px] text-zinc-600 truncate">{scanning ? "⏳ " : ""}{status}</span>
         <span className="text-[9px] font-mono text-zinc-700 flex-shrink-0 ml-2">{path}</span>
       </div>

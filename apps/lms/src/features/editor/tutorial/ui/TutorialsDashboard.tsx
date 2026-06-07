@@ -115,7 +115,7 @@ export function TutorialsDashboard({
       <div className="flex items-center justify-between gap-4 mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-[#0f0f12] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-[var(--k-base-100)] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Close Examples
@@ -124,14 +124,14 @@ export function TutorialsDashboard({
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-zinc-800 bg-[#0f0f12] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-zinc-800 bg-[var(--k-base-100)] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
           >
             <Upload className="w-3.5 h-3.5 text-cyan-400" />
             Import Example
           </button>
           <button
             onClick={onBack}
-            className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-white transition-all border border-zinc-800 bg-[#0f0f12]"
+            className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-white transition-all border border-zinc-800 bg-[var(--k-base-100)]"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -188,7 +188,7 @@ export function TutorialsDashboard({
               key={diff}
               onClick={() => setSelectedDifficulty(diff)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                selectedDifficulty === diff ? "bg-[#18181b] text-white" : "text-zinc-500 hover:text-zinc-300"
+                selectedDifficulty === diff ? "bg-[var(--k-base-300)] text-white" : "text-zinc-500 hover:text-zinc-300"
               }`}
             >
               {diff}
@@ -231,7 +231,7 @@ export function TutorialsDashboard({
                 onClick={() => setActiveModalTutorial(tutorial)}
                 className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800 bg-[#0c0c0f]/60 hover:bg-[#0e0e12] transition-all duration-300 hover:border-zinc-700 cursor-pointer shadow-xl"
               >
-                <div className="h-44 w-full bg-[#070709] border-b border-zinc-900 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-[#050507] transition-all">
+                <div className="h-44 w-full bg-[#070709] border-b border-zinc-900 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-[var(--k-base-100)] transition-all">
                   <div className="absolute inset-0 bg-[radial-gradient(#141416_1px,transparent_1px)] [background-size:12px_12px] opacity-60" />
                   <MiniFlowPreview tutorial={tutorial} />
                 </div>

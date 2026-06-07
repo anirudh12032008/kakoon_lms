@@ -6,7 +6,7 @@ import {
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
-  width: 12, height: 12, background: "#111113",
+  width: 12, height: 12, background: "var(--k-base-200)",
   border: `2.5px solid ${color}`, borderRadius: "50%", zIndex: 10,
 });
 
@@ -100,20 +100,20 @@ export function HTTPClientNode() {
           </svg>
         </button>
         {showHeaders && (
-          <div className="rounded-lg border border-[#1c1c20] bg-[#0a0a0d] overflow-hidden mt-1">
+          <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden mt-1">
             {headers.map((h, i) => (
-              <div key={i} className="flex gap-1 px-1.5 py-1 border-b border-[#111116] last:border-0">
+              <div key={i} className="flex gap-1 px-1.5 py-1 border-b border-[var(--k-base-200)] last:border-0">
                 <input value={h.key} onChange={(e) => updateHeader(i, "key", e.target.value)}
                   placeholder="Header"
-                  className="nodrag w-[90px] text-[9px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-zinc-400 outline-none" />
+                  className="nodrag w-[90px] text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 outline-none" />
                 <input value={h.value} onChange={(e) => updateHeader(i, "value", e.target.value)}
                   placeholder="Value"
-                  className="nodrag flex-1 text-[9px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-cyan-400 outline-none" />
+                  className="nodrag flex-1 text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-cyan-400 outline-none" />
                 <button onClick={() => removeHeader(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
               </div>
             ))}
             <button onClick={addHeader}
-              className="nodrag w-full py-1 text-[9px] text-cyan-400 hover:text-cyan-300 border-t border-[#1c1c20] transition-colors font-bold">
+              className="nodrag w-full py-1 text-[9px] text-cyan-400 hover:text-cyan-300 border-t border-[var(--k-base-300)] transition-colors font-bold">
               + Add header
             </button>
           </div>
@@ -132,26 +132,26 @@ export function HTTPClientNode() {
             </svg>
           </button>
           {showBody && (
-            <div className="rounded-lg border border-[#1c1c20] bg-[#0a0a0d] overflow-hidden mt-1">
-              <div className="px-2 py-1 border-b border-[#1c1c20]">
+            <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden mt-1">
+              <div className="px-2 py-1 border-b border-[var(--k-base-300)]">
                 <code className="text-[8px] text-zinc-600">
                   {"{" + bodyFields.map(f => `"${f.key || "key"}": {"{" + (f.varName || "var") + "}"}`).join(", ") + "}"}
                 </code>
               </div>
               {bodyFields.map((f, i) => (
-                <div key={i} className="flex gap-1 px-1.5 py-1 border-b border-[#111116] last:border-0">
+                <div key={i} className="flex gap-1 px-1.5 py-1 border-b border-[var(--k-base-200)] last:border-0">
                   <input value={f.key} onChange={(e) => updateField(i, "key", e.target.value)}
                     placeholder="key"
-                    className="nodrag w-[70px] text-[9px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-orange-400 outline-none" />
+                    className="nodrag w-[70px] text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-orange-400 outline-none" />
                   <span className="text-[9px] text-zinc-600 self-center">→</span>
                   <input value={f.varName} onChange={(e) => updateField(i, "varName", e.target.value)}
                     placeholder="variable"
-                    className="nodrag flex-1 text-[9px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-cyan-400 outline-none" />
+                    className="nodrag flex-1 text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-cyan-400 outline-none" />
                   <button onClick={() => removeField(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
                 </div>
               ))}
               <button onClick={addField}
-                className="nodrag w-full py-1 text-[9px] text-orange-400 hover:text-orange-300 border-t border-[#1c1c20] transition-colors font-bold">
+                className="nodrag w-full py-1 text-[9px] text-orange-400 hover:text-orange-300 border-t border-[var(--k-base-300)] transition-colors font-bold">
                 + Add field
               </button>
             </div>
@@ -159,7 +159,7 @@ export function HTTPClientNode() {
         </div>
       )}
 
-      <div className="mx-3 mt-1 border-t border-[#1c1c20]" />
+      <div className="mx-3 mt-1 border-t border-[var(--k-base-300)]" />
       <NodeField label="Response var">
         <TextInput value={responseVar} onChange={setResponseVar} green />
         <Handle type="source" position={Position.Right} id="response"
@@ -227,7 +227,7 @@ export function SerialMonitorNode() {
           </div>
         </div>
         {showLog && (
-          <div className="rounded-lg border border-[#1c1c20] bg-[#050507] overflow-hidden">
+          <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden">
             <div className="h-[90px] overflow-y-auto flex flex-col-reverse p-1.5 gap-0.5 scrollbar-thin">
               {log.map((entry, i) => (
                 <div key={i} className="flex items-start gap-1.5">
@@ -240,13 +240,13 @@ export function SerialMonitorNode() {
               {log.length === 0 && <div className="text-[9px] text-zinc-700 text-center py-2">No data yet</div>}
             </div>
             {/* send bar */}
-            <div className="border-t border-[#1c1c20] flex">
+            <div className="border-t border-[var(--k-base-300)] flex">
               <input value={sendCmd} onChange={(e) => setSendCmd(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Send command…"
                 className="nodrag flex-1 text-[10px] font-mono bg-transparent px-2 py-1.5 text-yellow-400 outline-none placeholder:text-zinc-700" />
               <button onClick={handleSend}
-                className="nodrag px-2 text-[9px] text-yellow-400 hover:text-white hover:bg-yellow-500/20 border-l border-[#1c1c20] transition-all font-bold">
+                className="nodrag px-2 text-[9px] text-yellow-400 hover:text-white hover:bg-yellow-500/20 border-l border-[var(--k-base-300)] transition-all font-bold">
                 ↵
               </button>
             </div>
@@ -263,20 +263,20 @@ export function SerialMonitorNode() {
             + Add
           </button>
         </div>
-        <div className="rounded-lg border border-[#1c1c20] bg-[#0a0a0d] overflow-hidden">
-          <div className="flex px-2 py-1 text-[8px] text-zinc-600 uppercase tracking-wider gap-1 border-b border-[#1c1c20]">
+        <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden">
+          <div className="flex px-2 py-1 text-[8px] text-zinc-600 uppercase tracking-wider gap-1 border-b border-[var(--k-base-300)]">
             <span className="flex-1">Var name</span>
             <span className="w-[44px]">Delim</span>
             <span className="w-[28px]">Idx</span>
           </div>
           {parseVars.map((v, i) => (
-            <div key={i} className="flex items-center gap-1 px-1.5 py-1 border-t border-[#111116]">
+            <div key={i} className="flex items-center gap-1 px-1.5 py-1 border-t border-[var(--k-base-200)]">
               <input value={v.name} onChange={(e) => updateVar(i, "name", e.target.value)}
-                className="nodrag flex-1 text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-green-400 outline-none" />
+                className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-green-400 outline-none" />
               <input value={v.delimiter} onChange={(e) => updateVar(i, "delimiter", e.target.value)}
-                className="nodrag w-[40px] text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-zinc-400 text-center outline-none" />
+                className="nodrag w-[40px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 text-center outline-none" />
               <input type="number" value={v.index} onChange={(e) => updateVar(i, "index", +e.target.value)} min={0}
-                className="nodrag w-[26px] text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1 py-0.5 text-blue-400 text-center outline-none" />
+                className="nodrag w-[26px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-blue-400 text-center outline-none" />
               <Handle type="source" position={Position.Right} id={`parse_${i}`}
                 style={{ ...outHS(COLORS.green), right: -22, position: "relative", display: "inline-block" }} />
               <button onClick={() => removeVar(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>

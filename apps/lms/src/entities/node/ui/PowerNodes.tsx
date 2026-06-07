@@ -6,7 +6,7 @@ import {
 } from "./BaseNode";
 
 const outHS = (color = "#22c55e") => ({
-  width: 12, height: 12, background: "#111113",
+  width: 12, height: 12, background: "var(--k-base-200)",
   border: `2.5px solid ${color}`, borderRadius: "50%", zIndex: 10,
 });
 
@@ -108,13 +108,13 @@ export function DeepSleepNode() {
       </>)}
       {useTouch && (
         <div className="px-3 py-1">
-          <div className="rounded-lg border border-[#1c1c20] bg-[#0a0a0d] px-2.5 py-1.5 text-[9px] text-zinc-500">
+          <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] px-2.5 py-1.5 text-[9px] text-zinc-500">
             Touch pad wake uses capacitive touch pins (T0–T9). Configure touch threshold in code.
           </div>
         </div>
       )}
 
-      <div className="mx-3 mt-0.5 mb-1 border-t border-[#1c1c20]" />
+      <div className="mx-3 mt-0.5 mb-1 border-t border-[var(--k-base-300)]" />
 
       <NodeField label="Hold GPIOs"><ToggleInput value={saveGpio} onChange={setSaveGpio} leftLabel="No" rightLabel="Yes" /></NodeField>
       <NodeField label="Battery mon"><ToggleInput value={battMonitor} onChange={setBattMonitor} leftLabel="Off" rightLabel="On" /></NodeField>
@@ -177,7 +177,7 @@ export function OTAUpdateNode() {
         <NodeField label="Secret"><TextInput value={password} onChange={setPassword} wide /></NodeField>
       )}
 
-      <div className="mx-3 mt-0.5 mb-1 border-t border-[#1c1c20]" />
+      <div className="mx-3 mt-0.5 mb-1 border-t border-[var(--k-base-300)]" />
 
       <NodeField label="Progress var">
         <TextInput value={progressVar} onChange={setProgressVar} green />
@@ -207,7 +207,7 @@ export function OTAUpdateNode() {
               <span className="text-zinc-500">Flashing firmware…</span>
               <span className="text-cyan-400 font-bold">{simProgress}%</span>
             </div>
-            <div className="w-full h-1.5 rounded-full bg-[#1c1c20] border border-[#2d2d35] overflow-hidden">
+            <div className="w-full h-1.5 rounded-full bg-[var(--k-base-300)] border border-[var(--k-border)] overflow-hidden">
               <div className="h-full bg-cyan-500 rounded-full transition-all duration-200" style={{ width: `${simProgress}%` }} />
             </div>
             {simProgress === 100 && (
@@ -265,8 +265,8 @@ export function SDCardNode() {
         </NodeField>
 
         {/* CSV column mapper */}
-        <div className="mx-3 mt-1 mb-0.5 rounded-lg border border-[#1c1c20] bg-[#0a0a0d] overflow-hidden">
-          <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#1c1c20]">
+        <div className="mx-3 mt-1 mb-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden">
+          <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--k-base-300)]">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">CSV Columns</span>
             <button onClick={addCol}
               className="nodrag text-[9px] px-1.5 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold transition-all">
@@ -278,11 +278,11 @@ export function SDCardNode() {
             <span className="flex-1">Variable</span>
           </div>
           {csvCols.map((col, i) => (
-            <div key={i} className="flex items-center gap-1.5 px-2 py-1 border-t border-[#111116]">
+            <div key={i} className="flex items-center gap-1.5 px-2 py-1 border-t border-[var(--k-base-200)]">
               <input value={col.label} onChange={(e) => updateCol(i, "label", e.target.value)}
-                className="nodrag w-[72px] text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1.5 py-0.5 text-zinc-300 outline-none" />
+                className="nodrag w-[72px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-zinc-300 outline-none" />
               <input value={col.varName} onChange={(e) => updateCol(i, "varName", e.target.value)}
-                className="nodrag flex-1 text-[10px] font-mono bg-[#111116] border border-[#2d2d35] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
+                className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
               <button onClick={() => removeCol(i)}
                 className="nodrag text-zinc-600 hover:text-red-400 transition-colors text-[10px] px-1">×</button>
             </div>
@@ -317,7 +317,7 @@ export function SDCardNode() {
 
       {/* status output */}
       <div className="px-3 pb-2">
-        <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0a0a0d] border border-[#1c1c20]">
+        <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
           <span className="text-[9px] text-zinc-500">Write status →</span>
           <Handle type="source" position={Position.Right} id="status"
             style={{ ...outHS(COLORS.green), right: -22 }} />

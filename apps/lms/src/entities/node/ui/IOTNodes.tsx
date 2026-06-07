@@ -22,7 +22,7 @@ function WifiIcon() {
 const outHS = {
   width: 12,
   height: 12,
-  background: "#111113",
+  background: "var(--k-base-200)",
   border: "2.5px solid #22c55e",
   borderRadius: "50%",
   zIndex: 10,

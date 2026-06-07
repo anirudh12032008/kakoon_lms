@@ -48,7 +48,7 @@ export function OLEDDisplayNode() {
       <BaseNode title="OLED Display" color={COLORS.purple} icon={<DisplayIcon />} width="250px">
         <AdvancedSection>
           {/* Fixed port info */}
-          <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+          <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
             <div className="flex items-center justify-between">
               <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Dedicated I2C Port</span>
               <span className="text-[9px] font-mono text-purple-400">fixed</span>
@@ -94,11 +94,11 @@ export function OLEDDisplayNode() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="🔍 Search animations..."
-              className="nodrag w-full text-[10px] bg-[#111116] border border-[#2d2d35] rounded-lg px-2 py-1.5 text-zinc-300 placeholder-zinc-600 outline-none focus:border-purple-500/50 mb-1.5"
+              className="nodrag w-full text-[10px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1.5 text-zinc-300 placeholder-zinc-600 outline-none focus:border-purple-500/50 mb-1.5"
             />
 
             {animList.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-[#2d2d35] p-3 text-center">
+              <div className="rounded-lg border border-dashed border-[var(--k-border)] p-3 text-center">
                 <p className="text-[10px] text-zinc-600 leading-relaxed">
                   No animations saved yet.<br />
                   <span className="text-purple-500">OLED Designer → Save to Library</span>
@@ -165,7 +165,7 @@ export function PlayAnimationNode() {
     <BaseNode title="Play Animation" color={COLORS.purple} icon={<DisplayIcon />} width="230px">
       <AdvancedSection>
         {/* Uses dedicated OLED port — pins fixed */}
-        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
           <div className="flex gap-3 mt-0.5">
             <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
@@ -188,7 +188,7 @@ export function ShowImageNode() {
   return (
     <BaseNode title="Show Image" color={COLORS.purple} icon={<DisplayIcon />} width="220px">
       <AdvancedSection>
-        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
           <div className="flex gap-3 mt-0.5">
             <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>

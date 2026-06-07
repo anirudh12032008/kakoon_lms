@@ -18,7 +18,7 @@ function PixelPalette({ colors, onChange }: { colors: string[]; onChange: (c: st
       <div className="flex flex-wrap gap-1">
         {colors.map((c, i) => (
           <div key={i} className="relative" title={`LED ${i}`}>
-            <div className="w-5 h-5 rounded-full border-2 border-[#2d2d35] overflow-hidden cursor-pointer hover:scale-110 transition-transform"
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--k-border)] overflow-hidden cursor-pointer hover:scale-110 transition-transform"
               style={{ background: c }}>
               <input type="color" value={c} onChange={e => { const n = [...colors]; n[i] = e.target.value; onChange(n); }}
                 className="absolute inset-0 opacity-0 cursor-pointer nodrag w-full h-full" />
@@ -47,7 +47,7 @@ export function NeoPixelLEDNode() {
   return (
     <BaseNode title="NeoPixel LED" color={COLORS.cyan} icon={<ChipIcon />} width="230px">
       <AdvancedSection>
-        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
             <span className="text-[9px] font-mono text-cyan-400">fixed</span>
@@ -57,12 +57,12 @@ export function NeoPixelLEDNode() {
       <NodeField label="LED Count"><NumberInput value={numLeds} onChange={setNumLeds} /></NodeField>
       <NodeField label="Color">
         <input type="color" value={color} onChange={e => setColor(e.target.value)}
-          className="nodrag w-10 h-6 rounded border border-[#2d2d35] cursor-pointer bg-transparent" />
+          className="nodrag w-10 h-6 rounded border border-[var(--k-border)] cursor-pointer bg-transparent" />
       </NodeField>
       {/* Brightness slider */}
       <div className="px-3 py-1.5">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Brightness</span>
+          <span className="text-xs text-[var(--k-muted)] font-medium">Brightness</span>
           <span className="text-[10px] font-mono text-cyan-400">{brightness}%</span>
         </div>
         <input
@@ -178,7 +178,7 @@ export function RGBLEDMatrixNode() {
         {["Chase", "Fade", "Rainbow", "Blink", "Solid", "Twinkle"].map(p => (
           <button key={p} onClick={() => setPattern(p)}
             className={`nodrag py-1 rounded-lg text-[10px] font-bold border transition-all ${
-              pattern === p ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300" : "border-[#2d2d35] text-zinc-500 hover:border-[#3d3d45] bg-[#111116]"
+              pattern === p ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300" : "border-[var(--k-border)] text-zinc-500 hover:border-[#3d3d45] bg-[var(--k-base-200)]"
             }`}
           >{p}</button>
         ))}
@@ -193,13 +193,13 @@ export function RGBLEDMatrixNode() {
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-zinc-500">Primary</span>
           <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)}
-            className="nodrag w-7 h-5 rounded border border-[#2d2d35] cursor-pointer bg-transparent" />
+            className="nodrag w-7 h-5 rounded border border-[var(--k-border)] cursor-pointer bg-transparent" />
         </div>
         {pattern !== "Solid" && pattern !== "Rainbow" && (
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] text-zinc-500">Secondary</span>
             <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)}
-              className="nodrag w-7 h-5 rounded border border-[#2d2d35] cursor-pointer bg-transparent" />
+              className="nodrag w-7 h-5 rounded border border-[var(--k-border)] cursor-pointer bg-transparent" />
           </div>
         )}
       </div>
@@ -207,7 +207,7 @@ export function RGBLEDMatrixNode() {
       {/* Brightness slider */}
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Brightness</span>
+          <span className="text-xs text-[var(--k-muted)] font-medium">Brightness</span>
           <span className="text-[10px] font-mono text-cyan-400">{brightness}/255</span>
         </div>
         <input type="range" min={0} max={255} step={1} value={brightness}
@@ -218,7 +218,7 @@ export function RGBLEDMatrixNode() {
       {/* FPS */}
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Animation FPS</span>
+          <span className="text-xs text-[var(--k-muted)] font-medium">Animation FPS</span>
           <span className="text-[10px] font-mono text-cyan-400">{fps} fps</span>
         </div>
         <input type="range" min={1} max={120} step={1} value={fps}
@@ -256,7 +256,7 @@ export function NeoPixelRGBNode() {
   return (
     <BaseNode title="NeoPixel RGB (Advanced)" color={COLORS.violet} icon={<ChipIcon />} width="250px">
       <AdvancedSection>
-        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
             <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
             <span className="text-[9px] font-mono text-violet-400">fixed</span>
@@ -290,7 +290,7 @@ export function NeoPixelDesignerNode() {
   return (
     <BaseNode title="NeoPixel Designer" color={COLORS.violet} icon={<ChipIcon />} width="270px">
       {/* Info bar */}
-      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+      <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
         <div className="flex items-center justify-between">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">
             GPIO {pin} · {ledCount} LED{ledCount !== 1 ? "s" : ""} · {mode}

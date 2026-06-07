@@ -22,19 +22,19 @@ function WaveformDisplay({ color = "#8b5cf6", live = false }: { color?: string; 
   const pts =
     "0,20 8,15 14,8 20,14 28,30 34,34 42,28 50,20 58,13 65,7 72,13 80,26 88,32 96,26 104,20 112,15 118,8 124,14 132,30 138,34 146,28 154,20 162,13 169,7 176,13 184,26 192,32 200,26 208,20 216,15 222,8";
   return (
-    <div className="w-full h-10 rounded-lg border border-[#2d2d35] bg-[#0a0a0d] overflow-hidden relative">
+    <div className="w-full h-10 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden relative">
       <svg className="absolute inset-0 w-[200%] h-full" viewBox="0 0 440 40" preserveAspectRatio="none">
         <polyline points={pts + " " + pts.split(" ").map(p => {
           const [x, y] = p.split(",");
           return `${Number(x) + 222},${y}`;
         }).join(" ")}
-          fill="none" stroke={live ? color : "#3f3f46"} strokeWidth="1.5" opacity={live ? 0.85 : 0.3}
+          fill="none" stroke={live ? color : "var(--k-base-400)"} strokeWidth="1.5" opacity={live ? 0.85 : 0.3}
           style={{ animation: live ? "scrollWave 2.4s linear infinite" : "none" }}
         />
       </svg>
       <div className="absolute top-1 right-1.5 flex items-center gap-1">
         <span className="inline-block w-1.5 h-1.5 rounded-full"
-          style={{ background: live ? "#4ade80" : "#3f3f46", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
+          style={{ background: live ? "#4ade80" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
         <span className="text-[9px] text-zinc-500 font-mono">{live ? "LIVE" : "waiting…"}</span>
       </div>
     </div>
@@ -44,7 +44,7 @@ function WaveformDisplay({ color = "#8b5cf6", live = false }: { color?: string; 
 // ─── Value Gauge Bar ──────────────────────────────────────────────────────────
 function GaugeBar({ pct = 0, color = "#8b5cf6" }: { pct?: number; color?: string }) {
   return (
-    <div className="w-full h-1.5 bg-[#1c1c20] rounded-full border border-[#2d2d35] overflow-hidden">
+    <div className="w-full h-1.5 bg-[var(--k-base-300)] rounded-full border border-[var(--k-border)] overflow-hidden">
       <div className="h-full rounded-full transition-all duration-300"
         style={{ width: `${Math.min(100, pct)}%`, background: color }} />
     </div>
@@ -54,7 +54,7 @@ function GaugeBar({ pct = 0, color = "#8b5cf6" }: { pct?: number; color?: string
 // ─── Stat Chip ────────────────────────────────────────────────────────────────
 function StatChip({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="flex flex-col items-center flex-1 bg-[#111116] rounded-md py-1 border border-[#2a2a30]">
+    <div className="flex flex-col items-center flex-1 bg-[var(--k-base-200)] rounded-md py-1 border border-[var(--k-border)]">
       <span className="text-[8px] uppercase tracking-wider font-bold" style={{ color }}>{label}</span>
       <span className="text-[11px] font-mono text-white mt-0.5">{value}</span>
     </div>

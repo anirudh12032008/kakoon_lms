@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/shared/auth/AuthContext";
+import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
@@ -28,6 +29,7 @@ export function DashboardHeader() {
             </div>
           </div>
         )}
+        <ThemeSwitcher />
         <button
           onClick={async () => {
             await logout();

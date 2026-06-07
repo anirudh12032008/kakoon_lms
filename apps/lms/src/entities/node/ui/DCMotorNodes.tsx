@@ -42,7 +42,7 @@ const ROBOT_MOVES = [
 function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
   const m = MOTOR_PORTS[motorKey];
   return (
-    <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+    <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">DRV8833 — fixed GPIO</span>
         <span className="text-[9px] font-mono text-orange-400">locked</span>
@@ -59,7 +59,7 @@ function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
 function RobotArrow({ move }: { move: RobotMove }) {
   const W = 80, H = 64;
   const wheelColor = (fwd: boolean | null) =>
-    fwd === null ? "#3f3f46" : fwd ? "#22c55e" : "#ef4444";
+    fwd === null ? "var(--k-base-400)" : fwd ? "#22c55e" : "#ef4444";
 
   type WheelState = { L: boolean | null; R: boolean | null };
   const states: Record<RobotMove, WheelState> = {
@@ -76,7 +76,7 @@ function RobotArrow({ move }: { move: RobotMove }) {
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className="mx-auto">
       {/* Body */}
-      <rect x={20} y={14} width={40} height={36} rx={5} fill="#18181b" stroke="#3f3f46" strokeWidth={1.5} />
+      <rect x={20} y={14} width={40} height={36} rx={5} fill="var(--k-base-300)" stroke="var(--k-base-400)" strokeWidth={1.5} />
       {/* Direction arrow on body */}
       {move !== "stop" && (
         <text x={40} y={36} textAnchor="middle" fontSize={18} fill={move.includes("spin") ? "#a78bfa" : "#f97316"}>
@@ -134,7 +134,7 @@ export function RobotDriveNode() {
                     : m.value.includes("spin")
                       ? "border-purple-500/60 bg-purple-500/15 text-purple-300"
                       : "border-orange-500/60 bg-orange-500/15 text-orange-300"
-                  : "border-[#2d2d35] bg-[#111116] text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
+                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
               }`}
             >
               {m.icon}
@@ -155,7 +155,7 @@ export function RobotDriveNode() {
       {!isStop && (
         <div className="px-3 pb-2">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+            <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
             <span className={`text-[10px] font-mono ${isSpin ? "text-purple-400" : "text-orange-400"}`}>{speed}%</span>
           </div>
           <input type="range" min={0} max={100} step={1} value={speed}
@@ -167,7 +167,7 @@ export function RobotDriveNode() {
 
       <AdvancedSection>
         {/* Hardware info */}
-        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — all 4 motors</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
             <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-zinc-400 font-mono">left</span></span>
@@ -194,7 +194,7 @@ export function DCMotorSingleNode() {
 
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+          <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
           <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
         </div>
         <input type="range" min={0} max={100} step={1} value={speed}
@@ -210,7 +210,7 @@ export function DCMotorSingleNode() {
               className={`nodrag py-1 rounded-lg border text-[9px] font-bold transition-all ${
                 direction === d.value
                   ? "border-orange-500/60 bg-orange-500/15 text-orange-300"
-                  : "border-[#2d2d35] bg-[#111116] text-zinc-500 hover:border-zinc-600"
+                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-zinc-500 hover:border-zinc-600"
               }`}
             >{d.label[0]}{d.label === "Coast" ? "st" : ""}</button>
           ))}
@@ -266,7 +266,7 @@ export function MultiMotorControllerNode() {
         {DIR_OPTIONS.map(d => (
           <button key={d.value} onClick={() => setDir(d.value)}
             className={`nodrag flex-1 py-0.5 rounded text-[9px] font-bold border transition-all ${
-              dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[#2d2d35] text-zinc-500 hover:border-zinc-600 bg-[#111116]"
+              dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[var(--k-border)] text-zinc-500 hover:border-zinc-600 bg-[var(--k-base-200)]"
             }`}
           >{d.value[0]}</button>
         ))}
@@ -299,7 +299,7 @@ export function MultiMotorControllerNode() {
       )}
 
       <AdvancedSection>
-        <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[#2d2d35] bg-[#111116]">
+        <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
             <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">17/18</span></span>

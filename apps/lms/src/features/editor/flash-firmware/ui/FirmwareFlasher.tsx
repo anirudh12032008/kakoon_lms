@@ -131,10 +131,10 @@ export function FirmwareFlasher({ onClose }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === e.currentTarget && !isBusy) onClose(); }}>
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[#2a2a32] bg-[#09090b] shadow-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[#09090b] shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[#1a1a20] bg-gradient-to-r from-violet-500/10 to-blue-500/10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--k-border)] bg-gradient-to-r from-violet-500/10 to-blue-500/10">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-blue-500 flex items-center justify-center">
               <Cpu className="w-4 h-4 text-white" />
@@ -170,7 +170,7 @@ export function FirmwareFlasher({ onClose }: Props) {
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-sm transition-all ${
                       selectedPort === p
                         ? "border-violet-500/50 bg-violet-500/10 text-white"
-                        : "border-[#2a2a32] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
+                        : "border-[var(--k-border)] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200"
                     }`}>
                     <Usb className="w-3.5 h-3.5 shrink-0" style={{ color: selectedPort === p ? "#8b5cf6" : undefined }} />
                     <span className="font-mono text-[11px] flex-1 text-left">{portLabel(p)}</span>
@@ -178,7 +178,7 @@ export function FirmwareFlasher({ onClose }: Props) {
                   </button>
                 ))}
                 <button onClick={handleRequestPort} disabled={isBusy}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-dashed border-[#2a2a32] text-zinc-600 hover:border-zinc-500 hover:text-zinc-400 text-[11px] transition-all disabled:opacity-40">
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-dashed border-[var(--k-border)] text-zinc-600 hover:border-zinc-500 hover:text-zinc-400 text-[11px] transition-all disabled:opacity-40">
                   <Plus className="w-3.5 h-3.5" />
                   {ports.length === 0 ? "Select a port…" : "Add another port"}
                 </button>
@@ -190,9 +190,9 @@ export function FirmwareFlasher({ onClose }: Props) {
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1.5">
             <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠️ Enter bootloader first</p>
             {[
-              <>Hold <kbd className="px-1 py-0.5 rounded bg-[#1e1e26] border border-[#2a2a32] font-mono text-[10px]">BOOT</kbd> button</>,
-              <>Press &amp; release <kbd className="px-1 py-0.5 rounded bg-[#1e1e26] border border-[#2a2a32] font-mono text-[10px]">RESET</kbd> (or replug USB)</>,
-              <>Release <kbd className="px-1 py-0.5 rounded bg-[#1e1e26] border border-[#2a2a32] font-mono text-[10px]">BOOT</kbd> — then click Flash</>,
+              <>Hold <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">BOOT</kbd> button</>,
+              <>Press &amp; release <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">RESET</kbd> (or replug USB)</>,
+              <>Release <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">BOOT</kbd> — then click Flash</>,
             ].map((text, i) => (
               <div key={i} className="flex items-center gap-2 text-[11px] text-zinc-300">
                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold shrink-0">{i+1}</span>
@@ -202,7 +202,7 @@ export function FirmwareFlasher({ onClose }: Props) {
           </div>
 
           {/* Progress + log */}
-          <div className="rounded-xl border border-[#1e1e26] bg-[#0a0a0d] p-3 space-y-2">
+          <div className="rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-3 space-y-2">
             <div className="flex items-center gap-2">
               {isBusy              && <Loader2       className="w-3.5 h-3.5 animate-spin" style={{ color: stateColor[state] }} />}
               {state === "done"    && <CheckCircle   className="w-3.5 h-3.5 text-green-400" />}
@@ -212,12 +212,12 @@ export function FirmwareFlasher({ onClose }: Props) {
               {isBusy && <span className="ml-auto text-[10px] font-mono text-zinc-400">{progress}%</span>}
             </div>
             {state !== "idle" && (
-              <div className="w-full h-1.5 rounded-full bg-[#1c1c20] overflow-hidden">
+              <div className="w-full h-1.5 rounded-full bg-[var(--k-base-300)] overflow-hidden">
                 <div className="h-full rounded-full transition-all duration-300"
                   style={{ width: `${progress}%`, background: stateColor[state] }} />
               </div>
             )}
-            <div className="bg-[#050507] rounded-lg p-2 h-[90px] overflow-y-auto font-mono text-[9px] space-y-0.5">
+            <div className="bg-[var(--k-base-100)] rounded-lg p-2 h-[90px] overflow-y-auto font-mono text-[9px] space-y-0.5">
               {log.length === 0
                 ? <span className="text-zinc-700">Log will appear here…</span>
                 : log.map((l, i) => (

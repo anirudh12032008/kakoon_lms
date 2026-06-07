@@ -91,7 +91,7 @@ export function MAX7219Node() {
         </>
       ) : (
         /* Empty state — invite the user to open the designer */
-        <div className="mx-3 mb-2 flex flex-col items-center gap-2 py-3 rounded-xl border border-dashed border-[#2a2a35] bg-[#0a0a0d]">
+        <div className="mx-3 mb-2 flex flex-col items-center gap-2 py-3 rounded-xl border border-dashed border-[#2a2a35] bg-[var(--k-base-100)]">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <span className="text-xl">💡</span>
           </div>
@@ -114,7 +114,7 @@ export function MAX7219Node() {
         <div className="flex gap-1">
           {[1, 2, 3, 4].map(n => (
             <button key={n} onClick={() => setModules(n)}
-              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[#2a2a32] hover:text-zinc-300"}`}>
+              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[var(--k-border)] hover:text-zinc-300"}`}>
               {n}
             </button>
           ))}
@@ -123,7 +123,7 @@ export function MAX7219Node() {
 
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[#9ca3af] font-medium">Brightness</span>
+          <span className="text-xs text-[var(--k-muted)] font-medium">Brightness</span>
           <span className="text-[10px] font-mono text-blue-400">{brightness}/15</span>
         </div>
         <input type="range" min={0} max={15} value={brightness}
@@ -134,7 +134,7 @@ export function MAX7219Node() {
       {hasDesign && (
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[#9ca3af] font-medium">Speed</span>
+            <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
             <span className="text-[10px] font-mono text-amber-400">{fps} fps</span>
           </div>
           <input type="range" min={1} max={30} value={fps}

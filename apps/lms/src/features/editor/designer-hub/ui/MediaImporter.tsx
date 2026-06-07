@@ -35,6 +35,8 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
   const [fileName, setFileName] = useState("");
   const [videoDuration, setVideoDuration] = useState(0);
   const [dragOver, setDragOver] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [playIdx, setPlayIdx] = useState(0);
   const fileRef  = useRef<HTMLInputElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -56,6 +58,28 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
     }
     ctx.putImageData(img, 0, 0);
   }, []);
+
+  const frameCount = frames.length;
+  const hasContent = preview !== null || frameCount > 0;
+
+  // The preview canvas mounts only once there's content, so drawing must happen
+  // in an effect (drawing imperatively inside processSource hits a canvas that
+  // isn't in the DOM yet — that was the "blank until you change a slider" bug).
+  useEffect(() => {
+    if (status === "processing") return;
+    const active = frameCount > 0 ? frames[Math.min(playIdx, frameCount - 1)] : preview;
+    if (active) renderPreview(active);
+  }, [preview, frames, playIdx, status, frameCount, renderPreview]);
+
+  // Animate through frames while playing.
+  useEffect(() => {
+    if (!playing || frameCount < 2) return;
+    const id = setInterval(
+      () => setPlayIdx((i) => (i + 1) % frameCount),
+      Math.max(40, Math.round(1000 / opts.fps))
+    );
+    return () => clearInterval(id);
+  }, [playing, frameCount, opts.fps]);
 
   const processSource = useCallback(async (src: HTMLImageElement | HTMLVideoElement, type: "image" | "gif" | "video") => {
     const canvas = canvasRef.current!;
@@ -143,6 +167,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
   const loadFile = useCallback(async (file: File) => {
     setStatus("processing");
     setFrames([]); setPreview(null);
+    setPlaying(false); setPlayIdx(0);
     setFileName(file.name);
 
     const isGif   = file.type === "image/gif";
@@ -187,14 +212,14 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
   const BADGE = (active: boolean) =>
     `px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
       active ? "bg-violet-500/20 border-violet-500/50 text-violet-300"
-             : "border-[#2a2a32] text-zinc-500 hover:border-zinc-600"
+             : "border-[var(--k-border)] text-zinc-500 hover:border-zinc-600"
     }`;
 
   return (
     <div className="flex flex-col gap-3 h-full">
       <div
         className={`rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
-          dragOver ? "border-violet-400 bg-violet-500/10" : "border-[#2d2d35] bg-[#0c0c10] hover:border-zinc-600"
+          dragOver ? "border-violet-400 bg-violet-500/10" : "border-[var(--k-border)] bg-[var(--k-base-100)] hover:border-zinc-600"
         }`}
         onClick={() => fileRef.current?.click()}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -269,14 +294,14 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
           <div className="flex items-center justify-between">
             <p className={OPT_LABEL}>Invert</p>
             <button onClick={() => setOpt("invert", !opts.invert)}
-              className={`w-8 h-4 rounded-full transition-all relative ${opts.invert ? "bg-violet-500" : "bg-[#2a2a32]"}`}>
+              className={`w-8 h-4 rounded-full transition-all relative ${opts.invert ? "bg-violet-500" : "bg-[var(--k-border)]"}`}>
               <span className={`absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all ${opts.invert ? "left-4" : "left-0.5"}`} />
             </button>
           </div>
 
           {(fileType === "gif" || fileType === "video") && (
             <>
-              <div className="h-px bg-[#2a2a32]" />
+              <div className="h-px bg-[var(--k-border)]" />
               <div>
                 <div className="flex justify-between mb-1">
                   <p className={OPT_LABEL}>Capture FPS</p>
@@ -317,29 +342,64 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
           )}
         </div>
 
-        <div className="flex-1 flex flex-col gap-2 min-w-0">
-          <p className={OPT_LABEL}>Preview — 128×64 OLED</p>
-          <div className="rounded-xl border border-[#2a2a32] bg-black overflow-hidden flex items-center justify-center"
-            style={{ aspectRatio: "2/1" }}>
-            {status === "processing"
-              ? <div className="text-[10px] text-zinc-500 flex flex-col items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
-                  <span>{statusMsg || "Processing…"}</span>
-                </div>
-              : preview
-                ? <canvas ref={previewCanvasRef} width={OLED_W} height={OLED_H}
-                    style={{ width: "100%", imageRendering: "pixelated" }} />
-                : <div className="text-[10px] text-zinc-700">Upload a file to see preview</div>
-            }
+        <div className="flex-1 flex flex-col gap-2 min-w-0 items-center">
+          <p className={OPT_LABEL + " self-start"}>Preview — 128×64 OLED</p>
+
+          {/* Display-sized preview: locked to the real 2:1 OLED ratio, capped width */}
+          <div
+            className="relative w-full max-w-[320px] rounded-xl border border-[var(--k-border)] bg-black overflow-hidden"
+            style={{ aspectRatio: "2 / 1" }}
+          >
+            {/* Canvas is always mounted so the draw effect can target it */}
+            <canvas
+              ref={previewCanvasRef}
+              width={OLED_W}
+              height={OLED_H}
+              className="absolute inset-0 h-full w-full"
+              style={{ imageRendering: "pixelated", opacity: hasContent ? 1 : 0 }}
+            />
+            {status === "processing" && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 text-[10px] text-zinc-400">
+                <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                <span>{statusMsg || "Processing…"}</span>
+              </div>
+            )}
+            {!hasContent && status !== "processing" && (
+              <div className="absolute inset-0 flex items-center justify-center text-[10px] text-zinc-600">
+                Upload a file to see preview
+              </div>
+            )}
           </div>
+
+          {/* Playback controls for multi-frame imports */}
+          {frameCount > 1 && (
+            <div className="w-full max-w-[320px] flex items-center gap-2">
+              <button
+                onClick={() => setPlaying((p) => !p)}
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] text-zinc-300 hover:text-white transition-colors"
+                title={playing ? "Pause" : "Play"}
+              >
+                {playing ? "⏸" : "▶"}
+              </button>
+              <input
+                type="range" min={0} max={frameCount - 1} value={Math.min(playIdx, frameCount - 1)}
+                onChange={(e) => { setPlaying(false); setPlayIdx(+e.target.value); }}
+                className="flex-1 h-1.5 rounded-full accent-violet-500"
+              />
+              <span className="text-[10px] font-mono text-zinc-500 w-14 text-right">
+                {Math.min(playIdx, frameCount - 1) + 1}/{frameCount}
+              </span>
+            </div>
+          )}
+
           {statusMsg && status !== "processing" && (
-            <p className={`text-[10px] font-semibold ${status === "done" ? "text-green-400" : "text-red-400"}`}>
+            <p className={`self-start text-[10px] font-semibold ${status === "done" ? "text-green-400" : "text-red-400"}`}>
               {statusMsg}
             </p>
           )}
-          {frames.length > 1 && (
-            <p className="text-[10px] text-zinc-500">
-              {frames.length} frames · {opts.fps} fps · ~{(frames.length / opts.fps).toFixed(1)}s loop
+          {frameCount > 1 && (
+            <p className="self-start text-[10px] text-zinc-500">
+              {frameCount} frames · {opts.fps} fps · ~{(frameCount / opts.fps).toFixed(1)}s loop
             </p>
           )}
           <button

@@ -98,7 +98,7 @@ oled.show()`;
 export interface OLEDDesignerProps {
   onAddNode?: (type: string, data: Record<string, unknown>) => void;
   /** Upload an animation to the ESP32 device (requires connection) */
-  onSaveToDevice?: (frames: number[][], fps: number, name: string) => Promise<void>;
+  onSaveToDevice?: (frames: number[][], fps: number, name: string, onProgress?: (pct: number) => void) => Promise<void>;
 }
 
 export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
@@ -117,6 +117,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   const [showCode, setShowCode] = useState(false);
   const [playFrame, setPlayFrame] = useState(0);
   const [saveDeviceState, setSaveDeviceState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [registry, setRegistry] = useState<AnimEntry[]>(() => loadAnimRegistry());
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dragFrame = useRef<number | null>(null);
@@ -429,8 +430,10 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
     if (!onSaveToDevice) return;
     const src = entry ?? { name: toSafeName(designName) || "my_design", frames, fps };
     setSaveDeviceState("saving");
+    setUploadProgress(0);
     try {
-      await onSaveToDevice(src.frames, src.fps, src.name);
+      await onSaveToDevice(src.frames, src.fps, src.name, (pct) => setUploadProgress(pct));
+      setUploadProgress(100);
       setSaveDeviceState("saved");
       setRegistry(loadAnimRegistry()); // refresh onDevice badges
       setTimeout(() => setSaveDeviceState("idle"), 2500);
@@ -455,7 +458,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   return (
     <div className="flex h-full gap-0">
       {/* Left panel: 150px — tools + presets + library */}
-      <div className="w-[150px] flex-shrink-0 border-r border-[#1a1a20] p-2 flex flex-col gap-2 overflow-y-auto">
+      <div className="w-[150px] flex-shrink-0 border-r border-[var(--k-border)] p-2 flex flex-col gap-2 overflow-y-auto">
         {/* Tools */}
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Tools</div>
@@ -513,7 +516,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-0.5 font-bold">Name</div>
           <input value={designName} onChange={(e) => setDesignName(e.target.value)}
-            className="w-full text-[10px] font-mono bg-[#0c0c10] border border-[#1e1e26] rounded-lg px-2 py-1 text-white outline-none" />
+            className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2 py-1 text-white outline-none" />
         </div>
         {frames.length > 1 && (
           <div>
@@ -538,7 +541,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               <p className="text-[9px] text-zinc-700 px-1">No saved animations</p>
             )}
             {registry.map((entry) => (
-              <div key={entry.name} className="bg-[#0e0e14] rounded-lg p-1.5 border border-[#1a1a20]">
+              <div key={entry.name} className="bg-[#0e0e14] rounded-lg p-1.5 border border-[var(--k-border)]">
                 <div className="flex items-center gap-1 mb-0.5">
                   <span className="text-[10px] text-zinc-300 font-semibold truncate flex-1">{entry.name}</span>
                   {entry.onDevice && (
@@ -572,7 +575,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
       {/* Center: canvas fills remaining width — min-h-0 lets flex children shrink */}
       <div ref={containerRef} className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
         {/* Frames bar */}
-        <div className="w-full flex items-center gap-2 px-3 py-2 border-b border-[#1a1a20] bg-[#0a0a0d] flex-shrink-0 flex-wrap">
+        <div className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--k-border)] bg-[var(--k-base-100)] flex-shrink-0 flex-wrap">
           <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mr-1">Frames</span>
           {frames.map((_, i) => (
             <div key={i} draggable
@@ -591,11 +594,11 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             </div>
           ))}
           <button onClick={addFrame}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[#2a2a32] hover:border-green-500/30 transition-all">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[var(--k-border)] hover:border-green-500/30 transition-all">
             <Plus className="w-2.5 h-2.5" />Add
           </button>
           <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-violet-400 border border-[#2a2a32] hover:border-violet-500/30 transition-all">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-violet-400 border border-[var(--k-border)] hover:border-violet-500/30 transition-all">
             <Copy className="w-2.5 h-2.5" />Dup
           </button>
 
@@ -603,7 +606,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
               showImport
                 ? "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40"
-                : "text-zinc-500 border-[#2a2a32] hover:text-fuchsia-400 hover:border-fuchsia-500/30"
+                : "text-zinc-500 border-[var(--k-border)] hover:text-fuchsia-400 hover:border-fuchsia-500/30"
             }`}>
             📷 Import
           </button>
@@ -627,7 +630,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               });
             }}
             title="Undo (Ctrl+Z)"
-            className="text-zinc-500 hover:text-zinc-300 text-xs px-1.5 py-0.5 rounded border border-[#2a2a32] hover:border-zinc-600 transition-all">
+            className="text-zinc-500 hover:text-zinc-300 text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
             ↩
           </button>
           <button
@@ -639,14 +642,14 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               });
             }}
             title="Redo (Ctrl+Y)"
-            className="text-zinc-500 hover:text-zinc-300 text-xs px-1.5 py-0.5 rounded border border-[#2a2a32] hover:border-zinc-600 transition-all">
+            className="text-zinc-500 hover:text-zinc-300 text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
             ↪
           </button>
         </div>
 
         {/* Media importer */}
         {showImport && (
-          <div className="border-b border-[#1a1a20] bg-[#08080b] p-4 max-h-[380px] overflow-y-auto w-full flex-shrink-0">
+          <div className="border-b border-[var(--k-border)] bg-[var(--k-base-100)] p-4 max-h-[380px] overflow-y-auto w-full flex-shrink-0">
             <MediaImporter
               onApply={(importedFrames, importedFps) => {
                 setFrames(importedFrames);
@@ -775,13 +778,13 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         </div>
 
         {/* Bottom bar */}
-        <div className="w-full border-t border-[#1a1a20] bg-[#0a0a0d] px-3 py-2 flex items-center gap-2 flex-shrink-0 flex-wrap">
+        <div className="w-full border-t border-[var(--k-border)] bg-[var(--k-base-100)] px-3 py-2 flex items-center gap-2 flex-shrink-0 flex-wrap">
           {/* Code toggle */}
           <button onClick={() => setShowCode(v => !v)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
               showCode
                 ? "bg-violet-500/20 text-violet-300 border-violet-500/40"
-                : "text-zinc-500 border-[#2a2a32] hover:text-zinc-300 hover:border-zinc-600"
+                : "text-zinc-500 border-[var(--k-border)] hover:text-zinc-300 hover:border-zinc-600"
             }`}>
             {"</>"}  Code
           </button>
@@ -813,34 +816,45 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           {/* Copy code shortcut */}
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-              copied ? "bg-green-500/20 text-green-400 border-green-500/30" : "text-zinc-500 border-[#2a2a32] hover:text-zinc-300 hover:border-zinc-600"
+              copied ? "bg-green-500/20 text-green-400 border-green-500/30" : "text-zinc-500 border-[var(--k-border)] hover:text-zinc-300 hover:border-zinc-600"
             }`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy Code"}
           </button>
 
-          {/* Upload to Device */}
+          {/* Upload to Device — with live progress bar */}
           {onSaveToDevice && (
-            <button onClick={() => handleSaveToDevice()} disabled={saveDeviceState === "saving"}
-              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ml-auto ${
-                saveDeviceState === "saved"   ? "bg-green-500/20 text-green-400 border-green-500/30" :
-                saveDeviceState === "failed"  ? "bg-red-500/20 text-red-400 border-red-500/30" :
-                saveDeviceState === "saving"  ? "bg-zinc-500/10 text-zinc-500 border-[#2a2a32]" :
-                "bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25"
-              }`}>
-              {saveDeviceState === "saving" ? (
-                <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" /> Saving…</>
-              ) : saveDeviceState === "saved" ? "✅ Saved!" :
-                 saveDeviceState === "failed" ? "❌ Failed" : (
-                <><Upload className="w-3 h-3" /> Upload to Device</>
-              )}
-            </button>
+            <div className="relative ml-auto">
+              <button onClick={() => handleSaveToDevice()} disabled={saveDeviceState === "saving"}
+                className={`relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all overflow-hidden ${
+                  saveDeviceState === "saved"   ? "bg-green-500/20 text-green-400 border-green-500/30" :
+                  saveDeviceState === "failed"  ? "bg-red-500/20 text-red-400 border-red-500/30" :
+                  saveDeviceState === "saving"  ? "bg-blue-500/10 text-blue-300 border-blue-500/30" :
+                  "bg-blue-500/15 text-blue-400 border-blue-500/30 hover:bg-blue-500/25"
+                }`}>
+                {/* Progress fill */}
+                {saveDeviceState === "saving" && (
+                  <span
+                    className="absolute inset-y-0 left-0 bg-blue-500/30 transition-[width] duration-150"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                )}
+                <span className="relative flex items-center gap-1.5">
+                  {saveDeviceState === "saving" ? (
+                    <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" /> Uploading… {uploadProgress}%</>
+                  ) : saveDeviceState === "saved" ? "✅ Saved to device!" :
+                     saveDeviceState === "failed" ? "❌ Not connected / failed" : (
+                    <><Upload className="w-3 h-3" /> Save to Device</>
+                  )}
+                </span>
+              </button>
+            </div>
           )}
         </div>
 
         {/* Code overlay */}
         {showCode && (
-          <div className="absolute bottom-14 right-4 w-72 max-h-64 bg-[#050507] border border-[#2a2a32] rounded-xl shadow-2xl flex flex-col overflow-hidden z-10">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-[#1a1a20]">
+          <div className="absolute bottom-14 right-4 w-72 max-h-64 bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-xl shadow-2xl flex flex-col overflow-hidden z-10">
+            <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
               <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">MicroPython</span>
               <button onClick={() => setShowCode(false)} className="text-zinc-600 hover:text-zinc-300 text-xs">✕</button>
             </div>

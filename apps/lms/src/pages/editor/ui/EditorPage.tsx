@@ -191,9 +191,11 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
 
   // ── OLED Animation Upload ─────────────────────────────────────────────────────
   const uploadOLEDAnimation = useCallback(async (
-    frames: number[][], fps: number, name: string
+    frames: number[][], fps: number, name: string,
+    onProgress?: (pct: number) => void
   ): Promise<boolean> => {
     if (!isConnected) { addLog("⚠️ Not connected to ESP32"); return false; }
+    onProgress?.(0);
 
     addLog(`📤 Saving animation "${name}" to ESP32...`);
 
@@ -233,9 +235,11 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         const chunk = payload.slice(i, i + CHUNK_BYTES);
         const hexStr = Array.from(chunk).map(b => b.toString(16).padStart(2, '0')).join('');
         await sendCode(`_oaf.write(binascii.unhexlify('${hexStr}'))\n`);
+        onProgress?.(Math.round((i / totalBytes) * 100));
       }
 
       await sendCode(`_oaf.close()\nprint('ANIM_SAVED:${safeName}')\n`);
+      onProgress?.(100);
       addLog(`✅ Animation "${name}" saved to /anim/${safeName}.bin`);
 
       // Mark as on-device in the local animation registry
