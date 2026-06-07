@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
+import { OAuth2Client } from "google-auth-library";
 import { User } from "../../models/User";
+import { config } from "../../config/config";
 import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
 import {
@@ -9,7 +11,13 @@ import {
   refreshCookieOptions,
   REFRESH_COOKIE,
 } from "../../utils/tokens";
-import type { RegisterInput, LoginInput } from "./auth.schemas";
+import type { RegisterInput, LoginInput, GoogleInput } from "./auth.schemas";
+
+const googleClient = new OAuth2Client(config.GOOGLE_CLIENT_ID);
+
+// A few friendly avatar colors to assign new accounts.
+const AVATAR_COLORS = ["#7c3aed", "#2563eb", "#10b981", "#f97316", "#e11d48", "#0891b2"];
+const randomColor = () => AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
 
 function issueTokens(user: { id: string; email: string; role: "student" | "admin"; tokenVersion: number }) {
   const accessToken = signAccessToken({ sub: user.id, email: user.email, role: user.role });
@@ -95,4 +103,57 @@ export const me = asyncHandler(async (req: Request, res: Response) => {
   const user = await User.findById(req.user!.sub);
   if (!user) throw ApiError.unauthorized("Account not found");
   res.json({ user: user.toJSON() });
+});
+
+export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
+  if (!config.GOOGLE_CLIENT_ID) {
+    throw ApiError.badRequest("Google sign-in is not configured on the server");
+  }
+  const { credential } = req.body as GoogleInput;
+
+  // Verify the ID token against Google and our client ID (audience).
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: config.GOOGLE_CLIENT_ID,
+    });
+    payload = ticket.getPayload();
+  } catch {
+    throw ApiError.unauthorized("Invalid Google credential");
+  }
+
+  if (!payload?.sub || !payload.email || payload.email_verified === false) {
+    throw ApiError.unauthorized("Google account could not be verified");
+  }
+
+  const email = payload.email.toLowerCase();
+  const googleId = payload.sub;
+
+  // Link by googleId first, then by email (so an existing email account adopts Google login).
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+  if (!user) {
+    user = new User({
+      name: payload.name || email.split("@")[0],
+      email,
+      googleId,
+      avatarUrl: payload.picture,
+      avatarColor: randomColor(),
+    });
+    await user.save();
+  } else if (!user.googleId) {
+    user.googleId = googleId;
+    if (!user.avatarUrl && payload.picture) user.avatarUrl = payload.picture;
+    await user.save();
+  }
+
+  const { accessToken, refreshToken } = issueTokens({
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    tokenVersion: user.tokenVersion,
+  });
+
+  res.cookie(REFRESH_COOKIE, refreshToken, refreshCookieOptions());
+  res.json({ user: user.toJSON(), accessToken });
 });

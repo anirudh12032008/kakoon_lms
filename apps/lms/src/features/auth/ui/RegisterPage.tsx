@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { apiErrorMessage } from "@/shared/api/client";
 import { AuthShell, AuthField, authInputClass } from "./AuthShell";
+import { GoogleSignInButton, GOOGLE_ENABLED } from "./GoogleSignInButton";
 
 export function RegisterPage() {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [name, setName] = useState("");
@@ -34,6 +35,16 @@ export function RegisterPage() {
       setErrors({ form: apiErrorMessage(err, "Could not create account") });
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async (credential: string) => {
+    setErrors({});
+    try {
+      await loginWithGoogle(credential);
+      navigate("/courses", { replace: true });
+    } catch (err) {
+      setErrors({ form: apiErrorMessage(err, "Google sign-in failed") });
     }
   };
 
@@ -86,6 +97,17 @@ export function RegisterPage() {
           {submitting ? "Creating account…" : "Create account"}
         </button>
       </form>
+
+      {GOOGLE_ENABLED && (
+        <div className="mt-2">
+          <div className="relative my-4 flex items-center">
+            <div className="flex-1 border-t border-subtle" />
+            <span className="px-3 text-[12px] font-medium text-hint">or</span>
+            <div className="flex-1 border-t border-subtle" />
+          </div>
+          <GoogleSignInButton onCredential={handleGoogle} onError={(m) => setErrors({ form: m })} />
+        </div>
+      )}
     </AuthShell>
   );
 }

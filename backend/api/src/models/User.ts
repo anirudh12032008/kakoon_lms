@@ -5,7 +5,9 @@ import { config } from "../config/config";
 export interface IUser {
   name: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string;
+  googleId?: string;
+  avatarUrl?: string;
   role: "student" | "admin";
   tokenVersion: number;
   avatarColor: string;
@@ -29,7 +31,10 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
       trim: true,
       index: true,
     },
-    passwordHash: { type: String, required: true, select: false },
+    // Optional: users who sign up with Google have no password.
+    passwordHash: { type: String, required: false, select: false },
+    googleId: { type: String, index: true, sparse: true },
+    avatarUrl: { type: String },
     role: { type: String, enum: ["student", "admin"], default: "student" },
     // Bumped on password change / forced logout to invalidate old refresh tokens.
     tokenVersion: { type: Number, default: 0 },
@@ -53,6 +58,8 @@ userSchema.methods.setPassword = async function (plain: string) {
 };
 
 userSchema.methods.verifyPassword = function (plain: string): Promise<boolean> {
+  // Google-only accounts have no password — password login always fails for them.
+  if (!this.passwordHash) return Promise.resolve(false);
   return bcrypt.compare(plain, this.passwordHash);
 };
 

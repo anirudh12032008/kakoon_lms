@@ -14,5 +14,11 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const googleSchema = z.object({
+  // The Google ID token (JWT credential) returned by Google Identity Services.
+  credential: z.string().min(10, "Missing Google credential"),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
+export type GoogleInput = z.infer<typeof googleSchema>;

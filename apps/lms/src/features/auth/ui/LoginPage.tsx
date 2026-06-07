@@ -3,9 +3,10 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { apiErrorMessage } from "@/shared/api/client";
 import { AuthShell, AuthField, authInputClass } from "./AuthShell";
+import { GoogleSignInButton, GOOGLE_ENABLED } from "./GoogleSignInButton";
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? "/courses";
@@ -26,6 +27,16 @@ export function LoginPage() {
       setError(apiErrorMessage(err, "Could not sign in"));
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleGoogle = async (credential: string) => {
+    setError(null);
+    try {
+      await loginWithGoogle(credential);
+      navigate(from, { replace: true });
+    } catch (err) {
+      setError(apiErrorMessage(err, "Google sign-in failed"));
     }
   };
 
@@ -71,6 +82,17 @@ export function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
+
+      {GOOGLE_ENABLED && (
+        <div className="mt-2">
+          <div className="relative my-4 flex items-center">
+            <div className="flex-1 border-t border-subtle" />
+            <span className="px-3 text-[12px] font-medium text-hint">or</span>
+            <div className="flex-1 border-t border-subtle" />
+          </div>
+          <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
+        </div>
+      )}
     </AuthShell>
   );
 }

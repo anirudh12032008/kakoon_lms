@@ -44,6 +44,9 @@ const envSchema = z.object({
   CORS_ORIGINS: z.string().default("http://localhost:5173"),
   COOKIE_DOMAIN: z.string().optional(),
   BCRYPT_ROUNDS: z.string().default("12"),
+
+  // Google OAuth — optional; "Sign in with Google" is disabled if unset.
+  GOOGLE_CLIENT_ID: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
