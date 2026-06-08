@@ -79,7 +79,7 @@ export function CourseDetailPage() {
 
   if (error && !course) {
     return (
-      <div className="min-h-screen bg-page">
+      <div className="h-screen overflow-y-auto bg-page">
         <DashboardHeader />
         <div className="mx-auto max-w-3xl px-5 py-16 text-center">
           <p className="text-lg font-semibold text-body">{error}</p>
@@ -93,7 +93,7 @@ export function CourseDetailPage() {
 
   if (!course) {
     return (
-      <div className="min-h-screen bg-page">
+      <div className="h-screen overflow-y-auto bg-page">
         <DashboardHeader />
         <div className="mx-auto max-w-4xl px-5 py-8">
           <div className="h-44 animate-pulse rounded-2xl border border-subtle bg-raised" />
@@ -103,7 +103,7 @@ export function CourseDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-page">
+    <div className="h-screen overflow-y-auto bg-page">
       <DashboardHeader />
 
       <main className="mx-auto max-w-4xl px-5 py-7">

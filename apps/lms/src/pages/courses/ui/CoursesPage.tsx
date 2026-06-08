@@ -97,7 +97,7 @@ export function CoursesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-page">
+    <div className="h-screen overflow-y-auto bg-page">
       <DashboardHeader />
 
       <main className="mx-auto max-w-6xl px-5 py-8">
