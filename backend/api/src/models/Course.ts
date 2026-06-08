@@ -23,6 +23,23 @@ const launchSchema = new Schema(
 );
 
 /**
+ * A declarative completion rule, evaluated by the editor against the live node
+ * graph. The item auto-completes when the rule passes:
+ *   - allOf: every listed node type must be present
+ *   - anyOf: at least one listed node type must be present
+ *   - min:   total node count must be >= this
+ * If no constraints are set, the item has no auto-check (manual only).
+ */
+const checkSchema = new Schema(
+  {
+    allOf: { type: [String], default: undefined },
+    anyOf: { type: [String], default: undefined },
+    min: { type: Number, default: undefined },
+  },
+  { _id: false }
+);
+
+/**
  * A build level: aligned "Build" (physical/LMS) + "Editor" (coding) tasks.
  * Levels are the sequential journey from kit to working robot.
  */
@@ -33,6 +50,7 @@ const levelSchema = new Schema(
     build: { type: String, default: "" }, // LMS / physical assembly step
     editor: { type: String, default: "" }, // editor / coding step
     order: { type: Number, default: 0 },
+    check: { type: checkSchema, default: undefined }, // auto-completion rule
   },
   { _id: false }
 );
@@ -43,6 +61,7 @@ const challengeSchema = new Schema(
     key: { type: String, required: true }, // "c1", ...
     title: { type: String, required: true },
     order: { type: Number, default: 0 },
+    check: { type: checkSchema, default: undefined },
   },
   { _id: false }
 );

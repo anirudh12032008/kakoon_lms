@@ -22,6 +22,8 @@ import { EditorStatusBar } from "@/widgets/editor-statusbar/ui/EditorStatusBar";
 import { useWifi } from "@/features/editor/wifi-connect/model/useWifi";
 import { useDraft } from "@/features/editor/save-draft/model/useDraft";
 import { useCourseSync } from "@/features/editor/save-draft/model/useCourseSync";
+import { useCourseMissions } from "@/features/editor/missions/model/useCourseMissions";
+import { MissionsPanel } from "@/features/editor/missions/ui/MissionsPanel";
 import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
@@ -93,6 +95,9 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     generatedCode, editableCode,
   });
 
+  // ── Course missions (auto-tracked levels & challenges) ───────────────────────
+  const missions = useCourseMissions(courseSlug);
+
   // ── WiFi ─────────────────────────────────────────────────────────────────────
   const wifi = useWifi({ connectWifi, setConnectionMode, addLog });
 
@@ -123,7 +128,10 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     }
 
     prevBlocksNodesRef.current = nds;
-  }, [tutorial]);
+
+    // Auto-evaluate course missions against the live node graph.
+    missions.evaluate(nds.map((n) => n.type ?? ""), nds.length);
+  }, [tutorial, missions]);
 
   // ── Launch restrictions ──────────────────────────────────────────────────────
   const launchRestrictions = useMemo(() => ({
@@ -460,6 +468,9 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Course missions — auto-tracked levels & challenges */}
+        {courseSlug && missions.enabled && <MissionsPanel missions={missions} />}
       </div>
 
       {showTerminal && (

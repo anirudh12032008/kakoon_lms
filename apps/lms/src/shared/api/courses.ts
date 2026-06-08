@@ -10,18 +10,27 @@ export interface CourseLaunch {
   availableSensors: string[];
 }
 
+/** Auto-completion rule evaluated against the editor's node graph. */
+export interface Check {
+  allOf?: string[];
+  anyOf?: string[];
+  min?: number;
+}
+
 export interface Level {
   key: string;
   label: string;
   build: string;
   editor: string;
   order: number;
+  check?: Check;
 }
 
 export interface Challenge {
   key: string;
   title: string;
   order: number;
+  check?: Check;
 }
 
 export interface Course {
