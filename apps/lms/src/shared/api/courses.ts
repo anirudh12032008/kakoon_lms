@@ -10,6 +10,20 @@ export interface CourseLaunch {
   availableSensors: string[];
 }
 
+export interface Level {
+  key: string;
+  label: string;
+  build: string;
+  editor: string;
+  order: number;
+}
+
+export interface Challenge {
+  key: string;
+  title: string;
+  order: number;
+}
+
 export interface Course {
   _id: string;
   slug: string;
@@ -24,8 +38,13 @@ export interface Course {
   learningGoals: string[];
   components: string[];
   order: number;
+  levels: Level[];
+  challenges: Challenge[];
   launch: CourseLaunch;
   enrolled?: boolean;
+  completedLevels?: string[];
+  completedChallenges?: string[];
+  progress?: number;
 }
 
 export interface Enrollment {
@@ -53,6 +72,28 @@ export async function fetchMyEnrollments(): Promise<Enrollment[]> {
 
 export async function enrollInCourse(slug: string): Promise<void> {
   await api.post(`/enrollments/${slug}`);
+}
+
+export interface ProgressResult {
+  progress: number;
+  completedLevels: string[];
+  completedChallenges: string[];
+  status: "active" | "completed";
+}
+
+/** Toggle completion of a level or challenge. */
+export async function setProgress(
+  slug: string,
+  kind: "level" | "challenge",
+  key: string,
+  done: boolean
+): Promise<ProgressResult> {
+  const { data } = await api.post<ProgressResult>(`/enrollments/${slug}/progress`, {
+    kind,
+    key,
+    done,
+  });
+  return data;
 }
 
 /** Marks the course as opened and returns its fresh data (incl. launch config). */

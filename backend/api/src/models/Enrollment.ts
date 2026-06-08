@@ -10,6 +10,9 @@ const enrollmentSchema = new Schema(
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true, index: true },
     status: { type: String, enum: ["active", "completed"], default: "active" },
     progress: { type: Number, default: 0, min: 0, max: 100 },
+    // Keys of completed levels/challenges (match Course.levels[].key / challenges[].key).
+    completedLevels: { type: [String], default: [] },
+    completedChallenges: { type: [String], default: [] },
     lastOpenedAt: { type: Date, default: null },
   },
   { timestamps: true }

@@ -40,9 +40,21 @@ export const getCourse = asyncHandler(async (req: Request, res: Response) => {
 
   const userId = optionalUserId(req);
   let enrolled = false;
+  let completedLevels: string[] = [];
+  let completedChallenges: string[] = [];
+  let progress = 0;
+
   if (userId) {
-    enrolled = !!(await Enrollment.exists({ user: userId, course: course._id }));
+    const enrollment = await Enrollment.findOne({ user: userId, course: course._id });
+    if (enrollment) {
+      enrolled = true;
+      completedLevels = enrollment.completedLevels ?? [];
+      completedChallenges = enrollment.completedChallenges ?? [];
+      progress = enrollment.progress ?? 0;
+    }
   }
 
-  res.json({ course: { ...course.toJSON(), enrolled } });
+  res.json({
+    course: { ...course.toJSON(), enrolled, completedLevels, completedChallenges, progress },
+  });
 });

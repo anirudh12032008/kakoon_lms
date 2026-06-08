@@ -22,6 +22,31 @@ const launchSchema = new Schema(
   { _id: false }
 );
 
+/**
+ * A build level: aligned "Build" (physical/LMS) + "Editor" (coding) tasks.
+ * Levels are the sequential journey from kit to working robot.
+ */
+const levelSchema = new Schema(
+  {
+    key: { type: String, required: true }, // "intro", "l1", ...
+    label: { type: String, required: true }, // "Intro", "Level 1"
+    build: { type: String, default: "" }, // LMS / physical assembly step
+    editor: { type: String, default: "" }, // editor / coding step
+    order: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+/** An optional challenge — an add-on or modification done after the build. */
+const challengeSchema = new Schema(
+  {
+    key: { type: String, required: true }, // "c1", ...
+    title: { type: String, required: true },
+    order: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
 const courseSchema = new Schema(
   {
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
@@ -42,6 +67,9 @@ const courseSchema = new Schema(
     components: { type: [String], default: [] },
     order: { type: Number, default: 0 },
     published: { type: Boolean, default: true },
+    introVideoUrl: { type: String, default: "" },
+    levels: { type: [levelSchema], default: [] },
+    challenges: { type: [challengeSchema], default: [] },
     launch: { type: launchSchema, default: () => ({}) },
     // Optional pre-built starter workspace (ReactFlow nodes/edges JSON).
     starterWorkspace: { type: Schema.Types.Mixed, default: null },

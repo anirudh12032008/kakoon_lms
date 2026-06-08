@@ -20,6 +20,19 @@ const CORE_NODES = [
   "pin_read",
 ];
 
+export interface LevelSeed {
+  key: string;
+  label: string;
+  build: string;
+  editor: string;
+  order: number;
+}
+export interface ChallengeSeed {
+  key: string;
+  title: string;
+  order: number;
+}
+
 export interface CourseSeed {
   slug: string;
   title: string;
@@ -33,6 +46,8 @@ export interface CourseSeed {
   learningGoals: string[];
   components: string[];
   order: number;
+  levels: LevelSeed[];
+  challenges: ChallengeSeed[];
   launch: {
     mode: "guided" | "challenge" | "sandbox" | "full" | "customize";
     launchType: "course";
@@ -43,7 +58,13 @@ export interface CourseSeed {
   };
 }
 
-export const COURSE_SEED: CourseSeed[] = [
+// Helpers to keep the content below readable.
+const lvl = (key: string, label: string, build: string, editor: string, order: number): LevelSeed => ({
+  key, label, build, editor, order,
+});
+const ch = (key: string, title: string, order: number): ChallengeSeed => ({ key, title, order });
+
+const BASE_COURSES: Omit<CourseSeed, "levels" | "challenges">[] = [
   {
     slug: "forklift",
     title: "Build a Forklift Robot",
@@ -185,3 +206,79 @@ export const COURSE_SEED: CourseSeed[] = [
     },
   },
 ];
+
+// ─── Levels (build journey) per course ────────────────────────────────────────
+// Each level pairs a "Build" step (physical/LMS) with an "Editor" step (coding).
+const LEVELS: Record<string, LevelSeed[]> = {
+  forklift: [
+    lvl("intro", "Intro", "Get comfortable with the components", "Add motors, servo, OLED and RGB LED control", 0),
+    lvl("l1", "Level 1", "Assemble the forklift and run it", "Move 4 motors and add speed control", 1),
+    lvl("l2", "Level 2", "Add the lifting mechanism", "Add servo control with top & bottom limits", 2),
+    lvl("l3", "Level 3", "Add an OLED and understand how it works", "Drive the OLED and play an animation", 3),
+    lvl("l4", "Level 4", "Add a light and make it react to other things", "RGB control with color presets", 4),
+    lvl("l5", "Level 5", "Tweak the code and explore", "LDR control, speed variables, and more", 5),
+  ],
+  tank: [
+    lvl("intro", "Intro", "Multiple servos, sweeps, and ultrasound working", "Learn about multiple servos and ultrasound", 0),
+    lvl("l1", "Level 1", "Assemble the tank and make it move", "Control 2 motors with speed", 1),
+    lvl("l2", "Level 2", "Assemble the shooting & lifting mechanism", "Control 2 motors + 2 servos (one limited to shoot)", 2),
+    lvl("l3", "Level 3", "Attach ultrasound to measure distance and show it on your phone", "Add ultrasound and send distance over Bluetooth", 3),
+    lvl("l4", "Level 4", "Make it shoot when something is ~10cm away", "Add the logic to shoot", 4),
+    lvl("l5", "Level 5", "Add LEDs so it feels alive", "LED control + logic for different colors", 5),
+  ],
+  turret: [
+    lvl("intro", "Intro", "How the flywheel mechanism works, and how IR works", "Add IR input", 0),
+    lvl("l1", "Level 1", "Assemble the pan & tilt motion", "Add 2-motor control with speed", 1),
+    lvl("l2", "Level 2", "Attach the flywheel and shooting mechanism", "Add 2-motor control with speed", 2),
+    lvl("l3", "Level 3", "Try shooting at different speeds", "Add PWM speed control", 3),
+    lvl("l4", "Level 4", "Control it with an IR remote", "Add the IR input option", 4),
+    lvl("l5", "Level 5", "Add a passcode feature", "Add IR input check + passcode logic", 5),
+  ],
+  "robotic-arm": [
+    lvl("intro", "Intro", "How to work with multiple servos", "Calibrate button for servos", 0),
+    lvl("l1", "Level 1", "Assemble the arm", "Control 3 servos over Bluetooth", 1),
+    lvl("l2", "Level 2", "Assemble the gripper", "Gripper servo with open/close limits", 2),
+    lvl("l3", "Level 3", "Pick and place an item using your phone (BT)", "Control all servos over Bluetooth", 3),
+    lvl("l4", "Level 4", "Add a shadow arm to control the robot arm", "Use a potentiometer to control servos (map & clamp)", 4),
+    lvl("l5", "Level 5", "Add record & play buttons", "Button to record and play back servo motions", 5),
+  ],
+};
+
+// ─── Challenges (post-build add-ons / modifications) per course ───────────────
+const CHALLENGES: Record<string, ChallengeSeed[]> = {
+  forklift: [
+    ch("c1", "Move the robot in a square", 0),
+    ch("c2", "Pick up and place a crate", 1),
+    ch("c3", "Run everything at half speed", 2),
+    ch("c4", "Try out OLED animations", 3),
+    ch("c5", "Upgrade the BLE remote", 4),
+    ch("c6", "Change LED color based on the forklift's action", 5),
+  ],
+  tank: [
+    ch("c1", "Make the robot move autonomously", 0),
+    ch("c2", "Use the distance to calculate the shooting height", 1),
+    ch("c3", "Shoot targets at different distances", 2),
+    ch("c4", "Swap the ultrasound for an OLED", 3),
+    ch("c5", "Change colors based on actions", 4),
+  ],
+  turret: [
+    ch("c1", "Add a Russian-roulette firing system", 0),
+    ch("c2", "Shoot in different modes while in IR mode", 1),
+    ch("c3", "Shoot 3 darts at once — make it dynamic", 2),
+    ch("c4", "Shoot at different distances", 3),
+    ch("c5", "Add an ultrasonic sensor", 4),
+    ch("c6", "Build an ammo counter", 5),
+  ],
+  "robotic-arm": [
+    ch("c1", "Record one motion and make it loop continuously", 0),
+    ch("c2", "Make a motion manually, without the shadow arm", 1),
+    ch("c3", "Test the max payload it can lift", 2),
+    ch("c4", "Save 3 moves and play them back: pick, wave, and dance", 3),
+  ],
+};
+
+export const COURSE_SEED: CourseSeed[] = BASE_COURSES.map((c) => ({
+  ...c,
+  levels: LEVELS[c.slug] ?? [],
+  challenges: CHALLENGES[c.slug] ?? [],
+}));
