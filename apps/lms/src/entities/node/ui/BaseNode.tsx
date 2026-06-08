@@ -187,7 +187,7 @@ export function NodeAdvancedButton({ className = "" }: { className?: string }) {
           ? globalAdvanced
             ? "border-violet-500/60 text-violet-400 bg-violet-500/15"
             : "border-amber-400/60 text-amber-400 bg-amber-400/10"
-          : "border-zinc-700 text-zinc-600 bg-transparent hover:border-zinc-500 hover:text-zinc-400"
+          : "border-zinc-700 text-zinc-600 bg-transparent hover:border-zinc-500 hover:text-[var(--k-muted)]"
       } ${globalAdvanced ? "cursor-default" : ""} ${className}`}
     >
       adv

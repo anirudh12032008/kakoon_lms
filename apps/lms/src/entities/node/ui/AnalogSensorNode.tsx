@@ -56,7 +56,7 @@ function StatChip({ label, value, color }: { label: string; value: string; color
   return (
     <div className="flex flex-col items-center flex-1 bg-[var(--k-base-200)] rounded-md py-1 border border-[var(--k-border)]">
       <span className="text-[8px] uppercase tracking-wider font-bold" style={{ color }}>{label}</span>
-      <span className="text-[11px] font-mono text-white mt-0.5">{value}</span>
+      <span className="text-[11px] font-mono text-[var(--k-text)] mt-0.5">{value}</span>
     </div>
   );
 }

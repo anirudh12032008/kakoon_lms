@@ -280,7 +280,7 @@ export function SDCardNode() {
           {csvCols.map((col, i) => (
             <div key={i} className="flex items-center gap-1.5 px-2 py-1 border-t border-[var(--k-base-200)]">
               <input value={col.label} onChange={(e) => updateCol(i, "label", e.target.value)}
-                className="nodrag w-[72px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-zinc-300 outline-none" />
+                className="nodrag w-[72px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-[var(--k-text)] outline-none" />
               <input value={col.varName} onChange={(e) => updateCol(i, "varName", e.target.value)}
                 className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
               <button onClick={() => removeCol(i)}
@@ -296,7 +296,7 @@ export function SDCardNode() {
       {/* SPI pins collapsible */}
       <div className="px-3 mt-0.5 mb-1">
         <button onClick={() => setShowPins(!showPins)}
-          className="nodrag w-full flex items-center justify-between py-1 text-[9px] text-zinc-500 hover:text-zinc-300 transition-colors">
+          className="nodrag w-full flex items-center justify-between py-1 text-[9px] text-zinc-500 hover:text-[var(--k-text)] transition-colors">
           <span>SPI Pins (CS/MOSI/MISO/CLK)</span>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
             style={{ transform: showPins ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>

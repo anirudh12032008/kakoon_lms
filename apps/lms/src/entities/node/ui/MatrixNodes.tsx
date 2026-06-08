@@ -114,7 +114,7 @@ export function MAX7219Node() {
         <div className="flex gap-1">
           {[1, 2, 3, 4].map(n => (
             <button key={n} onClick={() => setModules(n)}
-              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[var(--k-border)] hover:text-zinc-300"}`}>
+              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[var(--k-border)] hover:text-[var(--k-text)]"}`}>
               {n}
             </button>
           ))}

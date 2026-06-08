@@ -158,13 +158,13 @@ export function I2CScannerNode() {
                         {dev.addr}
                       </span>
                       {/* Device label */}
-                      <span className="text-[10px] text-zinc-400 font-medium">{dev.label}</span>
+                      <span className="text-[10px] text-[var(--k-muted)] font-medium">{dev.label}</span>
                     </div>
 
                     {/* One-click copy button */}
                     <button
                       onClick={() => handleCopy(dev.addr)}
-                      className="nodrag opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-zinc-400 hover:text-white hover:bg-zinc-700/50 border border-transparent hover:border-zinc-600"
+                      className="nodrag opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-[var(--k-muted)] hover:text-white hover:bg-zinc-700/50 border border-transparent hover:border-zinc-600"
                       title="Copy address"
                     >
                       {copiedAddr === dev.addr ? (

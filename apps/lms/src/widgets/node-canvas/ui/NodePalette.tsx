@@ -23,7 +23,7 @@ const CAT_COLORS: Record<string, { dot: string; text: string; bg: string }> = {
 };
 
 function fallbackColor() {
-  return { dot: "#71717a", text: "text-zinc-400", bg: "bg-zinc-500/10" };
+  return { dot: "#71717a", text: "text-[var(--k-muted)]", bg: "bg-zinc-500/10" };
 }
 
 function NodeItem({ node }: { node: NodeDef }) {
@@ -92,7 +92,7 @@ function CategorySection({ category, isOpen, onToggle, allowedNodeTypes }: {
   const c = CAT_COLORS[category.id] ?? fallbackColor();
 
   return (
-    <div className={`overflow-hidden rounded-xl transition-colors ${isOpen ? "bg-[#0d0d12] border border-subtle" : "border border-transparent"}`}>
+    <div className={`overflow-hidden rounded-xl transition-colors ${isOpen ? "bg-[var(--k-base-100)] border border-subtle" : "border border-transparent"}`}>
       <button
         onClick={onToggle}
         className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-xl transition-colors group ${isOpen ? c.bg : "hover:bg-hover"}`}

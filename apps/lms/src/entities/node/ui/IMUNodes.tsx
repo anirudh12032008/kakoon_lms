@@ -117,9 +117,9 @@ export function IMUSensorNode() {
             <span className="text-[9px] font-mono text-purple-400">locked</span>
           </div>
           <div className="flex gap-4 mt-0.5">
-            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
-            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
-            <span className="text-[10px] text-zinc-500">Addr <span className="text-zinc-300 font-mono">{ONBOARD_IMU_PINS.address}</span></span>
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
+            <span className="text-[10px] text-zinc-500">Addr <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.address}</span></span>
           </div>
         </div>
       </AdvancedSection>

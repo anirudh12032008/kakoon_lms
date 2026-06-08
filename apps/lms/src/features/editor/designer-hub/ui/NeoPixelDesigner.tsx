@@ -330,7 +330,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
             className={`mt-2 w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-[10px] font-bold transition-all border ${
               JSON.stringify(selectedColor) === JSON.stringify(OFF)
                 ? "bg-white/10 border-white/40 text-white"
-                : "bg-[var(--k-base-100)] border-[var(--k-border)] text-zinc-400 hover:text-white"
+                : "bg-[var(--k-base-100)] border-[var(--k-border)] text-[var(--k-muted)] hover:text-white"
             }`}>
             ⬛ Off (LED dark)
           </button>
@@ -340,7 +340,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1.5 font-bold">Built-in Effects</div>
           {NEOPIXEL_EFFECTS.map((ef) => (
             <button key={ef.id} onClick={() => loadEffect(ef.id)}
-              className="block w-full text-left text-[10px] text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all">
+              className="block w-full text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all">
               {ef.name}
             </button>
           ))}
@@ -370,7 +370,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
                 <div key={d.id} className="group flex items-center gap-1">
                   <button onClick={() => loadDesign(d)}
                     title={`${d.frames.length} frame${d.frames.length !== 1 ? "s" : ""} · ${d.mode}`}
-                    className="flex-1 min-w-0 text-left text-[10px] text-zinc-400 hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all truncate">
+                    className="flex-1 min-w-0 text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all truncate">
                     {d.name} <span className="text-zinc-600">· {d.frames.length}f</span>
                   </button>
                   <button onClick={() => deleteDesign(d.id)} title="Delete"
@@ -399,7 +399,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
               title="Drag to reorder"
               className="flex items-center gap-0.5 cursor-move">
               <button onClick={() => { setCurFrame(i); setPlaying(false); }}
-                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-zinc-300"}`}>
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-[var(--k-text)]"}`}>
                 {i + 1}
               </button>
               {frames.length > 1 && (
@@ -460,9 +460,9 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
       {/* Right: code */}
       <div className="w-[260px] flex-shrink-0 border-l border-[var(--k-border)] flex flex-col">
         <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
-          <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">MicroPython Code</span>
+          <span className="text-[10px] text-[var(--k-muted)] font-bold uppercase tracking-wider">MicroPython Code</span>
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-zinc-400 border border-[var(--k-border)]"}`}>
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-[var(--k-muted)] border border-[var(--k-border)]"}`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy"}
           </button>
         </div>

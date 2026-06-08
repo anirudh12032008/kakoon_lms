@@ -91,7 +91,7 @@ export function MQTTNode() {
                   placeholder="topic/path"
                   className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-orange-400 outline-none" />
                 <select value={t.qos} onChange={(e) => updatePub(i, "qos", e.target.value)}
-                  className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 outline-none">
+                  className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-[var(--k-muted)] outline-none">
                   <option value="0">QoS 0</option><option value="1">QoS 1</option><option value="2">QoS 2</option>
                 </select>
                 <button onClick={() => removePub(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
@@ -131,7 +131,7 @@ export function MQTTNode() {
                 placeholder="topic/path"
                 className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
               <select value={t.qos} onChange={(e) => updateSub(i, "qos", e.target.value)}
-                className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 outline-none">
+                className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-[var(--k-muted)] outline-none">
                 <option value="0">QoS 0</option><option value="1">QoS 1</option><option value="2">QoS 2</option>
               </select>
               <input value={t.varName} onChange={(e) => updateSub(i, "varName", e.target.value)}
@@ -152,7 +152,7 @@ export function MQTTNode() {
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Last Will & Testament</div>
           <div className="flex gap-1.5">
             <input value={lwtTopic} onChange={(e) => setLwtTopic(e.target.value)}
-              className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-300)] rounded px-1.5 py-1 text-zinc-400 outline-none" />
+              className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-300)] rounded px-1.5 py-1 text-[var(--k-muted)] outline-none" />
             <input value={lwtMsg} onChange={(e) => setLwtMsg(e.target.value)}
               className="nodrag w-[60px] text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-300)] rounded px-1.5 py-1 text-red-400 outline-none" />
           </div>

@@ -359,7 +359,7 @@ export function TutorialHelper({
           </div>
           <div className="flex-1 text-left min-w-0">
             <h4 className="text-xs font-bold text-white">Tutorial Completed! 🎉</h4>
-            <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed font-medium">
+            <p className="text-[11px] text-[var(--k-muted)] mt-1 leading-relaxed font-medium">
               Awesome work! You've successfully completed "{tutorial.title}". Feel free to keep playing with it!
             </p>
             <div className="flex gap-2 mt-3">
@@ -438,7 +438,7 @@ export function TutorialHelper({
       {/* Instruction Dialog */}
       <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-[580px] z-50 p-5 rounded-2xl border border-zinc-700/80 bg-[#0c0c0e]/92 backdrop-blur-md shadow-2xl">
         <div className="flex items-start gap-4">
-          <div className="flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl bg-zinc-800/40 border border-zinc-700/60 text-zinc-300 text-center flex-shrink-0 select-none">
+          <div className="flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl bg-zinc-800/40 border border-zinc-700/60 text-[var(--k-text)] text-center flex-shrink-0 select-none">
             <span className="text-[10px] font-black tracking-widest uppercase">STEP</span>
             <span className="text-lg font-black leading-none mt-1">{currentStepIndex + 1}/{tutorial.steps.length}</span>
           </div>
@@ -448,12 +448,12 @@ export function TutorialHelper({
               <Play className="w-4 h-4 fill-emerald-400/20 text-emerald-400" />
               {step.title}
             </h4>
-            <p className="text-xs text-zinc-300 mt-1.5 leading-relaxed font-medium">{step.description}</p>
+            <p className="text-xs text-[var(--k-text)] mt-1.5 leading-relaxed font-medium">{step.description}</p>
             <div className="flex items-center gap-3 mt-4">
               <div className="flex-1 bg-zinc-800/60 h-2 rounded-full overflow-hidden border border-zinc-700/35">
                 <div className="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-300" style={{ width: `${progressPercent}%` }} />
               </div>
-              <span className="text-[11px] font-bold text-zinc-400 flex-shrink-0">{progressPercent}% Done</span>
+              <span className="text-[11px] font-bold text-[var(--k-muted)] flex-shrink-0">{progressPercent}% Done</span>
             </div>
           </div>
 
@@ -461,7 +461,7 @@ export function TutorialHelper({
             <button onClick={onQuit} className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-zinc-800/40 border border-zinc-800 hover:border-zinc-700 transition-all" title="Quit Tutorial">
               <X className="w-4 h-4" />
             </button>
-            <button onClick={onStepComplete} className="flex items-center justify-center p-2 rounded-xl bg-zinc-800 border border-zinc-700/60 text-zinc-300 hover:text-white hover:bg-zinc-700/50 transition-all text-[11px] font-bold gap-1">
+            <button onClick={onStepComplete} className="flex items-center justify-center p-2 rounded-xl bg-zinc-800 border border-zinc-700/60 text-[var(--k-text)] hover:text-white hover:bg-zinc-700/50 transition-all text-[11px] font-bold gap-1">
               Skip <ArrowRight className="w-3 h-3" />
             </button>
           </div>
@@ -476,7 +476,7 @@ export function TutorialHelper({
             <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
             Step-by-Step Guide
           </span>
-          {isChecklistExpanded ? <ChevronUp className="w-4 h-4 text-zinc-400" /> : <ChevronDown className="w-4 h-4 text-zinc-400" />}
+          {isChecklistExpanded ? <ChevronUp className="w-4 h-4 text-[var(--k-muted)]" /> : <ChevronDown className="w-4 h-4 text-[var(--k-muted)]" />}
         </button>
 
         <div className="p-3.5 space-y-2 max-h-[380px] overflow-y-auto">
@@ -497,7 +497,7 @@ export function TutorialHelper({
                   {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                 </div>
                 <div className="text-[11px] leading-tight font-medium text-left">
-                  <p className={isDone ? "line-through text-zinc-500" : "text-zinc-300"}>{s.title}</p>
+                  <p className={isDone ? "line-through text-zinc-500" : "text-[var(--k-text)]"}>{s.title}</p>
                 </div>
               </div>
             );

@@ -77,13 +77,13 @@ export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultr
       <div className="flex gap-3 mt-0.5">
         {mode === "i2c" ? (
           <>
-            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{p.scl}</span></span>
-            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{p.sda}</span></span>
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-[var(--k-text)] font-mono">{p.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-[var(--k-text)] font-mono">{p.sda}</span></span>
           </>
         ) : (
           <>
-            <span className="text-[10px] text-zinc-500">TRIG <span className="text-zinc-300 font-mono">{p.trig}</span></span>
-            <span className="text-[10px] text-zinc-500">ECHO <span className="text-zinc-300 font-mono">{p.echo}</span></span>
+            <span className="text-[10px] text-zinc-500">TRIG <span className="text-[var(--k-text)] font-mono">{p.trig}</span></span>
+            <span className="text-[10px] text-zinc-500">ECHO <span className="text-[var(--k-text)] font-mono">{p.echo}</span></span>
           </>
         )}
       </div>

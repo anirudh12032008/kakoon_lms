@@ -231,7 +231,7 @@ export function LCD16x2Node() {
           <input value={formatStr} onChange={e => setFormatStr(e.target.value)}
             className="nodrag w-full bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-[11px] font-mono text-green-300 outline-none focus:border-blue-500/60"
             placeholder="e.g. Dist: {v} cm" />
-          <p className="text-[9px] text-zinc-600 mt-1">Use <span className="font-mono text-zinc-400">{"{v}"}</span> for live sensor value</p>
+          <p className="text-[9px] text-zinc-600 mt-1">Use <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> for live sensor value</p>
         </div>
 
         <div className="px-3 pb-2 flex flex-col gap-1.5">
@@ -270,12 +270,12 @@ export function LCD16x2Node() {
                 >
                   <div className="w-3 h-3 rounded-sm border border-[var(--k-border)] flex-shrink-0"
                     style={{ background: ch.some(r => r.some(v => v)) ? COLORS.blue : "transparent" }} />
-                  <span className="text-[10px] text-zinc-400">Char {i}</span>
+                  <span className="text-[10px] text-[var(--k-muted)]">Char {i}</span>
                 </button>
               ))}
             </div>
             <div className="flex flex-col gap-3">
-              <div className="text-xs text-zinc-400 font-bold">Editing Slot {activeChar}</div>
+              <div className="text-xs text-[var(--k-muted)] font-bold">Editing Slot {activeChar}</div>
               <CharEditor pixels={customChars[activeChar]}
                 onChange={px => setCustomChars(customChars.map((c, i) => i === activeChar ? px : c))} />
               <div className="flex flex-col gap-1">

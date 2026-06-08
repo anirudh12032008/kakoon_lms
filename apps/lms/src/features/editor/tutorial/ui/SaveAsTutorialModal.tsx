@@ -135,7 +135,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white text-sm transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-zinc-700 text-[var(--k-muted)] hover:text-white text-sm transition-colors"
                 >
                   Cancel
                 </button>
@@ -146,7 +146,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
             <div className="p-8 text-center">
               <div className="text-4xl mb-3">🎉</div>
               <p className="text-white font-bold text-lg">Tutorial Saved!</p>
-              <p className="text-zinc-400 text-sm mt-1">"{title}" is now in your tutorial catalog.</p>
+              <p className="text-[var(--k-muted)] text-sm mt-1">"{title}" is now in your tutorial catalog.</p>
             </div>
           ) : (
             /* ── Form step ── */
@@ -204,7 +204,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                             ? d === "Easy"   ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
                             : d === "Medium" ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
                             :                  "bg-red-500/20 border-red-500/40 text-red-400"
-                            : "border-zinc-800 text-zinc-600 hover:border-zinc-700 hover:text-zinc-400"
+                            : "border-zinc-800 text-zinc-600 hover:border-zinc-700 hover:text-[var(--k-muted)]"
                         }`}
                       >
                         {d}
@@ -226,7 +226,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white text-sm transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-zinc-700 text-[var(--k-muted)] hover:text-white text-sm transition-colors"
                 >
                   Cancel
                 </button>

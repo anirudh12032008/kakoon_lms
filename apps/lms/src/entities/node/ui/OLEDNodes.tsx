@@ -54,8 +54,8 @@ export function OLEDDisplayNode() {
               <span className="text-[9px] font-mono text-purple-400">fixed</span>
             </div>
             <div className="flex gap-3 mt-0.5">
-              <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
-              <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+              <span className="text-[10px] text-zinc-500">SCL <span className="text-[var(--k-text)] font-mono">{OLED_PINS.scl}</span></span>
+              <span className="text-[10px] text-zinc-500">SDA <span className="text-[var(--k-text)] font-mono">{OLED_PINS.sda}</span></span>
             </div>
           </div>
         </AdvancedSection>
@@ -67,7 +67,7 @@ export function OLEDDisplayNode() {
               className={`nodrag flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all ${
                 mode === "text"
                   ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
-                  : "text-zinc-500 border-[#2a2a35] hover:text-zinc-300"
+                  : "text-zinc-500 border-[#2a2a35] hover:text-[var(--k-text)]"
               }`}>
               📝 Text
             </button>
@@ -75,7 +75,7 @@ export function OLEDDisplayNode() {
               className={`nodrag flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all ${
                 mode === "anim"
                   ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
-                  : "text-zinc-500 border-[#2a2a35] hover:text-zinc-300"
+                  : "text-zinc-500 border-[#2a2a35] hover:text-[var(--k-text)]"
               }`}>
               🎬 Animation
             </button>
@@ -94,7 +94,7 @@ export function OLEDDisplayNode() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="🔍 Search animations..."
-              className="nodrag w-full text-[10px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1.5 text-zinc-300 placeholder-zinc-600 outline-none focus:border-purple-500/50 mb-1.5"
+              className="nodrag w-full text-[10px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1.5 text-[var(--k-text)] placeholder-zinc-600 outline-none focus:border-purple-500/50 mb-1.5"
             />
 
             {animList.length === 0 ? (
@@ -116,7 +116,7 @@ export function OLEDDisplayNode() {
                         : "border-transparent hover:bg-white/5"
                     }`}>
                     <button className="nodrag flex-1 text-left min-w-0" onClick={() => setAnimFile(anim.name)}>
-                      <span className={`font-semibold truncate block ${animFile === anim.name ? "text-purple-300" : "text-zinc-300"}`}>
+                      <span className={`font-semibold truncate block ${animFile === anim.name ? "text-purple-300" : "text-[var(--k-text)]"}`}>
                         {anim.name}
                       </span>
                       <span className="text-zinc-600 text-[9px]">
@@ -168,8 +168,8 @@ export function PlayAnimationNode() {
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
           <div className="flex gap-3 mt-0.5">
-            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
-            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-[var(--k-text)] font-mono">{OLED_PINS.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-[var(--k-text)] font-mono">{OLED_PINS.sda}</span></span>
           </div>
         </div>
         <NodeField label="Driver"><ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" /></NodeField>
@@ -191,8 +191,8 @@ export function ShowImageNode() {
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">OLED Dedicated Port</span>
           <div className="flex gap-3 mt-0.5">
-            <span className="text-[10px] text-zinc-500">SCL <span className="text-zinc-300 font-mono">{OLED_PINS.scl}</span></span>
-            <span className="text-[10px] text-zinc-500">SDA <span className="text-zinc-300 font-mono">{OLED_PINS.sda}</span></span>
+            <span className="text-[10px] text-zinc-500">SCL <span className="text-[var(--k-text)] font-mono">{OLED_PINS.scl}</span></span>
+            <span className="text-[10px] text-zinc-500">SDA <span className="text-[var(--k-text)] font-mono">{OLED_PINS.sda}</span></span>
           </div>
         </div>
         <NodeField label="Driver"><ToggleInput value={driver} onChange={setDriver} leftLabel="SH1106" rightLabel="SSD1306" /></NodeField>

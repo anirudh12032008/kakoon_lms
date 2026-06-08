@@ -489,7 +489,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         <div>
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Edit</div>
           <button onClick={() => { pushHistory(frames); invertFrame(); }}
-            className="w-full text-left text-[10px] text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all">
+            className="w-full text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all">
             ⬛ Invert
           </button>
           <div className="grid grid-cols-3 gap-0.5 mt-1">
@@ -512,7 +512,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           <div className="flex flex-col gap-0.5">
             {OLED_PRESETS.map((p) => (
               <button key={p.name} onClick={() => loadPreset(p)}
-                className="text-left text-[10px] text-zinc-400 hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all truncate">
+                className="text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all truncate">
                 {p.name}
               </button>
             ))}
@@ -554,7 +554,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             {registry.map((entry) => (
               <div key={entry.name} className="bg-[#0e0e14] rounded-lg p-1.5 border border-[var(--k-border)]">
                 <div className="flex items-center gap-1 mb-0.5">
-                  <span className="text-[10px] text-zinc-300 font-semibold truncate flex-1">{entry.name}</span>
+                  <span className="text-[10px] text-[var(--k-text)] font-semibold truncate flex-1">{entry.name}</span>
                   {entry.onDevice && (
                     <span className="text-[7px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 rounded px-1 py-px font-bold flex-shrink-0">ON DEVICE</span>
                   )}
@@ -596,7 +596,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               title="Drag to reorder"
               className="flex items-center gap-0.5 cursor-move">
               <button onClick={() => { setCurFrame(i); setPlaying(false); }}
-                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-zinc-300"}`}>
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-[var(--k-text)]"}`}>
                 {i + 1}
               </button>
               {frames.length > 1 && (
@@ -641,7 +641,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               });
             }}
             title="Undo (Ctrl+Z)"
-            className="text-zinc-500 hover:text-zinc-300 text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
+            className="text-zinc-500 hover:text-[var(--k-text)] text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
             ↩
           </button>
           <button
@@ -653,7 +653,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               });
             }}
             title="Redo (Ctrl+Y)"
-            className="text-zinc-500 hover:text-zinc-300 text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
+            className="text-zinc-500 hover:text-[var(--k-text)] text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
             ↪
           </button>
         </div>
@@ -795,7 +795,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
               showCode
                 ? "bg-violet-500/20 text-violet-300 border-violet-500/40"
-                : "text-zinc-500 border-[var(--k-border)] hover:text-zinc-300 hover:border-zinc-600"
+                : "text-zinc-500 border-[var(--k-border)] hover:text-[var(--k-text)] hover:border-zinc-600"
             }`}>
             {"</>"}  Code
           </button>
@@ -827,7 +827,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           {/* Copy code shortcut */}
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-              copied ? "bg-green-500/20 text-green-400 border-green-500/30" : "text-zinc-500 border-[var(--k-border)] hover:text-zinc-300 hover:border-zinc-600"
+              copied ? "bg-green-500/20 text-green-400 border-green-500/30" : "text-zinc-500 border-[var(--k-border)] hover:text-[var(--k-text)] hover:border-zinc-600"
             }`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy Code"}
           </button>
@@ -866,8 +866,8 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         {showCode && (
           <div className="absolute bottom-14 right-4 w-72 max-h-64 bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-xl shadow-2xl flex flex-col overflow-hidden z-10">
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
-              <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">MicroPython</span>
-              <button onClick={() => setShowCode(false)} className="text-zinc-600 hover:text-zinc-300 text-xs">✕</button>
+              <span className="text-[10px] text-[var(--k-muted)] font-bold uppercase tracking-wider">MicroPython</span>
+              <button onClick={() => setShowCode(false)} className="text-zinc-600 hover:text-[var(--k-text)] text-xs">✕</button>
             </div>
             <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono text-green-400 leading-relaxed">
               {code}

@@ -68,11 +68,11 @@ export function SleepNode() {
     >
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
-      <div className="text-sm font-bold text-white mb-2">Sleep</div>
+      <div className="text-sm font-bold text-[var(--k-text)] mb-2">Sleep</div>
       <div className="w-3/4 border-t border-[var(--k-border)] mb-2" />
       <input
         type="number"
-        className="rounded-md px-2 py-1 text-sm text-white bg-[var(--k-base-300)] border border-[var(--k-border)] outline-none nodrag w-[65px] text-center"
+        className="rounded-md px-2 py-1 text-sm text-[var(--k-text)] bg-[var(--k-base-300)] border border-[var(--k-border)] outline-none nodrag w-[65px] text-center"
         value={seconds}
         onChange={(e) => setSeconds(Number(e.target.value))}
       />

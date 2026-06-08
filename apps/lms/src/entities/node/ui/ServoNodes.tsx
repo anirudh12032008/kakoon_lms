@@ -83,7 +83,7 @@ function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
         <span className="text-[9px] font-mono text-orange-400">locked</span>
       </div>
       <div className="flex gap-2 mt-0.5">
-        <span className="text-[10px] text-zinc-500">GPIO <span className="text-zinc-300 font-mono">{SERVO_PORTS[servoKey].pin}</span></span>
+        <span className="text-[10px] text-zinc-500">GPIO <span className="text-[var(--k-text)] font-mono">{SERVO_PORTS[servoKey].pin}</span></span>
       </div>
     </div>
   );
@@ -414,7 +414,7 @@ export function MultiServoSequencerNode() {
         {keyframes.map((kf, kfIdx) => (
           <div key={kfIdx} className={`rounded-lg border p-2 transition-all ${playing && kfIdx === playIdx ? "border-purple-500/60 bg-purple-500/5" : "border-[var(--k-border)] bg-[#0d0d10]"}`}>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[9px] font-bold text-zinc-400">KF {kfIdx + 1} @ {kf.time}ms</span>
+              <span className="text-[9px] font-bold text-[var(--k-muted)]">KF {kfIdx + 1} @ {kf.time}ms</span>
               <button onClick={() => removeKeyframe(kfIdx)}
                 className="nodrag text-[9px] text-zinc-600 hover:text-red-400 transition-colors px-1">✕</button>
             </div>
@@ -426,7 +426,7 @@ export function MultiServoSequencerNode() {
                     onChange={e => updateAngle(kfIdx, sIdx, Number(e.target.value))}
                     className="nodrag w-full h-1 cursor-pointer"
                     style={{ accentColor: SERVO_COLORS[sIdx] }} />
-                  <span className="text-[9px] font-mono text-zinc-400">{a}°</span>
+                  <span className="text-[9px] font-mono text-[var(--k-muted)]">{a}°</span>
                 </div>
               ))}
             </div>
@@ -481,7 +481,7 @@ export function MultiServoSequencerNode() {
             const arr = keyframes.map(kf => `{t:${kf.time}, a:[${kf.angles.join(",")}]}`).join(", ");
             navigator.clipboard.writeText(`[${arr}]`).catch(() => {});
           }}
-          className="nodrag flex-1 py-1 rounded-lg border border-[var(--k-border)] text-zinc-400 text-[10px] font-bold hover:border-zinc-500 hover:text-white transition-all">
+          className="nodrag flex-1 py-1 rounded-lg border border-[var(--k-border)] text-[var(--k-muted)] text-[10px] font-bold hover:border-zinc-500 hover:text-white transition-all">
           ⎘ Export
         </button>
       </div>
@@ -562,7 +562,7 @@ export function ServoCalibrationNode() {
               return (
                 <div key={n.id} className="rounded-lg border border-[var(--k-border)] bg-[#0d0d10] p-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-zinc-300">{portLabel(n)}</span>
+                    <span className="text-[10px] font-bold text-[var(--k-text)]">{portLabel(n)}</span>
                     <div className="flex items-center gap-1.5">
                       <span className="text-[9px] font-mono text-cyan-400">{pulse} µs</span>
                       <span className="text-[10px] font-mono text-orange-400">{a}°</span>

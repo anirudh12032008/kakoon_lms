@@ -229,10 +229,10 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
         <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden"
           onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); }} />
         {fileName
-          ? <p className="text-xs font-semibold text-zinc-300">{fileName}</p>
+          ? <p className="text-xs font-semibold text-[var(--k-text)]">{fileName}</p>
           : <>
               <p className="text-2xl mb-1">📷</p>
-              <p className="text-xs font-semibold text-zinc-300">Drop image, GIF, or video here</p>
+              <p className="text-xs font-semibold text-[var(--k-text)]">Drop image, GIF, or video here</p>
               <p className="text-[10px] text-zinc-600 mt-0.5">PNG · JPG · GIF · MP4 · WebM</p>
             </>
         }
@@ -359,7 +359,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
               style={{ imageRendering: "pixelated", opacity: hasContent ? 1 : 0 }}
             />
             {status === "processing" && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 text-[10px] text-zinc-400">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 text-[10px] text-[var(--k-muted)]">
                 <div className="w-5 h-5 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
                 <span>{statusMsg || "Processing…"}</span>
               </div>
@@ -376,7 +376,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
             <div className="w-full max-w-[320px] flex items-center gap-2">
               <button
                 onClick={() => setPlaying((p) => !p)}
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] text-zinc-300 hover:text-white transition-colors"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] text-[var(--k-text)] hover:text-white transition-colors"
                 title={playing ? "Pause" : "Play"}
               >
                 {playing ? "⏸" : "▶"}
@@ -410,7 +410,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
             <PlusCircle className="w-3.5 h-3.5" />
             {frames.length > 1 ? `Apply ${frames.length} Frames to Designer` : "Apply to Designer"}
           </button>
-          <button onClick={onClose} className="text-[10px] text-zinc-600 hover:text-zinc-400 transition-colors text-center">
+          <button onClick={onClose} className="text-[10px] text-zinc-600 hover:text-[var(--k-muted)] transition-colors text-center">
             Cancel
           </button>
         </div>

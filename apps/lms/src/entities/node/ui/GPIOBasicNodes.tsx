@@ -212,7 +212,7 @@ export function PWMOutputNode() {
           <>
             <NodeField label="Sensor min"><NumberInput value={sensorMin} onChange={setSensorMin} /></NodeField>
             <NodeField label="Sensor max"><NumberInput value={sensorMax} onChange={setSensorMax} /></NodeField>
-            <p className="text-[9px] text-zinc-600 px-3 pb-1">Maps <span className="font-mono text-zinc-400">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
+            <p className="text-[9px] text-zinc-600 px-3 pb-1">Maps <span className="font-mono text-[var(--k-muted)]">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
           </>
         )}
       </AdvancedSection>

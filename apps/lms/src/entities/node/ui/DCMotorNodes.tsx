@@ -48,8 +48,8 @@ function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
         <span className="text-[9px] font-mono text-orange-400">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
-        <span className="text-[10px] text-zinc-500">PWM <span className="text-zinc-300 font-mono">{m.pwm}</span></span>
-        <span className="text-[10px] text-zinc-500">DIR <span className="text-zinc-300 font-mono">{m.dir}</span></span>
+        <span className="text-[10px] text-zinc-500">PWM <span className="text-[var(--k-text)] font-mono">{m.pwm}</span></span>
+        <span className="text-[10px] text-zinc-500">DIR <span className="text-[var(--k-text)] font-mono">{m.dir}</span></span>
       </div>
     </div>
   );
@@ -134,7 +134,7 @@ export function RobotDriveNode() {
                     : m.value.includes("spin")
                       ? "border-purple-500/60 bg-purple-500/15 text-purple-300"
                       : "border-orange-500/60 bg-orange-500/15 text-orange-300"
-                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-zinc-500 hover:border-zinc-500 hover:text-zinc-300"
+                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-zinc-500 hover:border-zinc-500 hover:text-[var(--k-text)]"
               }`}
             >
               {m.icon}
@@ -142,7 +142,7 @@ export function RobotDriveNode() {
           ))}
         </div>
         <div className="text-center mt-1">
-          <span className="text-[10px] font-semibold text-zinc-400">{current.label}</span>
+          <span className="text-[10px] font-semibold text-[var(--k-muted)]">{current.label}</span>
         </div>
       </div>
 
@@ -170,8 +170,8 @@ export function RobotDriveNode() {
         <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — all 4 motors</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-zinc-400 font-mono">left</span></span>
-            <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-zinc-400 font-mono">right</span></span>
+            <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-[var(--k-muted)] font-mono">left</span></span>
+            <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-[var(--k-muted)] font-mono">right</span></span>
           </div>
         </div>
       </AdvancedSection>
@@ -216,7 +216,7 @@ export function DCMotorSingleNode() {
           ))}
         </div>
         <div className="text-center mt-1">
-          <span className="text-[10px] text-zinc-400 font-semibold">{direction}</span>
+          <span className="text-[10px] text-[var(--k-muted)] font-semibold">{direction}</span>
         </div>
       </div>
     </BaseNode>
@@ -302,10 +302,10 @@ export function MultiMotorControllerNode() {
         <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-zinc-400">17/18</span></span>
-            <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-zinc-400">37/38</span></span>
-            <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-zinc-400">45/46</span></span>
-            <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-zinc-400">15/16</span></span>
+            <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-[var(--k-muted)]">17/18</span></span>
+            <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-[var(--k-muted)]">37/38</span></span>
+            <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-[var(--k-muted)]">45/46</span></span>
+            <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-[var(--k-muted)]">15/16</span></span>
           </div>
         </div>
       </AdvancedSection>

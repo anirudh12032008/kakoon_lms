@@ -115,7 +115,7 @@ export function TutorialsDashboard({
       <div className="flex items-center justify-between gap-4 mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-[var(--k-base-100)] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-[var(--k-base-100)] text-[var(--k-muted)] hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Close Examples
@@ -124,7 +124,7 @@ export function TutorialsDashboard({
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-zinc-800 bg-[var(--k-base-100)] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-zinc-800 bg-[var(--k-base-100)] text-[var(--k-muted)] hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
           >
             <Upload className="w-3.5 h-3.5 text-cyan-400" />
             Import Example
@@ -147,7 +147,7 @@ export function TutorialsDashboard({
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Robotics & AI Examples</h1>
-          <p className="text-zinc-400 text-xs mt-1">
+          <p className="text-[var(--k-muted)] text-xs mt-1">
             Browse and load prepackaged and custom robotics and AI block programs.
           </p>
         </div>
@@ -160,7 +160,7 @@ export function TutorialsDashboard({
             <select
               value={selectedComponent}
               onChange={(e) => setSelectedComponent(e.target.value)}
-              className="appearance-none bg-[#0e0e12] border border-zinc-800 rounded-lg px-4 py-2 pr-10 text-xs font-medium text-zinc-400 focus:outline-none focus:border-zinc-700 cursor-pointer"
+              className="appearance-none bg-[#0e0e12] border border-zinc-800 rounded-lg px-4 py-2 pr-10 text-xs font-medium text-[var(--k-muted)] focus:outline-none focus:border-zinc-700 cursor-pointer"
             >
               <option value="All">Sort by components</option>
               {allComponents.filter((c) => c !== "All").map((c) => (
@@ -177,7 +177,7 @@ export function TutorialsDashboard({
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-[#0e0e12] border border-zinc-800 rounded-lg pl-9 pr-4 py-2 text-xs font-medium text-zinc-300 placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 w-full"
+              className="bg-[#0e0e12] border border-zinc-800 rounded-lg pl-9 pr-4 py-2 text-xs font-medium text-[var(--k-text)] placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 w-full"
             />
           </div>
         </div>
@@ -188,7 +188,7 @@ export function TutorialsDashboard({
               key={diff}
               onClick={() => setSelectedDifficulty(diff)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                selectedDifficulty === diff ? "bg-[var(--k-base-300)] text-white" : "text-zinc-500 hover:text-zinc-300"
+                selectedDifficulty === diff ? "bg-[var(--k-base-300)] text-white" : "text-zinc-500 hover:text-[var(--k-text)]"
               }`}
             >
               {diff}
@@ -287,15 +287,15 @@ export function TutorialsDashboard({
 
             <div className="text-center mt-3">
               <h2 className="text-lg font-bold text-white px-2">{activeModalTutorial.title}</h2>
-              <p className="text-zinc-400 text-xs mt-2">How would you like to load this example?</p>
+              <p className="text-[var(--k-muted)] text-xs mt-2">How would you like to load this example?</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mt-8">
               <button
                 onClick={() => { onSelectTutorial(activeModalTutorial, "preview"); setActiveModalTutorial(null); }}
-                className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-zinc-800 bg-[#121215]/80 hover:bg-[#18181e] text-zinc-300 hover:text-white hover:border-zinc-700 transition-all font-semibold"
+                className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-zinc-800 bg-[#121215]/80 hover:bg-[#18181e] text-[var(--k-text)] hover:text-white hover:border-zinc-700 transition-all font-semibold"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800/40 text-zinc-400">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800/40 text-[var(--k-muted)]">
                   <Eye className="w-5 h-5" />
                 </div>
                 <span className="text-xs">Show Preview</span>

@@ -105,7 +105,7 @@ export function HTTPClientNode() {
               <div key={i} className="flex gap-1 px-1.5 py-1 border-b border-[var(--k-base-200)] last:border-0">
                 <input value={h.key} onChange={(e) => updateHeader(i, "key", e.target.value)}
                   placeholder="Header"
-                  className="nodrag w-[90px] text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 outline-none" />
+                  className="nodrag w-[90px] text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-[var(--k-muted)] outline-none" />
                 <input value={h.value} onChange={(e) => updateHeader(i, "value", e.target.value)}
                   placeholder="Value"
                   className="nodrag flex-1 text-[9px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-cyan-400 outline-none" />
@@ -274,7 +274,7 @@ export function SerialMonitorNode() {
               <input value={v.name} onChange={(e) => updateVar(i, "name", e.target.value)}
                 className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-green-400 outline-none" />
               <input value={v.delimiter} onChange={(e) => updateVar(i, "delimiter", e.target.value)}
-                className="nodrag w-[40px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-zinc-400 text-center outline-none" />
+                className="nodrag w-[40px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-[var(--k-muted)] text-center outline-none" />
               <input type="number" value={v.index} onChange={(e) => updateVar(i, "index", +e.target.value)} min={0}
                 className="nodrag w-[26px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-blue-400 text-center outline-none" />
               <Handle type="source" position={Position.Right} id={`parse_${i}`}

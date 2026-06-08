@@ -54,7 +54,7 @@ function ZoneRow({ label, color, dist, setDist, nodeColor, onColorChange }: {
       <span className="text-[9px] font-bold uppercase tracking-wider flex-shrink-0" style={{ color: nodeColor, width: 22 }}>{label}</span>
       <span className="text-[9px] text-zinc-600 flex-shrink-0">&lt;</span>
       <input type="number" value={dist} onChange={e => setDist(Number(e.target.value))}
-        className="nodrag w-11 rounded bg-[var(--k-base-300)] border border-[var(--k-border)] text-[10px] text-center text-zinc-300 font-mono outline-none px-1 py-0.5" />
+        className="nodrag w-11 rounded bg-[var(--k-base-300)] border border-[var(--k-border)] text-[10px] text-center text-[var(--k-text)] font-mono outline-none px-1 py-0.5" />
       <span className="text-[9px] text-zinc-600">cm</span>
     </div>
   );

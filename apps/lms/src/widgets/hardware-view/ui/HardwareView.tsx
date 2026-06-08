@@ -769,11 +769,11 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
         fitView fitViewOptions={{ padding: 0.12 }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background id="hw-dots" color="#16a34a" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "#050a07" }} />
+        <Background id="hw-dots" color="var(--k-dim)" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "var(--k-base-100)" }} />
         <MiniMap
-          nodeColor="#8b5cf6"
-          maskColor="rgba(8, 12, 8, 0.85)"
-          style={{ backgroundColor: "#101510", border: "1px solid #1f2a1f", borderRadius: "8px" }}
+          nodeColor="var(--k-primary)"
+          maskColor="color-mix(in srgb, var(--k-base-100) 78%, transparent)"
+          style={{ backgroundColor: "var(--k-base-300)", border: "1px solid var(--k-border)", borderRadius: "8px" }}
         />
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full px-5 py-2 text-[11px] text-hint border border-subtle bg-panel/90 shadow pointer-events-none backdrop-blur-sm">
           Drag a component · wire handle to board port · toggle ON/OFF · Delete removes from both views

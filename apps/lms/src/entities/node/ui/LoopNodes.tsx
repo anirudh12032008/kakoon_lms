@@ -60,7 +60,7 @@ export function ForeverLoopNode() {
     >
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
-      <div className="text-sm font-bold text-white">Forever Loop</div>
+      <div className="text-sm font-bold text-[var(--k-text)]">Forever Loop</div>
       <div style={{ color }}><RefreshIcon /></div>
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       <Handle type="source" position={Position.Right} id="body" style={{ ...hs, right: -7 }} />
@@ -124,7 +124,7 @@ export function BreakNode() {
     >
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
-      <div className="text-sm font-bold text-white mb-2">Break</div>
+      <div className="text-sm font-bold text-[var(--k-text)] mb-2">Break</div>
       <div className="w-3/4 border-t border-[var(--k-border)] mb-2" />
       <div style={{ color }}><ScissorsIcon /></div>
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />

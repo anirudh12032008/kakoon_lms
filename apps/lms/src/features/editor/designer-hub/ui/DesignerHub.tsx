@@ -20,7 +20,7 @@ function Tab({ label, icon, active, onClick }: TabProps) {
       className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold transition-all border-b-2 ${
         active
           ? "border-violet-500 text-violet-400 bg-violet-500/10"
-          : "border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
+          : "border-transparent text-zinc-500 hover:text-[var(--k-text)] hover:bg-white/5"
       }`}>
       <span>{icon}</span>{label}
     </button>
@@ -56,7 +56,7 @@ export function DesignerHub({ onClose, onAddNode, defaultTab = "oled", onSaveOLE
               <Tab label="NeoPixel LEDs" icon="💡" active={activeTab === "neopixel"} onClick={() => setActiveTab("neopixel")} />
               <Tab label="LED Matrix"   icon="⬛"  active={activeTab === "matrix"}   onClick={() => setActiveTab("matrix")} />
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 ml-2">
+            <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--k-muted)] hover:text-white hover:bg-white/10 ml-2">
               <X className="w-4 h-4" />
             </button>
           </div>

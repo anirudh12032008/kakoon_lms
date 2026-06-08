@@ -446,7 +446,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
           {(["3d","horizon","graphs"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                tab === t ? "border-violet-500/60 bg-violet-500/15 text-violet-300" : "border-[var(--k-border)] text-zinc-500 hover:text-zinc-300"
+                tab === t ? "border-violet-500/60 bg-violet-500/15 text-violet-300" : "border-[var(--k-border)] text-zinc-500 hover:text-[var(--k-text)]"
               }`}>
               {t === "3d" ? "3D" : t === "horizon" ? "AH" : "≈"}
             </button>

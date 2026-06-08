@@ -71,7 +71,7 @@ export function BLEModeNode() {
       {/* Commands */}
       <div className="px-3 pb-1">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-semibold text-zinc-300">When phone sends…</span>
+          <span className="text-[10px] font-semibold text-[var(--k-text)]">When phone sends…</span>
           <button onClick={addCmd}
             className="nodrag text-[9px] px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/25 text-blue-400 hover:bg-blue-500/25 transition-all font-semibold">
             + Add
@@ -103,7 +103,7 @@ export function BLEModeNode() {
       {/* Send back to phone */}
       <div className="px-3 pb-1">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-zinc-300">Send to phone</span>
+          <span className="text-[10px] font-semibold text-[var(--k-text)]">Send to phone</span>
           <ToggleInput value={enableTx} onChange={setEnableTx} leftLabel="Off" rightLabel="On" />
         </div>
         {enableTx && (

@@ -166,7 +166,7 @@ export function RGBLEDMatrixNode() {
         <TopologyPreview />
         <div className="flex-1 min-w-0">
           <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-0.5">Preview</div>
-          <div className="text-[10px] text-zinc-400">{ledCount} LED{ledCount !== 1 ? "s" : ""} · {topology}</div>
+          <div className="text-[10px] text-[var(--k-muted)]">{ledCount} LED{ledCount !== 1 ? "s" : ""} · {topology}</div>
         </div>
       </div>
 
