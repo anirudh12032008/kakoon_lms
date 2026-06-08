@@ -3,6 +3,7 @@ import {
   NodeField,
   SelectInput,
   ToggleInput,
+  NumberInput,
   useNodeField,
   AdvancedSection,
   COLORS,
@@ -51,6 +52,33 @@ function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
         <span className="text-[10px] text-zinc-500">PWM <span className="text-[var(--k-text)] font-mono">{m.pwm}</span></span>
         <span className="text-[10px] text-zinc-500">DIR <span className="text-[var(--k-text)] font-mono">{m.dir}</span></span>
       </div>
+    </div>
+  );
+}
+
+// ─── Custom GPIO override controls (Advanced mode) ────────────────────────────
+// Lets users re-target a motor's PWM + DIR lines to different GPIOs than the
+// board's stock DRV8833 wiring — useful for custom/breadboard motor setups.
+function CustomPinToggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <NodeField label="GPIO">
+      <ToggleInput value={value} onChange={onChange} leftLabel="Board" rightLabel="Custom" />
+    </NodeField>
+  );
+}
+
+function CustomPinRow({ label, pwmPin, setPwmPin, dirPin, setDirPin }: {
+  label: string;
+  pwmPin: number; setPwmPin: (v: number) => void;
+  dirPin: number; setDirPin: (v: number) => void;
+}) {
+  return (
+    <div className="px-3 py-1 flex items-center gap-2">
+      <span className="w-[58px] flex-shrink-0 text-[10px] text-[var(--k-muted)] font-medium">{label}</span>
+      <span className="text-[9px] text-zinc-500 uppercase">pwm</span>
+      <NumberInput value={pwmPin} onChange={setPwmPin} />
+      <span className="text-[9px] text-zinc-500 uppercase">dir</span>
+      <NumberInput value={dirPin} onChange={setDirPin} />
     </div>
   );
 }
@@ -114,6 +142,17 @@ export function RobotDriveNode() {
   const [move, setMove]   = useNodeField<RobotMove>("move", "forward");
   const [speed, setSpeed] = useNodeField<number>("speed", 75);
 
+  // Custom GPIO overrides — re-target each wheel's PWM/DIR lines (Advanced mode)
+  const [useCustomPins, setUseCustomPins] = useNodeField<boolean>("useCustomPins", false);
+  const [flPwmPin, setFlPwmPin] = useNodeField<number>("flPwmPin", MOTOR_PORTS.L1.pwm);
+  const [flDirPin, setFlDirPin] = useNodeField<number>("flDirPin", MOTOR_PORTS.L1.dir);
+  const [frPwmPin, setFrPwmPin] = useNodeField<number>("frPwmPin", MOTOR_PORTS.R1.pwm);
+  const [frDirPin, setFrDirPin] = useNodeField<number>("frDirPin", MOTOR_PORTS.R1.dir);
+  const [rlPwmPin, setRlPwmPin] = useNodeField<number>("rlPwmPin", MOTOR_PORTS.L2.pwm);
+  const [rlDirPin, setRlDirPin] = useNodeField<number>("rlDirPin", MOTOR_PORTS.L2.dir);
+  const [rrPwmPin, setRrPwmPin] = useNodeField<number>("rrPwmPin", MOTOR_PORTS.R2.pwm);
+  const [rrDirPin, setRrDirPin] = useNodeField<number>("rrDirPin", MOTOR_PORTS.R2.dir);
+
   const current = ROBOT_MOVES.find(m => m.value === move) ?? ROBOT_MOVES[0];
   const isStop  = move === "stop";
   const isSpin  = move.includes("spin");
@@ -174,6 +213,20 @@ export function RobotDriveNode() {
             <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-[var(--k-muted)] font-mono">right</span></span>
           </div>
         </div>
+
+        {/* Custom GPIO override — re-wire all 4 wheels to different pins */}
+        <CustomPinToggle value={useCustomPins} onChange={setUseCustomPins} />
+        {useCustomPins && (
+          <div className="mb-1">
+            <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
+              ⚠️ Overrides the board's stock DRV8833 wiring — only use this if your motors are wired to these GPIOs.
+            </p>
+            <CustomPinRow label="Front-Left"  pwmPin={flPwmPin} setPwmPin={setFlPwmPin} dirPin={flDirPin} setDirPin={setFlDirPin} />
+            <CustomPinRow label="Front-Right" pwmPin={frPwmPin} setPwmPin={setFrPwmPin} dirPin={frDirPin} setDirPin={setFrDirPin} />
+            <CustomPinRow label="Rear-Left"   pwmPin={rlPwmPin} setPwmPin={setRlPwmPin} dirPin={rlDirPin} setDirPin={setRlDirPin} />
+            <CustomPinRow label="Rear-Right"  pwmPin={rrPwmPin} setPwmPin={setRrPwmPin} dirPin={rrDirPin} setDirPin={setRrDirPin} />
+          </div>
+        )}
       </AdvancedSection>
     </BaseNode>
   );
@@ -185,12 +238,28 @@ export function DCMotorSingleNode() {
   const [speed, setSpeed]         = useNodeField<number>("speed", 50);
   const [direction, setDirection] = useNodeField<string>("direction", "Forward");
 
+  // Custom GPIO override — drive this motor on different pins than the port's stock wiring
+  const [useCustomPins, setUseCustomPins] = useNodeField<boolean>("useCustomPins", false);
+  const [customPwmPin, setCustomPwmPin]   = useNodeField<number>("customPwmPin", MOTOR_PORTS[motorPort].pwm);
+  const [customDirPin, setCustomDirPin]   = useNodeField<number>("customDirPin", MOTOR_PORTS[motorPort].dir);
+
   return (
     <BaseNode title="DC Motor" color={COLORS.orange} icon={<MotorIcon />} width="260px">
       <NodeField label="Motor Port">
         <SelectInput value={motorPort} onChange={v => setMotorPort(v as MotorKey)} compact options={MOTOR_OPTIONS} />
       </NodeField>
-      <AdvancedSection><MotorPinInfo motorKey={motorPort} /></AdvancedSection>
+      <AdvancedSection>
+        <MotorPinInfo motorKey={motorPort} />
+        <CustomPinToggle value={useCustomPins} onChange={setUseCustomPins} />
+        {useCustomPins && (
+          <div className="mb-1">
+            <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
+              ⚠️ Drives this motor on custom GPIOs instead of port {motorPort}'s stock wiring.
+            </p>
+            <CustomPinRow label="Motor" pwmPin={customPwmPin} setPwmPin={setCustomPwmPin} dirPin={customDirPin} setDirPin={setCustomDirPin} />
+          </div>
+        )}
+      </AdvancedSection>
 
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
@@ -227,6 +296,17 @@ export function DCMotorSingleNode() {
 export function MultiMotorControllerNode() {
   const [pairMode, setPairMode] = useNodeField<boolean>("pairMode", false);
   const [syncMode, setSyncMode] = useNodeField<boolean>("syncMode", false);
+
+  // Custom GPIO overrides — re-target each port's PWM/DIR lines (Advanced mode)
+  const [useCustomPins, setUseCustomPins] = useNodeField<boolean>("useCustomPins", false);
+  const [l1PwmPin, setL1PwmPin] = useNodeField<number>("l1PwmPin", MOTOR_PORTS.L1.pwm);
+  const [l1DirPin, setL1DirPin] = useNodeField<number>("l1DirPin", MOTOR_PORTS.L1.dir);
+  const [l2PwmPin, setL2PwmPin] = useNodeField<number>("l2PwmPin", MOTOR_PORTS.L2.pwm);
+  const [l2DirPin, setL2DirPin] = useNodeField<number>("l2DirPin", MOTOR_PORTS.L2.dir);
+  const [r1PwmPin, setR1PwmPin] = useNodeField<number>("r1PwmPin", MOTOR_PORTS.R1.pwm);
+  const [r1DirPin, setR1DirPin] = useNodeField<number>("r1DirPin", MOTOR_PORTS.R1.dir);
+  const [r2PwmPin, setR2PwmPin] = useNodeField<number>("r2PwmPin", MOTOR_PORTS.R2.pwm);
+  const [r2DirPin, setR2DirPin] = useNodeField<number>("r2DirPin", MOTOR_PORTS.R2.dir);
 
   const [l1speed, setL1speed] = useNodeField<number>("l1speed", 50);
   const [l1dir,   setL1dir]   = useNodeField<string>("l1dir",   "Forward");
@@ -308,6 +388,20 @@ export function MultiMotorControllerNode() {
             <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-[var(--k-muted)]">15/16</span></span>
           </div>
         </div>
+
+        {/* Custom GPIO override — re-wire any/all ports to different pins */}
+        <CustomPinToggle value={useCustomPins} onChange={setUseCustomPins} />
+        {useCustomPins && (
+          <div className="mb-1">
+            <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
+              ⚠️ Overrides the board's stock DRV8833 wiring — only use this if your motors are wired to these GPIOs.
+            </p>
+            <CustomPinRow label="L1" pwmPin={l1PwmPin} setPwmPin={setL1PwmPin} dirPin={l1DirPin} setDirPin={setL1DirPin} />
+            <CustomPinRow label="L2" pwmPin={l2PwmPin} setPwmPin={setL2PwmPin} dirPin={l2DirPin} setDirPin={setL2DirPin} />
+            <CustomPinRow label="R1" pwmPin={r1PwmPin} setPwmPin={setR1PwmPin} dirPin={r1DirPin} setDirPin={setR1DirPin} />
+            <CustomPinRow label="R2" pwmPin={r2PwmPin} setPwmPin={setR2PwmPin} dirPin={r2DirPin} setDirPin={setR2DirPin} />
+          </div>
+        )}
       </AdvancedSection>
     </BaseNode>
   );

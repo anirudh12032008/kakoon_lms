@@ -48,6 +48,13 @@ interface NodeData {
   l1speed?: number; l2speed?: number; r1speed?: number; r2speed?: number;
   l1dir?: string; l2dir?: string; r1dir?: string; r2dir?: string;
   move?: string;
+  // Motor custom GPIO overrides
+  useCustomPins?: boolean;
+  customPwmPin?: number; customDirPin?: number;
+  l1PwmPin?: number; l1DirPin?: number; l2PwmPin?: number; l2DirPin?: number;
+  r1PwmPin?: number; r1DirPin?: number; r2PwmPin?: number; r2DirPin?: number;
+  flPwmPin?: number; flDirPin?: number; frPwmPin?: number; frDirPin?: number;
+  rlPwmPin?: number; rlDirPin?: number; rrPwmPin?: number; rrDirPin?: number;
   // Multi-servo sequencer
   s1port?: string; s2port?: string; s3port?: string;
   keyframes?: Array<{ angles?: number[] }>;
@@ -219,9 +226,36 @@ front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _m
 rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))
 `;
 
+  // --- Custom-pin motor driver — for users who re-target a motor's PWM/DIR
+  // lines to GPIOs other than the board's stock DRV8833 wiring (Advanced mode).
+  const CUSTOM_MOTOR_HELPER = `# --- Custom-pin motor driver (PWM + DIR on user-chosen GPIOs) ---
+def _cm_pwm(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
+def _cm_dir(pin): return Pin(pin, Pin.OUT)
+
+def _cm_drive(pwm, d, t):
+    d.value(0 if t >= 0 else 1)
+    duty = int(abs(t) * 65535)
+    pwm.duty_u16(duty if t >= 0 else 65535 - duty)
+
+def _cm_stop(pwm, d):
+    pwm.duty_u16(0); d.value(0)
+`;
+
   // Helper: emit a shared helper block only once per script
   const emitOnce = (key: string, code: string) => {
     if (!setupOnce.has(key)) { setupOnce.add(key); setupLines.push(code); }
+  };
+
+  // Create (once) and return the variable names for a custom-pin motor's
+  // PWM + DIR objects, deduped by GPIO number so re-used pins share objects.
+  const getCustomMotorHandle = (pwmPin: number, dirPin: number) => {
+    imports.add("from machine import Pin, PWM");
+    emitOnce("custom_motor_helper", CUSTOM_MOTOR_HELPER);
+    const pwmVar = `_cm_pwm${pwmPin}`;
+    const dirVar = `_cm_dir${dirPin}`;
+    emitOnce(`cm_pwm_${pwmPin}`, `${pwmVar} = _cm_pwm(${pwmPin})`);
+    emitOnce(`cm_dir_${dirPin}`, `${dirVar} = _cm_dir(${dirPin})`);
+    return { pwmVar, dirVar };
   };
 
   const visited = new Set<string>();
@@ -806,48 +840,85 @@ time.sleep(0.1)`);
       // ─── Motor nodes ───────────────────────────────────────────────────────
       case "robot_drive": {
         imports.add("from machine import Pin, PWM");
-        emitOnce("drv8833_class", DRV8833_HELPER);
         const move = (d.move as string) ?? "forward";
         const t    = ((d.speed ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
         const ti   = (((d.speed ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
         chunkLines.push(`${indent}# Robot Drive — ${move}`);
-        if (move === "forward") {
-          chunkLines.push(`${indent}front.throttle_a(${t}); front.throttle_b(${t}); rear.throttle_a(${t}); rear.throttle_b(${t})`);
-        } else if (move === "backward") {
-          chunkLines.push(`${indent}front.throttle_a(-${t}); front.throttle_b(-${t}); rear.throttle_a(-${t}); rear.throttle_b(-${t})`);
-        } else if (move === "left") {
-          chunkLines.push(`${indent}front.throttle_a(${t}); front.throttle_b(${ti}); rear.throttle_a(${t}); rear.throttle_b(${ti})`);
-        } else if (move === "right") {
-          chunkLines.push(`${indent}front.throttle_a(${ti}); front.throttle_b(${t}); rear.throttle_a(${ti}); rear.throttle_b(${t})`);
-        } else if (move === "spin_left") {
-          chunkLines.push(`${indent}front.throttle_a(${t}); front.throttle_b(-${t}); rear.throttle_a(${t}); rear.throttle_b(-${t})`);
-        } else if (move === "spin_right") {
-          chunkLines.push(`${indent}front.throttle_a(-${t}); front.throttle_b(${t}); rear.throttle_a(-${t}); rear.throttle_b(${t})`);
+
+        if (d.useCustomPins) {
+          // Per-wheel throttle expression for each move (null = stop)
+          const moveThrottles: Record<string, Record<"FL" | "FR" | "RL" | "RR", string | null>> = {
+            forward:    { FL: t,        FR: t,        RL: t,        RR: t        },
+            backward:   { FL: `-${t}`,  FR: `-${t}`,  RL: `-${t}`,  RR: `-${t}`  },
+            left:       { FL: ti,       FR: t,        RL: ti,       RR: t        },
+            right:      { FL: t,        FR: ti,       RL: t,        RR: ti       },
+            spin_left:  { FL: `-${t}`,  FR: t,        RL: `-${t}`,  RR: t        },
+            spin_right: { FL: t,        FR: `-${t}`,  RL: t,        RR: `-${t}`  },
+            stop:       { FL: null,     FR: null,     RL: null,     RR: null     },
+          };
+          const throttles = moveThrottles[move] ?? moveThrottles.forward;
+          const WHEELS = [
+            { name: "FL" as const, pwm: d.flPwmPin ?? MOTORS.frontLeft.pwm,  dir: d.flDirPin ?? MOTORS.frontLeft.dir  },
+            { name: "FR" as const, pwm: d.frPwmPin ?? MOTORS.frontRight.pwm, dir: d.frDirPin ?? MOTORS.frontRight.dir },
+            { name: "RL" as const, pwm: d.rlPwmPin ?? MOTORS.rearLeft.pwm,   dir: d.rlDirPin ?? MOTORS.rearLeft.dir   },
+            { name: "RR" as const, pwm: d.rrPwmPin ?? MOTORS.rearRight.pwm,  dir: d.rrDirPin ?? MOTORS.rearRight.dir  },
+          ];
+          for (const w of WHEELS) {
+            const { pwmVar, dirVar } = getCustomMotorHandle(w.pwm, w.dir);
+            const thr = throttles[w.name];
+            if (thr === null) chunkLines.push(`${indent}_cm_stop(${pwmVar}, ${dirVar})  # ${w.name}`);
+            else chunkLines.push(`${indent}_cm_drive(${pwmVar}, ${dirVar}, ${thr})  # ${w.name}`);
+          }
         } else {
-          chunkLines.push(`${indent}front.stop_all(); rear.stop_all()`);
+          emitOnce("drv8833_class", DRV8833_HELPER);
+          if (move === "forward") {
+            chunkLines.push(`${indent}front.throttle_a(${t}); front.throttle_b(${t}); rear.throttle_a(${t}); rear.throttle_b(${t})`);
+          } else if (move === "backward") {
+            chunkLines.push(`${indent}front.throttle_a(-${t}); front.throttle_b(-${t}); rear.throttle_a(-${t}); rear.throttle_b(-${t})`);
+          } else if (move === "left") {
+            chunkLines.push(`${indent}front.throttle_a(${t}); front.throttle_b(${ti}); rear.throttle_a(${t}); rear.throttle_b(${ti})`);
+          } else if (move === "right") {
+            chunkLines.push(`${indent}front.throttle_a(${ti}); front.throttle_b(${t}); rear.throttle_a(${ti}); rear.throttle_b(${t})`);
+          } else if (move === "spin_left") {
+            chunkLines.push(`${indent}front.throttle_a(${t}); front.throttle_b(-${t}); rear.throttle_a(${t}); rear.throttle_b(-${t})`);
+          } else if (move === "spin_right") {
+            chunkLines.push(`${indent}front.throttle_a(-${t}); front.throttle_b(${t}); rear.throttle_a(-${t}); rear.throttle_b(${t})`);
+          } else {
+            chunkLines.push(`${indent}front.stop_all(); rear.stop_all()`);
+          }
         }
         break;
       }
       case "dc_motor_single": {
         // L1=FL(front.b), L2=RL(rear.b), R1=FR(front.a), R2=RR(rear.a)
         imports.add("from machine import Pin, PWM");
-        emitOnce("drv8833_class", DRV8833_HELPER);
-        const portToDRV: Record<string, { obj: string; fn: string }> = {
-          L1: { obj: "front", fn: "b" },
-          L2: { obj: "rear",  fn: "b" },
-          R1: { obj: "front", fn: "a" },
-          R2: { obj: "rear",  fn: "a" },
-        };
         const mKey  = (d.motorPort as string) ?? "L1";
-        const drv   = portToDRV[mKey] ?? portToDRV["L1"];
         const dir   = d.direction ?? "Forward";
         const speed = d.speed ?? 50;
         const t2    = (speed / 100).toFixed(2);
-        if (dir === "Brake" || dir === "Coast") {
-          chunkLines.push(`${indent}${drv.obj}.stop_${drv.fn}()  # ${dir}`);
+        const throttle = dir === "Reverse" ? `-${t2}` : t2;
+
+        if (d.useCustomPins && typeof d.customPwmPin === "number" && typeof d.customDirPin === "number") {
+          const { pwmVar, dirVar } = getCustomMotorHandle(d.customPwmPin, d.customDirPin);
+          if (dir === "Brake" || dir === "Coast") {
+            chunkLines.push(`${indent}_cm_stop(${pwmVar}, ${dirVar})  # ${mKey} ${dir} (custom GPIO ${d.customPwmPin}/${d.customDirPin})`);
+          } else {
+            chunkLines.push(`${indent}_cm_drive(${pwmVar}, ${dirVar}, ${throttle})  # ${mKey} ${dir} ${speed}% (custom GPIO ${d.customPwmPin}/${d.customDirPin})`);
+          }
         } else {
-          const throttle = dir === "Reverse" ? `-${t2}` : t2;
-          chunkLines.push(`${indent}${drv.obj}.throttle_${drv.fn}(${throttle})  # ${mKey} ${dir} ${speed}%`);
+          emitOnce("drv8833_class", DRV8833_HELPER);
+          const portToDRV: Record<string, { obj: string; fn: string }> = {
+            L1: { obj: "front", fn: "b" },
+            L2: { obj: "rear",  fn: "b" },
+            R1: { obj: "front", fn: "a" },
+            R2: { obj: "rear",  fn: "a" },
+          };
+          const drv = portToDRV[mKey] ?? portToDRV["L1"];
+          if (dir === "Brake" || dir === "Coast") {
+            chunkLines.push(`${indent}${drv.obj}.stop_${drv.fn}()  # ${dir}`);
+          } else {
+            chunkLines.push(`${indent}${drv.obj}.throttle_${drv.fn}(${throttle})  # ${mKey} ${dir} ${speed}%`);
+          }
         }
         break;
       }
@@ -885,7 +956,6 @@ time.sleep(0.1)`);
       }
       case "multi_motor_controller": {
         imports.add("from machine import Pin, PWM");
-        emitOnce("drv8833_class", DRV8833_HELPER);
         // Port → DRV8833 object + method: L1=FL(front.b), L2=RL(rear.b), R1=FR(front.a), R2=RR(rear.a)
         const portToDRVm: Record<string, { obj: string; fn: string }> = {
           L1: { obj: "front", fn: "b" },
@@ -893,10 +963,25 @@ time.sleep(0.1)`);
           R1: { obj: "front", fn: "a" },
           R2: { obj: "rear",  fn: "a" },
         };
+        // Port → custom GPIO pins, falling back to that port's stock DRV8833 wiring
+        // (L1=frontLeft, L2=rearLeft, R1=frontRight, R2=rearRight)
+        const portToCustomPins: Record<string, { pwm: number; dir: number }> = {
+          L1: { pwm: d.l1PwmPin ?? MOTORS.frontLeft.pwm,  dir: d.l1DirPin ?? MOTORS.frontLeft.dir  },
+          L2: { pwm: d.l2PwmPin ?? MOTORS.rearLeft.pwm,   dir: d.l2DirPin ?? MOTORS.rearLeft.dir   },
+          R1: { pwm: d.r1PwmPin ?? MOTORS.frontRight.pwm, dir: d.r1DirPin ?? MOTORS.frontRight.dir },
+          R2: { pwm: d.r2PwmPin ?? MOTORS.rearRight.pwm,  dir: d.r2DirPin ?? MOTORS.rearRight.dir  },
+        };
+        if (!d.useCustomPins) emitOnce("drv8833_class", DRV8833_HELPER);
         const makeMotorCall = (port: string, speed: number, dir: string) => {
+          const t = ((dir === "Reverse" ? -speed : speed) / 100).toFixed(2);
+          if (d.useCustomPins) {
+            const cp = portToCustomPins[port] ?? portToCustomPins["L1"];
+            const { pwmVar, dirVar } = getCustomMotorHandle(cp.pwm, cp.dir);
+            if (dir === "Brake" || dir === "Coast") return `_cm_stop(${pwmVar}, ${dirVar})`;
+            return `_cm_drive(${pwmVar}, ${dirVar}, ${t})`;
+          }
           const drv = portToDRVm[port] ?? portToDRVm["L1"];
           if (dir === "Brake" || dir === "Coast") return `${drv.obj}.stop_${drv.fn}()`;
-          const t = ((dir === "Reverse" ? -speed : speed) / 100).toFixed(2);
           return `${drv.obj}.throttle_${drv.fn}(${t})`;
         };
         if (d.syncMode) {
