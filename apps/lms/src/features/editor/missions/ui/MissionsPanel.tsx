@@ -49,8 +49,8 @@ export function MissionsPanel({ missions }: { missions: Missions }) {
         )}
       </AnimatePresence>
 
-      {/* Panel */}
-      <div className="absolute left-3 top-3 z-30 w-[270px] select-none">
+      {/* Panel — top-right so it never covers the blocks palette on the left */}
+      <div className="absolute right-3 top-3 z-30 w-[270px] select-none">
         <div className="rounded-2xl border border-subtle bg-panel/95 shadow-2xl backdrop-blur-md overflow-hidden">
           {/* Header / progress */}
           <button
