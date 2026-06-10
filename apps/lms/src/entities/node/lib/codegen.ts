@@ -215,7 +215,7 @@ class DRV8833:
           pwm.duty_u16(duty)
       else:
           d.value(1)
-          pwm.duty_u16(duty)   
+          pwm.duty_u16(self.MAX - duty)   
 
     def throttle_a(self, t): self._drv(self.ap, self.ad, t)
     def throttle_b(self, t): self._drv(self.bp, self.bd, t)
