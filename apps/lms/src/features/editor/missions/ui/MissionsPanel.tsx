@@ -38,7 +38,7 @@ export function MissionsPanel({ missions }: { missions: Missions }) {
             initial={{ opacity: 0, y: -12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -12, scale: 0.95 }}
-            className="absolute left-1/2 top-3 z-40 -translate-x-1/2 flex items-center gap-2 rounded-xl border border-success/40 bg-panel px-4 py-2.5 shadow-2xl"
+            className="absolute left-1/2 top-3 z-[1100] -translate-x-1/2 flex items-center gap-2 rounded-xl border border-success/40 bg-panel px-4 py-2.5 shadow-2xl"
           >
             <PartyPopper className="h-4 w-4 text-success-c" />
             <span className="text-sm font-bold text-body">
@@ -50,8 +50,8 @@ export function MissionsPanel({ missions }: { missions: Missions }) {
       </AnimatePresence>
 
       {/* Panel — top-right so it never covers the blocks palette on the left */}
-      <div className="absolute right-3 top-3 z-30 w-[270px] select-none">
-        <div className="rounded-2xl border border-subtle bg-panel/95 shadow-2xl backdrop-blur-md overflow-hidden">
+      <div className="absolute right-3 top-3 z-[1100] w-[270px] select-none">
+        <div className="rounded-2xl border border-subtle bg-panel shadow-2xl overflow-hidden">
           {/* Header / progress */}
           <button
             onClick={() => setOpen((v) => !v)}

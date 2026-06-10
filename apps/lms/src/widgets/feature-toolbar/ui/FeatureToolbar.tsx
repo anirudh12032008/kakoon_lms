@@ -1,4 +1,5 @@
-import { Package, Palette, Activity, Zap, HardDrive } from "lucide-react";
+import { Package, Palette, Activity, Zap, HardDrive, Wrench } from "lucide-react";
+import { useNodeMode } from "@/shared/context/NodeModeContext";
 
 interface FeatureToolbarProps {
   showDesignerHub: boolean;
@@ -54,49 +55,85 @@ function Sep() {
   return <div className="w-px h-4 bg-[var(--k-border)] mx-0.5 shrink-0" />;
 }
 
+/** Compact Workshop Mode switch — unlocks the advanced tools on this bar. */
+function WorkshopToggle() {
+  const { globalAdvanced, setGlobalAdvanced } = useNodeMode();
+  return (
+    <button
+      onClick={() => setGlobalAdvanced(!globalAdvanced)}
+      title={globalAdvanced
+        ? "Workshop Mode on — advanced tools & node fields unlocked"
+        : "Turn on Workshop Mode to unlock advanced tools & node fields"}
+      className={`flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all ${
+        globalAdvanced
+          ? "bg-primary-tint text-primary-c border-primary-tint"
+          : "border-subtle text-hint hover:text-body hover:bg-hover"
+      }`}
+    >
+      <Wrench className="h-3 w-3" />
+      <span className="hidden sm:inline lg:hidden">Workshop</span>
+      <span className="hidden lg:inline">Workshop Mode</span>
+      <span
+        className={`inline-flex h-3.5 w-6 items-center rounded-full p-0.5 transition-colors ${
+          globalAdvanced ? "bg-primary" : "bg-hover border border-subtle"
+        }`}
+      >
+        <span className={`h-2.5 w-2.5 rounded-full bg-white shadow transition-transform ${globalAdvanced ? "translate-x-2.5" : "translate-x-0"}`} />
+      </span>
+    </button>
+  );
+}
+
 export function FeatureToolbar({
   showDesignerHub, showIMUViz, showSensorViz, showRadarViz,
   showLibraryManager, showFirmwareFlasher, showESP32Files,
   onOpenDesignerHub, onToggleIMUViz, onToggleSensorViz, onToggleRadarViz,
   onOpenLibraryManager, onOpenFirmwareFlasher, onToggleESP32Files,
 }: FeatureToolbarProps) {
+  const { globalAdvanced } = useNodeMode();
+
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 px-3 overflow-x-auto bg-panel border-b border-subtle">
 
-      {/* — Design — */}
+      {/* — Everyday tools — */}
       <ToolBtn active={showDesignerHub} onClick={onOpenDesignerHub}
         icon={<Palette className="h-3.5 w-3.5" />} label="Designers"
         activeColor="fuchsia" title="OLED, NeoPixel & LED Matrix designers" />
-
-      <Sep />
-
-      {/* — Visualize — */}
-      <ToolBtn active={showIMUViz} onClick={onToggleIMUViz}
-        icon={<Activity className="h-3.5 w-3.5" />} label="IMU"
-        activeColor="violet" title="MPU6050 live motion plot" />
       <ToolBtn active={showSensorViz} onClick={onToggleSensorViz}
         icon={<svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 6v6l4 2"/>
         </svg>} label="Sensors"
         activeColor="emerald" title="Sensor gauges & timelines" />
-      <ToolBtn active={showRadarViz} onClick={onToggleRadarViz}
-        icon={<svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="12" x2="19" y2="5"/><circle cx="12" cy="12" r="3"/>
-        </svg>} label="Radar"
-        activeColor="cyan" title="Ultrasonic radar polar plot" />
 
-      <Sep />
+      {/* — Workshop-only tools: visualizers + device management — */}
+      {globalAdvanced && (
+        <>
+          <Sep />
+          <ToolBtn active={showIMUViz} onClick={onToggleIMUViz}
+            icon={<Activity className="h-3.5 w-3.5" />} label="IMU"
+            activeColor="violet" title="MPU6050 live motion plot" />
+          <ToolBtn active={showRadarViz} onClick={onToggleRadarViz}
+            icon={<svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="12" x2="19" y2="5"/><circle cx="12" cy="12" r="3"/>
+            </svg>} label="Radar"
+            activeColor="cyan" title="Ultrasonic radar polar plot" />
 
-      {/* — Manage — */}
-      <ToolBtn active={showLibraryManager} onClick={onOpenLibraryManager}
-        icon={<Package className="h-3.5 w-3.5" />} label="Libraries"
-        activeColor="violet" title="Install MicroPython libraries" />
-      <ToolBtn active={showESP32Files} onClick={onToggleESP32Files}
-        icon={<HardDrive className="h-3.5 w-3.5" />} label="Files"
-        activeColor="emerald" title="Browse ESP32 filesystem" />
-      <ToolBtn active={showFirmwareFlasher} onClick={onOpenFirmwareFlasher}
-        icon={<Zap className="h-3.5 w-3.5" />} label="Flash"
-        activeColor="blue" title="Flash MicroPython firmware" />
+          <Sep />
+          <ToolBtn active={showLibraryManager} onClick={onOpenLibraryManager}
+            icon={<Package className="h-3.5 w-3.5" />} label="Libraries"
+            activeColor="violet" title="Install MicroPython libraries" />
+          <ToolBtn active={showESP32Files} onClick={onToggleESP32Files}
+            icon={<HardDrive className="h-3.5 w-3.5" />} label="Files"
+            activeColor="emerald" title="Browse ESP32 filesystem" />
+          <ToolBtn active={showFirmwareFlasher} onClick={onOpenFirmwareFlasher}
+            icon={<Zap className="h-3.5 w-3.5" />} label="Flash"
+            activeColor="blue" title="Flash MicroPython firmware" />
+        </>
+      )}
+
+      <div className="ml-auto shrink-0 pl-2">
+        <WorkshopToggle />
+      </div>
     </div>
   );
 }

@@ -70,7 +70,7 @@ export function EditorStatusBar({
           isConnected ? "bg-success-tint text-success-c" : "bg-hover text-sub"
         }`}>
           <Circle className="h-2 w-2" fill="currentColor" />
-          {isConnected ? "ESP32" : "No Device"}
+          {isConnected ? "Robot connected" : "Not connected"}
         </div>
 
         {/* Connection mode picker */}

@@ -1,12 +1,15 @@
-import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {
+  Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles,
+  GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2, MoreHorizontal,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
-import { PlayerChip, AchievementsModal } from "@/entities/gamification";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 import type { SyncState } from "@/features/editor/save-draft/model/useCourseSync";
 import { useAnimations } from "@/shared/context/AnimationContext";
 import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
+import { PlayerChip, AchievementsModal } from "@/entities/gamification";
 
 interface EditorHeaderProps {
   viewMode: ViewMode;
@@ -28,8 +31,8 @@ function SyncIndicator({ state }: { state: SyncState }) {
   const map: Record<SyncState, { icon: React.ReactNode; label: string; cls: string }> = {
     idle: { icon: <Cloud className="h-3.5 w-3.5" />, label: "Synced", cls: "text-hint" },
     loading: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Loading…", cls: "text-hint" },
-    saving: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Saving…", cls: "text-sky-400" },
-    saved: { icon: <Check className="h-3.5 w-3.5" />, label: "Saved", cls: "text-emerald-400" },
+    saving: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Saving…", cls: "text-info-c" },
+    saved: { icon: <Check className="h-3.5 w-3.5" />, label: "Saved", cls: "text-success-c" },
     error: { icon: <CloudOff className="h-3.5 w-3.5" />, label: "Save failed", cls: "text-error-c" },
   };
   const s = map[state];
@@ -62,6 +65,69 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
   { mode: "hardware", icon: <Cpu className="h-3.5 w-3.5" />,                  label: "Hardware" },
 ];
 
+/** Overflow menu for secondary project actions — keeps the header calm. */
+function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
+  onImportProject?: () => void;
+  onExportProject?: () => void;
+  onSaveAsTutorial?: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const { animationsEnabled, toggle: toggleAnimations } = useAnimations();
+
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    window.addEventListener("mousedown", close);
+    return () => window.removeEventListener("mousedown", close);
+  }, [open]);
+
+  const item =
+    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-semibold text-sub transition-colors hover:bg-hover hover:text-body";
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        title="More actions"
+        className={`btn btn-ghost btn-sm px-2 ${open ? "bg-hover text-body" : "text-sub"}`}
+      >
+        <MoreHorizontal className="h-4 w-4" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-[1200] mt-1.5 w-56 rounded-xl border border-subtle bg-panel p-1.5 shadow-2xl">
+          {onImportProject && (
+            <button onClick={() => { onImportProject(); setOpen(false); }} className={item}>
+              <Upload className="h-4 w-4" /> Import project…
+            </button>
+          )}
+          {onExportProject && (
+            <button onClick={() => { onExportProject(); setOpen(false); }} className={item}>
+              <Download className="h-4 w-4" /> Export project
+            </button>
+          )}
+          {onSaveAsTutorial && (
+            <button onClick={() => { onSaveAsTutorial(); setOpen(false); }} className={item}>
+              <GraduationCap className="h-4 w-4" /> Save as tutorial
+            </button>
+          )}
+          <div className="my-1 border-t border-subtle" />
+          <button onClick={toggleAnimations} className={item}>
+            <Sparkles className={`h-4 w-4 ${animationsEnabled ? "text-primary-c" : "opacity-40"}`} />
+            Animations
+            <span className={`ml-auto text-[10px] font-bold uppercase ${animationsEnabled ? "text-primary-c" : "text-hint"}`}>
+              {animationsEnabled ? "On" : "Off"}
+            </span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
   launchContext, isCourse, syncState, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
@@ -69,17 +135,28 @@ export function EditorHeader({
 }: EditorHeaderProps) {
   const title      = launchContext?.title      ?? "Full Workshop";
   const launchType = isCourse ? "course" : (launchContext?.launchType ?? "mode");
-  const { animationsEnabled, toggle: toggleAnimations } = useAnimations();
   const [showAchievements, setShowAchievements] = useState(false);
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 bg-panel border-b border-subtle">
-      {/* Logo */}
-      <div className="flex items-center gap-2 px-1 shrink-0">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
-          <Blocks className="h-4 w-4 text-white" />
+      {/* Logo + back */}
+      <div className="flex items-center gap-1 shrink-0">
+        <div className="flex items-center gap-2 px-1">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
+            <Blocks className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-sm font-bold text-body hidden lg:inline">Kokoon</span>
         </div>
-        <span className="text-sm font-bold text-body hidden sm:inline">Kokoon</span>
+        {onBackToDashboard && (
+          <button
+            onClick={onBackToDashboard}
+            className="btn btn-ghost btn-sm gap-1 px-2 text-sub"
+            title={isCourse ? "Back to course" : "Back to dashboard"}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden md:inline text-xs">{isCourse ? "Course" : "Dashboard"}</span>
+          </button>
+        )}
       </div>
 
       {/* Centre breadcrumb */}
@@ -123,53 +200,9 @@ export function EditorHeader({
         </div>
       </div>
 
-      {/* Right actions */}
+      {/* Right actions — only the essentials stay top-level */}
       <div className="flex items-center gap-1 shrink-0">
         <PlayerChip compact onClick={() => setShowAchievements(true)} />
-        <ThemeSwitcher compact />
-
-        {/* Animation toggle */}
-        <button
-          onClick={toggleAnimations}
-          title={animationsEnabled ? "Disable animations" : "Enable animations"}
-          className={`btn btn-ghost btn-sm gap-1.5 ${animationsEnabled ? "text-primary-c" : "text-sub"}`}
-        >
-          <Sparkles className={`h-4 w-4 transition-all ${animationsEnabled ? "fill-current opacity-90" : "opacity-40"}`} />
-          <span className="hidden md:inline text-xs">{animationsEnabled ? "Anim" : "Anim"}</span>
-        </button>
-
-        {onImportProject && (
-          <button
-            onClick={onImportProject}
-            title="Import project from JSON"
-            className="btn btn-ghost btn-sm gap-1.5 text-sub hover:text-sky-400 transition-colors"
-          >
-            <Upload className="h-4 w-4" />
-            <span className="hidden md:inline text-xs">Import</span>
-          </button>
-        )}
-
-        {onExportProject && (
-          <button
-            onClick={onExportProject}
-            title="Export project as JSON"
-            className="btn btn-ghost btn-sm gap-1.5 text-sub hover:text-violet-400 transition-colors"
-          >
-            <Download className="h-4 w-4" />
-            <span className="hidden md:inline text-xs">Export</span>
-          </button>
-        )}
-
-        {onSaveAsTutorial && (
-          <button
-            onClick={onSaveAsTutorial}
-            title="Save current canvas as a tutorial"
-            className="btn btn-ghost btn-sm gap-1.5 text-sub hover:text-emerald-400 transition-colors"
-          >
-            <GraduationCap className="h-4 w-4" />
-            <span className="hidden md:inline text-xs">Save Tutorial</span>
-          </button>
-        )}
 
         <button
           onClick={onToggleTutorials}
@@ -177,19 +210,16 @@ export function EditorHeader({
           title="Tutorials"
         >
           <BookOpen className="h-4 w-4" />
-          <span className="hidden md:inline text-xs">Tutorials</span>
+          <span className="hidden lg:inline text-xs">Tutorials</span>
         </button>
 
-        {onBackToDashboard && (
-          <button
-            onClick={onBackToDashboard}
-            className="btn btn-ghost btn-sm gap-1.5 text-sub hidden md:flex"
-            title={isCourse ? "Back to course" : "Back to dashboard"}
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-            <span className="text-xs">{isCourse ? "Course" : "Dashboard"}</span>
-          </button>
-        )}
+        <ThemeSwitcher compact />
+
+        <MoreMenu
+          onImportProject={onImportProject}
+          onExportProject={onExportProject}
+          onSaveAsTutorial={onSaveAsTutorial}
+        />
       </div>
 
       <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />

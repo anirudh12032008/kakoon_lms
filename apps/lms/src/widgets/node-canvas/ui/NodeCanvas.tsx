@@ -38,9 +38,10 @@ import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
 function GlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, style, markerEnd }: EdgeProps) {
   const [edgePath] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
-  const baseStroke = (style?.stroke as string) ?? "#7c3aed";
+  // Wires follow the active theme accent instead of a fixed violet.
+  const baseStroke = (style?.stroke as string) ?? "var(--k-primary)";
   const sel = selected ?? false;
-  const activeStroke = "#c4b5fd";
+  const activeStroke = "color-mix(in srgb, var(--k-primary) 55%, white)";
 
   return (
     <>
@@ -68,7 +69,7 @@ function GlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targ
           ...style,
           stroke: sel ? activeStroke : baseStroke,
           strokeWidth: sel ? 2.5 : ((style?.strokeWidth as number) ?? 2),
-          filter: sel ? `drop-shadow(0 0 5px ${activeStroke}99)` : "none",
+          filter: sel ? "drop-shadow(0 0 5px var(--k-primary))" : "none",
           transition: "stroke 0.18s ease, stroke-width 0.18s ease, filter 0.18s ease",
         }}
       />
@@ -122,7 +123,7 @@ function NodeCanvasInner({
   const onConnect = useCallback(
     (params: Connection) =>
       setEdges((eds) =>
-        addEdge({ ...params, style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }, eds) as Edge[]
+        addEdge({ ...params, style: { stroke: "var(--k-primary)", strokeWidth: 2 }, animated: true }, eds) as Edge[]
       ),
     []
   );
@@ -165,7 +166,12 @@ function NodeCanvasInner({
   useImperativeHandle(canvasRef, () => ({
     getCode: () => generatePythonFromFlow(nodes, edges),
     getWorkspace: () => ({ nodes, edges }),
-    setWorkspace: (ws) => { setNodes(ws.nodes || []); setEdges(ws.edges || []); },
+    // Drop persisted selection state — restoring `selected: true` edges would
+    // light up their glow halos on load.
+    setWorkspace: (ws) => {
+      setNodes((ws.nodes || []).map((n) => ({ ...n, selected: false })));
+      setEdges((ws.edges || []).map((e) => ({ ...e, selected: false })));
+    },
     addNode: (type: string, data: Record<string, unknown> = {}) => {
       let position = { x: 200, y: 200 };
       if (wrapperRef.current) {
@@ -205,10 +211,34 @@ function NodeCanvasInner({
   return (
     <div
       ref={wrapperRef}
-      className="h-full w-full"
+      className="relative h-full w-full"
       onDrop={onDrop}
       onDragOver={onDragOver}
     >
+      {/* Empty-state guide — fades out the moment the first block lands */}
+      <AnimatePresence>
+        {nodes.length === 0 && (
+          <motion.div
+            key="canvas-empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            // Delay past the saved-workspace fetch so it never flashes on restore.
+            transition={{ duration: 0.25, delay: 0.6 }}
+            className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-subtle bg-raised text-3xl shadow-sm">
+              🤖
+            </div>
+            <p className="text-[15px] font-bold text-sub">Let's build something!</p>
+            <p className="max-w-[260px] text-center text-[13px] leading-relaxed text-hint">
+              Drag a block from the left panel onto the canvas — wire blocks together and
+              hit <span className="font-bold text-primary-c">Run</span> to see your robot move.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -223,8 +253,8 @@ function NodeCanvasInner({
         maxZoom={MAX_ZOOM}
         connectionRadius={CONNECTION_RADIUS}
         deleteKeyCode={["Backspace", "Delete"]}
-        connectionLineStyle={{ stroke: "#7c3aed", strokeWidth: 2, filter: "drop-shadow(0 0 6px #7c3aed88)" }}
-        defaultEdgeOptions={{ style: { stroke: "#7c3aed", strokeWidth: 2 }, animated: true }}
+        connectionLineStyle={{ stroke: "var(--k-primary)", strokeWidth: 2, filter: "drop-shadow(0 0 6px var(--k-primary))" }}
+        defaultEdgeOptions={{ style: { stroke: "var(--k-primary)", strokeWidth: 2 }, animated: true }}
       >
         <Background id="dots" color="var(--k-dim)" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "var(--k-base-100)" }} />
         <Controls style={{ background: "var(--k-base-300)", border: "1px solid var(--k-base-400)", borderRadius: "8px" }} />
