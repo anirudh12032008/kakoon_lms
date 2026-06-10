@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   ArrowLeft, Check, Clock, Cpu, Target, Sparkles, CheckCircle2, Circle, Hammer, Code2, Trophy,
 } from "lucide-react";
@@ -123,7 +124,12 @@ export function CourseDetailPage() {
         </button>
 
         {/* Hero */}
-        <div className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${course.accent} p-7`}>
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.99 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 28 }}
+          className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${course.accent} p-7`}
+        >
           <div className="flex items-start justify-between">
             <span className="text-6xl drop-shadow-lg">{course.coverEmoji}</span>
             <div className="flex items-center gap-2">
@@ -140,7 +146,7 @@ export function CourseDetailPage() {
           <div className="mt-4 flex items-center gap-2 text-[13px] font-semibold text-white/80">
             <Clock className="h-4 w-4" /> About {course.estimatedHours} hours
           </div>
-        </div>
+        </motion.div>
 
         {error && (
           <div className="mt-5 rounded-xl border border-error-tint bg-error-tint px-4 py-3 text-sm font-medium text-error-c">

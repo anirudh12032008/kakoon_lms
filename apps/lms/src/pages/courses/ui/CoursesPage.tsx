@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { ArrowRight, Check, Clock, Flame, Medal, Sparkles, Wrench, Zap } from "lucide-react";
 import { fetchCourses, type Course } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
@@ -11,11 +12,19 @@ import {
 } from "@/entities/gamification";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
-function CourseCard({ course, onOpen }: { course: Course; onOpen: () => void }) {
+/** Shared fade-up entrance; `order` staggers siblings. */
+const fadeUp = (order: number) => ({
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { type: "spring" as const, stiffness: 320, damping: 28, delay: order * 0.06 },
+});
+
+function CourseCard({ course, onOpen, order = 0 }: { course: Course; onOpen: () => void; order?: number }) {
   return (
-    <button
+    <motion.button
+      {...fadeUp(order)}
       onClick={onOpen}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-subtle bg-raised text-left transition-all duration-150 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/30"
+      className="group flex flex-col overflow-hidden rounded-2xl border border-subtle bg-raised text-left transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/30"
     >
       <div className={`relative bg-gradient-to-br ${course.accent} px-5 pt-5 pb-6`}>
         <div className="flex items-start justify-between">
@@ -61,16 +70,17 @@ function CourseCard({ course, onOpen }: { course: Course; onOpen: () => void }) 
           </span>
         </div>
       </div>
-    </button>
+    </motion.button>
   );
 }
 
 /** Big call-to-action that opens the editor with every block unlocked. */
 function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
   return (
-    <button
+    <motion.button
+      {...fadeUp(1)}
       onClick={onOpen}
-      className="group relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-all hover:shadow-xl hover:shadow-primary/20"
+      className="group relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-shadow hover:shadow-xl hover:shadow-primary/20"
     >
       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl">
         🧰
@@ -90,7 +100,7 @@ function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
         <Wrench className="h-4 w-4" /> Open
         <ArrowRight className="h-4 w-4" />
       </span>
-    </button>
+    </motion.button>
   );
 }
 
@@ -110,14 +120,14 @@ function PlayerStatsStrip() {
 
   return (
     <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {stats.map((s) => (
-        <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-subtle bg-raised px-4 py-3">
+      {stats.map((s, i) => (
+        <motion.div key={s.label} {...fadeUp(i * 0.7)} className="flex items-center gap-3 rounded-2xl border border-subtle bg-raised px-4 py-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-hover">{s.icon}</div>
           <div className="min-w-0 leading-tight">
             <div className="truncate text-[15px] font-black text-body">{s.value}</div>
             <div className="text-[11px] font-semibold text-hint">{s.label}</div>
           </div>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
@@ -152,14 +162,14 @@ export function CoursesPage() {
       <DashboardHeader />
 
       <main className="mx-auto max-w-6xl px-5 py-8">
-        <div className="mb-6">
+        <motion.div {...fadeUp(0)} className="mb-6">
           <h1 className="text-3xl font-black tracking-tight text-body">
             {user ? `Hey ${user.name.split(" ")[0]} 👋` : "Robot Courses"}
           </h1>
           <p className="mt-1.5 text-[15px] text-sub">
             Pick a robot to build. Enroll for free and jump straight into the block editor.
           </p>
-        </div>
+        </motion.div>
 
         <PlayerStatsStrip />
 
@@ -181,10 +191,11 @@ export function CoursesPage() {
 
         {courses && (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course) => (
+            {courses.map((course, i) => (
               <CourseCard
                 key={course._id}
                 course={course}
+                order={2 + i}
                 onOpen={() => navigate(`/courses/${course.slug}`)}
               />
             ))}

@@ -42,11 +42,14 @@ export function useDraft({
         if (draft.flowData) {
           try {
             const workspace = JSON.parse(draft.flowData);
-            // Canvas ref is populated during the same commit; one rAF is
-            // enough for ReactFlow's internal setup to finish.
-            requestAnimationFrame(() => {
-              canvasRef.current?.setWorkspace(workspace);
-            });
+            // setTimeout, not rAF — rAF never fires in hidden/background
+            // tabs, which would skip the restore and let the draft autosave
+            // overwrite it with an empty canvas.
+            const apply = (attempt: number) => {
+              if (canvasRef.current) canvasRef.current.setWorkspace(workspace);
+              else if (attempt < 40) setTimeout(() => apply(attempt + 1), 50);
+            };
+            apply(0);
           } catch { /* corrupted flow data */ }
         }
       }

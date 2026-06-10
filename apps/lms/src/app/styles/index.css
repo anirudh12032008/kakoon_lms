@@ -22,6 +22,44 @@
   }
 }
 
+/* ── Micro-interactions ──────────────────────────────────────────────────
+   Press feedback on every button-like control; GPU-cheap, feels tactile. */
+.btn:active,
+button.bg-brand-gradient:active,
+button:where([class*="rounded-full"], [class*="rounded-xl"], [class*="rounded-lg"]):active:not(.nodrag):not(.react-flow__node *) {
+  transform: scale(0.97);
+}
+.btn, button.bg-brand-gradient {
+  transition: transform 0.12s ease, opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+button { -webkit-tap-highlight-color: transparent; }
+
+/* Theme switches crossfade instead of snapping */
+body { transition: background-color 0.25s ease; }
+
+/* Dropdown / popover entrance */
+@keyframes popIn {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.anim-pop-in { animation: popIn 0.16s ease both; transform-origin: top right; }
+
+/* Palette category contents slide in as a category opens */
+@keyframes catIn {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-cat-in { animation: catIn 0.18s ease both; }
+
+/* Accessibility: users who ask for less motion get less motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Scrollbars */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

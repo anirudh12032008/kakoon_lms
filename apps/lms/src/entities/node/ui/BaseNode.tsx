@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
-import { Handle, Position, useNodeId, useNodes, useReactFlow, useStore } from "@xyflow/react";
+import { Handle, Position, useNodeId, useReactFlow, useStore } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "@/shared/context/ModalContext";
 import { PlusCircle } from "lucide-react";
@@ -85,11 +85,10 @@ function SelectionToolbar() {
   const { getNode, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
   const { prompt } = useModal();
 
-  // useNodes() re-renders only when node selection changes — no store any-cast needed
-  const allNodes = useNodes();
-  const isSelected = useMemo(
-    () => allNodes.find((n) => n.id === nodeId)?.selected ?? false,
-    [allNodes, nodeId]
+  // Subscribe to *this node's* selected flag only — useNodes() would re-render
+  // every toolbar on every node change (incl. drag position updates).
+  const isSelected = useStore((s) =>
+    nodeId ? (s.nodes.find((n) => n.id === nodeId)?.selected ?? false) : false
   );
 
   if (!nodeId || !isSelected) return null;
@@ -256,12 +255,14 @@ export function TextInput({
   className?: string; green?: boolean; wide?: boolean; style?: React.CSSProperties;
 }) {
   const [isFocused, setIsFocused] = useState(false);
-  const allNodes = useNodes();
+  // Snapshot nodes only while focused — subscribing via useNodes() would
+  // re-render every input on the canvas during node drags.
+  const { getNodes } = useReactFlow();
 
   const suggestions = useMemo(() => {
     if (!isFocused) return [];
     const vars = new Set<string>();
-    for (const n of allNodes) {
+    for (const n of getNodes()) {
       if (!n.data) continue;
       for (const k of VAR_KEYS) {
         const v = n.data[k];
@@ -270,7 +271,7 @@ export function TextInput({
     }
     const lower = value.toLowerCase();
     return Array.from(vars).filter((s) => s !== value && s.toLowerCase().includes(lower));
-  }, [allNodes, isFocused, value]);
+  }, [getNodes, isFocused, value]);
 
   const dropdown = isFocused && suggestions.length > 0 && (
     <div className="absolute left-0 right-0 top-full mt-1 z-[9999] rounded-lg border border-cyan-800 bg-[#0c0c0f]/95 backdrop-blur-md shadow-2xl p-1 max-h-[140px] overflow-y-auto select-none nodrag">

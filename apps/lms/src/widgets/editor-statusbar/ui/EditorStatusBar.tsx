@@ -85,7 +85,7 @@ export function EditorStatusBar({
           </button>
 
           {showWifiInput && (
-            <div className="absolute bottom-full left-0 mb-2 w-56 rounded-xl p-2 shadow-xl z-30 bg-panel border border-subtle">
+            <div className="anim-pop-in absolute bottom-full left-0 mb-2 w-56 rounded-xl p-2 shadow-xl z-30 bg-panel border border-subtle" style={{ transformOrigin: "bottom left" }}>
               {(["usb", "wifi"] as const).map((mode) => (
                 <button
                   key={mode}

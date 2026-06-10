@@ -6,9 +6,11 @@ import { AuthProvider } from "./shared/auth/AuthContext";
 import { ThemeProvider } from "./shared/theme/ThemeProvider";
 import "./app/styles/index.css";
 import App from "./app/App.tsx";
+import { ErrorBoundary } from "./app/ErrorBoundary";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <ErrorBoundary>
     <ThemeProvider>
       <BrowserRouter>
         <AuthProvider>
@@ -18,5 +20,6 @@ createRoot(document.getElementById("root")!).render(
         </AuthProvider>
       </BrowserRouter>
     </ThemeProvider>
+    </ErrorBoundary>
   </StrictMode>
 );

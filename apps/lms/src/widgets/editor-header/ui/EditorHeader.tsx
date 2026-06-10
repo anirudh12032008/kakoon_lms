@@ -98,7 +98,7 @@ function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[1200] mt-1.5 w-56 rounded-xl border border-subtle bg-panel p-1.5 shadow-2xl">
+        <div className="anim-pop-in absolute right-0 top-full z-[1200] mt-1.5 w-56 rounded-xl border border-subtle bg-panel p-1.5 shadow-2xl">
           {onImportProject && (
             <button onClick={() => { onImportProject(); setOpen(false); }} className={item}>
               <Upload className="h-4 w-4" /> Import project…
