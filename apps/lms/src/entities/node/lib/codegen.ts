@@ -208,13 +208,14 @@ class DRV8833:
         self.bd = b_dir
 
     def _drv(self, pwm, d, t):
-        t = max(-1.0, min(1.0, t))   # clamp to [-1.0, 1.0]
-        if t >= 0:
-            d.value(0)
-            pwm.duty_u16(int(t * self.MAX))
-        else:
-            d.value(1)
-            pwm.duty_u16(int((1.0 + t) * self.MAX))
+      t = max(-1.0, min(1.0, t))
+      duty = int(abs(t) * self.MAX)   
+      if t >= 0:
+          d.value(0)
+          pwm.duty_u16(duty)
+      else:
+          d.value(1)
+          pwm.duty_u16(duty)   
 
     def throttle_a(self, t): self._drv(self.ap, self.ad, t)
     def throttle_b(self, t): self._drv(self.bp, self.bd, t)
