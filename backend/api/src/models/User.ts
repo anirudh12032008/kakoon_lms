@@ -43,11 +43,16 @@ const userSchema = new Schema<IUser, UserModel, IUserMethods>(
   { timestamps: true }
 );
 
-// Never leak the hash in JSON responses.
+// Public shape only: map _id -> id and never leak internal fields
+// (passwordHash, tokenVersion used for refresh-token invalidation, etc).
 userSchema.set("toJSON", {
   transform: (_doc, ret) => {
     const r = ret as unknown as Record<string, unknown>;
+    r.id = String(r._id);
+    delete r._id;
     delete r.passwordHash;
+    delete r.tokenVersion;
+    delete r.updatedAt;
     delete r.__v;
     return r;
   },

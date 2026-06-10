@@ -98,6 +98,15 @@ interface NodeCanvasProps {
 
 const getId = () => `node_${crypto.randomUUID().slice(0, 8)}`;
 
+/** True when the user is typing somewhere — copy/paste must not hijack inputs. */
+function isTypingTarget(el: EventTarget | null): boolean {
+  if (!(el instanceof HTMLElement)) return false;
+  return (
+    el.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(el.tagName)
+  );
+}
+
 function NodeCanvasInner({
   onCodeChange,
   onFlowChange,
@@ -133,6 +142,73 @@ function NodeCanvasInner({
     onCodeChange?.(code);
     onFlowChange?.(nodes, edges);
   }, [nodes, edges, onCodeChange, onFlowChange]);
+
+  // ── Copy / paste / duplicate (Ctrl/Cmd + C, V, D) ──────────────────────────
+  // Clipboard lives in a ref: per-canvas, survives re-renders, never persisted.
+  const clipboardRef = useRef<{ nodes: Node[]; edges: Edge[] } | null>(null);
+  const pasteCountRef = useRef(0);
+
+  const copySelection = useCallback(() => {
+    const selNodes = nodes.filter((n) => n.selected);
+    if (selNodes.length === 0) return false;
+    const selIds = new Set(selNodes.map((n) => n.id));
+    // Only keep wires whose both ends are inside the selection.
+    const selEdges = edges.filter((e) => selIds.has(e.source) && selIds.has(e.target));
+    clipboardRef.current = {
+      nodes: structuredClone(selNodes),
+      edges: structuredClone(selEdges),
+    };
+    pasteCountRef.current = 0;
+    return true;
+  }, [nodes, edges]);
+
+  const pasteClipboard = useCallback(() => {
+    const clip = clipboardRef.current;
+    if (!clip || clip.nodes.length === 0) return;
+    pasteCountRef.current += 1;
+    const offset = 36 * pasteCountRef.current;
+
+    const idMap = new Map<string, string>();
+    const newNodes = clip.nodes.map((n) => {
+      const id = getId();
+      idMap.set(n.id, id);
+      return {
+        ...structuredClone(n),
+        id,
+        position: { x: n.position.x + offset, y: n.position.y + offset },
+        selected: true,
+      };
+    });
+    const newEdges = clip.edges.map((e) => ({
+      ...structuredClone(e),
+      id: `edge_${crypto.randomUUID().slice(0, 8)}`,
+      source: idMap.get(e.source)!,
+      target: idMap.get(e.target)!,
+      selected: false,
+    }));
+
+    // Deselect everything else so the pasted copies become the active selection.
+    setNodes((nds) => nds.map((n) => ({ ...n, selected: false })).concat(newNodes));
+    setEdges((eds) => eds.map((e) => ({ ...e, selected: false })).concat(newEdges));
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || isTypingTarget(e.target)) return;
+      // Don't fight the browser when the user has text selected.
+      if (window.getSelection()?.toString()) return;
+      const key = e.key.toLowerCase();
+      if (key === "c") {
+        if (copySelection()) e.preventDefault();
+      } else if (key === "v") {
+        if (clipboardRef.current) { e.preventDefault(); pasteClipboard(); }
+      } else if (key === "d") {
+        if (copySelection()) { e.preventDefault(); pasteClipboard(); }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [copySelection, pasteClipboard]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

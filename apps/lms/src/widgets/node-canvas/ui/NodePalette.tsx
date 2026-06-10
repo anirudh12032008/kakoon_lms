@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
-import { PencilLine, Trash2, Search } from "lucide-react";
+import { PencilLine, Trash2, Search, X } from "lucide-react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "@/entities/node/model";
+import { NODE_HINTS } from "@/entities/node/model/hints";
 import { useCustomNodes, type CustomNodeTemplate, isCustomNodeTemplateAllowed } from "@/entities/custom-node/model/customNodes";
 import { useModal } from "@/shared/context/ModalContext";
 import { GlobalAdvancedToggle } from "@/shared/context/NodeModeContext";
@@ -37,10 +38,14 @@ function NodeItem({ node }: { node: NodeDef }) {
       draggable
       onDragStart={onDragStart}
       data-node-type={node.type}
-      className="flex items-center gap-2 px-2.5 py-2 rounded-lg cursor-grab active:cursor-grabbing select-none transition-colors text-sub hover:bg-hover hover:text-body border border-transparent hover:border-subtle"
+      title={NODE_HINTS[node.type]}
+      className="group/item flex items-center gap-2 rounded-lg border border-subtle bg-panel px-2.5 py-2 cursor-grab active:cursor-grabbing select-none transition-all text-sub hover:text-body hover:-translate-y-px hover:shadow-sm"
+      style={{ ["--node-c" as string]: node.previewDot }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = node.previewDot + "66")}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = "")}
     >
-      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: node.previewDot }} />
-      <span className="text-[13px] font-medium truncate leading-tight">{node.label}</span>
+      <div className="w-2 h-2 rounded-full shrink-0 transition-transform group-hover/item:scale-125" style={{ backgroundColor: node.previewDot }} />
+      <span className="text-[12.5px] font-semibold truncate leading-tight">{node.label}</span>
     </div>
   );
 }
@@ -92,31 +97,35 @@ function CategorySection({ category, isOpen, onToggle, allowedNodeTypes }: {
   const c = CAT_COLORS[category.id] ?? fallbackColor();
 
   return (
-    <div className={`overflow-hidden rounded-xl transition-colors ${isOpen ? "bg-[var(--k-base-100)] border border-subtle" : "border border-transparent"}`}>
+    <div className={`overflow-hidden rounded-xl border transition-colors ${isOpen ? "border-subtle bg-panel" : "border-transparent"}`}>
       <button
         onClick={onToggle}
-        className={`w-full flex items-center gap-2 px-2.5 py-2.5 rounded-xl transition-colors group ${isOpen ? c.bg : "hover:bg-hover"}`}
+        className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-xl transition-colors group ${isOpen ? "" : "hover:bg-hover"}`}
       >
+        {/* Colored icon chip */}
+        <span
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[13px]"
+          style={{ backgroundColor: c.dot + (isOpen ? "2e" : "1c"), color: c.dot }}
+        >
+          {category.icon}
+        </span>
+        <span className={`text-[13px] font-bold leading-tight transition-colors ${isOpen ? c.text : "text-sub group-hover:text-body"}`}>
+          {category.label}
+        </span>
+        <span className={`ml-auto text-[10.5px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${isOpen ? `${c.text} ${c.bg}` : "text-hint"}`}>
+          {visibleNodes.length}
+        </span>
         <svg
           className={`w-3.5 h-3.5 shrink-0 transition-transform duration-150 ${isOpen ? `rotate-90 ${c.text}` : "text-hint rotate-0"}`}
           viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"
         >
           <polyline points="9 18 15 12 9 6"/>
         </svg>
-        <span className={`text-[14px] font-semibold leading-tight transition-colors ${isOpen ? c.text : "text-sub group-hover:text-body"}`}>
-          {category.icon} {category.label}
-        </span>
-        <span className={`ml-auto text-[11px] font-bold tabular-nums px-1.5 py-0.5 rounded-md ${isOpen ? `${c.text} ${c.bg}` : "text-hint"}`}>
-          {visibleNodes.length}
-        </span>
       </button>
 
       {isOpen && (
-        <div className="pl-2.5 pr-1.5 pb-2">
-          {/* Indentation rail groups the category's nodes under its header */}
-          <div className="grid grid-cols-2 gap-1 border-l-2 pl-2" style={{ borderColor: c.dot + "40" }}>
-            {visibleNodes.map((node) => <NodeItem key={node.type} node={node} />)}
-          </div>
+        <div className="grid grid-cols-2 gap-1.5 px-2 pb-2 pt-0.5">
+          {visibleNodes.map((node) => <NodeItem key={node.type} node={node} />)}
         </div>
       )}
     </div>
@@ -159,20 +168,31 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
       style={{ width: `${width}px` }}
     >
       {/* Header */}
-      <div className="px-3 pt-3.5 pb-3 border-b border-subtle">
-        <p className="text-[12px] font-bold uppercase tracking-widest text-hint mb-2.5">Blocks</p>
-        <div className="flex items-center gap-2 rounded-lg px-3 py-2 bg-hover border border-subtle focus-within:border-primary/50 transition-colors">
+      <div className="px-3 pt-3 pb-2.5 border-b border-subtle">
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2 bg-panel border border-subtle focus-within:border-primary/60 focus-within:shadow-sm transition-all">
           <Search className="w-4 h-4 shrink-0 text-hint" />
           <input
             type="text" placeholder="Search blocks…"
             value={search} onChange={(e) => setSearch(e.target.value)}
-            className="grow text-sm bg-transparent outline-none text-body placeholder:text-hint"
+            className="grow min-w-0 text-sm bg-transparent outline-none text-body placeholder:text-hint"
           />
+          {search && (
+            <button onClick={() => setSearch("")} className="shrink-0 rounded-full p-0.5 text-hint hover:bg-hover hover:text-body" title="Clear search">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Category list */}
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+        {filtered.length === 0 && search.trim() && (
+          <div className="flex flex-col items-center gap-1.5 px-3 py-8 text-center">
+            <span className="text-xl">🔍</span>
+            <p className="text-[13px] font-semibold text-sub">No blocks found</p>
+            <p className="text-[11.5px] text-hint">Try a different word, like "motor" or "sensor".</p>
+          </div>
+        )}
         {filtered.map((cat) => {
           const isOpen = search.trim() ? true : openCategoryId === cat.id;
           return (

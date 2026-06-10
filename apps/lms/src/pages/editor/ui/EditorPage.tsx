@@ -508,7 +508,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         onUpload={handleUpload}
         onRun={handleRun}
         onStop={handleStop}
-        onOpenFileManager={() => setShowLibraryManager(true)}
+        onOpenFileManager={() => setShowESP32Files(true)}
       />
 
       {/* Tutorials */}

@@ -5,6 +5,38 @@ import { useModal } from "@/shared/context/ModalContext";
 import { PlusCircle } from "lucide-react";
 import { saveCustomSubflowFromSelection } from "@/entities/custom-node/model/customNodes";
 import { useNodeMode } from "@/shared/context/NodeModeContext";
+import { NODE_HINTS } from "../model/hints";
+
+/** "?" badge in a node header — hover for a one-line explanation of the block. */
+export function NodeHintButton({ onDark = true }: { onDark?: boolean }) {
+  const nodeId = useNodeId();
+  const { getNode } = useReactFlow();
+  const type = nodeId ? getNode(nodeId)?.type : undefined;
+  const hint = type ? NODE_HINTS[type] : undefined;
+  if (!hint) return null;
+
+  return (
+    <span className="group/hint relative nodrag shrink-0 inline-flex">
+      <button
+        type="button"
+        onClick={(e) => e.stopPropagation()}
+        aria-label="What does this block do?"
+        className={`flex h-[18px] w-[18px] items-center justify-center rounded-full border text-[10px] font-black leading-none transition-colors ${
+          onDark
+            ? "border-white/40 text-white/75 hover:bg-white/20 hover:text-white"
+            : "border-[var(--k-border)] text-[var(--k-muted)] hover:bg-[var(--k-base-400)] hover:text-[var(--k-text)]"
+        }`}
+      >
+        ?
+      </button>
+      <span
+        className="pointer-events-none invisible absolute right-0 top-full z-[9999] mt-2 w-56 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] px-3 py-2 text-left text-[11px] font-medium leading-snug text-[var(--k-text)] normal-case tracking-normal opacity-0 shadow-2xl transition-opacity duration-150 group-hover/hint:visible group-hover/hint:opacity-100"
+      >
+        {hint}
+      </span>
+    </span>
+  );
+}
 
 function TrashIcon() {
   return (
@@ -363,6 +395,7 @@ export function BaseNode({
         }}
       >
         <SelectionToolbar />
+        <span className="absolute left-3 top-3"><NodeHintButton onDark={false} /></span>
         <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
         {hasTopHandle && <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />}
         <div className="text-sm font-bold text-white mb-2">{title}</div>
@@ -403,6 +436,7 @@ export function BaseNode({
         <span className="text-sm font-bold text-white leading-tight truncate flex-1">{title}</span>
         {icon && <span className="text-white opacity-90 shrink-0">{icon}</span>}
         <div className="flex items-center gap-1.5 shrink-0">
+          <NodeHintButton />
           <NodeAdvancedButton />
           <NodeToggleButton value={disabled} onChange={setDisabled} />
         </div>
@@ -447,6 +481,7 @@ export function LoopNode({
         <span className="text-sm font-bold text-white truncate flex-1">{title}</span>
         {icon && <span style={{ color }} className="shrink-0">{icon}</span>}
         <div className="flex items-center gap-1.5 shrink-0">
+          <NodeHintButton onDark={false} />
           <NodeAdvancedButton />
           <NodeToggleButton value={disabled} onChange={setDisabled} />
         </div>
@@ -492,6 +527,7 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
         <span className="text-sm font-bold text-white tracking-wide flex-1">If-Else</span>
+        <NodeHintButton />
         <svg className="w-5 h-5 text-white opacity-95 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>

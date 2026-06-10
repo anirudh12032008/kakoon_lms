@@ -153,8 +153,8 @@ export function EditorStatusBar({
         </button>
 
         <button onClick={onOpenFileManager} disabled={!isConnected}
-          className="btn btn-ghost btn-xs gap-1.5 text-sub border border-subtle hidden md:flex"
-          title="Manage ESP32 files">
+          className="btn btn-ghost btn-xs gap-1.5 text-sub border border-subtle hidden sm:flex disabled:opacity-40"
+          title={isConnected ? "Browse files on your robot" : "Connect your robot to browse its files"}>
           <HardDrive className="h-3.5 w-3.5" />
           Files
         </button>
