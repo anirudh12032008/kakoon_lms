@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, Check, Clock, Sparkles, Wrench } from "lucide-react";
+import { ArrowRight, Check, Clock, Flame, Medal, Sparkles, Wrench, Zap } from "lucide-react";
 import { fetchCourses, type Course } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { useLaunchStore } from "@/shared/launch/launchStore";
 import { buildLaunchContext, EDITOR_MODE_PRESETS } from "@/entities/editor-launch/model/config";
+import {
+  ACHIEVEMENTS, usePlayerLevel, usePlayerProfile, useDisplayStreak,
+} from "@/entities/gamification";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
 function CourseCard({ course, onOpen }: { course: Course; onOpen: () => void }) {
@@ -27,6 +31,23 @@ function CourseCard({ course, onOpen }: { course: Course; onOpen: () => void }) 
 
       <div className="flex flex-1 flex-col gap-3 p-5">
         <p className="text-[14px] leading-relaxed text-sub">{course.summary}</p>
+
+        {/* Progress (enrolled only) */}
+        {course.enrolled && (
+          <div>
+            <div className="mb-1 flex items-center justify-between text-[11px] font-bold">
+              <span className="text-hint">Progress</span>
+              <span className="text-primary-c">{course.progress ?? 0}%</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-hover">
+              <div
+                className="h-full rounded-full bg-brand-gradient transition-all duration-500"
+                style={{ width: `${course.progress ?? 0}%` }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="mt-auto flex items-center justify-between pt-2">
           <div className="flex items-center gap-2">
             <DifficultyBadge difficulty={course.difficulty} />
@@ -73,8 +94,38 @@ function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
   );
 }
 
+/** XP / streak / badges strip under the page heading. */
+function PlayerStatsStrip() {
+  const profile = usePlayerProfile();
+  const level = usePlayerLevel();
+  const streak = useDisplayStreak();
+  const badges = Object.keys(profile.unlocked).length;
+
+  const stats = [
+    { icon: <Zap className="h-4 w-4 text-primary-c" fill="currentColor" />, value: profile.xp, label: "XP earned" },
+    { icon: <span className="text-[15px] font-black text-secondary-c">{level.level}</span>, value: level.title, label: "Level" },
+    { icon: <Flame className={`h-4 w-4 ${streak > 0 ? "text-warning-c" : "text-hint"}`} fill={streak > 0 ? "currentColor" : "none"} />, value: streak === 1 ? "1 day" : `${streak} days`, label: "Streak" },
+    { icon: <Medal className="h-4 w-4 text-accent-c" />, value: `${badges}/${ACHIEVEMENTS.length}`, label: "Badges" },
+  ];
+
+  return (
+    <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {stats.map((s) => (
+        <div key={s.label} className="flex items-center gap-3 rounded-2xl border border-subtle bg-raised px-4 py-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-hover">{s.icon}</div>
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-[15px] font-black text-body">{s.value}</div>
+            <div className="text-[11px] font-semibold text-hint">{s.label}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function CoursesPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const setLaunchContext = useLaunchStore((s) => s.setContext);
   const [courses, setCourses] = useState<Course[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -102,11 +153,15 @@ export function CoursesPage() {
 
       <main className="mx-auto max-w-6xl px-5 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-black tracking-tight text-body">Robot Courses</h1>
+          <h1 className="text-3xl font-black tracking-tight text-body">
+            {user ? `Hey ${user.name.split(" ")[0]} 👋` : "Robot Courses"}
+          </h1>
           <p className="mt-1.5 text-[15px] text-sub">
             Pick a robot to build. Enroll for free and jump straight into the block editor.
           </p>
         </div>
+
+        <PlayerStatsStrip />
 
         <FullWorkshopBanner onOpen={openFullWorkshop} />
 

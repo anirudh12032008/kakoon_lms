@@ -15,6 +15,11 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/** The API serializes Mongo docs with `_id`; normalize to the `id` our types promise. */
+function normalizeUser(raw: AuthUser & { _id?: string }): AuthUser {
+  return { ...raw, id: raw.id ?? raw._id ?? "" };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
@@ -27,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const { data } = await api.post("/auth/refresh");
         if (cancelled) return;
         setAccessToken(data.accessToken);
-        setUser(data.user);
+        setUser(normalizeUser(data.user));
         setStatus("authed");
       } catch {
         if (cancelled) return;
@@ -44,21 +49,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post("/auth/login", { email, password });
     setAccessToken(data.accessToken);
-    setUser(data.user);
+    setUser(normalizeUser(data.user));
     setStatus("authed");
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
     const { data } = await api.post("/auth/register", { name, email, password });
     setAccessToken(data.accessToken);
-    setUser(data.user);
+    setUser(normalizeUser(data.user));
     setStatus("authed");
   }, []);
 
   const loginWithGoogle = useCallback(async (credential: string) => {
     const { data } = await api.post("/auth/google", { credential });
     setAccessToken(data.accessToken);
-    setUser(data.user);
+    setUser(normalizeUser(data.user));
     setStatus("authed");
   }, []);
 

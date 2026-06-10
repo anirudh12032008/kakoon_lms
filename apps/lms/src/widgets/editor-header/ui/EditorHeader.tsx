@@ -1,6 +1,8 @@
 import { Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles, GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
+import { PlayerChip, AchievementsModal } from "@/entities/gamification";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 import type { SyncState } from "@/features/editor/save-draft/model/useCourseSync";
 import { useAnimations } from "@/shared/context/AnimationContext";
@@ -68,6 +70,7 @@ export function EditorHeader({
   const title      = launchContext?.title      ?? "Full Workshop";
   const launchType = isCourse ? "course" : (launchContext?.launchType ?? "mode");
   const { animationsEnabled, toggle: toggleAnimations } = useAnimations();
+  const [showAchievements, setShowAchievements] = useState(false);
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 bg-panel border-b border-subtle">
@@ -122,6 +125,7 @@ export function EditorHeader({
 
       {/* Right actions */}
       <div className="flex items-center gap-1 shrink-0">
+        <PlayerChip compact onClick={() => setShowAchievements(true)} />
         <ThemeSwitcher compact />
 
         {/* Animation toggle */}
@@ -187,6 +191,8 @@ export function EditorHeader({
           </button>
         )}
       </div>
+
+      <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
     </header>
   );
 }

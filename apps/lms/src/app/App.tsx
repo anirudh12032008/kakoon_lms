@@ -1,7 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./styles/App.css";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
+import { XpToastHost, useGamification } from "@/entities/gamification";
+import { useAuth } from "@/shared/auth/AuthContext";
 import { AnimationProvider } from "@/shared/context/AnimationContext";
 import { NodeModeProvider } from "@/shared/context/NodeModeContext";
 import { AdminPage } from "@/pages/admin/ui/AdminPage";
@@ -27,6 +29,16 @@ function PageLoader() {
       <span className="loading loading-spinner loading-md text-primary-c" />
     </div>
   );
+}
+
+/** Keeps the gamification store pointed at the signed-in user's profile. */
+function GamificationBridge() {
+  const { user } = useAuth();
+  const setUser = useGamification((s) => s.setUser);
+  useEffect(() => {
+    setUser(user?.id ?? null);
+  }, [user?.id, setUser]);
+  return null;
 }
 
 // ── Editor route — reads the launch context from the store ────────────────────
@@ -79,6 +91,8 @@ export default function App() {
   return (
     <AnimationProvider>
       <NodeModeProvider>
+        <GamificationBridge />
+        <XpToastHost />
         <Routes>
           {/* Guest-only */}
           <Route element={<GuestOnlyRoute />}>

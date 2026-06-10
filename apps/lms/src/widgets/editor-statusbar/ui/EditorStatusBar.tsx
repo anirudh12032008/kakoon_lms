@@ -2,6 +2,7 @@ import {
   PanelLeftClose, Circle, Usb, Wifi, ChevronDown,
   Loader2, Upload, HardDrive, Play, Square,
 } from "lucide-react";
+import { useGamification } from "@/entities/gamification";
 
 interface EditorStatusBarProps {
   showTerminal: boolean;
@@ -41,6 +42,12 @@ export function EditorStatusBar({
   wifiSsid, setWifiSsid, wifiPassword, setWifiPassword, wifiSubnet, setWifiSubnet,
   isUploading, isSending, isRunning, onUpload, onRun, onStop, onOpenFileManager,
 }: EditorStatusBarProps) {
+  const award = useGamification((s) => s.award);
+
+  // XP rewards ride along with the real actions (daily-capped in the store).
+  const handleRun = () => { award("runCode", "Code sent to your robot"); onRun(); };
+  const handleUpload = () => { award("uploadCode", "Program saved to ESP32"); onUpload(); };
+
   return (
     <footer className="flex h-12 shrink-0 items-center justify-between gap-2 px-3 bg-panel border-t border-subtle">
 
@@ -136,7 +143,7 @@ export function EditorStatusBar({
           )}
         </button>
 
-        <button onClick={onUpload} disabled={!isConnected || isUploading}
+        <button onClick={handleUpload} disabled={!isConnected || isUploading}
           className="btn btn-ghost btn-xs gap-1.5 text-sub border border-subtle"
           title="Save code to ESP32">
           {isUploading
@@ -161,7 +168,7 @@ export function EditorStatusBar({
           </button>
         )}
 
-        <button onClick={onRun} disabled={!isConnected || isSending}
+        <button onClick={handleRun} disabled={!isConnected || isSending}
           className="btn btn-sm gap-1.5 font-bold text-white bg-brand-gradient border-0 hover:opacity-90">
           {isSending
             ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Running…</span></>

@@ -8,6 +8,7 @@ import {
 } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useLaunchStore } from "@/shared/launch/launchStore";
+import { XP_REWARDS, useGamification } from "@/entities/gamification";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
 export function CourseDetailPage() {
@@ -57,6 +58,9 @@ export function CourseDetailPage() {
     }
   };
 
+  const recordProgressToggle = useGamification((s) => s.recordProgressToggle);
+  const recordCourseCompleted = useGamification((s) => s.recordCourseCompleted);
+
   const handleToggle = async (kind: "level" | "challenge", key: string, done: boolean) => {
     if (!course?.enrolled) return;
     // Optimistic update, then reconcile with the server's recomputed progress.
@@ -64,8 +68,10 @@ export function CourseDetailPage() {
     const current = new Set(course[listKey] ?? []);
     if (done) current.add(key); else current.delete(key);
     setCourse({ ...course, [listKey]: Array.from(current) });
+    recordProgressToggle(kind, done);
     try {
       const res = await setProgress(course.slug, kind, key, done);
+      if (res.status === "completed") recordCourseCompleted(course.slug);
       setCourse((c) => c && ({
         ...c,
         completedLevels: res.completedLevels,
@@ -73,6 +79,8 @@ export function CourseDetailPage() {
         progress: res.progress,
       }));
     } catch (e) {
+      // Roll the optimistic XP back if the server rejected the toggle.
+      recordProgressToggle(kind, !done);
       setError(apiErrorMessage(e, "Could not save progress"));
     }
   };
@@ -244,6 +252,11 @@ export function CourseDetailPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-bold uppercase tracking-wide text-hint">{lv.label}</span>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${
+                          done ? "bg-primary-tint text-primary-c" : "bg-hover text-hint"
+                        }`}>
+                          +{XP_REWARDS.levelComplete} XP
+                        </span>
                       </div>
                       <div className="mt-1.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                         <div className="rounded-lg border border-subtle bg-page px-3 py-2">
@@ -304,7 +317,12 @@ export function CourseDetailPage() {
                     {done
                       ? <CheckCircle2 className="h-5 w-5 shrink-0 text-warning-c" />
                       : <Circle className="h-5 w-5 shrink-0 text-hint" />}
-                    <span className={`text-[14px] font-medium ${done ? "text-body" : "text-sub"}`}>{c.title}</span>
+                    <span className={`flex-1 text-[14px] font-medium ${done ? "text-body" : "text-sub"}`}>{c.title}</span>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                      done ? "bg-warning-tint text-warning-c" : "bg-hover text-hint"
+                    }`}>
+                      +{XP_REWARDS.challengeComplete} XP
+                    </span>
                   </button>
                 );
               })}

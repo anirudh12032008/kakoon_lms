@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
+import { PlayerChip, AchievementsModal } from "@/entities/gamification";
 
 export function DashboardHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showAchievements, setShowAchievements] = useState(false);
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-subtle bg-panel/90 px-5 py-3 backdrop-blur-xl">
@@ -15,6 +18,7 @@ export function DashboardHeader() {
       </button>
 
       <div className="flex items-center gap-3">
+        <PlayerChip onClick={() => setShowAchievements(true)} />
         {user && (
           <div className="flex items-center gap-2.5">
             <div
@@ -42,6 +46,8 @@ export function DashboardHeader() {
           <span className="hidden sm:inline">Sign out</span>
         </button>
       </div>
+
+      <AchievementsModal open={showAchievements} onClose={() => setShowAchievements(false)} />
     </header>
   );
 }
