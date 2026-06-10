@@ -208,14 +208,14 @@ class DRV8833:
         self.bd = b_dir
 
     def _drv(self, pwm, d, t):
-      t = max(-1.0, min(1.0, t))
-      duty = int(abs(t) * self.MAX)   
-      if t >= 0:
-          d.value(0)
-          pwm.duty_u16(duty)
-      else:
-          d.value(1)
-          pwm.duty_u16(self.MAX - duty)   
+        t = max(-1.0, min(1.0, t))
+        duty = int(abs(t) * self.MAX)
+        if t >= 0:
+            d.value(0)
+            pwm.duty_u16(duty)
+        else:
+            d.value(1)
+            pwm.duty_u16(self.MAX - duty)
 
     def throttle_a(self, t): self._drv(self.ap, self.ad, t)
     def throttle_b(self, t): self._drv(self.bp, self.bd, t)
@@ -224,7 +224,8 @@ class DRV8833:
     def stop_b(self): self.bp.duty_u16(0); self.bd.value(0)
     def stop_all(self): self.stop_a(); self.stop_b()
 
-def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
+
+def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=1000)
 def _dp(pin): return Pin(pin, Pin.OUT)
 
 front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))
