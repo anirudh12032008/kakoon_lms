@@ -102,7 +102,7 @@ export function TutorialsDashboard({
   }, [tutorials]);
 
   return (
-    <div className="w-full h-full bg-[#08080a] text-zinc-100 p-6 md:p-8 font-sans overflow-y-auto select-none">
+    <div className="w-full h-full bg-[var(--k-base-100)] text-[var(--k-text)] p-6 md:p-8 font-sans overflow-y-auto select-none">
       <input
         type="file"
         ref={fileInputRef}
@@ -115,7 +115,7 @@ export function TutorialsDashboard({
       <div className="flex items-center justify-between gap-4 mb-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-zinc-800 bg-[var(--k-base-100)] text-[var(--k-muted)] hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] text-[var(--k-muted)] hover:text-[var(--k-text)] hover:border-[var(--k-border)] transition-all text-xs font-semibold"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           Close Examples
@@ -124,14 +124,14 @@ export function TutorialsDashboard({
         <div className="flex items-center gap-2">
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-zinc-800 bg-[var(--k-base-100)] text-[var(--k-muted)] hover:text-white hover:border-zinc-700 transition-all text-xs font-semibold"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-[var(--k-border)] bg-[var(--k-base-100)] text-[var(--k-muted)] hover:text-[var(--k-text)] hover:border-[var(--k-border)] transition-all text-xs font-semibold"
           >
             <Upload className="w-3.5 h-3.5 text-cyan-400" />
             Import Example
           </button>
           <button
             onClick={onBack}
-            className="rounded-lg p-2 text-zinc-500 hover:bg-zinc-800 hover:text-white transition-all border border-zinc-800 bg-[var(--k-base-100)]"
+            className="rounded-lg p-2 text-[var(--k-muted)] hover:bg-[var(--k-base-300)] hover:text-[var(--k-text)] transition-all border border-[var(--k-border)] bg-[var(--k-base-100)]"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -154,41 +154,41 @@ export function TutorialsDashboard({
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-900 pb-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--k-border)] pb-6 mb-8">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
             <select
               value={selectedComponent}
               onChange={(e) => setSelectedComponent(e.target.value)}
-              className="appearance-none bg-[#0e0e12] border border-zinc-800 rounded-lg px-4 py-2 pr-10 text-xs font-medium text-[var(--k-muted)] focus:outline-none focus:border-zinc-700 cursor-pointer"
+              className="appearance-none bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-4 py-2 pr-10 text-xs font-medium text-[var(--k-muted)] focus:outline-none focus:border-[var(--k-border)] cursor-pointer"
             >
               <option value="All">Sort by components</option>
               {allComponents.filter((c) => c !== "All").map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-3 text-zinc-500 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-3 text-[var(--k-muted)] pointer-events-none" />
           </div>
 
           <div className="relative min-w-[200px] md:min-w-[260px]">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-zinc-500" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-[var(--k-muted)]" />
             <input
               type="text"
               placeholder="Search..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-[#0e0e12] border border-zinc-800 rounded-lg pl-9 pr-4 py-2 text-xs font-medium text-[var(--k-text)] placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 w-full"
+              className="bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg pl-9 pr-4 py-2 text-xs font-medium text-[var(--k-text)] placeholder:text-[var(--k-muted)] focus:outline-none focus:border-[var(--k-border)] w-full"
             />
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 bg-[#0e0e12] p-1 border border-zinc-800 rounded-lg self-start md:self-auto">
+        <div className="flex items-center gap-1.5 bg-[var(--k-base-200)] p-1 border border-[var(--k-border)] rounded-lg self-start md:self-auto">
           {(["All", "Easy", "Medium", "Hard"] as const).map((diff) => (
             <button
               key={diff}
               onClick={() => setSelectedDifficulty(diff)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                selectedDifficulty === diff ? "bg-[var(--k-base-300)] text-white" : "text-zinc-500 hover:text-[var(--k-text)]"
+                selectedDifficulty === diff ? "bg-[var(--k-base-300)] text-white" : "text-[var(--k-muted)] hover:text-[var(--k-text)]"
               }`}
             >
               {diff}
@@ -199,12 +199,12 @@ export function TutorialsDashboard({
 
       {/* Count header */}
       <div className="mb-6">
-        <div className="flex items-center justify-between border border-zinc-800/80 bg-[#0e0e12]/60 rounded-xl px-4 py-3">
+        <div className="flex items-center justify-between border border-[var(--k-border)]/80 bg-[var(--k-base-200)]/60 rounded-xl px-4 py-3">
           <div className="flex items-center gap-2.5">
             <span className="text-sm font-semibold text-white">
               {selectedDifficulty === "All" ? "All Examples" : `${selectedDifficulty} Examples`}
             </span>
-            <span className="text-xs text-zinc-500 bg-[#16161a] px-2 py-0.5 rounded-full font-medium">
+            <span className="text-xs text-[var(--k-muted)] bg-[var(--k-base-300)] px-2 py-0.5 rounded-full font-medium">
               {filteredTutorials.length}
             </span>
           </div>
@@ -215,11 +215,11 @@ export function TutorialsDashboard({
       {loading ? (
         <div className="text-center py-20 flex flex-col items-center justify-center gap-3">
           <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-          <p className="text-zinc-500 text-xs font-medium">Loading robotics examples...</p>
+          <p className="text-[var(--k-muted)] text-xs font-medium">Loading robotics examples...</p>
         </div>
       ) : filteredTutorials.length === 0 ? (
-        <div className="text-center py-20 border border-dashed border-zinc-900 rounded-2xl">
-          <p className="text-zinc-500 text-sm">No examples matching your filters.</p>
+        <div className="text-center py-20 border border-dashed border-[var(--k-border)] rounded-2xl">
+          <p className="text-[var(--k-muted)] text-sm">No examples matching your filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -229,9 +229,9 @@ export function TutorialsDashboard({
               <div
                 key={tutorial.id}
                 onClick={() => setActiveModalTutorial(tutorial)}
-                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-zinc-800 bg-[#0c0c0f]/60 hover:bg-[#0e0e12] transition-all duration-300 hover:border-zinc-700 cursor-pointer shadow-xl"
+                className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-200)]/60 hover:bg-[var(--k-base-200)] transition-all duration-300 hover:border-[var(--k-border)] cursor-pointer shadow-xl"
               >
-                <div className="h-44 w-full bg-[#070709] border-b border-zinc-900 p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-[var(--k-base-100)] transition-all">
+                <div className="h-44 w-full bg-[var(--k-base-100)] border-b border-[var(--k-border)] p-4 flex items-center justify-center relative overflow-hidden group-hover:bg-[var(--k-base-100)] transition-all">
                   <div className="absolute inset-0 bg-[radial-gradient(#141416_1px,transparent_1px)] [background-size:12px_12px] opacity-60" />
                   <MiniFlowPreview tutorial={tutorial} />
                 </div>
@@ -250,7 +250,7 @@ export function TutorialsDashboard({
                       >
                         {tutorial.difficulty}
                       </span>
-                      <span className="text-[9px] font-bold text-zinc-500 uppercase px-1.5 py-0.5 bg-[#16161a] rounded">
+                      <span className="text-[9px] font-bold text-[var(--k-muted)] uppercase px-1.5 py-0.5 bg-[var(--k-base-300)] rounded">
                         {tutorial.board}
                       </span>
                       {isCompleted && (
@@ -260,10 +260,10 @@ export function TutorialsDashboard({
                         </span>
                       )}
                     </div>
-                    <h3 className="text-sm font-bold text-zinc-100 group-hover:text-white line-clamp-2 leading-snug">
+                    <h3 className="text-sm font-bold text-[var(--k-text)] group-hover:text-[var(--k-text)] line-clamp-2 leading-snug">
                       {tutorial.title}
                     </h3>
-                    <p className="text-zinc-500 text-[11px] line-clamp-3 leading-relaxed">
+                    <p className="text-[var(--k-muted)] text-[11px] line-clamp-3 leading-relaxed">
                       {tutorial.description}
                     </p>
                   </div>
@@ -277,10 +277,10 @@ export function TutorialsDashboard({
       {/* Start / Preview Modal */}
       {activeModalTutorial && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#232328] bg-[#0c0c0e] p-6 shadow-2xl">
+          <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-200)] p-6 shadow-2xl">
             <button
               onClick={() => setActiveModalTutorial(null)}
-              className="absolute right-4 top-4 rounded-lg p-1 text-zinc-500 hover:bg-zinc-800 hover:text-white"
+              className="absolute right-4 top-4 rounded-lg p-1 text-[var(--k-muted)] hover:bg-[var(--k-base-300)] hover:text-[var(--k-text)]"
             >
               <X className="w-4 h-4" />
             </button>
@@ -293,9 +293,9 @@ export function TutorialsDashboard({
             <div className="grid grid-cols-2 gap-4 mt-8">
               <button
                 onClick={() => { onSelectTutorial(activeModalTutorial, "preview"); setActiveModalTutorial(null); }}
-                className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-zinc-800 bg-[#121215]/80 hover:bg-[#18181e] text-[var(--k-text)] hover:text-white hover:border-zinc-700 transition-all font-semibold"
+                className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-[var(--k-border)] bg-[var(--k-base-300)]/80 hover:bg-[var(--k-base-400)] text-[var(--k-text)] hover:text-[var(--k-text)] hover:border-[var(--k-border)] transition-all font-semibold"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800/40 text-[var(--k-muted)]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--k-base-300)]/40 text-[var(--k-muted)]">
                   <Eye className="w-5 h-5" />
                 </div>
                 <span className="text-xs">Show Preview</span>
@@ -303,7 +303,7 @@ export function TutorialsDashboard({
 
               <button
                 onClick={() => { onSelectTutorial(activeModalTutorial, "interactive"); setActiveModalTutorial(null); }}
-                className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-cyan-500/20 bg-[#101924]/80 hover:bg-[#122335] text-cyan-400 hover:text-cyan-300 hover:border-cyan-500/40 transition-all font-semibold"
+                className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-cyan-500/20 bg-accent/10 hover:bg-accent/20 text-cyan-400 hover:text-cyan-300 hover:border-cyan-500/40 transition-all font-semibold"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-cyan-950/40 text-cyan-400">
                   <Play className="w-5 h-5 fill-cyan-400/20" />

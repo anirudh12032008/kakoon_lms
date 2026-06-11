@@ -20,16 +20,20 @@ export const listCourses = asyncHandler(async (req: Request, res: Response) => {
   const courses = await Course.find({ published: true }).sort({ order: 1, createdAt: 1 });
 
   const userId = optionalUserId(req);
-  const enrolledIds = userId
-    ? new Set(
-        (await Enrollment.find({ user: userId }).select("course")).map((e) => String(e.course))
+  const enrollmentByCourse = userId
+    ? new Map(
+        (await Enrollment.find({ user: userId }).select("course progress")).map((e) => [
+          String(e.course),
+          e.progress ?? 0,
+        ])
       )
-    : new Set<string>();
+    : new Map<string, number>();
 
   res.json({
     courses: courses.map((c) => ({
       ...c.toJSON(),
-      enrolled: enrolledIds.has(String(c._id)),
+      enrolled: enrollmentByCourse.has(String(c._id)),
+      progress: enrollmentByCourse.get(String(c._id)) ?? 0,
     })),
   });
 });

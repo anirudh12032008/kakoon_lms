@@ -66,24 +66,24 @@ function LoginScreen({ onAuth }: { onAuth: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#08080a] flex items-center justify-center">
-      <div className="w-full max-w-sm mx-4 rounded-2xl border border-zinc-800 bg-[#0f0f12] p-8 shadow-2xl">
+    <div className="fixed inset-0 bg-[var(--k-base-100)] flex items-center justify-center">
+      <div className="w-full max-w-sm mx-4 rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-300)] p-8 shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-lg">🔐</div>
           <div>
             <p className="text-sm font-bold text-white">Admin Access</p>
-            <p className="text-xs text-zinc-500">Kokoon Tutorial Builder</p>
+            <p className="text-xs text-[var(--k-muted)]">Kokoon Tutorial Builder</p>
           </div>
         </div>
 
-        <label className="block text-xs font-semibold text-zinc-400 mb-2 uppercase tracking-wider">Admin Secret</label>
+        <label className="block text-xs font-semibold text-[var(--k-muted)] mb-2 uppercase tracking-wider">Admin Secret</label>
         <input
           type="password"
           value={input}
           onChange={(e) => { setInput(e.target.value); setError(false); }}
           onKeyDown={(e) => e.key === "Enter" && attempt()}
           placeholder="Enter secret…"
-          className="w-full bg-[#0a0a0d] border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-violet-500 transition-colors mb-2"
+          className="w-full bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-[var(--k-dim)] outline-none focus:border-violet-500 transition-colors mb-2"
         />
         {error && (
           <p className="text-xs text-red-400 mb-3">
@@ -125,7 +125,7 @@ function NodeRowEditor({ row, onChange, onRemove }: {
         rows={1}
         className={`input-sm font-mono text-[10px] resize-none ${!jsonValid ? "border-red-600/60" : ""}`}
         placeholder='{"key":"val"}' />
-      <button onClick={onRemove} className="text-zinc-600 hover:text-red-400 text-lg leading-none mt-1.5">×</button>
+      <button onClick={onRemove} className="text-[var(--k-dim)] hover:text-red-400 text-lg leading-none mt-1.5">×</button>
     </div>
   );
 }
@@ -145,7 +145,7 @@ function EdgeRowEditor({ row, onChange, onRemove }: {
         className="input-sm font-mono" placeholder="target node id" />
       <input value={row.handle} onChange={(e) => onChange({ ...row, handle: e.target.value })}
         className="input-sm font-mono" placeholder='sourceHandle (opt)' />
-      <button onClick={onRemove} className="text-zinc-600 hover:text-red-400 text-lg leading-none">×</button>
+      <button onClick={onRemove} className="text-[var(--k-dim)] hover:text-red-400 text-lg leading-none">×</button>
     </div>
   );
 }
@@ -263,15 +263,15 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-[#08080a] text-zinc-100 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-[var(--k-base-100)] text-[var(--k-text)] flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-zinc-800/60 shrink-0">
-        <button onClick={onBack} className="text-zinc-500 hover:text-white transition-colors text-sm">← Back</button>
-        <span className="text-zinc-700">|</span>
+      <div className="flex items-center gap-4 px-6 py-4 border-b border-[var(--k-border)]/60 shrink-0">
+        <button onClick={onBack} className="text-[var(--k-muted)] hover:text-[var(--k-text)] transition-colors text-sm">← Back</button>
+        <span className="text-[var(--k-dim)]">|</span>
         <span className="text-sm font-bold text-violet-400">Tutorial Builder</span>
         <div className="ml-auto flex gap-2">
-          <button onClick={() => setTab("build")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === "build" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"}`}>Build</button>
-          <button onClick={() => setTab("list")}  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === "list"  ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"}`}>Saved ({customList.length})</button>
+          <button onClick={() => setTab("build")} className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === "build" ? "bg-violet-600 text-white" : "text-[var(--k-muted)] hover:text-[var(--k-text)]"}`}>Build</button>
+          <button onClick={() => setTab("list")}  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${tab === "list"  ? "bg-violet-600 text-white" : "text-[var(--k-muted)] hover:text-[var(--k-text)]"}`}>Saved ({customList.length})</button>
         </div>
       </div>
 
@@ -279,17 +279,17 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
         /* ── Saved tutorials list ── */
         <div className="flex-1 overflow-y-auto p-6">
           {customList.length === 0 ? (
-            <div className="text-center text-zinc-600 mt-16 text-sm">No custom tutorials saved yet.</div>
+            <div className="text-center text-[var(--k-dim)] mt-16 text-sm">No custom tutorials saved yet.</div>
           ) : (
             <div className="max-w-3xl mx-auto space-y-3">
               {customList.map((t) => (
-                <div key={t.id} className="rounded-xl border border-zinc-800 bg-[#0f0f12] p-4 flex items-center gap-4">
+                <div key={t.id} className="rounded-xl border border-[var(--k-border)] bg-[var(--k-base-300)] p-4 flex items-center gap-4">
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-white truncate">{t.title}</p>
-                    <p className="text-xs text-zinc-500 truncate">{t.description}</p>
-                    <p className="text-[10px] text-zinc-600 mt-1">{t.steps.length} steps · {t.difficulty} · {t.nodes.length} nodes</p>
+                    <p className="text-xs text-[var(--k-muted)] truncate">{t.description}</p>
+                    <p className="text-[10px] text-[var(--k-dim)] mt-1">{t.steps.length} steps · {t.difficulty} · {t.nodes.length} nodes</p>
                   </div>
-                  <button onClick={() => loadIntoBuilder(t)} className="text-xs px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-all font-semibold">Edit</button>
+                  <button onClick={() => loadIntoBuilder(t)} className="text-xs px-3 py-1.5 rounded-lg bg-[var(--k-base-300)] hover:bg-[var(--k-base-400)] text-[var(--k-text)] transition-all font-semibold">Edit</button>
                   <button onClick={() => deleteCustom(t.id)} className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all font-semibold">Delete</button>
                 </div>
               ))}
@@ -300,7 +300,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
         /* ── Builder ── */
         <div className="flex-1 overflow-hidden flex gap-0">
           {/* Left: form */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 border-r border-zinc-800/60">
+          <div className="flex-1 overflow-y-auto p-6 space-y-6 border-r border-[var(--k-border)]/60">
             {/* Metadata */}
             <section>
               <h2 className="section-heading">Metadata</h2>
@@ -330,7 +330,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                 <h2 className="section-heading !mb-0">Nodes ({nodeRows.length})</h2>
                 <button onClick={addNode} className="btn-sm bg-emerald-600/20 text-emerald-400 border-emerald-600/30 hover:bg-emerald-600/30">+ Node</button>
               </div>
-              <div className="mb-1.5 grid grid-cols-[1fr_1.4fr_56px_56px_1.6fr_32px] gap-1.5 text-[9px] text-zinc-600 uppercase tracking-wider font-semibold px-0.5">
+              <div className="mb-1.5 grid grid-cols-[1fr_1.4fr_56px_56px_1.6fr_32px] gap-1.5 text-[9px] text-[var(--k-dim)] uppercase tracking-wider font-semibold px-0.5">
                 <span>ID</span><span>Type</span><span>X</span><span>Y</span><span>Data (JSON)</span><span />
               </div>
               <div className="space-y-1.5">
@@ -340,7 +340,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                     onRemove={() => setNodeRows((rows) => rows.filter((_, j) => j !== i))}
                   />
                 ))}
-                {nodeRows.length === 0 && <p className="text-xs text-zinc-600 py-2">No nodes yet.</p>}
+                {nodeRows.length === 0 && <p className="text-xs text-[var(--k-dim)] py-2">No nodes yet.</p>}
               </div>
             </section>
 
@@ -350,7 +350,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                 <h2 className="section-heading !mb-0">Edges ({edgeRows.length})</h2>
                 <button onClick={addEdge} className="btn-sm bg-blue-600/20 text-blue-400 border-blue-600/30 hover:bg-blue-600/30">+ Edge</button>
               </div>
-              <div className="mb-1.5 grid grid-cols-[1fr_1fr_1fr_1fr_32px] gap-1.5 text-[9px] text-zinc-600 uppercase tracking-wider font-semibold px-0.5">
+              <div className="mb-1.5 grid grid-cols-[1fr_1fr_1fr_1fr_32px] gap-1.5 text-[9px] text-[var(--k-dim)] uppercase tracking-wider font-semibold px-0.5">
                 <span>ID</span><span>Source</span><span>Target</span><span>Source Handle</span><span />
               </div>
               <div className="space-y-1.5">
@@ -360,7 +360,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                     onRemove={() => setEdgeRows((rows) => rows.filter((_, j) => j !== i))}
                   />
                 ))}
-                {edgeRows.length === 0 && <p className="text-xs text-zinc-600 py-2">No edges yet. Add edges to connect nodes.</p>}
+                {edgeRows.length === 0 && <p className="text-xs text-[var(--k-dim)] py-2">No edges yet. Add edges to connect nodes.</p>}
               </div>
             </section>
 
@@ -371,7 +371,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                 Save to Catalog
               </button>
               <button onClick={() => setShowJson((s) => !s)}
-                className="px-4 py-2.5 rounded-xl border border-zinc-700 text-zinc-400 hover:text-white text-sm font-semibold transition-all">
+                className="px-4 py-2.5 rounded-xl border border-[var(--k-border)] text-[var(--k-muted)] hover:text-[var(--k-text)] text-sm font-semibold transition-all">
                 {showJson ? "Hide" : "Show"} JSON
               </button>
               {saved && <span className="text-xs text-emerald-400 font-semibold">✓ Saved!</span>}
@@ -379,8 +379,8 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
             </div>
 
             {showJson && (
-              <div className="rounded-xl border border-zinc-800 bg-[#0a0a0d] p-4 overflow-auto max-h-72">
-                <pre className="text-[10px] text-zinc-400 font-mono whitespace-pre-wrap">{jsonExport}</pre>
+              <div className="rounded-xl border border-[var(--k-border)] bg-[var(--k-base-100)] p-4 overflow-auto max-h-72">
+                <pre className="text-[10px] text-[var(--k-muted)] font-mono whitespace-pre-wrap">{jsonExport}</pre>
               </div>
             )}
           </div>
@@ -389,15 +389,15 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
           <div className="w-80 shrink-0 overflow-y-auto p-5">
             <h2 className="section-heading">Steps Preview ({steps.length})</h2>
             {steps.length === 0 ? (
-              <p className="text-xs text-zinc-600">Connect some nodes to see generated steps.</p>
+              <p className="text-xs text-[var(--k-dim)]">Connect some nodes to see generated steps.</p>
             ) : (
               <ol className="space-y-2.5">
                 {steps.map((s, i) => (
                   <li key={s.id} className="flex gap-2.5">
                     <span className="shrink-0 w-5 h-5 rounded-full bg-violet-600/20 text-violet-400 text-[10px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
                     <div>
-                      <p className="text-[11px] font-semibold text-zinc-200 leading-tight">{s.title}</p>
-                      <p className="text-[10px] text-zinc-500 leading-snug mt-0.5">{s.description}</p>
+                      <p className="text-[11px] font-semibold text-[var(--k-text)] leading-tight">{s.title}</p>
+                      <p className="text-[10px] text-[var(--k-muted)] leading-snug mt-0.5">{s.description}</p>
                       <span className={`inline-block mt-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${
                         s.actionType === "add_node"    ? "bg-emerald-500/15 text-emerald-400" :
                         s.actionType === "connect"     ? "bg-blue-500/15 text-blue-400" :
@@ -420,7 +420,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">{label}</label>
+      <label className="block text-[10px] font-semibold text-[var(--k-muted)] uppercase tracking-wider mb-1">{label}</label>
       {children}
     </div>
   );

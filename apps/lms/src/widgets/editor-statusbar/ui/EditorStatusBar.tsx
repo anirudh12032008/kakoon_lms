@@ -169,7 +169,9 @@ export function EditorStatusBar({
         )}
 
         <button onClick={handleRun} disabled={!isConnected || isSending}
-          className="btn btn-sm gap-1.5 font-bold text-white bg-brand-gradient border-0 hover:opacity-90">
+          className={`btn btn-sm gap-1.5 font-bold text-white bg-brand-gradient border-0 hover:opacity-90 transition-shadow ${
+            isConnected && !isSending ? "shadow-[0_0_18px_color-mix(in_srgb,var(--k-primary)_55%,transparent)]" : ""
+          }`}>
           {isSending
             ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Running…</span></>
             : <><Play className="h-3.5 w-3.5" fill="white" /><span className="hidden sm:inline">Run</span></>

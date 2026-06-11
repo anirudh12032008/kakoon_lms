@@ -48,7 +48,7 @@ export function PlayerChip({ onClick, compact }: { onClick?: () => void; compact
           streak > 0 ? "text-warning-c" : "text-hint"
         }`}
       >
-        <Flame className="h-3.5 w-3.5" fill={streak > 0 ? "currentColor" : "none"} />
+        <Flame className={`h-3.5 w-3.5 ${streak > 0 ? "anim-flame" : ""}`} fill={streak > 0 ? "currentColor" : "none"} />
         {streak}
       </span>
     </button>

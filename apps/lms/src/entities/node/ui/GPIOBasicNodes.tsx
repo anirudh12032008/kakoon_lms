@@ -158,12 +158,12 @@ export function PWMOutputNode() {
             {[50, 500, 1000, 5000, 20000, 40000].map(v => (
               <button key={v} onClick={() => freqPreset(v)}
                 className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-mono border transition-all ${
-                  freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[var(--k-border)] text-zinc-500 hover:border-zinc-600 bg-[var(--k-base-200)]"
+                  freq === v ? "border-purple-500/60 text-purple-300 bg-purple-500/10" : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] bg-[var(--k-base-200)]"
                 }`}
               >{v >= 1000 ? `${v / 1000}k` : v}Hz</button>
             ))}
           </div>
-          <p className="text-[9px] text-zinc-600 mt-1">Range: 1 Hz – 40 kHz</p>
+          <p className="text-[9px] text-[var(--k-dim)] mt-1">Range: 1 Hz – 40 kHz</p>
         </div>
       </AdvancedSection>
 
@@ -177,8 +177,8 @@ export function PWMOutputNode() {
           onChange={e => setDuty(Number(e.target.value))}
           className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.purple }} />
         <div className="flex justify-between mt-0.5">
-          <span className="text-[8px] text-zinc-600">0%</span>
-          <span className="text-[8px] text-zinc-600">100%</span>
+          <span className="text-[8px] text-[var(--k-dim)]">0%</span>
+          <span className="text-[8px] text-[var(--k-dim)]">100%</span>
         </div>
       </div>
 
@@ -203,7 +203,7 @@ export function PWMOutputNode() {
 
         {/* Sensor input binding */}
         <div className="px-3 pt-1 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Auto-modulate from Sensor</span>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Auto-modulate from Sensor</span>
         </div>
         <NodeField label="Sensor var">
           <TextInput value={sensorBind} onChange={setSensorBind} />
@@ -212,7 +212,7 @@ export function PWMOutputNode() {
           <>
             <NodeField label="Sensor min"><NumberInput value={sensorMin} onChange={setSensorMin} /></NodeField>
             <NodeField label="Sensor max"><NumberInput value={sensorMax} onChange={setSensorMax} /></NodeField>
-            <p className="text-[9px] text-zinc-600 px-3 pb-1">Maps <span className="font-mono text-[var(--k-muted)]">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
+            <p className="text-[9px] text-[var(--k-dim)] px-3 pb-1">Maps <span className="font-mono text-[var(--k-muted)]">{sensorBind}</span> ({sensorMin}–{sensorMax}) → duty 0–100%</p>
           </>
         )}
       </AdvancedSection>

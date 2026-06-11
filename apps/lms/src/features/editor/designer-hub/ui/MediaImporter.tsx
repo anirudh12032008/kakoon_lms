@@ -208,18 +208,18 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
   }, [opts.threshold, opts.brightness, opts.contrast, opts.invert, opts.dither, opts.scaleMode]);
 
   const SLIDER = "w-full h-1.5 rounded-full accent-violet-500";
-  const OPT_LABEL = "text-[9px] text-zinc-500 uppercase tracking-wider font-bold";
+  const OPT_LABEL = "text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold";
   const BADGE = (active: boolean) =>
     `px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
       active ? "bg-violet-500/20 border-violet-500/50 text-violet-300"
-             : "border-[var(--k-border)] text-zinc-500 hover:border-zinc-600"
+             : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)]"
     }`;
 
   return (
     <div className="flex flex-col gap-3 h-full">
       <div
         className={`rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-all ${
-          dragOver ? "border-violet-400 bg-violet-500/10" : "border-[var(--k-border)] bg-[var(--k-base-100)] hover:border-zinc-600"
+          dragOver ? "border-violet-400 bg-violet-500/10" : "border-[var(--k-border)] bg-[var(--k-base-100)] hover:border-[var(--k-dim)]"
         }`}
         onClick={() => fileRef.current?.click()}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -233,7 +233,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
           : <>
               <p className="text-2xl mb-1">📷</p>
               <p className="text-xs font-semibold text-[var(--k-text)]">Drop image, GIF, or video here</p>
-              <p className="text-[10px] text-zinc-600 mt-0.5">PNG · JPG · GIF · MP4 · WebM</p>
+              <p className="text-[10px] text-[var(--k-dim)] mt-0.5">PNG · JPG · GIF · MP4 · WebM</p>
             </>
         }
       </div>
@@ -365,7 +365,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
               </div>
             )}
             {!hasContent && status !== "processing" && (
-              <div className="absolute inset-0 flex items-center justify-center text-[10px] text-zinc-600">
+              <div className="absolute inset-0 flex items-center justify-center text-[10px] text-[var(--k-dim)]">
                 Upload a file to see preview
               </div>
             )}
@@ -376,7 +376,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
             <div className="w-full max-w-[320px] flex items-center gap-2">
               <button
                 onClick={() => setPlaying((p) => !p)}
-                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] text-[var(--k-text)] hover:text-white transition-colors"
+                className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] text-[var(--k-text)] hover:text-[var(--k-text)] transition-colors"
                 title={playing ? "Pause" : "Play"}
               >
                 {playing ? "⏸" : "▶"}
@@ -386,7 +386,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
                 onChange={(e) => { setPlaying(false); setPlayIdx(+e.target.value); }}
                 className="flex-1 h-1.5 rounded-full accent-violet-500"
               />
-              <span className="text-[10px] font-mono text-zinc-500 w-14 text-right">
+              <span className="text-[10px] font-mono text-[var(--k-muted)] w-14 text-right">
                 {Math.min(playIdx, frameCount - 1) + 1}/{frameCount}
               </span>
             </div>
@@ -398,7 +398,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
             </p>
           )}
           {frameCount > 1 && (
-            <p className="self-start text-[10px] text-zinc-500">
+            <p className="self-start text-[10px] text-[var(--k-muted)]">
               {frameCount} frames · {opts.fps} fps · ~{(frameCount / opts.fps).toFixed(1)}s loop
             </p>
           )}
@@ -410,7 +410,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
             <PlusCircle className="w-3.5 h-3.5" />
             {frames.length > 1 ? `Apply ${frames.length} Frames to Designer` : "Apply to Designer"}
           </button>
-          <button onClick={onClose} className="text-[10px] text-zinc-600 hover:text-[var(--k-muted)] transition-colors text-center">
+          <button onClick={onClose} className="text-[10px] text-[var(--k-dim)] hover:text-[var(--k-muted)] transition-colors text-center">
             Cancel
           </button>
         </div>

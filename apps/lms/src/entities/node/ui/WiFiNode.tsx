@@ -69,7 +69,7 @@ export function WiFiNodeNode() {
             <div key={i} className="w-1.5 rounded-sm" style={{ height: h * 0.12 + "px", background: i < 3 ? "#14b8a6" : "var(--k-base-300)" }} />
           ))}
         </div>
-        <span className="text-[9px] text-zinc-500">Signal preview (live at runtime)</span>
+        <span className="text-[9px] text-[var(--k-muted)]">Signal preview (live at runtime)</span>
       </div>
     </BaseNode>
   );

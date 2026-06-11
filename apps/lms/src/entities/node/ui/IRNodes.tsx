@@ -76,7 +76,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
           <span className="w-1.5 h-1.5 rounded-full"
             style={{ background: live ? beamColor : "var(--k-base-400)",
               animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-          <span className="text-[8px] text-zinc-600">{live ? "Live" : "Connect to see data"}</span>
+          <span className="text-[8px] text-[var(--k-dim)]">{live ? "Live" : "Connect to see data"}</span>
         </div>
       </div>
     </div>
@@ -125,11 +125,11 @@ function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
     <div className="mx-3 mb-1 px-3 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
       {/* Code display */}
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[8px] uppercase tracking-wider text-zinc-600 font-bold">Last Code</span>
+        <span className="text-[8px] uppercase tracking-wider text-[var(--k-dim)] font-bold">Last Code</span>
         <div className="flex items-center gap-1">
           <span className="w-1 h-1 rounded-full"
             style={{ background: live ? "#f97316" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-          <span className="text-[8px] text-zinc-600 font-mono">{live ? "LIVE" : "no signal"}</span>
+          <span className="text-[8px] text-[var(--k-dim)] font-mono">{live ? "LIVE" : "no signal"}</span>
         </div>
       </div>
 
@@ -140,7 +140,7 @@ function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
         </span>
       </div>
 
-      <p className="text-[8px] text-zinc-600 mt-1.5 text-center">📱 Point your remote at the receiver!</p>
+      <p className="text-[8px] text-[var(--k-dim)] mt-1.5 text-center">📱 Point your remote at the receiver!</p>
     </div>
   );
 }

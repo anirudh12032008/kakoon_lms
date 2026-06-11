@@ -131,7 +131,7 @@ export function FirmwareFlasher({ onClose }: Props) {
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
       onClick={(e) => { if (e.target === e.currentTarget && !isBusy) onClose(); }}>
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[#09090b] shadow-2xl">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-100)] shadow-2xl">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--k-border)] bg-gradient-to-r from-violet-500/10 to-blue-500/10">
@@ -141,11 +141,11 @@ export function FirmwareFlasher({ onClose }: Props) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Flash Firmware</h2>
-              <p className="text-[10px] text-zinc-500">ESP32-S3 · MicroPython v1.25.0</p>
+              <p className="text-[10px] text-[var(--k-muted)]">ESP32-S3 · MicroPython v1.25.0</p>
             </div>
           </div>
           {!isBusy && (
-            <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--k-muted)] hover:text-white hover:bg-white/10">
+            <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)]">
               <X className="w-4 h-4" />
             </button>
           )}
@@ -163,14 +163,14 @@ export function FirmwareFlasher({ onClose }: Props) {
           {/* Port picker */}
           {!noSerial && (
             <div>
-              <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-2">Select Port</p>
+              <p className="text-[10px] text-[var(--k-muted)] uppercase tracking-wider font-bold mb-2">Select Port</p>
               <div className="space-y-1.5">
                 {ports.map((p, i) => (
                   <button key={i} onClick={() => !isBusy && setSelectedPort(p)} disabled={isBusy}
                     className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-sm transition-all ${
                       selectedPort === p
                         ? "border-violet-500/50 bg-violet-500/10 text-white"
-                        : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-zinc-600 hover:text-zinc-200"
+                        : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] hover:text-[var(--k-text)]"
                     }`}>
                     <Usb className="w-3.5 h-3.5 shrink-0" style={{ color: selectedPort === p ? "#8b5cf6" : undefined }} />
                     <span className="font-mono text-[11px] flex-1 text-left">{portLabel(p)}</span>
@@ -178,7 +178,7 @@ export function FirmwareFlasher({ onClose }: Props) {
                   </button>
                 ))}
                 <button onClick={handleRequestPort} disabled={isBusy}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-dashed border-[var(--k-border)] text-zinc-600 hover:border-zinc-500 hover:text-[var(--k-muted)] text-[11px] transition-all disabled:opacity-40">
+                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border border-dashed border-[var(--k-border)] text-[var(--k-dim)] hover:border-[var(--k-dim)] hover:text-[var(--k-muted)] text-[11px] transition-all disabled:opacity-40">
                   <Plus className="w-3.5 h-3.5" />
                   {ports.length === 0 ? "Select a port…" : "Add another port"}
                 </button>
@@ -207,7 +207,7 @@ export function FirmwareFlasher({ onClose }: Props) {
               {isBusy              && <Loader2       className="w-3.5 h-3.5 animate-spin" style={{ color: stateColor[state] }} />}
               {state === "done"    && <CheckCircle   className="w-3.5 h-3.5 text-green-400" />}
               {state === "error"   && <AlertTriangle className="w-3.5 h-3.5 text-red-400" />}
-              {state === "idle"    && <Zap           className="w-3.5 h-3.5 text-zinc-500" />}
+              {state === "idle"    && <Zap           className="w-3.5 h-3.5 text-[var(--k-muted)]" />}
               <span className="text-xs font-bold" style={{ color: stateColor[state] }}>{stateLabel[state]}</span>
               {isBusy && <span className="ml-auto text-[10px] font-mono text-[var(--k-muted)]">{progress}%</span>}
             </div>
@@ -219,13 +219,13 @@ export function FirmwareFlasher({ onClose }: Props) {
             )}
             <div className="bg-[var(--k-base-100)] rounded-lg p-2 h-[90px] overflow-y-auto font-mono text-[9px] space-y-0.5">
               {log.length === 0
-                ? <span className="text-zinc-700">Log will appear here…</span>
+                ? <span className="text-[var(--k-dim)]">Log will appear here…</span>
                 : log.map((l, i) => (
                   <div key={i} className={
                     l.includes("❌") ? "text-red-400" :
                     l.includes("✅") || l.includes("🎉") ? "text-green-400" :
                     l.includes("⚡") || l.includes("⬇️") ? "text-violet-400" :
-                    l.includes("🗑") ? "text-orange-400" : "text-zinc-500"
+                    l.includes("🗑") ? "text-orange-400" : "text-[var(--k-muted)]"
                   }>{l}</div>
                 ))
               }
@@ -248,7 +248,7 @@ export function FirmwareFlasher({ onClose }: Props) {
             </button>
           )}
 
-          <p className="text-[9px] text-zinc-700 text-center">
+          <p className="text-[9px] text-[var(--k-dim)] text-center">
             Erases the board and installs MicroPython v1.25.0. Save your project first!
           </p>
         </div>

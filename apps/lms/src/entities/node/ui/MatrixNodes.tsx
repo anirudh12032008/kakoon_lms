@@ -91,11 +91,11 @@ export function MAX7219Node() {
         </>
       ) : (
         /* Empty state — invite the user to open the designer */
-        <div className="mx-3 mb-2 flex flex-col items-center gap-2 py-3 rounded-xl border border-dashed border-[#2a2a35] bg-[var(--k-base-100)]">
+        <div className="mx-3 mb-2 flex flex-col items-center gap-2 py-3 rounded-xl border border-dashed border-[var(--k-border)] bg-[var(--k-base-100)]">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <span className="text-xl">💡</span>
           </div>
-          <p className="text-[9px] text-zinc-500 text-center px-3 leading-relaxed">
+          <p className="text-[9px] text-[var(--k-muted)] text-center px-3 leading-relaxed">
             No pattern yet.<br />Design one in the Matrix Designer.
           </p>
           {onOpenDesigner && (
@@ -114,7 +114,7 @@ export function MAX7219Node() {
         <div className="flex gap-1">
           {[1, 2, 3, 4].map(n => (
             <button key={n} onClick={() => setModules(n)}
-              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[var(--k-border)] hover:text-[var(--k-text)]"}`}>
+              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-[var(--k-muted)] border border-[var(--k-border)] hover:text-[var(--k-text)]"}`}>
               {n}
             </button>
           ))}
@@ -147,7 +147,7 @@ export function MAX7219Node() {
       {hasDesign && onOpenDesigner && (
         <div className="px-3 pb-2">
           <button onClick={onOpenDesigner}
-            className="nodrag w-full py-1.5 rounded-lg border border-[#2a2a35] text-[9px] font-bold text-zinc-500 hover:text-blue-400 hover:border-blue-500/30 transition-all">
+            className="nodrag w-full py-1.5 rounded-lg border border-[var(--k-border)] text-[9px] font-bold text-[var(--k-muted)] hover:text-blue-400 hover:border-blue-500/30 transition-all">
             ✏️ Edit in Designer
           </button>
         </div>

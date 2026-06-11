@@ -67,14 +67,14 @@ export function ModalProvider({ children }: { children: ReactNode }) {
             className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
           >
-            <div className="w-full max-w-sm rounded-2xl border border-[#2a2a32] bg-[#0e0e12] p-5 shadow-2xl">
-              <p className="text-sm text-zinc-200 mb-4 leading-relaxed whitespace-pre-wrap">
+            <div className="w-full max-w-sm rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-200)] p-5 shadow-2xl">
+              <p className="text-sm text-[var(--k-text)] mb-4 leading-relaxed whitespace-pre-wrap">
                 {pending.message}
               </p>
               {pending.type === "prompt" && (
                 <input
                   autoFocus
-                  className="w-full mb-4 rounded-lg border border-[#2d2d35] bg-[#1c1c20] px-3 py-2 text-sm text-white outline-none focus:border-violet-500 transition-colors"
+                  className="w-full mb-4 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] px-3 py-2 text-sm text-[var(--k-text)] outline-none focus:border-violet-500 transition-colors"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={(e) => {
@@ -86,7 +86,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={handleCancel}
-                  className="px-4 py-1.5 rounded-lg text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all"
+                  className="px-4 py-1.5 rounded-lg text-sm text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-300)] transition-all"
                 >
                   Cancel
                 </button>

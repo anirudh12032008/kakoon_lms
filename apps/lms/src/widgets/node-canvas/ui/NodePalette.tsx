@@ -24,7 +24,7 @@ const CAT_COLORS: Record<string, { dot: string; text: string; bg: string }> = {
 };
 
 function fallbackColor() {
-  return { dot: "#71717a", text: "text-[var(--k-muted)]", bg: "bg-zinc-500/10" };
+  return { dot: "#71717a", text: "text-[var(--k-muted)]", bg: "bg-[var(--k-base-400)]" };
 }
 
 function NodeItem({ node }: { node: NodeDef }) {

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Zap } from "lucide-react";
+import { burstConfetti } from "@/shared/lib/confetti";
 import { useGamification, type GamificationToast } from "../model/store";
 
 const TOAST_LIFETIME_MS = 4000;
@@ -9,9 +10,13 @@ function Toast({ toast }: { toast: GamificationToast }) {
   const dismiss = useGamification((s) => s.dismissToast);
 
   useEffect(() => {
+    // Celebrate: small pop near the toast for XP, full-screen rain for
+    // achievements and level-ups.
+    if (toast.kind === "xp") burstConfetti(0.88, 0.82, 45);
+    else burstConfetti(0.5, 0.35, 150);
     const t = setTimeout(() => dismiss(toast.id), TOAST_LIFETIME_MS);
     return () => clearTimeout(t);
-  }, [toast.id, dismiss]);
+  }, [toast.id, toast.kind, dismiss]);
 
   const isXp = toast.kind === "xp";
 

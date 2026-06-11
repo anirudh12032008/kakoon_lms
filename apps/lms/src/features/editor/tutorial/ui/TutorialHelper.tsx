@@ -352,7 +352,7 @@ export function TutorialHelper({
 
   if (isCompleted || !step) {
     return (
-      <div className="fixed bottom-6 right-6 w-full max-w-[360px] z-[9999] p-4 rounded-xl border border-emerald-500/35 bg-[#0c0c0e]/95 backdrop-blur-md shadow-2xl">
+      <div className="fixed bottom-6 right-6 w-full max-w-[360px] z-[9999] p-4 rounded-xl border border-emerald-500/35 bg-[var(--k-base-200)]/95 backdrop-blur-md shadow-2xl">
         <div className="flex items-start gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex-shrink-0">
             <Award className="w-4 h-4 animate-bounce" />
@@ -390,10 +390,10 @@ export function TutorialHelper({
       <div className="fixed inset-0 z-30 dimming-backdrop pointer-events-none" />
 
       <div ref={catOutlineRef} style={{ display: "none", boxSizing: "border-box" }}
-        className="fixed z-40 pointer-events-none border border-white/60 bg-white/5 shadow-[0_0_10px_rgba(255,255,255,0.15)] rounded-lg" />
+        className="fixed z-40 pointer-events-none border border-white/60 bg-[var(--k-base-400)] shadow-[0_0_10px_rgba(255,255,255,0.15)] rounded-lg" />
 
       <div ref={palOutlineRef} style={{ display: "none", boxSizing: "border-box" }}
-        className="fixed z-40 pointer-events-none border border-white/60 bg-white/5 shadow-[0_0_10px_rgba(255,255,255,0.15)] rounded-lg" />
+        className="fixed z-40 pointer-events-none border border-white/60 bg-[var(--k-base-400)] shadow-[0_0_10px_rgba(255,255,255,0.15)] rounded-lg" />
 
       <div ref={srcNodeOutlineRef} style={{ display: "none", boxSizing: "border-box" }}
         className="fixed z-35 pointer-events-none border border-emerald-500/60 bg-emerald-500/5 shadow-[0_0_10px_rgba(16,185,129,0.2)] rounded-xl" />
@@ -436,9 +436,9 @@ export function TutorialHelper({
       </div>
 
       {/* Instruction Dialog */}
-      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-[580px] z-50 p-5 rounded-2xl border border-zinc-700/80 bg-[#0c0c0e]/92 backdrop-blur-md shadow-2xl">
+      <div className="fixed top-20 left-1/2 transform -translate-x-1/2 w-full max-w-[580px] z-50 p-5 rounded-2xl border border-[var(--k-border)]/80 bg-[var(--k-base-200)]/95 backdrop-blur-md shadow-2xl">
         <div className="flex items-start gap-4">
-          <div className="flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl bg-zinc-800/40 border border-zinc-700/60 text-[var(--k-text)] text-center flex-shrink-0 select-none">
+          <div className="flex flex-col items-center justify-center px-3.5 py-2.5 rounded-xl bg-[var(--k-base-300)]/40 border border-[var(--k-border)]/60 text-[var(--k-text)] text-center flex-shrink-0 select-none">
             <span className="text-[10px] font-black tracking-widest uppercase">STEP</span>
             <span className="text-lg font-black leading-none mt-1">{currentStepIndex + 1}/{tutorial.steps.length}</span>
           </div>
@@ -450,7 +450,7 @@ export function TutorialHelper({
             </h4>
             <p className="text-xs text-[var(--k-text)] mt-1.5 leading-relaxed font-medium">{step.description}</p>
             <div className="flex items-center gap-3 mt-4">
-              <div className="flex-1 bg-zinc-800/60 h-2 rounded-full overflow-hidden border border-zinc-700/35">
+              <div className="flex-1 bg-[var(--k-base-300)]/60 h-2 rounded-full overflow-hidden border border-[var(--k-border)]/35">
                 <div className="bg-gradient-to-r from-emerald-400 to-teal-500 h-full rounded-full transition-all duration-300" style={{ width: `${progressPercent}%` }} />
               </div>
               <span className="text-[11px] font-bold text-[var(--k-muted)] flex-shrink-0">{progressPercent}% Done</span>
@@ -458,10 +458,10 @@ export function TutorialHelper({
           </div>
 
           <div className="flex flex-col gap-2 flex-shrink-0">
-            <button onClick={onQuit} className="p-2 rounded-xl text-zinc-500 hover:text-white hover:bg-zinc-800/40 border border-zinc-800 hover:border-zinc-700 transition-all" title="Quit Tutorial">
+            <button onClick={onQuit} className="p-2 rounded-xl text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-300)]/40 border border-[var(--k-border)] hover:border-[var(--k-border)] transition-all" title="Quit Tutorial">
               <X className="w-4 h-4" />
             </button>
-            <button onClick={onStepComplete} className="flex items-center justify-center p-2 rounded-xl bg-zinc-800 border border-zinc-700/60 text-[var(--k-text)] hover:text-white hover:bg-zinc-700/50 transition-all text-[11px] font-bold gap-1">
+            <button onClick={onStepComplete} className="flex items-center justify-center p-2 rounded-xl bg-[var(--k-base-300)] border border-[var(--k-border)]/60 text-[var(--k-text)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)]/50 transition-all text-[11px] font-bold gap-1">
               Skip <ArrowRight className="w-3 h-3" />
             </button>
           </div>
@@ -469,9 +469,9 @@ export function TutorialHelper({
       </div>
 
       {/* Checklist Sidebar */}
-      <div className={`fixed top-48 right-6 z-40 w-72 rounded-2xl border border-zinc-800/80 bg-[#0c0c0e]/95 backdrop-blur-md shadow-2xl transition-all duration-300 overflow-hidden ${isChecklistExpanded ? "max-h-[500px]" : "max-h-[52px]"}`}>
+      <div className={`fixed top-48 right-6 z-40 w-72 rounded-2xl border border-[var(--k-border)]/80 bg-[var(--k-base-200)]/95 backdrop-blur-md shadow-2xl transition-all duration-300 overflow-hidden ${isChecklistExpanded ? "max-h-[500px]" : "max-h-[52px]"}`}>
         <button onClick={() => setIsChecklistExpanded(!isChecklistExpanded)}
-          className="w-full flex items-center justify-between px-4 py-3.5 border-b border-zinc-800/40 hover:bg-zinc-800/10 transition-colors">
+          className="w-full flex items-center justify-between px-4 py-3.5 border-b border-[var(--k-border)]/40 hover:bg-[var(--k-base-300)]/10 transition-colors">
           <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
             <HelpCircle className="w-3.5 h-3.5 text-emerald-400" />
             Step-by-Step Guide
@@ -486,18 +486,18 @@ export function TutorialHelper({
             return (
               <div key={s.id} className={`flex items-start gap-2.5 p-2 rounded-xl border transition-all ${
                 isCurrent ? "bg-emerald-500/5 border-emerald-500/30 text-emerald-400"
-                  : isDone ? "bg-zinc-950/20 border-zinc-900 text-zinc-500"
-                  : "bg-transparent border-transparent text-zinc-600"
+                  : isDone ? "bg-[var(--k-base-300)]/20 border-[var(--k-border)] text-[var(--k-muted)]"
+                  : "bg-transparent border-transparent text-[var(--k-dim)]"
               }`}>
                 <div className={`flex-shrink-0 flex items-center justify-center w-5 h-5 rounded-full border text-[10px] font-black ${
                   isDone ? "border-emerald-500/45 bg-emerald-500/10 text-emerald-400"
                     : isCurrent ? "border-emerald-400 bg-emerald-500/20 text-emerald-300"
-                    : "border-zinc-800 text-zinc-600"
+                    : "border-[var(--k-border)] text-[var(--k-dim)]"
                 }`}>
                   {isDone ? <Check className="w-3.5 h-3.5" /> : idx + 1}
                 </div>
                 <div className="text-[11px] leading-tight font-medium text-left">
-                  <p className={isDone ? "line-through text-zinc-500" : "text-[var(--k-text)]"}>{s.title}</p>
+                  <p className={isDone ? "line-through text-[var(--k-muted)]" : "text-[var(--k-text)]"}>{s.title}</p>
                 </div>
               </div>
             );

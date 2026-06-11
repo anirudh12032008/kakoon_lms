@@ -57,8 +57,8 @@ export function BLEModeNode() {
 
       {/* Raw incoming data variable */}
       <div className="px-3 pb-1">
-        <div className="flex items-center gap-2 bg-[#0d0d10] border border-[#1e1e24] rounded-lg px-2 py-1.5">
-          <span className="text-[9px] text-zinc-500 shrink-0">phone → </span>
+        <div className="flex items-center gap-2 bg-[var(--k-base-300)] border border-[var(--k-border)] rounded-lg px-2 py-1.5">
+          <span className="text-[9px] text-[var(--k-muted)] shrink-0">phone → </span>
           <input value={rawVarName} onChange={(e) => setRawVarName(e.target.value)}
             className="nodrag flex-1 text-[11px] font-mono bg-transparent text-blue-300 outline-none min-w-0" />
           <Handle type="source" position={Position.Right} id="ble_raw"
@@ -80,20 +80,20 @@ export function BLEModeNode() {
 
         <div className="flex flex-col gap-1">
           {cmdMap.map((cmd, i) => (
-            <div key={i} className="flex items-center gap-1.5 bg-[#0d0d10] border border-[#1e1e24] rounded-lg px-2 py-1.5">
+            <div key={i} className="flex items-center gap-1.5 bg-[var(--k-base-300)] border border-[var(--k-border)] rounded-lg px-2 py-1.5">
               <input
                 value={cmd.trigger}
                 onChange={(e) => updateTrigger(i, e.target.value)}
                 placeholder="command…"
-                className="nodrag flex-1 text-[11px] font-mono bg-transparent text-blue-300 outline-none placeholder:text-zinc-700 min-w-0"
+                className="nodrag flex-1 text-[11px] font-mono bg-transparent text-blue-300 outline-none placeholder:text-[var(--k-dim)] min-w-0"
               />
               <button onClick={() => removeCmd(i)}
-                className="nodrag text-zinc-700 hover:text-red-400 text-[11px] shrink-0 leading-none">×</button>
+                className="nodrag text-[var(--k-dim)] hover:text-red-400 text-[11px] shrink-0 leading-none">×</button>
               <Handle type="source" position={Position.Right} id={`cmd_${i}`} style={cmdHandle} />
             </div>
           ))}
           {cmdMap.length === 0 && (
-            <div className="text-[9px] text-zinc-700 text-center py-2">No commands yet</div>
+            <div className="text-[9px] text-[var(--k-dim)] text-center py-2">No commands yet</div>
           )}
         </div>
       </div>
@@ -111,7 +111,7 @@ export function BLEModeNode() {
             <Handle type="target" position={Position.Left} id="ble_tx"
               style={{ width: 12, height: 12, background: "var(--k-base-200)", border: "2.5px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, left: -14, top: "auto", transform: "none" }} />
             <input value={txVarName} onChange={(e) => setTxVarName(e.target.value)}
-              className="nodrag flex-1 text-[10px] font-mono bg-[#0d0d10] border border-[#1e1e24] rounded-lg px-2 py-1 text-green-300 outline-none" />
+              className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-300)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-green-300 outline-none" />
           </div>
         )}
       </div>
@@ -128,10 +128,10 @@ export function BLEModeNode() {
             <div className="flex items-center gap-3 pt-1 px-1">
               <Handle type="source" position={Position.Right} id="connected"
                 style={{ width: 10, height: 10, background: "var(--k-base-200)", border: "2px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none" }} />
-              <span className="text-[8px] text-zinc-600">on connect</span>
+              <span className="text-[8px] text-[var(--k-dim)]">on connect</span>
               <Handle type="source" position={Position.Right} id="disconnected"
                 style={{ width: 10, height: 10, background: "var(--k-base-200)", border: "2px solid #ef4444", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none", marginLeft: 4 }} />
-              <span className="text-[8px] text-zinc-600">on disconnect</span>
+              <span className="text-[8px] text-[var(--k-dim)]">on disconnect</span>
             </div>
           </div>
         </div>

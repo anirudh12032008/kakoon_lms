@@ -794,10 +794,10 @@ export function HardwareView({ canvasRef }: HardwareViewProps) {
   }, []);
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[#080c08]">
+    <div className="flex h-full w-full overflow-hidden bg-[var(--k-base-100)]">
       {/* Palette */}
-      <aside className="w-56 shrink-0 border-r border-white/5 flex flex-col overflow-hidden" style={{ background: "#0d120d" }}>
-        <div className="px-4 py-3 border-b border-white/5">
+      <aside className="w-56 shrink-0 border-r border-[var(--k-border)] flex flex-col overflow-hidden" style={{ background: "var(--k-base-200)" }}>
+        <div className="px-4 py-3 border-b border-[var(--k-border)]">
           <p className="text-[11px] font-bold text-white/80 uppercase tracking-widest">Components</p>
           <p className="text-[10px] text-white/30 mt-0.5">Drag · Drop · Wire · Toggle</p>
         </div>
@@ -833,7 +833,7 @@ export function HardwareView({ canvasRef }: HardwareViewProps) {
         </div>
 
         {wired.length > 0 && (
-          <div className="border-t border-white/5 p-3">
+          <div className="border-t border-[var(--k-border)] p-3">
             <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">Connected</p>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {wired.slice().reverse().map((w, i) => (

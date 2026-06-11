@@ -23,7 +23,7 @@ export function NodeHintButton({ onDark = true }: { onDark?: boolean }) {
         aria-label="What does this block do?"
         className={`flex h-[18px] w-[18px] items-center justify-center rounded-full border text-[10px] font-black leading-none transition-colors ${
           onDark
-            ? "border-white/40 text-white/75 hover:bg-white/20 hover:text-white"
+            ? "border-white/40 text-white/75 hover:bg-white/20 hover:text-[var(--k-text)]"
             : "border-[var(--k-border)] text-[var(--k-muted)] hover:bg-[var(--k-base-400)] hover:text-[var(--k-text)]"
         }`}
       >
@@ -145,7 +145,7 @@ function SelectionToolbar() {
             return nds.map((n) => n.id === nodeId ? { ...n, selected: false } : n).concat(duplicated);
           });
         }}
-        className="text-[var(--k-muted)] hover:text-white transition-colors p-1 rounded hover:bg-[var(--k-base-400)]"
+        className="text-[var(--k-muted)] hover:text-[var(--k-text)] transition-colors p-1 rounded hover:bg-[var(--k-base-400)]"
         title="Duplicate Node"
       >
         <DuplicateIcon />
@@ -218,7 +218,7 @@ export function NodeAdvancedButton({ className = "" }: { className?: string }) {
           ? globalAdvanced
             ? "border-violet-500/60 text-violet-400 bg-violet-500/15"
             : "border-amber-400/60 text-amber-400 bg-amber-400/10"
-          : "border-zinc-700 text-zinc-600 bg-transparent hover:border-zinc-500 hover:text-[var(--k-muted)]"
+          : "border-[var(--k-border)] text-[var(--k-dim)] bg-transparent hover:border-[var(--k-dim)] hover:text-[var(--k-muted)]"
       } ${globalAdvanced ? "cursor-default" : ""} ${className}`}
     >
       adv
@@ -274,11 +274,11 @@ export function TextInput({
   }, [getNodes, isFocused, value]);
 
   const dropdown = isFocused && suggestions.length > 0 && (
-    <div className="absolute left-0 right-0 top-full mt-1 z-[9999] rounded-lg border border-cyan-800 bg-[#0c0c0f]/95 backdrop-blur-md shadow-2xl p-1 max-h-[140px] overflow-y-auto select-none nodrag">
+    <div className="absolute left-0 right-0 top-full mt-1 z-[9999] rounded-lg border border-cyan-800 bg-[var(--k-base-200)]/95 backdrop-blur-md shadow-2xl p-1 max-h-[140px] overflow-y-auto select-none nodrag">
       {suggestions.map((s) => (
         <button key={s} type="button"
           onMouseDown={(e) => { e.preventDefault(); onChange(s); setIsFocused(false); }}
-          className="w-full text-left px-2.5 py-1.5 rounded-md text-[11px] font-mono font-semibold text-cyan-400 hover:text-white hover:bg-cyan-600/25 transition-all cursor-pointer"
+          className="w-full text-left px-2.5 py-1.5 rounded-md text-[11px] font-mono font-semibold text-cyan-400 hover:text-[var(--k-text)] hover:bg-cyan-600/25 transition-all cursor-pointer"
         >{s}</button>
       ))}
     </div>

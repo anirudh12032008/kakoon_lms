@@ -287,7 +287,7 @@ function NodeCanvasInner({
   return (
     <div
       ref={wrapperRef}
-      className="relative h-full w-full"
+      className="canvas-vignette relative h-full w-full"
       onDrop={onDrop}
       onDragOver={onDragOver}
     >

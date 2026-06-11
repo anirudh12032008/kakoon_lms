@@ -64,8 +64,8 @@ export function TimerIntervalNode() {
         style={{ ...outHS("#22c55e"), left: -6, top: "35%" }} />
       <Handle type="target" position={Position.Left} id="stop"
         style={{ ...outHS("#ef4444"), left: -6, top: "65%" }} />
-      <div className="absolute text-[8px] text-zinc-500 select-none font-mono" style={{ left: 10, top: "30%" }}>START</div>
-      <div className="absolute text-[8px] text-zinc-500 select-none font-mono" style={{ left: 10, top: "60%" }}>STOP</div>
+      <div className="absolute text-[8px] text-[var(--k-muted)] select-none font-mono" style={{ left: 10, top: "30%" }}>START</div>
+      <div className="absolute text-[8px] text-[var(--k-muted)] select-none font-mono" style={{ left: 10, top: "60%" }}>STOP</div>
 
       <div className="h-3" />
 
@@ -82,9 +82,9 @@ export function TimerIntervalNode() {
 
       {/* freq readout */}
       <div className="mx-3 mb-1 flex items-center justify-between px-2.5 py-1 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
-        <span className="text-[9px] text-zinc-500">Period</span>
+        <span className="text-[9px] text-[var(--k-muted)]">Period</span>
         <span className="text-[11px] font-mono font-bold text-cyan-400">{ms >= 1000 ? `${(ms/1000).toFixed(2)} s` : `${ms} ms`}</span>
-        <span className="text-[9px] text-zinc-500">{hz} Hz</span>
+        <span className="text-[9px] text-[var(--k-muted)]">{hz} Hz</span>
       </div>
 
       <NodeField label="Auto-start"><ToggleInput value={autoStart} onChange={setAutoStart} leftLabel="Off" rightLabel="On" /></NodeField>
@@ -97,8 +97,8 @@ export function TimerIntervalNode() {
         style={{ ...outHS(COLORS.cyan), right: -6, top: "42%" }} />
       <Handle type="source" position={Position.Right} id="elapsed_out"
         style={{ ...outHS(COLORS.yellow), right: -6, top: "62%" }} />
-      <div className="absolute text-[8px] text-zinc-500 select-none font-mono text-right" style={{ right: 10, top: "37%" }}>TICK</div>
-      <div className="absolute text-[8px] text-zinc-500 select-none font-mono text-right" style={{ right: 10, top: "57%" }}>ELAPSED</div>
+      <div className="absolute text-[8px] text-[var(--k-muted)] select-none font-mono text-right" style={{ right: 10, top: "37%" }}>TICK</div>
+      <div className="absolute text-[8px] text-[var(--k-muted)] select-none font-mono text-right" style={{ right: 10, top: "57%" }}>ELAPSED</div>
       <div className="h-5" />
     </BaseNode>
   );
@@ -140,10 +140,10 @@ export function VariableStateNode() {
         <div className="flex items-center gap-1">
           <Handle type="target" position={Position.Left} id="write"
             style={{ ...makeHandleStyle(COLORS.orange), left: -6 }} />
-          <span className="text-[9px] text-zinc-500 font-mono ml-4">WRITE IN</span>
+          <span className="text-[9px] text-[var(--k-muted)] font-mono ml-4">WRITE IN</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-[9px] text-zinc-500 font-mono mr-4">READ OUT</span>
+          <span className="text-[9px] text-[var(--k-muted)] font-mono mr-4">READ OUT</span>
           <Handle type="source" position={Position.Right} id="read"
             style={{ ...makeHandleStyle(tc), right: -6 }} />
         </div>
@@ -151,7 +151,7 @@ export function VariableStateNode() {
 
       {/* live value pill */}
       <div className="mx-3 mb-2 flex items-center justify-center px-3 py-1.5 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
-        <span className="text-[9px] text-zinc-500 mr-2">Current value:</span>
+        <span className="text-[9px] text-[var(--k-muted)] mr-2">Current value:</span>
         <span className="text-xs font-mono font-bold" style={{ color: tc }}>{initVal}</span>
       </div>
     </BaseNode>
@@ -213,17 +213,17 @@ export function MathTransformNode() {
 
       {op === "map" && (<>
         <div className="mx-3 mt-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] p-2">
-          <div className="text-[9px] text-zinc-500 mb-1.5 uppercase tracking-wider font-bold">Input Range → Output Range</div>
+          <div className="text-[9px] text-[var(--k-muted)] mb-1.5 uppercase tracking-wider font-bold">Input Range → Output Range</div>
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[9px] text-zinc-500 w-6">in</span>
+            <span className="text-[9px] text-[var(--k-muted)] w-6">in</span>
             <NumberInput value={inMin} onChange={setInMin} style={{ width: 54 }} />
-            <span className="text-[9px] text-zinc-600">to</span>
+            <span className="text-[9px] text-[var(--k-dim)]">to</span>
             <NumberInput value={inMax} onChange={setInMax} style={{ width: 54 }} />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] text-zinc-500 w-6">out</span>
+            <span className="text-[9px] text-[var(--k-muted)] w-6">out</span>
             <NumberInput value={outMin} onChange={setOutMin} style={{ width: 54 }} />
-            <span className="text-[9px] text-zinc-600">to</span>
+            <span className="text-[9px] text-[var(--k-dim)]">to</span>
             <NumberInput value={outMax} onChange={setOutMax} style={{ width: 54 }} />
           </div>
         </div>
@@ -235,10 +235,10 @@ export function MathTransformNode() {
 
       {op === "clamp" && (
         <div className="mx-3 mt-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] p-2">
-          <div className="text-[9px] text-zinc-500 mb-1.5 uppercase tracking-wider font-bold">Clamp Range</div>
+          <div className="text-[9px] text-[var(--k-muted)] mb-1.5 uppercase tracking-wider font-bold">Clamp Range</div>
           <div className="flex items-center gap-1.5">
             <NumberInput value={clampMin} onChange={setClampMin} style={{ width: 60 }} />
-            <span className="text-[9px] text-zinc-600">to</span>
+            <span className="text-[9px] text-[var(--k-dim)]">to</span>
             <NumberInput value={clampMax} onChange={setClampMax} style={{ width: 60 }} />
           </div>
         </div>

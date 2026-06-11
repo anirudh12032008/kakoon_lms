@@ -1,24 +1,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, Copy, PlusCircle } from "lucide-react";
+import { textToColumns } from "../lib/font5";
 
 function copyText(s: string) { navigator.clipboard.writeText(s).catch(() => {}); }
 
-const FONT5: Record<string, number[]> = {
-  " ":[0,0,0,0,0],"A":[126,17,17,17,126],"B":[127,73,73,73,54],"C":[62,65,65,65,34],
-  "D":[127,65,65,34,28],"E":[127,73,73,73,65],"F":[127,9,9,9,1],"G":[62,65,73,73,122],
-  "H":[127,8,8,8,127],"I":[0,65,127,65,0],"J":[32,64,65,63,1],"K":[127,8,20,34,65],
-  "L":[127,64,64,64,64],"M":[127,2,4,2,127],"N":[127,4,8,16,127],"O":[62,65,65,65,62],
-  "P":[127,9,9,9,6],"Q":[62,65,81,33,94],"R":[127,9,25,41,70],"S":[70,73,73,73,49],
-  "T":[1,1,127,1,1],"U":[63,64,64,64,63],"V":[31,32,64,32,31],"W":[63,64,32,64,63],
-  "X":[99,20,8,20,99],"Y":[7,8,112,8,7],"Z":[97,81,73,69,67],
-  "0":[62,81,73,69,62],"1":[0,66,127,64,0],"2":[66,97,81,73,70],"3":[33,65,69,75,49],
-  "4":[24,20,18,127,16],"5":[39,69,69,69,57],"6":[60,74,73,73,48],"7":[1,113,9,5,3],
-  "8":[54,73,73,73,54],"9":[6,73,73,41,30],"!":[0,0,95,0,0],".":[0,96,96,0,0],
-  ",":[0,80,48,0,0],"?":[2,1,81,9,6],
-};
-
 function textToMatrixFrames(text: string, modules: number): number[][] {
-  const cols = text.toUpperCase().split("").flatMap((c) => [...(FONT5[c] ?? FONT5[" "]), 0]);
+  const cols = textToColumns(text);
   const frames: number[][] = [];
   const totalCols = modules * 8;
   for (let offset = 0; offset < cols.length; offset++) {
@@ -36,13 +23,49 @@ function textToMatrixFrames(text: string, modules: number): number[][] {
 }
 
 const MATRIX_ANIMS = [
-  { id: "flash",    name: "Flash" },
-  { id: "checker",  name: "Checkerboard" },
-  { id: "row_wipe", name: "Row Wipe" },
-  { id: "col_wipe", name: "Column Wipe" },
-  { id: "rain",     name: "Rain" },
-  { id: "spiral",   name: "Spiral" },
+  { id: "flash",    name: "⚡ Flash" },
+  { id: "checker",  name: "🏁 Checkerboard" },
+  { id: "row_wipe", name: "↕️ Row Wipe" },
+  { id: "col_wipe", name: "↔️ Column Wipe" },
+  { id: "rain",     name: "🌧 Rain" },
+  { id: "spiral",   name: "🌀 Spiral" },
+  { id: "heart",    name: "💓 Heartbeat" },
+  { id: "bounce",   name: "🏀 Bouncing Ball" },
+  { id: "wave",     name: "🌊 Wave" },
 ];
+
+/** 8×8 heart shape (small + large) for the heartbeat preset. */
+const HEART_SMALL = [
+  "00000000",
+  "00100100",
+  "01111110",
+  "01111110",
+  "00111100",
+  "00011000",
+  "00000000",
+  "00000000",
+];
+const HEART_BIG = [
+  "01100110",
+  "11111111",
+  "11111111",
+  "11111111",
+  "01111110",
+  "00111100",
+  "00011000",
+  "00000000",
+];
+
+function stampShape(shape: string[], modules: number, modIndex: number): number[] {
+  const W = modules * 8;
+  const f = new Array(W * 8).fill(0);
+  shape.forEach((rowStr, row) => {
+    rowStr.split("").forEach((ch, col) => {
+      if (ch === "1") f[row * W + modIndex * 8 + col] = 1;
+    });
+  });
+  return f;
+}
 
 function buildMatrixAnim(id: string, modules: number): number[][] {
   const W = modules * 8, H = 8, blank = new Array(W * H).fill(0);
@@ -85,7 +108,45 @@ function buildMatrixAnim(id: string, modules: number): number[][] {
       }
       return frames;
     }
+    case "heart": {
+      const mid = Math.floor(modules / 2);
+      const small = stampShape(HEART_SMALL, modules, mid);
+      const big = stampShape(HEART_BIG, modules, mid);
+      return [small, small, big, big, small, big, small, small, blank.slice()];
+    }
+    case "bounce":
+      return Array.from({ length: W * 2 - 2 }, (_, s) => {
+        const x = s < W ? s : 2 * W - 2 - s;
+        const y = Math.round(Math.abs(Math.sin((s / (W - 1)) * Math.PI * 2)) * (H - 2));
+        const f = new Array(W * H).fill(0);
+        const yy = H - 1 - y;
+        f[yy * W + x] = 1;
+        if (x > 0) f[yy * W + x - 1] = 1;
+        if (yy > 0) f[(yy - 1) * W + x] = 1;
+        return f;
+      });
+    case "wave":
+      return Array.from({ length: 16 }, (_, frame) =>
+        Array.from({ length: W * H }, (__, i) => {
+          const col = i % W, row = Math.floor(i / W);
+          const crest = Math.round(((Math.sin((col + frame) * 0.55) + 1) / 2) * (H - 1));
+          return row >= crest ? 1 : 0;
+        }));
     default: return [blank];
+  }
+}
+
+/** Per-frame edit ops shared by the toolbar. */
+function transformFrame(f: number[], W: number, op: "invert" | "clear" | "fill" | "left" | "right" | "up" | "down"): number[] {
+  const H = f.length / W;
+  switch (op) {
+    case "invert": return f.map((p) => (p ? 0 : 1));
+    case "clear":  return new Array(f.length).fill(0);
+    case "fill":   return new Array(f.length).fill(1);
+    case "left":   return f.map((_, i) => f[Math.floor(i / W) * W + ((i % W) + 1) % W]);
+    case "right":  return f.map((_, i) => f[Math.floor(i / W) * W + ((i % W) + W - 1) % W]);
+    case "up":     return f.map((_, i) => f[((Math.floor(i / W) + 1) % H) * W + (i % W)]);
+    case "down":   return f.map((_, i) => f[((Math.floor(i / W) + H - 1) % H) * W + (i % W)]);
   }
 }
 
@@ -145,8 +206,17 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
   const [addedToCanvas, setAddedToCanvas] = useState(false);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dragFrame = useRef<number | null>(null);
+  // Drag-to-paint: the value (0/1) being painted while the mouse is held down.
+  const paintValue = useRef<number | null>(null);
+  const [onionSkin, setOnionSkin] = useState(true);
 
   const W = modules * 8;
+
+  useEffect(() => {
+    const up = () => { paintValue.current = null; };
+    window.addEventListener("mouseup", up);
+    return () => window.removeEventListener("mouseup", up);
+  }, []);
 
   useEffect(() => {
     setFrames([new Array(W * 8).fill(0)]);
@@ -161,13 +231,23 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
     return () => { if (playRef.current) clearInterval(playRef.current); };
   }, [playing, fps]);
 
-  const togglePixel = (x: number, y: number) => {
+  const setPixel = (x: number, y: number, value: number) => {
     setFrames((prev) => {
       const u = [...prev], f = [...u[curFrame]];
-      f[y * W + x] ^= 1;
+      if (f[y * W + x] === value) return prev;
+      f[y * W + x] = value;
       u[curFrame] = f;
       return u;
     });
+  };
+
+  const applyOp = (op: Parameters<typeof transformFrame>[2]) => {
+    setFrames((prev) => {
+      const u = [...prev];
+      u[curFrame] = transformFrame(u[curFrame], W, op);
+      return u;
+    });
+    setPlaying(false);
   };
 
   const removeFrame = (idx: number) => {
@@ -208,29 +288,66 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
         <div className="flex flex-col border-b border-[var(--k-border)]">
           {(["draw","anims","text"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`text-[10px] font-bold px-3 py-2 text-left transition-all ${tab===t ? "bg-violet-500/15 text-violet-400 border-l-2 border-violet-500" : "text-zinc-500 hover:text-[var(--k-text)] border-l-2 border-transparent"}`}>
+              className={`text-[10px] font-bold px-3 py-2 text-left transition-all ${tab===t ? "bg-violet-500/15 text-violet-400 border-l-2 border-violet-500" : "text-[var(--k-muted)] hover:text-[var(--k-text)] border-l-2 border-transparent"}`}>
               {t === "draw" ? "✏️ Draw" : t === "anims" ? "🎬 Animations" : "📝 Scroll Text"}
             </button>
           ))}
         </div>
         <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
           <div>
-            <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Modules</div>
+            <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Modules</div>
             <div className="flex gap-1">
               {[1,2,3,4].map((n) => (
                 <button key={n} onClick={() => setModules(n)}
-                  className={`flex-1 py-1 text-[10px] font-bold rounded transition-all ${n===modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-zinc-500 border border-[var(--k-border)]"}`}>
+                  className={`flex-1 py-1 text-[10px] font-bold rounded transition-all ${n===modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-[var(--k-muted)] border border-[var(--k-border)]"}`}>
                   {n}
                 </button>
               ))}
             </div>
           </div>
 
+          {tab === "draw" && (
+            <>
+              <div>
+                <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Edit Frame</div>
+                <div className="grid grid-cols-3 gap-1">
+                  {([
+                    ["invert", "◑"], ["fill", "■"], ["clear", "□"],
+                  ] as const).map(([op, icon]) => (
+                    <button key={op} onClick={() => applyOp(op)} title={op}
+                      className="py-1 rounded text-[11px] text-[var(--k-muted)] hover:text-amber-400 border border-[var(--k-border)] hover:border-amber-500/30 transition-all capitalize">
+                      {icon}
+                    </button>
+                  ))}
+                  {([
+                    ["left", "←"], ["up", "↑"], ["right", "→"],
+                  ] as const).map(([op, icon]) => (
+                    <button key={op} onClick={() => applyOp(op)} title={`Shift ${op}`}
+                      className="py-1 rounded text-[11px] text-[var(--k-muted)] hover:text-amber-400 border border-[var(--k-border)] hover:border-amber-500/30 transition-all">
+                      {icon}
+                    </button>
+                  ))}
+                  <div />
+                  <button onClick={() => applyOp("down")} title="Shift down"
+                    className="py-1 rounded text-[11px] text-[var(--k-muted)] hover:text-amber-400 border border-[var(--k-border)] hover:border-amber-500/30 transition-all">
+                    ↓
+                  </button>
+                  <div />
+                </div>
+              </div>
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider font-bold">Onion skin</span>
+                <input type="checkbox" checked={onionSkin} onChange={(e) => setOnionSkin(e.target.checked)}
+                  className="accent-amber-500" />
+              </label>
+            </>
+          )}
+
           {tab === "anims" && (
             <div className="flex flex-col gap-1">
               {MATRIX_ANIMS.map((a) => (
                 <button key={a.id} onClick={() => { const f = buildMatrixAnim(a.id, modules); setFrames(f); setCurFrame(0); setPlaying(false); }}
-                  className="text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all">
+                  className="text-left text-[10px] text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg hover:bg-[var(--k-base-400)] transition-all">
                   {a.name}
                 </button>
               ))}
@@ -240,7 +357,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           {tab === "text" && (
             <div className="flex flex-col gap-2">
               <div>
-                <div className="text-[9px] text-zinc-600 mb-1">Text to scroll</div>
+                <div className="text-[9px] text-[var(--k-dim)] mb-1">Text to scroll</div>
                 <input value={scrollText} onChange={(e) => setScrollText(e.target.value)}
                   className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1.5 text-amber-400 uppercase outline-none" />
               </div>
@@ -252,11 +369,11 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           )}
 
           <div>
-            <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">FPS: {fps}</div>
+            <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">FPS: {fps}</div>
             <input type="range" min={1} max={30} value={fps} onChange={(e) => setFps(+e.target.value)} className="w-full accent-amber-500" />
           </div>
           <div>
-            <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Name</div>
+            <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Name</div>
             <input value={designName} onChange={(e) => setDesignName(e.target.value)}
               className="w-full text-[10px] bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
           </div>
@@ -274,22 +391,22 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
               title="Drag to reorder"
               className="flex items-center gap-0.5 cursor-move">
               <button onClick={() => { setCurFrame(i); setPlaying(false); }}
-                className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${i===curFrame ? "bg-amber-500/20 text-amber-400 border border-amber-500/40" : "text-zinc-600 hover:text-[var(--k-muted)]"}`}>
+                className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all ${i===curFrame ? "bg-amber-500/20 text-amber-400 border border-amber-500/40" : "text-[var(--k-dim)] hover:text-[var(--k-muted)]"}`}>
                 {i+1}
               </button>
               {frames.length > 1 && (
                 <button onClick={() => removeFrame(i)} title="Delete frame"
-                  className="text-zinc-700 hover:text-red-400 text-[10px]">×</button>
+                  className="text-[var(--k-dim)] hover:text-red-400 text-[10px]">×</button>
               )}
             </div>
           ))}
-          {frames.length > 30 && <span className="text-[9px] text-zinc-600">+{frames.length-30}</span>}
+          {frames.length > 30 && <span className="text-[9px] text-[var(--k-dim)]">+{frames.length-30}</span>}
           <button onClick={() => { setFrames((p) => [...p, [...p[p.length-1]]]); setCurFrame(frames.length); setPlaying(false); }}
-            className="px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[var(--k-border)]">
+            className="px-2 py-0.5 rounded text-[9px] text-[var(--k-muted)] hover:text-green-400 border border-[var(--k-border)]">
             + Frame
           </button>
           <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-amber-400 border border-[var(--k-border)] hover:border-amber-500/30">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-[var(--k-muted)] hover:text-amber-400 border border-[var(--k-border)] hover:border-amber-500/30">
             <Copy className="w-3 h-3" /> Dup
           </button>
           {frames.length > 1 && (
@@ -299,20 +416,34 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
             </button>
           )}
         </div>
-        <div className="flex-1 flex items-center justify-center p-6">
+        <div className="flex-1 flex items-center justify-center p-6 select-none">
           <div className="flex flex-col gap-1">
             {Array.from({ length: 8 }, (_, row) => (
               <div key={row} className="flex gap-1">
                 {Array.from({ length: W }, (_, col) => {
                   const on = displayFrame[row * W + col];
+                  // Onion skin: faint ghost of the previous frame while drawing
+                  const ghost = !playing && onionSkin && curFrame > 0 && !on
+                    ? frames[curFrame - 1][row * W + col]
+                    : 0;
                   return (
                     <button key={col}
-                      onClick={() => tab === "draw" && togglePixel(col, row)}
-                      className="rounded transition-all hover:scale-110"
+                      onMouseDown={(e) => {
+                        if (tab !== "draw" || playing) return;
+                        e.preventDefault();
+                        const v = on ? 0 : 1;
+                        paintValue.current = v;
+                        setPixel(col, row, v);
+                      }}
+                      onMouseEnter={() => {
+                        if (tab !== "draw" || playing || paintValue.current === null) return;
+                        setPixel(col, row, paintValue.current);
+                      }}
+                      className="rounded transition-colors"
                       style={{
                         width: Math.max(12, Math.min(28, Math.floor(360 / W))),
                         height: Math.max(12, Math.min(28, Math.floor(360 / W))),
-                        background: on ? "#fbbf24" : "#1a1208",
+                        background: on ? "#fbbf24" : ghost ? "#4a3a12" : "#1a1208",
                         boxShadow: on ? "0 0 8px #fbbf2480" : "none",
                         border: on ? "1px solid #f59e0b" : "1px solid #2a2010",
                       }} />
@@ -329,7 +460,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
         <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
           <span className="text-[10px] text-[var(--k-muted)] font-bold uppercase tracking-wider">MicroPython Code</span>
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-white/5 text-[var(--k-muted)] border border-[var(--k-border)]"}`}>
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-bold transition-all ${copied ? "bg-green-500/20 text-green-400" : "bg-[var(--k-base-400)] text-[var(--k-muted)] border border-[var(--k-border)]"}`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy"}
           </button>
         </div>
@@ -359,7 +490,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
               <PlusCircle className="w-3.5 h-3.5" />
               {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
             </button>
-            <p className="text-[8px] text-zinc-700 text-center">
+            <p className="text-[8px] text-[var(--k-dim)] text-center">
               {frames.length} frame{frames.length !== 1 ? "s" : ""} · {modules} module{modules !== 1 ? "s" : ""} · {fps} fps
             </p>
           </div>

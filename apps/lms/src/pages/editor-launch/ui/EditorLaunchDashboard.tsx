@@ -53,14 +53,14 @@ function ModeCard({ title, description, badge, gradientIdx, selected, onClick }:
           </div>
           {selected
             ? <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/30"><Check className="h-3.5 w-3.5 text-white" /></div>
-            : <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-white/80 group-hover:translate-x-0.5 transition-all" />
+            : <ArrowRight className="h-4 w-4 text-white/40 group-hover:text-[var(--k-text)]/80 group-hover:translate-x-0.5 transition-all" />
           }
         </div>
         <h3 className="mt-3 text-[15px] font-black text-white tracking-tight leading-tight">{title}</h3>
         <p className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-white/60">{badge}</p>
       </div>
       {/* Description */}
-      <div className="flex-1 bg-raised px-4 py-3 border-t border-white/5">
+      <div className="flex-1 bg-raised px-4 py-3 border-t border-[var(--k-border)]">
         <p className="text-[12px] leading-5 text-sub">{description}</p>
       </div>
     </button>

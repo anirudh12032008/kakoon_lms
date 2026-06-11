@@ -45,12 +45,12 @@ function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">DRV8833 — fixed GPIO</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">DRV8833 — fixed GPIO</span>
         <span className="text-[9px] font-mono text-orange-400">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
-        <span className="text-[10px] text-zinc-500">PWM <span className="text-[var(--k-text)] font-mono">{m.pwm}</span></span>
-        <span className="text-[10px] text-zinc-500">DIR <span className="text-[var(--k-text)] font-mono">{m.dir}</span></span>
+        <span className="text-[10px] text-[var(--k-muted)]">PWM <span className="text-[var(--k-text)] font-mono">{m.pwm}</span></span>
+        <span className="text-[10px] text-[var(--k-muted)]">DIR <span className="text-[var(--k-text)] font-mono">{m.dir}</span></span>
       </div>
     </div>
   );
@@ -75,9 +75,9 @@ function CustomPinRow({ label, pwmPin, setPwmPin, dirPin, setDirPin }: {
   return (
     <div className="px-3 py-1 flex items-center gap-2">
       <span className="w-[58px] flex-shrink-0 text-[10px] text-[var(--k-muted)] font-medium">{label}</span>
-      <span className="text-[9px] text-zinc-500 uppercase">pwm</span>
+      <span className="text-[9px] text-[var(--k-muted)] uppercase">pwm</span>
       <NumberInput value={pwmPin} onChange={setPwmPin} />
-      <span className="text-[9px] text-zinc-500 uppercase">dir</span>
+      <span className="text-[9px] text-[var(--k-muted)] uppercase">dir</span>
       <NumberInput value={dirPin} onChange={setDirPin} />
     </div>
   );
@@ -161,7 +161,7 @@ export function RobotDriveNode() {
     <BaseNode title="Robot Drive" color={COLORS.orange} icon={<MotorIcon />} width="260px">
       {/* Direction grid */}
       <div className="px-3 pb-1 pt-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Direction</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Direction</span>
         <div className="grid grid-cols-4 gap-1 mt-1.5">
           {ROBOT_MOVES.map(m => (
             <button key={m.value} onClick={() => setMove(m.value)}
@@ -173,7 +173,7 @@ export function RobotDriveNode() {
                     : m.value.includes("spin")
                       ? "border-purple-500/60 bg-purple-500/15 text-purple-300"
                       : "border-orange-500/60 bg-orange-500/15 text-orange-300"
-                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-zinc-500 hover:border-zinc-500 hover:text-[var(--k-text)]"
+                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-[var(--k-muted)] hover:border-[var(--k-dim)] hover:text-[var(--k-text)]"
               }`}
             >
               {m.icon}
@@ -207,10 +207,10 @@ export function RobotDriveNode() {
       <AdvancedSection>
         {/* Hardware info */}
         <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — all 4 motors</span>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 — all 4 motors</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-zinc-500">L1·L2 <span className="text-[var(--k-muted)] font-mono">left</span></span>
-            <span className="text-[10px] text-zinc-500">R1·R2 <span className="text-[var(--k-muted)] font-mono">right</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">L1·L2 <span className="text-[var(--k-muted)] font-mono">left</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">R1·R2 <span className="text-[var(--k-muted)] font-mono">right</span></span>
           </div>
         </div>
 
@@ -272,14 +272,14 @@ export function DCMotorSingleNode() {
       </div>
 
       <div className="px-3 pb-2">
-        <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold">Direction</span>
+        <span className="text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Direction</span>
         <div className="grid grid-cols-4 gap-1 mt-1">
           {DIR_OPTIONS.map(d => (
             <button key={d.value} onClick={() => setDirection(d.value)}
               className={`nodrag py-1 rounded-lg border text-[9px] font-bold transition-all ${
                 direction === d.value
                   ? "border-orange-500/60 bg-orange-500/15 text-orange-300"
-                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-zinc-500 hover:border-zinc-600"
+                  : "border-[var(--k-border)] bg-[var(--k-base-200)] text-[var(--k-muted)] hover:border-[var(--k-dim)]"
               }`}
             >{d.label[0]}{d.label === "Coast" ? "st" : ""}</button>
           ))}
@@ -336,7 +336,7 @@ export function MultiMotorControllerNode() {
   }) => (
     <div className="px-3 pt-1.5">
       <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">{label}</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">{label}</span>
         <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
       </div>
       <input type="range" min={0} max={100} step={1} value={speed}
@@ -346,7 +346,7 @@ export function MultiMotorControllerNode() {
         {DIR_OPTIONS.map(d => (
           <button key={d.value} onClick={() => setDir(d.value)}
             className={`nodrag flex-1 py-0.5 rounded text-[9px] font-bold border transition-all ${
-              dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[var(--k-border)] text-zinc-500 hover:border-zinc-600 bg-[var(--k-base-200)]"
+              dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] bg-[var(--k-base-200)]"
             }`}
           >{d.value[0]}</button>
         ))}
@@ -380,12 +380,12 @@ export function MultiMotorControllerNode() {
 
       <AdvancedSection>
         <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">2× DRV8833 — shared driver</span>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 — shared driver</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-zinc-500">L1 <span className="font-mono text-[var(--k-muted)]">17/18</span></span>
-            <span className="text-[10px] text-zinc-500">L2 <span className="font-mono text-[var(--k-muted)]">37/38</span></span>
-            <span className="text-[10px] text-zinc-500">R1 <span className="font-mono text-[var(--k-muted)]">45/46</span></span>
-            <span className="text-[10px] text-zinc-500">R2 <span className="font-mono text-[var(--k-muted)]">15/16</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">L1 <span className="font-mono text-[var(--k-muted)]">17/18</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">L2 <span className="font-mono text-[var(--k-muted)]">37/38</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">R1 <span className="font-mono text-[var(--k-muted)]">45/46</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">R2 <span className="font-mono text-[var(--k-muted)]">15/16</span></span>
           </div>
         </div>
 

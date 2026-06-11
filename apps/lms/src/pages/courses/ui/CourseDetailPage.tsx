@@ -12,6 +12,20 @@ import { useLaunchStore } from "@/shared/launch/launchStore";
 import { XP_REWARDS, useGamification } from "@/entities/gamification";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
+/** Fade-up once when the block scrolls into view. */
+function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 18 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ type: "spring", stiffness: 300, damping: 28, delay }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 export function CourseDetailPage() {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
@@ -185,7 +199,8 @@ export function CourseDetailPage() {
 
         {/* Details grid */}
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
-          <section className="rounded-2xl border border-subtle bg-raised p-5">
+          <Reveal>
+          <section className="h-full rounded-2xl border border-subtle bg-raised p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-sub">
               <Target className="h-4 w-4 text-primary-c" /> What you'll learn
             </h2>
@@ -198,8 +213,10 @@ export function CourseDetailPage() {
               ))}
             </ul>
           </section>
+          </Reveal>
 
-          <section className="rounded-2xl border border-subtle bg-raised p-5">
+          <Reveal delay={0.08}>
+          <section className="h-full rounded-2xl border border-subtle bg-raised p-5">
             <h2 className="flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-sub">
               <Cpu className="h-4 w-4 text-primary-c" /> Components
             </h2>
@@ -211,6 +228,7 @@ export function CourseDetailPage() {
               ))}
             </div>
           </section>
+          </Reveal>
         </div>
 
         {/* Progress bar (enrolled only) */}
@@ -237,20 +255,38 @@ export function CourseDetailPage() {
           <p className="mb-4 text-sm text-sub">
             Follow these in order — each level pairs a hands-on build step with what you'll code in the editor.
           </p>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col">
             {course.levels.map((lv, idx) => {
-              const done = course.completedLevels?.includes(lv.key) ?? false;
+              const completedSet = new Set(course.completedLevels ?? []);
+              const done = completedSet.has(lv.key);
+              // The quest marker: first level that isn't done yet.
+              const isCurrent = !done && course.levels.slice(0, idx).every((l) => completedSet.has(l.key));
+              const prevDone = idx > 0 && completedSet.has(course.levels[idx - 1].key);
               return (
+                <Reveal key={lv.key} delay={Math.min(idx * 0.04, 0.16)}>
+                {/* Connector rail between quest steps */}
+                {idx > 0 && (
+                  <div className={`ml-[30px] h-4 w-[3px] rounded-full ${
+                    prevDone ? "bg-gradient-to-b from-primary to-secondary/70" : "bg-hover"
+                  }`} />
+                )}
                 <div
-                  key={lv.key}
-                  className={`rounded-2xl border bg-raised p-4 transition-colors ${
-                    done ? "border-primary/40" : "border-subtle"
+                  className={`rounded-2xl border bg-raised p-4 transition-all ${
+                    done
+                      ? "border-primary/40"
+                      : isCurrent
+                        ? "border-primary/60 shadow-[0_0_24px_color-mix(in_srgb,var(--k-primary)_18%,transparent)]"
+                        : "border-subtle"
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* Step number / done */}
                     <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-black ${
-                      done ? "bg-primary text-white" : "bg-hover text-sub"
+                      done
+                        ? "bg-primary text-white"
+                        : isCurrent
+                          ? "anim-quest-pulse bg-brand-gradient text-white"
+                          : "bg-hover text-sub"
                     }`}>
                       {done ? <Check className="h-4 w-4" /> : idx}
                     </div>
@@ -263,6 +299,11 @@ export function CourseDetailPage() {
                         }`}>
                           +{XP_REWARDS.levelComplete} XP
                         </span>
+                        {isCurrent && (
+                          <span className="rounded-full bg-brand-gradient px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
+                            ⭐ Up next
+                          </span>
+                        )}
                       </div>
                       <div className="mt-1.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                         <div className="rounded-lg border border-subtle bg-page px-3 py-2">
@@ -294,6 +335,7 @@ export function CourseDetailPage() {
                     )}
                   </div>
                 </div>
+                </Reveal>
               );
             })}
           </div>

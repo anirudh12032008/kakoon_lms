@@ -95,8 +95,8 @@ export function I2CScannerNode() {
 
       {/* Range label */}
       <div className="px-3 py-0.5 flex items-center justify-between">
-        <span className="text-[9px] text-zinc-500 font-mono">Range: 0x00 – 0x7F</span>
-        <span className="text-[9px] text-zinc-600">(128 addresses)</span>
+        <span className="text-[9px] text-[var(--k-muted)] font-mono">Range: 0x00 – 0x7F</span>
+        <span className="text-[9px] text-[var(--k-dim)]">(128 addresses)</span>
       </div>
 
       {/* Scan button */}
@@ -140,17 +140,17 @@ export function I2CScannerNode() {
           <div className="rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--k-base-300)]">
-              <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Found Devices</span>
+              <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Found Devices</span>
               <span className="text-[9px] font-mono text-blue-400 font-bold">{found.length} found</span>
             </div>
 
             {found.length === 0 ? (
-              <div className="px-3 py-3 text-center text-[10px] text-zinc-600">No devices found</div>
+              <div className="px-3 py-3 text-center text-[10px] text-[var(--k-dim)]">No devices found</div>
             ) : (
               <div className="flex flex-col">
                 {found.map((dev) => (
                   <div key={dev.addr}
-                    className="flex items-center justify-between px-2.5 py-1.5 border-b border-[#151518] last:border-0 hover:bg-[var(--k-base-200)] transition-colors group"
+                    className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--k-border)] last:border-0 hover:bg-[var(--k-base-200)] transition-colors group"
                   >
                     <div className="flex items-center gap-2">
                       {/* Address badge */}
@@ -164,7 +164,7 @@ export function I2CScannerNode() {
                     {/* One-click copy button */}
                     <button
                       onClick={() => handleCopy(dev.addr)}
-                      className="nodrag opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-[var(--k-muted)] hover:text-white hover:bg-zinc-700/50 border border-transparent hover:border-zinc-600"
+                      className="nodrag opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)]/50 border border-transparent hover:border-[var(--k-dim)]"
                       title="Copy address"
                     >
                       {copiedAddr === dev.addr ? (
@@ -184,7 +184,7 @@ export function I2CScannerNode() {
           </div>
 
           {/* Known address legend hint */}
-          <p className="text-[8px] text-zinc-600 mt-1.5 leading-tight">
+          <p className="text-[8px] text-[var(--k-dim)] mt-1.5 leading-tight">
             Auto-labelled: 0x3C OLED · 0x27/0x3F LCD · 0x68 MPU6050 · 0x48 ADS1115 · 0x76 BME280
           </p>
         </div>

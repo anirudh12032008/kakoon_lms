@@ -52,10 +52,10 @@ function ZoneRow({ label, color, dist, setDist, nodeColor, onColorChange }: {
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer nodrag" />
       </div>
       <span className="text-[9px] font-bold uppercase tracking-wider flex-shrink-0" style={{ color: nodeColor, width: 22 }}>{label}</span>
-      <span className="text-[9px] text-zinc-600 flex-shrink-0">&lt;</span>
+      <span className="text-[9px] text-[var(--k-dim)] flex-shrink-0">&lt;</span>
       <input type="number" value={dist} onChange={e => setDist(Number(e.target.value))}
         className="nodrag w-11 rounded bg-[var(--k-base-300)] border border-[var(--k-border)] text-[10px] text-center text-[var(--k-text)] font-mono outline-none px-1 py-0.5" />
-      <span className="text-[9px] text-zinc-600">cm</span>
+      <span className="text-[9px] text-[var(--k-dim)]">cm</span>
     </div>
   );
 }
@@ -87,14 +87,14 @@ export function UltrasonicSensorNode() {
       </AdvancedSection>
 
       {/* Distance display */}
-      <div className="px-3 py-1 flex items-center gap-2 bg-[#0d0d10] mx-3 rounded-lg border border-[var(--k-border)]">
+      <div className="px-3 py-1 flex items-center gap-2 bg-[var(--k-base-300)] mx-3 rounded-lg border border-[var(--k-border)]">
         <div className="flex-1 text-center">
-          <div className="text-[9px] text-zinc-500 uppercase">cm</div>
+          <div className="text-[9px] text-[var(--k-muted)] uppercase">cm</div>
           <div className="text-sm font-mono font-bold text-purple-400">—.-</div>
         </div>
         <div className="w-px h-6 bg-[var(--k-border)]" />
         <div className="flex-1 text-center">
-          <div className="text-[9px] text-zinc-500 uppercase">in</div>
+          <div className="text-[9px] text-[var(--k-muted)] uppercase">in</div>
           <div className="text-sm font-mono font-bold text-cyan-400">—.-</div>
         </div>
       </div>
@@ -102,7 +102,7 @@ export function UltrasonicSensorNode() {
       <AdvancedSection>
         {/* Proximity zone designer */}
         <div className="px-3 pt-2 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold px-0">Proximity Zones</span>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold px-0">Proximity Zones</span>
         </div>
         <ZoneRow label="Near" color={nearColor} dist={nearDist} setDist={setNearDist} nodeColor={nearColor} onColorChange={setNearColor} />
         <ZoneRow label="Mid" color={midColor} dist={midDist} setDist={setMidDist} nodeColor={midColor} onColorChange={setMidColor} />

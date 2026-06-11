@@ -5,6 +5,7 @@ import { MediaImporter } from "./MediaImporter";
 import {
   type AnimEntry, loadAnimRegistry, upsertAnim, removeAnim, toSafeName,
 } from "@/shared/lib/animRegistry";
+import { textToColumns } from "../lib/font5";
 
 type OLEDTool = "pen" | "eraser" | "line" | "rect" | "circle" | "fill";
 interface OLEDDesign { id: string; name: string; frames: number[][]; fps: number; }
@@ -119,6 +120,8 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   const [saveDeviceState, setSaveDeviceState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [registry, setRegistry] = useState<AnimEntry[]>(() => loadAnimRegistry());
+  const [stampText, setStampText] = useState("HELLO");
+  const [stampScale, setStampScale] = useState(2);
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const dragFrame = useRef<number | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -243,6 +246,32 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
       return u;
     });
   }, [curFrame]);
+
+  /** Stamps the typed text into the centre of the current frame (5×7 font). */
+  const stampTextOnFrame = useCallback(() => {
+    const cols = textToColumns(stampText);
+    if (cols.length === 0) return;
+    const s = stampScale;
+    const x0 = Math.max(0, Math.floor((OLED_W - cols.length * s) / 2));
+    const y0 = Math.max(0, Math.floor((OLED_H - 7 * s) / 2));
+    setFrames((prev) => {
+      const u = [...prev];
+      const f = [...u[curFrame]];
+      cols.forEach((colByte, ci) => {
+        for (let bit = 0; bit < 7; bit++) {
+          if (!(colByte & (1 << bit))) continue;
+          for (let dx = 0; dx < s; dx++) {
+            for (let dy = 0; dy < s; dy++) {
+              const x = x0 + ci * s + dx, y = y0 + bit * s + dy;
+              if (x < OLED_W && y < OLED_H) f[y * OLED_W + x] = 1;
+            }
+          }
+        }
+      });
+      u[curFrame] = f;
+      return u;
+    });
+  }, [stampText, stampScale, curFrame]);
 
   // ── Dynamic scale ─────────────────────────────────────────────────────────
   const [scale, setScale] = useState(6);
@@ -472,12 +501,12 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
       <div className="w-[150px] flex-shrink-0 border-r border-[var(--k-border)] p-2 flex flex-col gap-2 overflow-y-auto">
         {/* Tools */}
         <div>
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Tools</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Tools</div>
           <div className="grid grid-cols-2 gap-1">
             {tools.map((t) => (
               <button key={t.id} onClick={() => setTool(t.id)}
                 className={`flex flex-col items-center gap-0.5 py-1 px-1 rounded-lg text-[10px] font-bold transition-all ${
-                  tool === t.id ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "text-zinc-500 hover:bg-white/5 border border-transparent"
+                  tool === t.id ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "text-[var(--k-muted)] hover:bg-[var(--k-base-400)] border border-transparent"
                 }`}>
                 <span className="text-sm">{t.icon}</span>{t.label}
               </button>
@@ -487,32 +516,54 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
         {/* Invert / Shift */}
         <div>
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Edit</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Edit</div>
           <button onClick={() => { pushHistory(frames); invertFrame(); }}
-            className="w-full text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all">
+            className="w-full text-left text-[10px] text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg hover:bg-[var(--k-base-400)] transition-all">
             ⬛ Invert
           </button>
           <div className="grid grid-cols-3 gap-0.5 mt-1">
             <div />
             <button onClick={() => { pushHistory(frames); shiftFrame(0, -1); }}
-              className="text-zinc-500 hover:text-white text-center py-0.5 rounded hover:bg-white/5 text-sm">↑</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">↑</button>
             <div />
             <button onClick={() => { pushHistory(frames); shiftFrame(-1, 0); }}
-              className="text-zinc-500 hover:text-white text-center py-0.5 rounded hover:bg-white/5 text-sm">←</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">←</button>
             <button onClick={() => { pushHistory(frames); shiftFrame(0, 1); }}
-              className="text-zinc-500 hover:text-white text-center py-0.5 rounded hover:bg-white/5 text-sm">↓</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">↓</button>
             <button onClick={() => { pushHistory(frames); shiftFrame(1, 0); }}
-              className="text-zinc-500 hover:text-white text-center py-0.5 rounded hover:bg-white/5 text-sm">→</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">→</button>
           </div>
+        </div>
+
+        {/* Text stamp */}
+        <div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Stamp Text</div>
+          <input value={stampText} onChange={(e) => setStampText(e.target.value)} maxLength={16}
+            placeholder="HELLO"
+            className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white uppercase outline-none" />
+          <div className="flex gap-1 mt-1">
+            {[1, 2, 3].map((s) => (
+              <button key={s} onClick={() => setStampScale(s)}
+                className={`flex-1 py-0.5 text-[9px] font-bold rounded transition-all ${
+                  stampScale === s ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "text-[var(--k-muted)] border border-[var(--k-border)]"
+                }`}>
+                {s}×
+              </button>
+            ))}
+          </div>
+          <button onClick={() => { pushHistory(frames); stampTextOnFrame(); }}
+            className="mt-1 w-full py-1 rounded-lg bg-violet-500/15 text-violet-300 border border-violet-500/30 text-[10px] font-bold transition-all hover:bg-violet-500/25">
+            🔤 Stamp on frame
+          </button>
         </div>
 
         {/* Presets */}
         <div>
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Presets</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Presets</div>
           <div className="flex flex-col gap-0.5">
             {OLED_PRESETS.map((p) => (
               <button key={p.name} onClick={() => loadPreset(p)}
-                className="text-left text-[10px] text-[var(--k-muted)] hover:text-white px-2 py-1 rounded-lg hover:bg-white/5 transition-all truncate">
+                className="text-left text-[10px] text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg hover:bg-[var(--k-base-400)] transition-all truncate">
                 {p.name}
               </button>
             ))}
@@ -525,13 +576,13 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
         {/* Design name & FPS */}
         <div>
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-0.5 font-bold">Name</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-0.5 font-bold">Name</div>
           <input value={designName} onChange={(e) => setDesignName(e.target.value)}
             className="w-full text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2 py-1 text-white outline-none" />
         </div>
         {frames.length > 1 && (
           <div>
-            <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-0.5 font-bold">FPS: {fps}</div>
+            <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-0.5 font-bold">FPS: {fps}</div>
             <input type="range" min={1} max={30} value={fps} onChange={(e) => setFps(+e.target.value)}
               className="w-full accent-violet-500" />
           </div>
@@ -539,7 +590,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
         {/* Animation Library */}
         <div className="flex-1">
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Library</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Library</div>
 
           {/* Save to Library — always works, no device needed */}
           <button onClick={saveToLibrary}
@@ -549,17 +600,17 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
           <div className="flex flex-col gap-1">
             {registry.length === 0 && (
-              <p className="text-[9px] text-zinc-700 px-1">No saved animations</p>
+              <p className="text-[9px] text-[var(--k-dim)] px-1">No saved animations</p>
             )}
             {registry.map((entry) => (
-              <div key={entry.name} className="bg-[#0e0e14] rounded-lg p-1.5 border border-[var(--k-border)]">
+              <div key={entry.name} className="bg-[var(--k-base-300)] rounded-lg p-1.5 border border-[var(--k-border)]">
                 <div className="flex items-center gap-1 mb-0.5">
                   <span className="text-[10px] text-[var(--k-text)] font-semibold truncate flex-1">{entry.name}</span>
                   {entry.onDevice && (
                     <span className="text-[7px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 rounded px-1 py-px font-bold flex-shrink-0">ON DEVICE</span>
                   )}
                 </div>
-                <div className="text-[9px] text-zinc-600">{entry.frameCount}f · {entry.fps}fps</div>
+                <div className="text-[9px] text-[var(--k-dim)]">{entry.frameCount}f · {entry.fps}fps</div>
                 <div className="flex gap-1 mt-1">
                   <button onClick={() => loadFromLibrary(entry)}
                     className="flex-1 text-[9px] text-violet-400 border border-violet-500/30 rounded px-1 py-0.5 hover:bg-violet-500/10 transition-all">
@@ -587,7 +638,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
       <div ref={containerRef} className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
         {/* Frames bar */}
         <div className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--k-border)] bg-[var(--k-base-100)] flex-shrink-0 flex-wrap">
-          <span className="text-[9px] text-zinc-500 uppercase tracking-wider font-bold mr-1">Frames</span>
+          <span className="text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold mr-1">Frames</span>
           {frames.map((_, i) => (
             <div key={i} draggable
               onDragStart={() => { dragFrame.current = i; }}
@@ -596,20 +647,20 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               title="Drag to reorder"
               className="flex items-center gap-0.5 cursor-move">
               <button onClick={() => { setCurFrame(i); setPlaying(false); }}
-                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-zinc-500 hover:text-[var(--k-text)]"}`}>
+                className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all ${i === curFrame ? "bg-violet-500/25 text-violet-300 border border-violet-500/40" : "text-[var(--k-muted)] hover:text-[var(--k-text)]"}`}>
                 {i + 1}
               </button>
               {frames.length > 1 && (
-                <button onClick={() => removeFrame(i)} className="text-zinc-700 hover:text-red-400 text-[10px]">×</button>
+                <button onClick={() => removeFrame(i)} className="text-[var(--k-dim)] hover:text-red-400 text-[10px]">×</button>
               )}
             </div>
           ))}
           <button onClick={addFrame}
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-green-400 border border-[var(--k-border)] hover:border-green-500/30 transition-all">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-[var(--k-muted)] hover:text-green-400 border border-[var(--k-border)] hover:border-green-500/30 transition-all">
             <Plus className="w-2.5 h-2.5" />Add
           </button>
           <button onClick={() => duplicateFrame(curFrame)} title="Duplicate current frame"
-            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-zinc-500 hover:text-violet-400 border border-[var(--k-border)] hover:border-violet-500/30 transition-all">
+            className="flex items-center gap-1 px-2 py-0.5 rounded text-[9px] text-[var(--k-muted)] hover:text-violet-400 border border-[var(--k-border)] hover:border-violet-500/30 transition-all">
             <Copy className="w-2.5 h-2.5" />Dup
           </button>
 
@@ -617,7 +668,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             className={`flex items-center gap-1 px-2.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
               showImport
                 ? "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40"
-                : "text-zinc-500 border-[var(--k-border)] hover:text-fuchsia-400 hover:border-fuchsia-500/30"
+                : "text-[var(--k-muted)] border-[var(--k-border)] hover:text-fuchsia-400 hover:border-fuchsia-500/30"
             }`}>
             📷 Import
           </button>
@@ -641,7 +692,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               });
             }}
             title="Undo (Ctrl+Z)"
-            className="text-zinc-500 hover:text-[var(--k-text)] text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
+            className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-[var(--k-dim)] transition-all">
             ↩
           </button>
           <button
@@ -653,7 +704,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               });
             }}
             title="Redo (Ctrl+Y)"
-            className="text-zinc-500 hover:text-[var(--k-text)] text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-zinc-600 transition-all">
+            className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-xs px-1.5 py-0.5 rounded border border-[var(--k-border)] hover:border-[var(--k-dim)] transition-all">
             ↪
           </button>
         </div>
@@ -781,7 +832,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
             {/* Coordinate readout — bottom right corner of canvas */}
             {dragPos && (
-              <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 border border-[#2a2a3a] text-[9px] font-mono text-violet-300 pointer-events-none">
+              <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 border border-[var(--k-border)] text-[9px] font-mono text-violet-300 pointer-events-none">
                 {dragPos[0]}, {dragPos[1]}
               </div>
             )}
@@ -795,7 +846,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
               showCode
                 ? "bg-violet-500/20 text-violet-300 border-violet-500/40"
-                : "text-zinc-500 border-[var(--k-border)] hover:text-[var(--k-text)] hover:border-zinc-600"
+                : "text-[var(--k-muted)] border-[var(--k-border)] hover:text-[var(--k-text)] hover:border-[var(--k-dim)]"
             }`}>
             {"</>"}  Code
           </button>
@@ -827,7 +878,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           {/* Copy code shortcut */}
           <button onClick={() => { copyText(code); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold border transition-all ${
-              copied ? "bg-green-500/20 text-green-400 border-green-500/30" : "text-zinc-500 border-[var(--k-border)] hover:text-[var(--k-text)] hover:border-zinc-600"
+              copied ? "bg-green-500/20 text-green-400 border-green-500/30" : "text-[var(--k-muted)] border-[var(--k-border)] hover:text-[var(--k-text)] hover:border-[var(--k-dim)]"
             }`}>
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy Code"}
           </button>
@@ -867,7 +918,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           <div className="absolute bottom-14 right-4 w-72 max-h-64 bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-xl shadow-2xl flex flex-col overflow-hidden z-10">
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
               <span className="text-[10px] text-[var(--k-muted)] font-bold uppercase tracking-wider">MicroPython</span>
-              <button onClick={() => setShowCode(false)} className="text-zinc-600 hover:text-[var(--k-text)] text-xs">✕</button>
+              <button onClick={() => setShowCode(false)} className="text-[var(--k-dim)] hover:text-[var(--k-text)] text-xs">✕</button>
             </div>
             <pre className="flex-1 overflow-auto p-3 text-[9px] font-mono text-green-400 leading-relaxed">
               {code}

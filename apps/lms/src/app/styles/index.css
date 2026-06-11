@@ -51,6 +51,47 @@ body { transition: background-color 0.25s ease; }
 }
 .anim-cat-in { animation: catIn 0.18s ease both; }
 
+/* A lit streak flame flickers like a real one */
+@keyframes flameFlicker {
+  0%, 100% { transform: scale(1) rotate(-2deg); }
+  30%      { transform: scale(1.15) rotate(2deg); }
+  55%      { transform: scale(0.95) rotate(-1deg); }
+  80%      { transform: scale(1.1) rotate(1.5deg); }
+}
+.anim-flame { animation: flameFlicker 1.6s ease-in-out infinite; transform-origin: bottom center; }
+
+/* Slow drifting float for ambient decorations */
+@keyframes floatDrift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-18px) rotate(8deg); }
+}
+.anim-float { animation: floatDrift 7s ease-in-out infinite; }
+
+/* Soft pulse ring for the "you are here" quest marker */
+@keyframes questPulse {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--k-primary) 45%, transparent); }
+  100% { box-shadow: 0 0 0 12px transparent; }
+}
+.anim-quest-pulse { animation: questPulse 1.8s ease-out infinite; }
+
+/* Mouse-tracking spotlight on cards — driven by --mx/--my set in JS */
+.card-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  pointer-events: none;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--k-primary) 13%, transparent),
+    transparent 70%
+  );
+}
+.card-spotlight:hover::before { opacity: 1; }
+
 /* Accessibility: users who ask for less motion get less motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -102,13 +143,13 @@ body { transition: background-color 0.25s ease; }
 
 /* ── Admin page shared input/button classes ─────────────────────────────── */
 .input-sm {
-  @apply w-full bg-[#0a0a0d] border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-zinc-200 placeholder:text-zinc-700 outline-none focus:border-zinc-600 transition-colors;
+  @apply w-full bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-lg px-2 py-1.5 text-xs text-[var(--k-text)] placeholder:text-[var(--k-dim)] outline-none focus:border-[var(--k-dim)] transition-colors;
 }
 .input-md {
-  @apply w-full bg-[#0a0a0d] border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors;
+  @apply w-full bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-lg px-3 py-2 text-sm text-[var(--k-text)] placeholder:text-[var(--k-dim)] outline-none focus:border-[var(--k-dim)] transition-colors;
 }
 .section-heading {
-  @apply text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3;
+  @apply text-[10px] font-bold text-[var(--k-muted)] uppercase tracking-widest mb-3;
 }
 .btn-sm {
   @apply text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-all;

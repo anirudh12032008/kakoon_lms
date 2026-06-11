@@ -35,7 +35,7 @@ function WaveformDisplay({ color = "#8b5cf6", live = false }: { color?: string; 
       <div className="absolute top-1 right-1.5 flex items-center gap-1">
         <span className="inline-block w-1.5 h-1.5 rounded-full"
           style={{ background: live ? "#4ade80" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-        <span className="text-[9px] text-zinc-500 font-mono">{live ? "LIVE" : "waiting…"}</span>
+        <span className="text-[9px] text-[var(--k-muted)] font-mono">{live ? "LIVE" : "waiting…"}</span>
       </div>
     </div>
   );
@@ -104,10 +104,10 @@ export function AnalogSensorNode() {
         <div className="px-3 pt-1 pb-0.5">
           <GaugeBar pct={pct} color={COLORS.purple} />
           <div className="flex justify-between mt-0.5">
-            <span className="text-[9px] text-zinc-600 font-mono">
+            <span className="text-[9px] text-[var(--k-dim)] font-mono">
               {rawValue !== null ? `${rawValue} raw` : "0 raw"}
             </span>
-            <span className="text-[9px] text-zinc-600 font-mono">4095 / 3.3V</span>
+            <span className="text-[9px] text-[var(--k-dim)] font-mono">4095 / 3.3V</span>
           </div>
         </div>
         {/* Min / Max / Avg */}

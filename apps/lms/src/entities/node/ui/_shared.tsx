@@ -71,19 +71,19 @@ export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultr
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Fixed GPIO — Port {port}</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Fixed GPIO — Port {port}</span>
         <span className="text-[9px] font-mono text-purple-400">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
         {mode === "i2c" ? (
           <>
-            <span className="text-[10px] text-zinc-500">SCL <span className="text-[var(--k-text)] font-mono">{p.scl}</span></span>
-            <span className="text-[10px] text-zinc-500">SDA <span className="text-[var(--k-text)] font-mono">{p.sda}</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">SCL <span className="text-[var(--k-text)] font-mono">{p.scl}</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">SDA <span className="text-[var(--k-text)] font-mono">{p.sda}</span></span>
           </>
         ) : (
           <>
-            <span className="text-[10px] text-zinc-500">TRIG <span className="text-[var(--k-text)] font-mono">{p.trig}</span></span>
-            <span className="text-[10px] text-zinc-500">ECHO <span className="text-[var(--k-text)] font-mono">{p.echo}</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">TRIG <span className="text-[var(--k-text)] font-mono">{p.trig}</span></span>
+            <span className="text-[10px] text-[var(--k-muted)]">ECHO <span className="text-[var(--k-text)] font-mono">{p.echo}</span></span>
           </>
         )}
       </div>
@@ -152,8 +152,8 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
         <text x={CX} y={CY + 9} textAnchor="middle" fill="#6b7280" fontSize={8}>degrees</text>
       </svg>
       <div className="flex justify-between w-[88px] px-1">
-        <span className="text-[8px] text-zinc-600">{min}°</span>
-        <span className="text-[8px] text-zinc-600">{max}°</span>
+        <span className="text-[8px] text-[var(--k-dim)]">{min}°</span>
+        <span className="text-[8px] text-[var(--k-dim)]">{max}°</span>
       </div>
     </div>
   );

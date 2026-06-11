@@ -64,7 +64,7 @@ export function MQTTNode() {
         <NodeField label="TLS / SSL"><ToggleInput value={useTLS} onChange={setUseTLS} leftLabel="Off" rightLabel="On" /></NodeField>
         <NodeField label="Auth">
           <ToggleInput value={useAuth} onChange={setUseAuth} leftLabel="Off" rightLabel="On" />
-          <span className="text-[9px] text-zinc-600 ml-1">Keep-alive: {keepAlive}s</span>
+          <span className="text-[9px] text-[var(--k-dim)] ml-1">Keep-alive: {keepAlive}s</span>
         </NodeField>
         {useAuth && (<>
           <NodeField label="Username"><TextInput value={username} onChange={setUsername} wide /></NodeField>
@@ -94,7 +94,7 @@ export function MQTTNode() {
                   className="nodrag text-[9px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1 py-0.5 text-[var(--k-muted)] outline-none">
                   <option value="0">QoS 0</option><option value="1">QoS 1</option><option value="2">QoS 2</option>
                 </select>
-                <button onClick={() => removePub(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
+                <button onClick={() => removePub(i)} className="nodrag text-[var(--k-dim)] hover:text-red-400 text-[11px] px-0.5">×</button>
               </div>
               <div className="flex items-center gap-2">
                 <Handle type="target" position={Position.Left} id={`pub_${i}`}
@@ -106,12 +106,12 @@ export function MQTTNode() {
                   <input type="checkbox" checked={t.retained}
                     onChange={(e) => updatePub(i, "retained", e.target.checked)}
                     className="nodrag w-3 h-3 accent-orange-500" />
-                  <span className="text-[8px] text-zinc-500">Retain</span>
+                  <span className="text-[8px] text-[var(--k-muted)]">Retain</span>
                 </label>
               </div>
             </div>
           ))}
-          {pubTopics.length === 0 && <div className="py-2 text-center text-[9px] text-zinc-600">No publish topics</div>}
+          {pubTopics.length === 0 && <div className="py-2 text-center text-[9px] text-[var(--k-dim)]">No publish topics</div>}
         </div>
       </div>
 
@@ -139,17 +139,17 @@ export function MQTTNode() {
                 className="nodrag w-[60px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-green-400 outline-none" />
               <Handle type="source" position={Position.Right} id={`sub_${i}`}
                 style={{ ...outHS(COLORS.cyan), right: -22, top: "auto", position: "relative", display: "inline-block" }} />
-              <button onClick={() => removeSub(i)} className="nodrag text-zinc-600 hover:text-red-400 text-[11px] px-0.5">×</button>
+              <button onClick={() => removeSub(i)} className="nodrag text-[var(--k-dim)] hover:text-red-400 text-[11px] px-0.5">×</button>
             </div>
           ))}
-          {subTopics.length === 0 && <div className="py-2 text-center text-[9px] text-zinc-600">No subscribe topics</div>}
+          {subTopics.length === 0 && <div className="py-2 text-center text-[9px] text-[var(--k-dim)]">No subscribe topics</div>}
         </div>
       </div>
 
       <AdvancedSection>
         {/* LWT */}
         <div className="px-3 pb-2">
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-1 font-bold">Last Will & Testament</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-1 font-bold">Last Will & Testament</div>
           <div className="flex gap-1.5">
             <input value={lwtTopic} onChange={(e) => setLwtTopic(e.target.value)}
               className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-100)] border border-[var(--k-base-300)] rounded px-1.5 py-1 text-[var(--k-muted)] outline-none" />
@@ -159,10 +159,10 @@ export function MQTTNode() {
           <div className="flex items-center gap-2 mt-1">
             <Handle type="source" position={Position.Right} id="connected"
               style={{ ...outHS(COLORS.green), right: -6, position: "relative", display: "inline-block" }} />
-            <span className="text-[8px] text-zinc-600">connected</span>
+            <span className="text-[8px] text-[var(--k-dim)]">connected</span>
             <Handle type="source" position={Position.Right} id="error"
               style={{ ...outHS(COLORS.red), right: -6, position: "relative", display: "inline-block", marginLeft: 8 }} />
-            <span className="text-[8px] text-zinc-600">error</span>
+            <span className="text-[8px] text-[var(--k-dim)]">error</span>
           </div>
         </div>
       </AdvancedSection>

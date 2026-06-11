@@ -85,8 +85,8 @@ export function ButtonDigitalInputNode() {
             style={{ accentColor: COLORS.blue }}
           />
           <div className="flex justify-between mt-0.5">
-            <span className="text-[8px] text-zinc-600">0 ms</span>
-            <span className="text-[8px] text-zinc-600">200 ms</span>
+            <span className="text-[8px] text-[var(--k-dim)]">0 ms</span>
+            <span className="text-[8px] text-[var(--k-dim)]">200 ms</span>
           </div>
         </div>
         <NodeField label="Hold (ms)"><NumberInput value={holdDuration} onChange={setHoldDuration} /></NodeField>
@@ -94,7 +94,7 @@ export function ButtonDigitalInputNode() {
 
       {/* Three output events */}
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Output Events</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Output Events</span>
       </div>
       <NodeField label="Press">
         <TextInput value={pressVar} onChange={setPressVar} green />

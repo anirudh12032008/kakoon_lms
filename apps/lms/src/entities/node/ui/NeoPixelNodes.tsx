@@ -14,7 +14,7 @@ import { ChipIcon } from "./_shared";
 function PixelPalette({ colors, onChange }: { colors: string[]; onChange: (c: string[]) => void }) {
   return (
     <div className="px-3 pb-1">
-      <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold block mb-1">Per-pixel Colors</span>
+      <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold block mb-1">Per-pixel Colors</span>
       <div className="flex flex-wrap gap-1">
         {colors.map((c, i) => (
           <div key={i} className="relative" title={`LED ${i}`}>
@@ -49,7 +49,7 @@ export function NeoPixelLEDNode() {
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">On-board Ring — GPIO 48</span>
             <span className="text-[9px] font-mono text-cyan-400">fixed</span>
           </div>
         </div>
@@ -72,8 +72,8 @@ export function NeoPixelLEDNode() {
           style={{ accentColor: COLORS.cyan }}
         />
         <div className="flex justify-between mt-0.5">
-          <span className="text-[8px] text-zinc-600">Off</span>
-          <span className="text-[8px] text-zinc-600">Full</span>
+          <span className="text-[8px] text-[var(--k-dim)]">Off</span>
+          <span className="text-[8px] text-[var(--k-dim)]">Full</span>
         </div>
       </div>
     </BaseNode>
@@ -138,7 +138,7 @@ export function RGBLEDMatrixNode() {
           const c = isStaticPattern ? (pixelColors[i] ?? primaryColor) : primaryColor;
           return <div key={i} className="w-2.5 h-2.5 rounded-sm" style={{ background: c, opacity: 0.85 }} />;
         })}
-        {n > 20 && <span className="text-[8px] text-zinc-600 self-center">+{n - 20}</span>}
+        {n > 20 && <span className="text-[8px] text-[var(--k-dim)] self-center">+{n - 20}</span>}
       </div>
     );
   };
@@ -165,39 +165,39 @@ export function RGBLEDMatrixNode() {
       <div className="px-3 pb-1 pt-0.5 flex items-center gap-3">
         <TopologyPreview />
         <div className="flex-1 min-w-0">
-          <div className="text-[9px] text-zinc-600 uppercase tracking-wider mb-0.5">Preview</div>
+          <div className="text-[9px] text-[var(--k-dim)] uppercase tracking-wider mb-0.5">Preview</div>
           <div className="text-[10px] text-[var(--k-muted)]">{ledCount} LED{ledCount !== 1 ? "s" : ""} · {topology}</div>
         </div>
       </div>
 
       {/* Pattern picker */}
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Animation Pattern</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Animation Pattern</span>
       </div>
       <div className="px-3 pb-1 grid grid-cols-3 gap-1">
         {["Chase", "Fade", "Rainbow", "Blink", "Solid", "Twinkle"].map(p => (
           <button key={p} onClick={() => setPattern(p)}
             className={`nodrag py-1 rounded-lg text-[10px] font-bold border transition-all ${
-              pattern === p ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300" : "border-[var(--k-border)] text-zinc-500 hover:border-[#3d3d45] bg-[var(--k-base-200)]"
+              pattern === p ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300" : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] bg-[var(--k-base-200)]"
             }`}
           >{p}</button>
         ))}
       </div>
       {/* Pattern description */}
       <div className="px-3 pb-1">
-        <p className="text-[9px] text-zinc-600 italic">{PATTERN_DESCRIPTIONS[pattern]}</p>
+        <p className="text-[9px] text-[var(--k-dim)] italic">{PATTERN_DESCRIPTIONS[pattern]}</p>
       </div>
 
       {/* Color pickers */}
       <div className="px-3 pb-1 flex items-center gap-3">
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-zinc-500">Primary</span>
+          <span className="text-[10px] text-[var(--k-muted)]">Primary</span>
           <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)}
             className="nodrag w-7 h-5 rounded border border-[var(--k-border)] cursor-pointer bg-transparent" />
         </div>
         {pattern !== "Solid" && pattern !== "Rainbow" && (
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-zinc-500">Secondary</span>
+            <span className="text-[10px] text-[var(--k-muted)]">Secondary</span>
             <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)}
               className="nodrag w-7 h-5 rounded border border-[var(--k-border)] cursor-pointer bg-transparent" />
           </div>
@@ -230,7 +230,7 @@ export function RGBLEDMatrixNode() {
       {showPixelPalette && (
         <AdvancedSection>
           <div className="px-3 pt-1 pb-0.5 flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Per-pixel Colors</span>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Per-pixel Colors</span>
             <button onClick={() => setShowPixelEditor(v => !v)}
               className="nodrag text-[9px] text-cyan-400 hover:text-cyan-300 transition-colors">
               {showPixelEditor ? "▲ hide" : "▼ show"}
@@ -258,7 +258,7 @@ export function NeoPixelRGBNode() {
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">On-board Ring — GPIO 48</span>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">On-board Ring — GPIO 48</span>
             <span className="text-[9px] font-mono text-violet-400">fixed</span>
           </div>
         </div>
@@ -292,7 +292,7 @@ export function NeoPixelDesignerNode() {
       {/* Info bar */}
       <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-bold">
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">
             GPIO {pin} · {ledCount} LED{ledCount !== 1 ? "s" : ""} · {mode}
           </span>
           <span className="text-[9px] font-mono text-violet-400">
@@ -322,16 +322,16 @@ export function NeoPixelDesignerNode() {
               />
             ))}
             {firstFrame.length > displayCount && (
-              <span className="text-[8px] text-zinc-600 self-center ml-1">+{firstFrame.length - displayCount}</span>
+              <span className="text-[8px] text-[var(--k-dim)] self-center ml-1">+{firstFrame.length - displayCount}</span>
             )}
           </div>
           {firstFrame.length === 0 && (
-            <div className="text-[10px] text-zinc-600 italic">No LED data</div>
+            <div className="text-[10px] text-[var(--k-dim)] italic">No LED data</div>
           )}
         </div>
       )}
 
-      <div className="px-3 pb-2 text-[9px] text-zinc-600 leading-relaxed">
+      <div className="px-3 pb-2 text-[9px] text-[var(--k-dim)] leading-relaxed">
         Designed in Designer Hub — edit there to update
       </div>
     </BaseNode>

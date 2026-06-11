@@ -121,8 +121,54 @@
   .text-warning-c  { color: var(--k-warning); }
   .text-info-c     { color: var(--k-info); }
 
-  /* Gradient brand background */
-  .bg-brand-gradient { background: linear-gradient(135deg, var(--k-primary), var(--k-secondary)); }
+  /* Gradient brand background — oversized + slowly panning so it feels alive */
+  .bg-brand-gradient {
+    background: linear-gradient(135deg, var(--k-primary), var(--k-secondary), var(--k-primary));
+    background-size: 220% 220%;
+    animation: brandPan 9s ease-in-out infinite;
+  }
+
+  /* Gradient text for hero headings */
+  .text-brand-gradient {
+    background: linear-gradient(120deg, var(--k-primary), var(--k-secondary), var(--k-accent), var(--k-primary));
+    background-size: 280% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: brandPan 12s ease-in-out infinite;
+  }
+
+  /* Diagonal light sweep — add .shine-sweep to a relative overflow-hidden box */
+  .shine-sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.22) 50%, transparent 58%);
+    background-size: 300% 100%;
+    background-position: 120% 0;
+    animation: shineSweep 5.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* Soft vignette to give big surfaces (canvas) depth */
+  .canvas-vignette::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 90% at 50% 45%, transparent 62%, color-mix(in srgb, var(--k-base-100) 55%, transparent) 100%);
+  }
+}
+
+@keyframes brandPan {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes shineSweep {
+  0%, 55%  { background-position: 130% 0; }
+  85%, 100%{ background-position: -70% 0; }
 }
 
 /* ── 5. GLOBAL COMPONENT OVERRIDES ──────────────────────────── */

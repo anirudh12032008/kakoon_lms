@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, animate, useReducedMotion } from "framer-motion";
 import { ArrowRight, Check, Clock, Flame, Medal, Sparkles, Wrench, Zap } from "lucide-react";
 import { fetchCourses, type Course } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
@@ -24,11 +24,18 @@ function CourseCard({ course, onOpen, order = 0 }: { course: Course; onOpen: () 
     <motion.button
       {...fadeUp(order)}
       onClick={onOpen}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-subtle bg-raised text-left transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/30"
+      onMouseMove={(e) => {
+        const r = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+        e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+      }}
+      className="card-spotlight group relative flex flex-col overflow-hidden rounded-2xl border border-subtle bg-raised text-left transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/30"
     >
       <div className={`relative bg-gradient-to-br ${course.accent} px-5 pt-5 pb-6`}>
         <div className="flex items-start justify-between">
-          <span className="text-4xl drop-shadow">{course.coverEmoji}</span>
+          <span className="text-4xl drop-shadow transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:rotate-[-4deg]">
+            {course.coverEmoji}
+          </span>
           {course.enrolled && (
             <span className="flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[11px] font-bold text-white">
               <Check className="h-3 w-3" /> Enrolled
@@ -80,9 +87,9 @@ function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
     <motion.button
       {...fadeUp(1)}
       onClick={onOpen}
-      className="group relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-shadow hover:shadow-xl hover:shadow-primary/20"
+      className="group shine-sweep relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-shadow hover:shadow-xl hover:shadow-primary/20"
     >
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl">
+      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
         🧰
       </div>
       <div className="min-w-0 flex-1">
@@ -104,6 +111,26 @@ function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
   );
 }
 
+/** Counts up to `value` on mount — makes the XP number feel earned. */
+function CountUp({ value }: { value: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (reduced || value === 0) { el.textContent = String(value); return; }
+    const controls = animate(0, value, {
+      duration: Math.min(1.4, 0.5 + value / 600),
+      ease: "easeOut",
+      onUpdate: (v) => { el.textContent = String(Math.round(v)); },
+    });
+    return () => controls.stop();
+  }, [value, reduced]);
+
+  return <span ref={ref}>0</span>;
+}
+
 /** XP / streak / badges strip under the page heading. */
 function PlayerStatsStrip() {
   const profile = usePlayerProfile();
@@ -112,9 +139,9 @@ function PlayerStatsStrip() {
   const badges = Object.keys(profile.unlocked).length;
 
   const stats = [
-    { icon: <Zap className="h-4 w-4 text-primary-c" fill="currentColor" />, value: profile.xp, label: "XP earned" },
+    { icon: <Zap className="h-4 w-4 text-primary-c" fill="currentColor" />, value: <CountUp value={profile.xp} />, label: "XP earned" },
     { icon: <span className="text-[15px] font-black text-secondary-c">{level.level}</span>, value: level.title, label: "Level" },
-    { icon: <Flame className={`h-4 w-4 ${streak > 0 ? "text-warning-c" : "text-hint"}`} fill={streak > 0 ? "currentColor" : "none"} />, value: streak === 1 ? "1 day" : `${streak} days`, label: "Streak" },
+    { icon: <Flame className={`h-4 w-4 ${streak > 0 ? "anim-flame text-warning-c" : "text-hint"}`} fill={streak > 0 ? "currentColor" : "none"} />, value: streak === 1 ? "1 day" : `${streak} days`, label: "Streak" },
     { icon: <Medal className="h-4 w-4 text-accent-c" />, value: `${badges}/${ACHIEVEMENTS.length}`, label: "Badges" },
   ];
 
@@ -158,13 +185,29 @@ export function CoursesPage() {
   }, []);
 
   return (
-    <div className="h-screen overflow-y-auto bg-page">
+    <div className="relative h-screen overflow-y-auto bg-page">
+      {/* Ambient depth — faint brand glows + drifting machine parts */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-48 left-1/4 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-[140px]" />
+        <div className="absolute top-1/3 -right-40 h-96 w-96 rounded-full bg-secondary/10 blur-[140px]" />
+        <span className="anim-float absolute right-[12%] top-24 hidden text-4xl opacity-[0.08] lg:block">⚙️</span>
+        <span className="anim-float absolute left-[6%] top-1/2 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-2.4s" }}>🔩</span>
+        <span className="anim-float absolute right-[28%] bottom-24 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-4.8s" }}>⚡</span>
+        <span className="anim-float absolute left-[30%] top-32 hidden text-2xl opacity-[0.06] lg:block" style={{ animationDelay: "-1.2s" }}>🤖</span>
+      </div>
+
       <DashboardHeader />
 
-      <main className="mx-auto max-w-6xl px-5 py-8">
+      <main className="relative mx-auto max-w-6xl px-5 py-8">
         <motion.div {...fadeUp(0)} className="mb-6">
-          <h1 className="text-3xl font-black tracking-tight text-body">
-            {user ? `Hey ${user.name.split(" ")[0]} 👋` : "Robot Courses"}
+          <h1 className="text-3xl font-black tracking-tight">
+            {user ? (
+              <>
+                <span className="text-brand-gradient">Hey {user.name.split(" ")[0]}</span> 👋
+              </>
+            ) : (
+              <span className="text-body">Robot Courses</span>
+            )}
           </h1>
           <p className="mt-1.5 text-[15px] text-sub">
             Pick a robot to build. Enroll for free and jump straight into the block editor.

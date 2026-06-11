@@ -93,7 +93,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
         <motion.div
-          className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-zinc-800 bg-[var(--k-base-100)] shadow-2xl overflow-hidden"
+          className="relative z-10 w-full max-w-md mx-4 rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-100)] shadow-2xl overflow-hidden"
           initial={{ scale: 0.94, y: 12, opacity: 0 }}
           animate={{ scale: 1, y: 0, opacity: 1 }}
           exit={{ scale: 0.94, y: 12, opacity: 0 }}
@@ -108,11 +108,11 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Admin Access Required</p>
-                  <p className="text-xs text-zinc-500">One-time unlock to save tutorials</p>
+                  <p className="text-xs text-[var(--k-muted)]">One-time unlock to save tutorials</p>
                 </div>
               </div>
 
-              <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">
+              <label className="block text-[10px] font-semibold text-[var(--k-muted)] uppercase tracking-wider mb-1.5">
                 Admin Secret
               </label>
               <input
@@ -122,7 +122,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 onChange={(e) => { setSecret(e.target.value); setAuthError(""); }}
                 onKeyDown={(e) => e.key === "Enter" && unlock()}
                 placeholder="Enter secret…"
-                className="w-full bg-[var(--k-base-100)] border border-zinc-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-violet-500 transition-colors"
+                className="w-full bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-[var(--k-dim)] outline-none focus:border-violet-500 transition-colors"
               />
               {authError && <p className="text-xs text-red-400 mt-2">{authError}</p>}
 
@@ -135,7 +135,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-700 text-[var(--k-muted)] hover:text-white text-sm transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-[var(--k-border)] text-[var(--k-muted)] hover:text-[var(--k-text)] text-sm transition-colors"
                 >
                   Cancel
                 </button>
@@ -157,7 +157,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Save as Tutorial</p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-[var(--k-muted)]">
                     {nodeCount} block{nodeCount !== 1 ? "s" : ""} · {edgeCount} connection{edgeCount !== 1 ? "s" : ""} captured
                   </p>
                 </div>
@@ -171,29 +171,29 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Title *</label>
+                  <label className="block text-[10px] font-semibold text-[var(--k-muted)] uppercase tracking-wider mb-1.5">Title *</label>
                   <input
                     value={title}
                     autoFocus
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g. BT Forklift Control"
-                    className="w-full bg-[var(--k-base-100)] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors"
+                    className="w-full bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-[var(--k-dim)] outline-none focus:border-[var(--k-dim)] transition-colors"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Description</label>
+                  <label className="block text-[10px] font-semibold text-[var(--k-muted)] uppercase tracking-wider mb-1.5">Description</label>
                   <textarea
                     value={desc}
                     onChange={(e) => setDesc(e.target.value)}
                     rows={2}
                     placeholder="What will students learn?"
-                    className="w-full bg-[var(--k-base-100)] border border-zinc-800 rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-zinc-600 transition-colors resize-none"
+                    className="w-full bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-lg px-3 py-2.5 text-sm text-white placeholder:text-[var(--k-dim)] outline-none focus:border-[var(--k-dim)] transition-colors resize-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1.5">Difficulty</label>
+                  <label className="block text-[10px] font-semibold text-[var(--k-muted)] uppercase tracking-wider mb-1.5">Difficulty</label>
                   <div className="flex gap-2">
                     {(["Easy", "Medium", "Hard"] as const).map((d) => (
                       <button
@@ -204,7 +204,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                             ? d === "Easy"   ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400"
                             : d === "Medium" ? "bg-amber-500/20 border-amber-500/40 text-amber-400"
                             :                  "bg-red-500/20 border-red-500/40 text-red-400"
-                            : "border-zinc-800 text-zinc-600 hover:border-zinc-700 hover:text-[var(--k-muted)]"
+                            : "border-[var(--k-border)] text-[var(--k-dim)] hover:border-[var(--k-border)] hover:text-[var(--k-muted)]"
                         }`}
                       >
                         {d}
@@ -226,7 +226,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
                 </button>
                 <button
                   onClick={onClose}
-                  className="px-4 py-2.5 rounded-xl border border-zinc-700 text-[var(--k-muted)] hover:text-white text-sm transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-[var(--k-border)] text-[var(--k-muted)] hover:text-[var(--k-text)] text-sm transition-colors"
                 >
                   Cancel
                 </button>
