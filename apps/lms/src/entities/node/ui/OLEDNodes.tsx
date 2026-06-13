@@ -20,8 +20,8 @@ const OLED_PINS = { scl: OLED.scl, sda: OLED.sda };
 // ─── OLED Display Node ────────────────────────────────────────────────────────
 export function OLEDDisplayNode() {
   const [mode, setMode]     = useNodeField<"text" | "anim">("mode", "text");
-  const [line1, setLine1]   = useNodeField<string>("line1", "Hello");
-  const [line2, setLine2]   = useNodeField<string>("line2", "World!");
+  const [line1, setLine1]   = useNodeField<string>("line1", "");
+  const [line2, setLine2]   = useNodeField<string>("line2", "");
   const [animFile, setAnimFile] = useNodeField<string>("animFile", "");
   const [driver, setDriver] = useNodeField<boolean>("driver", false);
 

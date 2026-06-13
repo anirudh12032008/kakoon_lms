@@ -57,7 +57,7 @@ const DEFAULTS: Record<string, Record<string, any>> = {
   map_range:           { value: "", fromMin: 0, fromMax: 4095, toMin: 0, toMax: 180, varName: "mapped_value" },
   servo_motor:         { servoPort: "S1", angle: 90 },
   dc_motor_single:     { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" },
-  oled_display:        { mode: "text", line1: "Hello", line2: "World!", driver: false },
+  oled_display:        { mode: "text", line1: "", line2: "", driver: false },
   ble_mode:            { deviceName: "ESP32-BLE", rawVarName: "ble_data", enableCmdMap: true, enableTx: false, txVarName: "ble_tx" },
 };
 
