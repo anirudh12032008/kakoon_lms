@@ -3,6 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { User } from "../../models/User";
 import { config } from "../../config/config";
 import { ApiError } from "../../utils/ApiError";
+import { ERRORS } from "../../utils/errorCatalog";
 import { asyncHandler } from "../../utils/asyncHandler";
 import {
   signAccessToken,
@@ -50,10 +51,10 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body as LoginInput;
 
   const user = await User.findOne({ email }).select("+passwordHash");
-  if (!user) throw ApiError.unauthorized("Invalid email or password");
+  if (!user) throw ApiError.from(ERRORS.INVALID_CREDENTIALS);
 
   const ok = await user.verifyPassword(password);
-  if (!ok) throw ApiError.unauthorized("Invalid email or password");
+  if (!ok) throw ApiError.from(ERRORS.INVALID_CREDENTIALS);
 
   const { accessToken, refreshToken } = issueTokens({
     id: user.id,
@@ -79,7 +80,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
 
   const user = await User.findById(payload.sub);
   if (!user || user.tokenVersion !== payload.tokenVersion) {
-    throw ApiError.unauthorized("Session expired, please sign in again");
+    throw ApiError.from(ERRORS.SESSION_EXPIRED);
   }
 
   // Rotate the refresh token on every use.

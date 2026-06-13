@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./styles/App.css";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { XpToastHost, useGamification } from "@/entities/gamification";
+import { ErrorToastHost } from "@/shared/error/ErrorToastHost";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { AnimationProvider } from "@/shared/context/AnimationContext";
 import { NodeModeProvider } from "@/shared/context/NodeModeContext";
@@ -93,6 +94,7 @@ export default function App() {
       <NodeModeProvider>
         <GamificationBridge />
         <XpToastHost />
+        <ErrorToastHost />
         <Routes>
           {/* Guest-only */}
           <Route element={<GuestOnlyRoute />}>

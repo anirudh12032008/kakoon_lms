@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ZodTypeAny } from "zod";
 import { ApiError } from "../utils/ApiError";
+import { ERRORS } from "../utils/errorCatalog";
 
 /** Validates req.body against a Zod schema, replacing it with the parsed value. */
 export const validateBody =
@@ -8,8 +9,9 @@ export const validateBody =
     const result = schema.safeParse(req.body);
     if (!result.success) {
       return next(
-        ApiError.badRequest(
-          "Validation failed",
+        ApiError.from(
+          ERRORS.VALIDATION_FAILED,
+          undefined,
           result.error.issues.map((i) => ({ path: i.path.join("."), message: i.message }))
         )
       );

@@ -1,4 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { reportError } from "@/shared/error/errorToastStore";
 
 /**
  * Central axios instance.
@@ -67,6 +68,10 @@ api.interceptors.response.use(
         return api(original);
       }
     }
+
+    // Surface every failed request as an error popup. The 401 that triggers a
+    // successful silent refresh returns above, so it never reaches here.
+    reportError({ message: apiErrorMessage(error), code: apiErrorCode(error) });
     return Promise.reject(error);
   }
 );
@@ -78,4 +83,12 @@ export function apiErrorMessage(err: unknown, fallback = "Something went wrong")
     return data?.error ?? err.message ?? fallback;
   }
   return fallback;
+}
+
+/** Extracts the stable catalog code (e.g. "KKN-1004") from an axios error, if present. */
+export function apiErrorCode(err: unknown): string | undefined {
+  if (axios.isAxiosError(err)) {
+    return (err.response?.data as { code?: string } | undefined)?.code;
+  }
+  return undefined;
 }
