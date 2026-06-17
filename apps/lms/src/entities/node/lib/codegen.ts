@@ -33,6 +33,7 @@ interface NodeData {
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
   customChars?: boolean[][][]; cursorBlink?: boolean; cursorUnderline?: boolean;
+  colon?: boolean;
   animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
@@ -747,12 +748,23 @@ time.sleep(0.1)`);
         }
         break;
       }
-      case "seven_seg":
+      case "seven_seg": {
+        const ssClk = d.clk ?? 4;
+        const ssDio = d.dio ?? 5;
+        const ssBright = Math.max(0, Math.min(7, d.brightness ?? 5));
+        const ssNum = d.number ?? 1234;
         imports.add("import tm1637");
         imports.add("from machine import Pin");
-        setupLines.push(`tm = tm1637.TM1637(clk=Pin(${d.clk ?? 17}), dio=Pin(${d.dio ?? 18}))`);
-        chunkLines.push(`${indent}tm.number(${d.number ?? 1234})`);
+        setupLines.push(`tm = tm1637.TM1637(clk=Pin(${ssClk}), dio=Pin(${ssDio}))`);
+        setupLines.push(`tm.brightness(${ssBright})`);
+        if (d.colon) {
+          // Clock-style HH:MM split across the two digit pairs with the colon lit
+          chunkLines.push(`${indent}tm.numbers(${Math.floor(Number(ssNum) / 100)}, ${Number(ssNum) % 100}, colon=True)`);
+        } else {
+          chunkLines.push(`${indent}tm.number(${ssNum})`);
+        }
         break;
+      }
       // ─── Servo nodes ───────────────────────────────────────────────────────
       case "servo_motor": {
         imports.add("from machine import Pin, PWM");
