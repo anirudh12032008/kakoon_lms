@@ -17,12 +17,12 @@ interface TabProps { label: string; icon: string; active: boolean; onClick: () =
 function Tab({ label, icon, active, onClick }: TabProps) {
   return (
     <button onClick={onClick}
-      className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition-all ${
+      className={`flex items-center gap-2 rounded-full border px-5 py-2.5 text-sm font-bold transition-all ${
         active
-          ? "bg-brand-gradient text-white shadow-sm"
-          : "text-sub hover:text-body hover:bg-hover"
+          ? "bg-brand-gradient text-white border-transparent shadow-sm"
+          : "text-sub border-subtle hover:text-body hover:bg-hover"
       }`}>
-      <span>{icon}</span>{label}
+      <span className="text-base">{icon}</span>{label}
     </button>
   );
 }
@@ -42,22 +42,22 @@ export function DesignerHub({ onClose, onAddNode, defaultTab = "oled", onSaveOLE
       <div className="w-full h-full max-w-[1400px] max-h-[92vh] overflow-hidden rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-100)] shadow-2xl flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-subtle bg-panel flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-subtle bg-panel flex-shrink-0">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-brand-gradient text-base">🎨</div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gradient text-xl">🎨</div>
             <div className="min-w-0">
-              <h2 className="truncate text-sm font-black tracking-tight text-body">Designer Hub</h2>
-              <p className="truncate text-[11px] text-hint">Draw pixel art & light shows, then drop them onto the canvas as blocks</p>
+              <h2 className="truncate text-base font-black tracking-tight text-body">Designer Hub</h2>
+              <p className="truncate text-xs text-hint">Draw pixel art & light shows, then drop them onto the canvas as blocks</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <div className="flex rounded-full bg-raised p-1 gap-0.5">
+            <div className="flex rounded-full bg-raised p-1.5 gap-1.5">
               <Tab label="OLED" icon="🖥️" active={activeTab === "oled"}     onClick={() => setActiveTab("oled")} />
               <Tab label="NeoPixel" icon="💡" active={activeTab === "neopixel"} onClick={() => setActiveTab("neopixel")} />
               <Tab label="Matrix"   icon="⬛"  active={activeTab === "matrix"}   onClick={() => setActiveTab("matrix")} />
             </div>
-            <button onClick={onClose} title="Close" className="rounded-full border border-subtle p-1.5 text-sub transition-colors hover:bg-hover hover:text-body">
-              <X className="w-4 h-4" />
+            <button onClick={onClose} title="Close" className="flex items-center justify-center rounded-full border border-subtle h-11 w-11 text-sub transition-colors hover:bg-hover hover:text-body">
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>

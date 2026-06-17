@@ -498,7 +498,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   return (
     <div className="flex h-full gap-0">
       {/* Left panel — tools + presets + library */}
-      <div className="w-[240px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] p-4 flex flex-col gap-5 overflow-y-auto">
+      <div className="w-[272px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] p-4 flex flex-col gap-5 overflow-y-auto">
         {/* Tools */}
         <div>
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-[0.14em] mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-[var(--k-primary)]">Tools</div>
@@ -518,20 +518,20 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         <div>
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-[0.14em] mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-[var(--k-primary)]">Edit</div>
           <button onClick={() => { pushHistory(frames); invertFrame(); }}
-            className="w-full text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg hover:bg-[var(--k-base-400)] transition-all">
+            className="w-full text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg border border-[var(--k-border)] hover:bg-[var(--k-base-400)] hover:border-[var(--k-dim)] transition-all">
             ⬛ Invert
           </button>
           <div className="grid grid-cols-3 gap-0.5 mt-1">
             <div />
             <button onClick={() => { pushHistory(frames); shiftFrame(0, -1); }}
-              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">↑</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-1.5 rounded-lg border border-[var(--k-border)] hover:border-[var(--k-dim)] hover:bg-[var(--k-base-400)] text-sm transition-all">↑</button>
             <div />
             <button onClick={() => { pushHistory(frames); shiftFrame(-1, 0); }}
-              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">←</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-1.5 rounded-lg border border-[var(--k-border)] hover:border-[var(--k-dim)] hover:bg-[var(--k-base-400)] text-sm transition-all">←</button>
             <button onClick={() => { pushHistory(frames); shiftFrame(0, 1); }}
-              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">↓</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-1.5 rounded-lg border border-[var(--k-border)] hover:border-[var(--k-dim)] hover:bg-[var(--k-base-400)] text-sm transition-all">↓</button>
             <button onClick={() => { pushHistory(frames); shiftFrame(1, 0); }}
-              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-0.5 rounded hover:bg-[var(--k-base-400)] text-sm">→</button>
+              className="text-[var(--k-muted)] hover:text-[var(--k-text)] text-center py-1.5 rounded-lg border border-[var(--k-border)] hover:border-[var(--k-dim)] hover:bg-[var(--k-base-400)] text-sm transition-all">→</button>
           </div>
         </div>
 
@@ -563,7 +563,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           <div className="flex flex-col gap-0.5">
             {OLED_PRESETS.map((p) => (
               <button key={p.name} onClick={() => loadPreset(p)}
-                className="text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg hover:bg-[var(--k-base-400)] transition-all truncate">
+                className="text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg border border-[var(--k-border)] hover:bg-[var(--k-base-400)] hover:border-[var(--k-dim)] transition-all truncate">
                 {p.name}
               </button>
             ))}
@@ -578,7 +578,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         <div>
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-[0.14em] mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-[var(--k-primary)]">Name</div>
           <input value={designName} onChange={(e) => setDesignName(e.target.value)}
-            className="w-full text-xs font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2 py-1 text-white outline-none" />
+            className="w-full text-xs font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2.5 py-2 text-white outline-none" />
         </div>
         {frames.length > 1 && (
           <div>

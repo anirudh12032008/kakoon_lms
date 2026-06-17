@@ -310,7 +310,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
   return (
     <div className="flex h-full">
       {/* Left: settings */}
-      <div className="w-[240px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] p-4 flex flex-col gap-5 overflow-y-auto">
+      <div className="w-[272px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] p-4 flex flex-col gap-5 overflow-y-auto">
         <div>
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-wider mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-violet-500">Mode</div>
           <div className="flex flex-col gap-1">
@@ -327,7 +327,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
           <div>
             <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-wider mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-violet-500">LED Count</div>
             <input type="number" value={ledCount} min={1} max={64} onChange={(e) => setLedCount(+e.target.value)}
-              className="w-full text-xs font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
+              className="w-full text-xs font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2.5 py-2 text-white outline-none" />
           </div>
         ) : (
           <div className="flex gap-1.5">
@@ -347,7 +347,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
         <div>
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-wider mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-violet-500">Data Pin</div>
           <input type="number" value={dataPin} onChange={(e) => setDataPin(+e.target.value)}
-            className="w-full text-xs font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
+            className="w-full text-xs font-mono bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2.5 py-2 text-white outline-none" />
           <div className="text-[10px] text-[var(--k-dim)] mt-0.5">On-board ring = GPIO 48</div>
         </div>
 
@@ -382,7 +382,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-wider mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-violet-500">Built-in Effects</div>
           {NEOPIXEL_EFFECTS.map((ef) => (
             <button key={ef.id} onClick={() => loadEffect(ef.id)}
-              className="block w-full text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg hover:bg-[var(--k-base-400)] transition-all">
+              className="block w-full text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg border border-[var(--k-border)] hover:bg-[var(--k-base-400)] hover:border-[var(--k-dim)] transition-all">
               {ef.name}
             </button>
           ))}
@@ -391,7 +391,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
         <div>
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-wider mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-violet-500">Name</div>
           <input value={designName} onChange={(e) => setDesignName(e.target.value)}
-            className="w-full text-xs bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
+            className="w-full text-xs bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2.5 py-2 text-white outline-none" />
           <button
             onClick={saveDesign}
             disabled={!designName.trim()}
@@ -412,7 +412,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
                 <div key={d.id} className="group flex items-center gap-1">
                   <button onClick={() => loadDesign(d)}
                     title={`${d.frames.length} frame${d.frames.length !== 1 ? "s" : ""} · ${d.mode}`}
-                    className="flex-1 min-w-0 text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg hover:bg-[var(--k-base-400)] transition-all truncate">
+                    className="flex-1 min-w-0 text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg border border-[var(--k-border)] hover:bg-[var(--k-base-400)] hover:border-[var(--k-dim)] transition-all truncate">
                     {d.name} <span className="text-[var(--k-dim)]">· {d.frames.length}f</span>
                   </button>
                   <button onClick={() => deleteDesign(d.id)} title="Delete"

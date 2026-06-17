@@ -284,7 +284,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
   return (
     <div className="flex h-full">
       {/* Left: tabs + controls */}
-      <div className="w-[240px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] flex flex-col">
+      <div className="w-[272px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] flex flex-col">
         <div className="flex flex-col border-b border-[var(--k-border)]">
           {(["draw","anims","text"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
@@ -347,7 +347,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
             <div className="flex flex-col gap-1">
               {MATRIX_ANIMS.map((a) => (
                 <button key={a.id} onClick={() => { const f = buildMatrixAnim(a.id, modules); setFrames(f); setCurFrame(0); setPlaying(false); }}
-                  className="text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg hover:bg-[var(--k-base-400)] transition-all">
+                  className="text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1.5 rounded-lg border border-[var(--k-border)] hover:bg-[var(--k-base-400)] hover:border-[var(--k-dim)] transition-all">
                   {a.name}
                 </button>
               ))}
@@ -375,7 +375,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           <div>
             <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-wider mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-amber-500">Name</div>
             <input value={designName} onChange={(e) => setDesignName(e.target.value)}
-              className="w-full text-xs bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded px-2 py-1 text-white outline-none" />
+              className="w-full text-xs bg-[var(--k-base-100)] border border-[var(--k-base-400)] rounded-lg px-2.5 py-2 text-white outline-none" />
           </div>
         </div>
       </div>
