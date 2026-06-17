@@ -10,24 +10,45 @@ import {
   COLORS,
 } from "./BaseNode";
 import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
+import { useSensorStore } from "@/shared/lib/sensorStore";
 
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
+const STALE_MS = 3000;
 
 // ─── Echo Timing Pulse Visualiser ─────────────────────────────────────────────
-// Animated timing diagram: TRIG fires a 10µs pulse, sound travels to the object
-// and bounces back, ECHO goes high for the round-trip duration.
-function EchoPulseDisplay() {
+// Animated timing diagram driven by LIVE serial data only. When no live reading
+// is present the diagram is frozen/dim and shows "waiting…". When live, TRIG fires
+// a pulse, the sound travels to the detected object and bounces back, and the ECHO
+// high-time + object position scale with the measured distance.
+function EchoPulseDisplay({ live, distanceCm }: { live: boolean; distanceCm: number | null }) {
   const DUR = "2.4s";
+  // Map distance (0–200cm) → fraction of the lane the object sits at, and the
+  // echo pulse width. Farther object = later/longer echo.
+  const frac = distanceCm != null ? Math.max(0.12, Math.min(1, distanceCm / 200)) : 0.6;
+  const objLeft = `${8 + frac * 78}%`;       // sensor at 8%, object up to ~86%
+  const echoW = Math.round(4 + frac * 36);    // echo bar width 4–40px
+  const anim = (name: string, delay = 0) =>
+    live ? `${name} ${DUR} ${name === "usWaveRing" || name === "usPing" ? "ease-in-out" : "steps(1)"} ${delay}s infinite` : "none";
+
   return (
-    <div className="w-full rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden px-2.5 py-2 flex flex-col gap-1.5">
+    <div className={`w-full rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden px-2.5 py-2 flex flex-col gap-1.5 transition-opacity ${live ? "" : "opacity-50"}`}>
+      {/* Status row */}
+      <div className="flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full"
+          style={{ background: live ? "#22d3ee" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
+        <span className="text-[9px] text-[var(--k-muted)] font-mono">{live ? "LIVE" : "waiting…"}</span>
+        {live && distanceCm != null && (
+          <span className="text-[9px] text-cyan-400 font-mono ml-auto">{distanceCm.toFixed(1)} cm</span>
+        )}
+      </div>
+
       {/* Travel lane: sensor → object with a pinging wave */}
       <div className="relative h-6">
         {/* sensor (left) */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center">
-          <div className="w-3 h-4 rounded-sm bg-purple-500/80" />
-        </div>
-        {/* object (right) */}
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm bg-[var(--k-base-400)] border border-[var(--k-border)]" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-4 rounded-sm bg-purple-500/80" />
+        {/* object — positioned by measured distance */}
+        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-1.5 h-5 rounded-sm bg-[var(--k-base-400)] border border-[var(--k-border)] transition-all duration-300"
+          style={{ left: live ? objLeft : "86%" }} />
         {/* dashed path */}
         <div className="absolute left-4 right-3 top-1/2 -translate-y-1/2 h-px"
           style={{ backgroundImage: "repeating-linear-gradient(90deg,var(--k-border) 0 4px,transparent 4px 8px)" }} />
@@ -35,11 +56,11 @@ function EchoPulseDisplay() {
         {[0, 0.12].map((delay, i) => (
           <div key={i}
             className="absolute top-1/2 left-4 w-4 h-4 -translate-y-1/2 rounded-full border-2 border-cyan-400"
-            style={{ animation: `usWaveRing ${DUR} ease-out ${delay}s infinite` }} />
+            style={{ animation: anim("usWaveRing", delay), opacity: live ? undefined : 0 }} />
         ))}
         {/* traveling ping dot */}
         <div className="absolute top-1/2 w-1.5 h-1.5 -translate-y-1/2 -translate-x-1/2 rounded-full bg-cyan-300 shadow-[0_0_6px_2px_rgba(34,211,238,0.6)]"
-          style={{ animation: `usPing ${DUR} ease-in-out infinite` }} />
+          style={{ animation: anim("usPing"), opacity: live ? undefined : 0 }} />
       </div>
 
       {/* TRIG waveform */}
@@ -48,19 +69,20 @@ function EchoPulseDisplay() {
         <div className="flex-1 flex items-end h-3">
           <div className="h-[2px] w-3 bg-[var(--k-border)]" />
           <div className="w-1 self-stretch rounded-sm bg-purple-500"
-            style={{ animation: `usTrigPulse ${DUR} steps(1) infinite` }} />
+            style={{ animation: anim("usTrigPulse"), opacity: live ? undefined : 0.3 }} />
           <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
         </div>
       </div>
 
-      {/* ECHO waveform — high for the round-trip time */}
+      {/* ECHO waveform — high for the round-trip time (width scales with distance) */}
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-cyan-400 font-mono w-7 flex-shrink-0">ECHO</span>
         <div className="flex-1 flex items-end h-3">
           <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
-          <div className="flex items-end h-full" style={{ animation: `usEchoPulse ${DUR} steps(1) infinite` }}>
+          <div className="flex items-end h-full" style={{ animation: anim("usEchoPulse"), opacity: live ? undefined : 0.3 }}>
             <div className="h-[2px] w-px bg-cyan-500" />
-            <div className="w-10 self-stretch border-t-2 border-l-2 border-r-2 border-cyan-500 rounded-t-sm" />
+            <div className="self-stretch border-t-2 border-l-2 border-r-2 border-cyan-500 rounded-t-sm transition-all duration-300"
+              style={{ width: live ? echoW : 24 }} />
           </div>
           <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
         </div>
@@ -102,6 +124,12 @@ export function UltrasonicSensorNode() {
   const [midColor, setMidColor] = useNodeField<string>("midColor", "#f97316");
   const [farColor, setFarColor] = useNodeField<string>("farColor", "#22c55e");
 
+  // Live distance piped from the ESP32 serial stream (label == varName).
+  const reading = useSensorStore(s => s.readings[varName]);
+  const live = !!reading && (Date.now() - reading.ts) < STALE_MS;
+  const distanceCm = live && reading.value >= 0 ? reading.value : null;
+  const distanceIn = distanceCm != null ? distanceCm / 2.54 : null;
+
   return (
     <BaseNode title="Ultrasonic Sensor" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       <NodeField label="Sensor Port">
@@ -112,7 +140,7 @@ export function UltrasonicSensorNode() {
         <PortPinBadge port={port} mode="ultrasonic" />
         {/* Echo pulse visualiser */}
         <div className="px-3 pt-1 pb-0.5">
-          <EchoPulseDisplay />
+          <EchoPulseDisplay live={live} distanceCm={distanceCm} />
         </div>
       </AdvancedSection>
 
@@ -120,12 +148,12 @@ export function UltrasonicSensorNode() {
       <div className="px-3 py-1 flex items-center gap-2 bg-[var(--k-base-300)] mx-3 rounded-lg border border-[var(--k-border)]">
         <div className="flex-1 text-center">
           <div className="text-[9px] text-[var(--k-muted)] uppercase">cm</div>
-          <div className="text-sm font-mono font-bold text-purple-400">—.-</div>
+          <div className="text-sm font-mono font-bold text-purple-400">{distanceCm != null ? distanceCm.toFixed(1) : "—.-"}</div>
         </div>
         <div className="w-px h-6 bg-[var(--k-border)]" />
         <div className="flex-1 text-center">
           <div className="text-[9px] text-[var(--k-muted)] uppercase">in</div>
-          <div className="text-sm font-mono font-bold text-cyan-400">—.-</div>
+          <div className="text-sm font-mono font-bold text-cyan-400">{distanceIn != null ? distanceIn.toFixed(1) : "—.-"}</div>
         </div>
       </div>
 

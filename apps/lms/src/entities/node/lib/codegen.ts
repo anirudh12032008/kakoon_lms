@@ -599,6 +599,10 @@ time.sleep(0.1)`);
         chunkLines.push(`${indent}_dur = time_pulse_us(echo, 1, 30000)`);
         chunkLines.push(`${indent}# Convert: distance = duration * speed_of_sound / 2 = us * 0.0343 / 2`);
         chunkLines.push(`${indent}${distVar} = (_dur * 0.0343 / 2) if _dur > 0 else -1`);
+        if (d.sendToViz !== false) {
+          // label = varName so the node's sensorStore lookup matches
+          chunkLines.push(`${indent}print(f"SENSOR,distance,${distVar},{${distVar}:.1f}")`);
+        }
         break;
       }
       case "touch_sensor": {
