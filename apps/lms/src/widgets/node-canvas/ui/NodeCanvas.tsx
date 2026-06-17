@@ -388,7 +388,7 @@ export const NodeCanvas = forwardRef<NodeCanvasRef, NodeCanvasProps>(
               <NodePaletteWrapper width={sidebarWidth} allowedCategories={allowedCategories} allowedNodeTypes={allowedNodeTypes} />
               <div
                 onMouseDown={startResizing}
-                className="w-1 hover:w-1.5 bg-[var(--k-base-400)] hover:bg-[var(--k-primary)]/50 active:bg-[var(--k-primary)] cursor-col-resize transition-all flex-shrink-0 z-50"
+                className="w-1 hover:w-1.5 bg-[var(--k-base-400)] hover:bg-[var(--k-primary)]/50 active:bg-[var(--k-primary)] cursor-col-resize transition-all flex-shrink-0 z-10"
                 style={{ marginRight: "-2px", marginLeft: "-2px" }}
               />
             </>
