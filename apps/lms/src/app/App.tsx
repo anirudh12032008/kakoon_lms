@@ -14,6 +14,8 @@ import { RegisterPage } from "@/features/auth/ui/RegisterPage";
 import { CoursesPage } from "@/pages/courses/ui/CoursesPage";
 import { CourseDetailPage } from "@/pages/courses/ui/CourseDetailPage";
 import { useLaunchStore } from "@/shared/launch/launchStore";
+import { useProjectStore } from "@/shared/launch/projectStore";
+import { ProjectsPage } from "@/pages/projects/ui/ProjectsPage";
 
 const EditorLaunchDashboard = lazy(() =>
   import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard }))
@@ -72,6 +74,8 @@ function LaunchRoute() {
   const setContext = useLaunchStore((s) => s.setContext);
 
   const onLaunch = (ctx: EditorLaunchContext) => {
+    // A fresh mode/kit/custom launch is a new sandbox — unbind any open project.
+    useProjectStore.getState().clearActiveProject();
     setContext(ctx);
     navigate("/editor");
   };
@@ -106,6 +110,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:slug" element={<CourseDetailPage />} />
+            <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/launch" element={<LaunchRoute />} />
             <Route path="/editor" element={<EditorRoute />} />
             <Route path="/admin" element={<AdminRoute />} />

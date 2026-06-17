@@ -11,6 +11,11 @@ const projectSchema = new Schema(
     name: { type: String, required: true, trim: true, maxlength: 120 },
     // ReactFlow workspace: { nodes: [...], edges: [...] }
     workspace: { type: Schema.Types.Mixed, required: true },
+    // Generated/edited Python for the saved program (standalone projects).
+    code: { type: String, default: "" },
+    // Editor state needed to faithfully reopen a standalone project:
+    // { generatedCode, editableCode, hasManualEdits, viewMode, isEditing, launchContext }.
+    meta: { type: Schema.Types.Mixed, default: null },
   },
   { timestamps: true }
 );

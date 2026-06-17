@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { FolderOpen, GraduationCap, LogOut } from "lucide-react";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
 import { PlayerChip, AchievementsModal } from "@/entities/gamification";
@@ -8,14 +8,30 @@ import { PlayerChip, AchievementsModal } from "@/entities/gamification";
 export function DashboardHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [showAchievements, setShowAchievements] = useState(false);
+
+  const navItem = (active: boolean) =>
+    `flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+      active ? "bg-primary/15 text-primary-c" : "text-sub hover:bg-hover hover:text-body"
+    }`;
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-subtle bg-panel/90 px-5 py-3 backdrop-blur-xl">
-      <button onClick={() => navigate("/courses")} className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-lg">⚡</div>
-        <span className="text-xl font-black tracking-tight text-body">Kokoon</span>
-      </button>
+      <div className="flex items-center gap-2">
+        <button onClick={() => navigate("/courses")} className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-lg">⚡</div>
+          <span className="text-xl font-black tracking-tight text-body">Kokoon</span>
+        </button>
+        <nav className="ml-3 hidden items-center gap-1 sm:flex">
+          <button onClick={() => navigate("/courses")} className={navItem(pathname.startsWith("/courses"))}>
+            <GraduationCap className="h-4 w-4" /> Courses
+          </button>
+          <button onClick={() => navigate("/projects")} className={navItem(pathname.startsWith("/projects"))}>
+            <FolderOpen className="h-4 w-4" /> Projects
+          </button>
+        </nav>
+      </div>
 
       <div className="flex items-center gap-3">
         <PlayerChip onClick={() => setShowAchievements(true)} />

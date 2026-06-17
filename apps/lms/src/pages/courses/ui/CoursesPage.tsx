@@ -6,6 +6,7 @@ import { fetchCourses, type Course } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { useLaunchStore } from "@/shared/launch/launchStore";
+import { useProjectStore } from "@/shared/launch/projectStore";
 import { buildLaunchContext, EDITOR_MODE_PRESETS } from "@/entities/editor-launch/model/config";
 import {
   ACHIEVEMENTS, usePlayerLevel, usePlayerProfile, useDisplayStreak,
@@ -170,6 +171,7 @@ export function CoursesPage() {
   const openFullWorkshop = () => {
     const preset = EDITOR_MODE_PRESETS.find((p) => p.id === "full-workshop") ?? EDITOR_MODE_PRESETS[0];
     // No courseSlug → unrestricted blocks + local-draft persistence (sandbox).
+    useProjectStore.getState().clearActiveProject();
     setLaunchContext(buildLaunchContext(preset));
     navigate("/editor");
   };

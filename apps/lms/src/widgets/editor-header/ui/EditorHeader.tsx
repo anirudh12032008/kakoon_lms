@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles,
   GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2, MoreHorizontal,
+  Save, Pencil,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
@@ -18,6 +19,14 @@ interface EditorHeaderProps {
   launchContext?: EditorLaunchContext;
   isCourse?: boolean;
   syncState?: SyncState;
+  /** Set for a saved-project session — drives the "Saved/Saving" project chip. */
+  projectSyncState?: SyncState;
+  /** Name of the active saved project, if any. */
+  projectName?: string | null;
+  /** Whether the Save-to-projects action is available (non-course sessions). */
+  canSaveProject?: boolean;
+  /** Save the current workspace as a project, or rename the active one. */
+  onSaveProject?: () => void;
   showTutorialsCatalog: boolean;
   onToggleTutorials: () => void;
   onBackToDashboard?: () => void;
@@ -130,7 +139,9 @@ function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
 
 export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
-  launchContext, isCourse, syncState, showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
+  launchContext, isCourse, syncState,
+  projectSyncState, projectName, canSaveProject, onSaveProject,
+  showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
   onSaveAsTutorial, onExportProject, onImportProject,
 }: EditorHeaderProps) {
   const title      = launchContext?.title      ?? "Full Workshop";
@@ -164,10 +175,11 @@ export function EditorHeader({
         <div className="flex max-w-[42rem] items-center gap-2 rounded-full px-3 py-1.5 bg-raised border border-subtle">
           {isCourse && <GraduationCap className="h-3.5 w-3.5 text-primary-c shrink-0" />}
           <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px] text-hint">
-            {launchType}
+            {projectName ? "project" : launchType}
           </span>
-          <span className="text-xs font-semibold truncate text-body">{title}</span>
+          <span className="text-xs font-semibold truncate text-body">{projectName || title}</span>
           {isCourse && syncState && <SyncIndicator state={syncState} />}
+          {!isCourse && projectName && projectSyncState && <SyncIndicator state={projectSyncState} />}
         </div>
       </div>
 
@@ -203,6 +215,17 @@ export function EditorHeader({
       {/* Right actions — only the essentials stay top-level */}
       <div className="flex items-center gap-1 shrink-0">
         <PlayerChip compact onClick={() => setShowAchievements(true)} />
+
+        {canSaveProject && onSaveProject && (
+          <button
+            onClick={onSaveProject}
+            className="btn btn-ghost btn-sm gap-1.5 text-sub"
+            title={projectName ? "Rename project" : "Save to my projects"}
+          >
+            {projectName ? <Pencil className="h-4 w-4" /> : <Save className="h-4 w-4" />}
+            <span className="hidden lg:inline text-xs">{projectName ? "Rename" : "Save"}</span>
+          </button>
+        )}
 
         <button
           onClick={onToggleTutorials}

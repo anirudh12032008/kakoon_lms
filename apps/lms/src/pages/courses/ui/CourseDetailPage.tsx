@@ -9,6 +9,7 @@ import {
 } from "@/shared/api/courses";
 import { apiErrorMessage } from "@/shared/api/client";
 import { useLaunchStore } from "@/shared/launch/launchStore";
+import { useProjectStore } from "@/shared/launch/projectStore";
 import { XP_REWARDS, useGamification } from "@/entities/gamification";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
@@ -65,6 +66,7 @@ export function CourseDetailPage() {
     setError(null);
     try {
       const fresh = await openCourseEditor(course.slug);
+      useProjectStore.getState().clearActiveProject();
       setLaunchContext(courseToLaunchContext(fresh));
       navigate("/editor");
     } catch (e) {

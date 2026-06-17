@@ -22,6 +22,8 @@ import { EditorStatusBar } from "@/widgets/editor-statusbar/ui/EditorStatusBar";
 import { useWifi } from "@/features/editor/wifi-connect/model/useWifi";
 import { useDraft } from "@/features/editor/save-draft/model/useDraft";
 import { useCourseSync } from "@/features/editor/save-draft/model/useCourseSync";
+import { useProject } from "@/features/editor/save-project/model/useProject";
+import { useProjectStore } from "@/shared/launch/projectStore";
 import { useCourseMissions } from "@/features/editor/missions/model/useCourseMissions";
 import { MissionsPanel } from "@/features/editor/missions/ui/MissionsPanel";
 import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
@@ -57,7 +59,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const [isUploading, setIsUploading] = useState(false);
   const [connectionMode, setConnectionMode] = useState<"usb" | "wifi">("usb");
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
-  const { confirm } = useModal();
+  const { confirm, prompt } = useModal();
 
   // ── Feature panel visibility ────────────────────────────────────────────────
   const [showTerminal, setShowTerminal] = useState(false);
@@ -83,9 +85,13 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   // Course sessions sync to the learner's LMS account; sandbox sessions keep a
   // local draft.
   const courseSlug = launchContext?.courseSlug;
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
+  // A standalone session is bound to a saved project; otherwise it's a sandbox
+  // that keeps a local draft until the user saves it.
+  const isProjectSession = !courseSlug && !!activeProjectId;
 
   useDraft({
-    canvasRef, enabled: !courseSlug, isLoadingDraft, setIsLoadingDraft,
+    canvasRef, enabled: !courseSlug && !activeProjectId, isLoadingDraft, setIsLoadingDraft,
     generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
     setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
   });
@@ -94,6 +100,23 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     canvasRef, courseSlug, isLoadingDraft, setIsLoadingDraft,
     generatedCode, editableCode,
   });
+
+  const project = useProject({
+    canvasRef, enabled: !courseSlug, isLoadingDraft, setIsLoadingDraft, launchContext,
+    generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
+    setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
+  });
+
+  // Save / rename the current sandbox as a named project on the user's account.
+  const handleSaveProject = useCallback(async () => {
+    if (isProjectSession) {
+      const next = await prompt("Rename project", project.projectName ?? "");
+      if (next && next.trim()) await project.rename(next);
+      return;
+    }
+    const name = await prompt("Save project as", launchContext?.title ?? "My project");
+    if (name && name.trim()) await project.saveAsNew(name);
+  }, [isProjectSession, project, prompt, launchContext]);
 
   // ── Course missions (auto-tracked levels & challenges) ───────────────────────
   const missions = useCourseMissions(courseSlug);
@@ -387,6 +410,10 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         launchContext={launchContext}
         isCourse={!!courseSlug}
         syncState={syncState}
+        projectSyncState={isProjectSession ? project.syncState : undefined}
+        projectName={isProjectSession ? project.projectName : undefined}
+        canSaveProject={!courseSlug}
+        onSaveProject={handleSaveProject}
         showTutorialsCatalog={tutorial.showTutorialsCatalog}
         onToggleTutorials={() => tutorial.setShowTutorialsCatalog(!tutorial.showTutorialsCatalog)}
         onBackToDashboard={onBackToDashboard}
