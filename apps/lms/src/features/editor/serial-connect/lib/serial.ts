@@ -154,10 +154,9 @@ export async function sendCodeToESP32(
     return;
   }
   
-  // Default: REPL paste mode
-  // Ctrl+B — exit raw REPL mode if we're stuck in it from a previous Upload
-  await writer.write(encoder.encode("\x02"));
-  await new Promise((r) => setTimeout(r, 100));
+  // Default: raw REPL mode (Ctrl+A).
+  // Unlike paste mode (Ctrl+E), raw REPL does NOT echo the submitted code back
+  // to the terminal, so only the program's own output appears in the console.
 
   // Ctrl+C to interrupt any running code
   await writer.write(encoder.encode("\x03"));
@@ -167,18 +166,18 @@ export async function sendCodeToESP32(
   await writer.write(encoder.encode("\x03"));
   await new Promise((r) => setTimeout(r, 150));
 
-  // Ctrl+E to enter paste mode
-  await writer.write(encoder.encode("\x05"));
-  await new Promise((r) => setTimeout(r, 200)); // longer wait — board needs time to switch modes
-  
+  // Ctrl+A to enter raw REPL mode
+  await writer.write(encoder.encode("\x01"));
+  await new Promise((r) => setTimeout(r, 200)); // board needs time to switch modes
+
   // Send code in small chunks
   const lines = code.split("\n");
   for (const line of lines) {
     await writer.write(encoder.encode(line + "\n"));
     await new Promise((r) => setTimeout(r, 20));
   }
-  
-  // Ctrl+D to execute
+
+  // Ctrl+D to execute the buffered code in raw mode
   await writer.write(encoder.encode("\x04"));
 }
 

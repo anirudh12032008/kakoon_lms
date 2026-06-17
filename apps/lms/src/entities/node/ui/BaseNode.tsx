@@ -7,33 +7,25 @@ import { saveCustomSubflowFromSelection } from "@/entities/custom-node/model/cus
 import { useNodeMode } from "@/shared/context/NodeModeContext";
 import { NODE_HINTS } from "../model/hints";
 
-/** "?" badge in a node header — hover for a one-line explanation of the block. */
-export function NodeHintButton({ onDark = true }: { onDark?: boolean }) {
+/** Node title — hovering the name reveals a one-line explanation of the block. */
+export function NodeTitle({ title, dark = true }: { title: string; dark?: boolean }) {
   const nodeId = useNodeId();
   const { getNode } = useReactFlow();
   const type = nodeId ? getNode(nodeId)?.type : undefined;
   const hint = type ? NODE_HINTS[type] : undefined;
-  if (!hint) return null;
 
   return (
-    <span className="group/hint relative nodrag shrink-0 inline-flex">
-      <button
-        type="button"
-        onClick={(e) => e.stopPropagation()}
-        aria-label="What does this block do?"
-        className={`flex h-[18px] w-[18px] items-center justify-center rounded-full border text-[10px] font-black leading-none transition-colors ${
-          onDark
-            ? "border-white/40 text-white/75 hover:bg-white/20 hover:text-[var(--k-text)]"
-            : "border-[var(--k-border)] text-[var(--k-muted)] hover:bg-[var(--k-base-400)] hover:text-[var(--k-text)]"
-        }`}
-      >
-        ?
-      </button>
+    <span className="group/title relative min-w-0 flex-1">
       <span
-        className="pointer-events-none invisible absolute right-0 top-full z-[9999] mt-2 w-56 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] px-3 py-2 text-left text-[11px] font-medium leading-snug text-[var(--k-text)] normal-case tracking-normal opacity-0 shadow-2xl transition-opacity duration-150 group-hover/hint:visible group-hover/hint:opacity-100"
+        className={`block truncate text-sm font-bold leading-tight ${dark ? "text-white" : "text-[var(--k-text)]"} ${hint ? "cursor-help" : ""}`}
       >
-        {hint}
+        {title}
       </span>
+      {hint && (
+        <span className="pointer-events-none invisible absolute left-0 top-full z-[9999] mt-2 w-56 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] px-3 py-2 text-left text-[11px] font-medium normal-case leading-snug tracking-normal text-[var(--k-text)] opacity-0 shadow-2xl transition-opacity duration-150 group-hover/title:visible group-hover/title:opacity-100">
+          {hint}
+        </span>
+      )}
     </span>
   );
 }
@@ -200,7 +192,8 @@ export function AdvancedSection({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
-export function NodeAdvancedButton({ className = "" }: { className?: string }) {
+/** Full-width expander pinned to the bottom of a node that toggles advanced fields. */
+export function NodeAdvancedFooter() {
   const { globalAdvanced } = useNodeMode();
   const [nodeAdvanced, setNodeAdvanced] = useNodeField<boolean>("advancedMode", false);
   const isAdvanced = globalAdvanced || nodeAdvanced;
@@ -208,20 +201,26 @@ export function NodeAdvancedButton({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
-      title={isAdvanced ? "Switch to Basic Mode" : "Unlock Advanced Fields"}
+      title={isAdvanced ? "Hide advanced fields" : "Show advanced fields"}
       onClick={(e) => {
         e.stopPropagation();
         if (!globalAdvanced) setNodeAdvanced(!nodeAdvanced);
       }}
-      className={`nodrag inline-flex items-center justify-center rounded px-1 h-5 text-[9px] font-bold uppercase tracking-wider border transition-all ${
+      style={{ borderRadius: "0 0 11px 11px" }}
+      className={`nodrag flex w-full items-center justify-center gap-1.5 border-t px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
         isAdvanced
           ? globalAdvanced
-            ? "border-violet-500/60 text-violet-400 bg-violet-500/15"
-            : "border-amber-400/60 text-amber-400 bg-amber-400/10"
-          : "border-[var(--k-border)] text-[var(--k-dim)] bg-transparent hover:border-[var(--k-dim)] hover:text-[var(--k-muted)]"
-      } ${globalAdvanced ? "cursor-default" : ""} ${className}`}
+            ? "border-violet-500/30 bg-violet-500/10 text-violet-400"
+            : "border-amber-400/30 bg-amber-400/10 text-amber-400"
+          : "border-[var(--k-border)] text-[var(--k-dim)] hover:bg-[var(--k-base-300)] hover:text-[var(--k-muted)]"
+      } ${globalAdvanced ? "cursor-default" : ""}`}
     >
-      adv
+      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"
+        strokeLinecap="round" strokeLinejoin="round"
+        className={`transition-transform duration-200 ${isAdvanced ? "rotate-180" : ""}`}>
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+      Advanced
     </button>
   );
 }
@@ -396,10 +395,9 @@ export function BaseNode({
         }}
       >
         <SelectionToolbar />
-        <span className="absolute left-3 top-3"><NodeHintButton onDark={false} /></span>
         <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
         {hasTopHandle && <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />}
-        <div className="text-sm font-bold text-white mb-2">{title}</div>
+        <div className="mb-2 flex w-3/4 justify-center"><NodeTitle title={title} /></div>
         <div className="w-3/4 border-t border-[var(--k-border)] mb-2" />
         {children}
         {hasBottomHandle && <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />}
@@ -434,15 +432,12 @@ export function BaseNode({
       <div className="flex items-center gap-2 px-3 py-2.5 z-20 relative"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
-        <span className="text-sm font-bold text-white leading-tight truncate flex-1">{title}</span>
         {icon && <span className="text-white opacity-90 shrink-0">{icon}</span>}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <NodeHintButton />
-          <NodeAdvancedButton />
-          <NodeToggleButton value={disabled} onChange={setDisabled} />
-        </div>
+        <NodeTitle title={title} />
+        <NodeToggleButton value={disabled} onChange={setDisabled} />
       </div>
       <div className="w-full py-1.5 flex flex-col gap-0.5">{children}</div>
+      <NodeAdvancedFooter />
     </motion.div>
   );
 }
@@ -479,13 +474,9 @@ export function LoopNode({
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       {hasRightHandle && <Handle type="source" position={Position.Right} id="body" style={{ ...hs, right: -7 }} />}
       <div className="flex items-center gap-2 px-4 py-3 z-20 relative">
-        <span className="text-sm font-bold text-white truncate flex-1">{title}</span>
         {icon && <span style={{ color }} className="shrink-0">{icon}</span>}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <NodeHintButton onDark={false} />
-          <NodeAdvancedButton />
-          <NodeToggleButton value={disabled} onChange={setDisabled} />
-        </div>
+        <NodeTitle title={title} />
+        <NodeToggleButton value={disabled} onChange={setDisabled} />
       </div>
       {children && (
         <>
@@ -493,6 +484,7 @@ export function LoopNode({
           <div className="py-1.5 flex flex-col gap-0.5">{children}</div>
         </>
       )}
+      <NodeAdvancedFooter />
     </motion.div>
   );
 }
@@ -527,11 +519,10 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
       <div className="flex items-center gap-2 px-4 py-2.5 z-20 relative"
         style={{ background: color, borderRadius: "10px 10px 0 0" }}
       >
-        <span className="text-sm font-bold text-white tracking-wide flex-1">If-Else</span>
-        <NodeHintButton />
         <svg className="w-5 h-5 text-white opacity-95 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
         </svg>
+        <NodeTitle title="If-Else" />
         <NodeToggleButton value={disabled} onChange={setDisabled} className="shrink-0" />
       </div>
       <div className="py-4 px-3 flex items-center justify-center">{children}</div>
