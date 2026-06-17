@@ -4,6 +4,7 @@ import {
   NodeField,
   TextInput,
   SelectInput,
+  ToggleInput,
   useNodeField,
   makeHandleStyle,
   AdvancedSection,
@@ -116,6 +117,7 @@ export function UltrasonicSensorNode() {
   const [nearColor, setNearColor] = useNodeField<string>("nearColor", "#ef4444");
   const [midColor, setMidColor] = useNodeField<string>("midColor", "#f97316");
   const [farColor, setFarColor] = useNodeField<string>("farColor", "#22c55e");
+  const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
 
   // Live distance piped from the ESP32 serial stream (label == varName).
   const reading = useSensorStore(s => s.readings[varName]);
@@ -127,6 +129,10 @@ export function UltrasonicSensorNode() {
     <BaseNode title="Ultrasonic Sensor" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       <NodeField label="Sensor Port">
         <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
+      </NodeField>
+
+      <NodeField label="Send to Viz">
+        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
       </NodeField>
 
       <AdvancedSection>
