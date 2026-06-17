@@ -301,7 +301,7 @@ function NodeCanvasInner({
             exit={{ opacity: 0, scale: 0.96 }}
             // Delay past the saved-workspace fetch so it never flashes on restore.
             transition={{ duration: 0.25, delay: 0.6 }}
-            className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-3"
+            className="pointer-events-none absolute inset-0 z-0 flex flex-col items-center justify-center gap-3"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-subtle bg-raised text-3xl shadow-sm">
               🤖
