@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Package, Upload, CheckCircle, Loader2, AlertTriangle, Search } from "lucide-react";
 import {
-  LIBRARY_REGISTRY, getRequiredLibraries, CATEGORY_COLORS,
+  LIBRARY_REGISTRY, getRequiredLibraries, withDependencies, CATEGORY_COLORS,
   type LibraryEntry,
 } from "@/features/editor/install-library/lib/libraryRegistry";
 
@@ -29,8 +29,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
   const setLibProgress = (id: string, p: ProgressState) =>
     setProgress((prev) => ({ ...prev, [id]: p }));
 
-  const installLib = async (lib: LibraryEntry) => {
-    if (!isConnected) return;
+  const installOne = async (lib: LibraryEntry): Promise<boolean> => {
     setLibProgress(lib.id, 0);
     try {
       const res = await fetch(lib.path);
@@ -38,8 +37,20 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
       const content = await res.text();
       const ok = await onUploadFile(lib.name, content, (p) => setLibProgress(lib.id, p));
       setLibProgress(lib.id, ok ? "done" : "error");
+      return ok;
     } catch {
       setLibProgress(lib.id, "error");
+      return false;
+    }
+  };
+
+  // Installing a library also installs its dependencies (deps first), so e.g.
+  // installing i2c_lcd pulls in lcd_api — avoiding "no module named 'lcd_api'".
+  const installLib = async (lib: LibraryEntry) => {
+    if (!isConnected) return;
+    for (const entry of withDependencies(lib)) {
+      const ok = await installOne(entry);
+      if (!ok) break;
     }
   };
 

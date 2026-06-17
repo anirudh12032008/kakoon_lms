@@ -35,6 +35,7 @@ interface NodeData {
   animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
+  sensorPort?: string; backlight?: boolean;
   // Servo
   servoPort?: string; servoModel?: string; servoType?: string;
   angle?: number; startAngle?: number; endAngle?: number;

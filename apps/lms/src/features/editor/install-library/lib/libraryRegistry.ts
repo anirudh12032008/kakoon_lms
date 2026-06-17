@@ -9,6 +9,8 @@ export interface LibraryEntry {
   category: "Display" | "Sensor" | "Motor" | "Comms" | "Utility";
   /** npm-like size estimate shown in UI */
   size?: string;
+  /** ids of other libraries this one imports and that must be installed too */
+  deps?: string[];
 }
 
 export const LIBRARY_REGISTRY: LibraryEntry[] = [
@@ -57,6 +59,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
     path: "/libs/i2c_lcd.py",
     category: "Display",
     size: "2 KB",
+    deps: ["lcd_api"],
   },
   {
     id: "lcd_api",
@@ -182,7 +185,37 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
 ];
 
 export function getRequiredLibraries(code: string): LibraryEntry[] {
-  return LIBRARY_REGISTRY.filter((lib) => code.includes(lib.trigger));
+  const matched = LIBRARY_REGISTRY.filter((lib) => code.includes(lib.trigger));
+  // Pull in transitive dependencies (e.g. i2c_lcd needs lcd_api) so they also
+  // surface in the "Detected in your code" list.
+  const ids = new Set(matched.map((l) => l.id));
+  const queue = [...matched];
+  while (queue.length) {
+    const lib = queue.shift()!;
+    for (const depId of lib.deps ?? []) {
+      if (ids.has(depId)) continue;
+      const dep = LIBRARY_REGISTRY.find((l) => l.id === depId);
+      if (dep) { ids.add(depId); queue.push(dep); }
+    }
+  }
+  return LIBRARY_REGISTRY.filter((l) => ids.has(l.id));
+}
+
+/** Returns a library plus all of its (transitive) dependencies, deps first. */
+export function withDependencies(lib: LibraryEntry): LibraryEntry[] {
+  const out: LibraryEntry[] = [];
+  const seen = new Set<string>();
+  const visit = (entry: LibraryEntry) => {
+    if (seen.has(entry.id)) return;
+    seen.add(entry.id);
+    for (const depId of entry.deps ?? []) {
+      const dep = LIBRARY_REGISTRY.find((l) => l.id === depId);
+      if (dep) visit(dep);
+    }
+    out.push(entry);
+  };
+  visit(lib);
+  return out;
 }
 
 export const CATEGORY_COLORS: Record<LibraryEntry["category"], string> = {
