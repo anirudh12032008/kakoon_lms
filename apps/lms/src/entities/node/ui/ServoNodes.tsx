@@ -4,6 +4,7 @@ import {
   BaseNode,
   NodeField,
   NumberInput,
+  TextInput,
   SelectInput,
   ToggleInput,
   useNodeField,
@@ -94,8 +95,10 @@ export function ServoMotorNode() {
   const [servoPort, setServoPort]   = useNodeField<ServoKey>("servoPort", "S1");
   const [servoModel, setServoModel] = useNodeField<ServoModelId>("servoModel", "mg90s");
   const [servoType, setServoType]   = useNodeField<ServoType>("servoType", "180");
-  const [angle, setAngle]           = useNodeField<number>("angle", 90);
+  const [angle, setAngle]           = useNodeField<number | string>("angle", 90);
   const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 0);
+  const angleNum = Number(angle);
+  const dialAngle = Number.isFinite(angleNum) ? Math.max(0, Math.min(180, angleNum)) : 90;
   return (
     <BaseNode title="Servo Motor" color={COLORS.orange} icon={<MotorIcon />} width="240px">
       <NodeField label="Servo Port">
@@ -109,9 +112,9 @@ export function ServoMotorNode() {
         ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
         : (
           <>
-            <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />
+            <AngleDial angle={dialAngle} onChange={setAngle} color={COLORS.orange} />
             <NodeField label="Set Angle (°)">
-              <NumberInput value={angle} onChange={v => setAngle(Math.max(0, Math.min(180, v)))} />
+              <TextInput value={String(angle ?? "")} onChange={setAngle} />
             </NodeField>
           </>
         )}
@@ -206,7 +209,7 @@ export function ServoControllerNode() {
   const [servoModel, setServoModel] = useNodeField<ServoModelId>("servoModel", "mg90s");
   const [servoType, setServoType]   = useNodeField<ServoType>("servoType", "180");
   const [mode, setMode]             = useNodeField<string>("mode", "standard");
-  const [angle, setAngle]           = useNodeField<number>("angle", 90);
+  const [angle, setAngle]           = useNodeField<number | string>("angle", 90);
   const [sweepMin, setSweepMin]     = useNodeField<number>("sweepMin", 0);
   const [sweepMax, setSweepMax]     = useNodeField<number>("sweepMax", 180);
   const [sweepPeriod, setSweepPeriod] = useNodeField<number>("sweepPeriod", 1000);
@@ -214,7 +217,11 @@ export function ServoControllerNode() {
   const [pulseMin, setPulseMin]     = useNodeField<number>("pulseMin", 600);
   const [pulseMax, setPulseMax]     = useNodeField<number>("pulseMax", 2400);
 
-  const pulseUs = Math.round(pulseMin + (angle / 180) * (pulseMax - pulseMin));
+  const angleNum = Number(angle);
+  const dialAngle = Number.isFinite(angleNum) ? Math.max(0, Math.min(180, angleNum)) : 90;
+  const pulseUs = Number.isFinite(angleNum)
+    ? Math.round(pulseMin + (angleNum / 180) * (pulseMax - pulseMin))
+    : null;
 
   // Picking a model presets the pulse-width fine-tune fields to that servo's range.
   const applyModel = (m: ServoModelId) => {
@@ -246,13 +253,13 @@ export function ServoControllerNode() {
 
       {servoType === "180" && mode === "standard" && (
         <>
-          <AngleDial angle={angle} onChange={setAngle} color={COLORS.orange} />
+          <AngleDial angle={dialAngle} onChange={setAngle} color={COLORS.orange} />
           <NodeField label="Set Angle (°)">
-            <NumberInput value={angle} onChange={v => setAngle(Math.max(0, Math.min(180, v)))} />
+            <TextInput value={String(angle ?? "")} onChange={setAngle} />
           </NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] flex items-center justify-between">
-            <span className="text-[9px] text-[var(--k-muted)]">Pulse @ {angle}°</span>
-            <span className="text-[10px] font-mono text-orange-400">{pulseUs} µs</span>
+            <span className="text-[9px] text-[var(--k-muted)]">Pulse @ {String(angle)}°</span>
+            <span className="text-[10px] font-mono text-orange-400">{pulseUs == null ? "auto" : `${pulseUs} µs`}</span>
           </div>
         </>
       )}

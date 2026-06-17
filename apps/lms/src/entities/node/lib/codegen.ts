@@ -40,7 +40,7 @@ interface NodeData {
   sensorPort?: string; backlight?: boolean;
   // Servo
   servoPort?: string; servoModel?: string; servoType?: string;
-  angle?: number; startAngle?: number; endAngle?: number;
+  angle?: number | string; startAngle?: number; endAngle?: number;
   steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
   sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
   bounce?: boolean; loop?: boolean;
@@ -105,6 +105,21 @@ function oledPixelsToMonoHLSB(pixels: boolean[][], oledW: number, oledH: number)
 
 function bytesToPyHex(buf: Uint8Array): string {
   return Array.from(buf).map(b => `\\x${b.toString(16).padStart(2, "0")}`).join("");
+}
+
+function asPyExpr(value: unknown, fallback: string): string {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return fallback;
+}
+
+function asFiniteNumber(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const n = Number(value.trim());
+    if (Number.isFinite(n)) return n;
+  }
+  return undefined;
 }
 
 /**
@@ -798,7 +813,8 @@ time.sleep(0.1)`);
           const spd = d.contSpeed ?? 0;
           chunkLines.push(`${indent}${sv1}.speed(${spd})  # ${smPort} 360° continuous ${spd}%`);
         } else {
-          chunkLines.push(`${indent}${sv1}.angle(${d.angle ?? 90})  # ${smPort} → ${d.angle ?? 90}°`);
+          const smAngleExpr = asPyExpr(d.angle, "90");
+          chunkLines.push(`${indent}${sv1}.angle(${smAngleExpr})  # ${smPort} → ${smAngleExpr}°`);
         }
         break;
       }
@@ -1072,7 +1088,12 @@ time.sleep(0.1)`);
           chunkLines.push(`${indent}    time.sleep_ms(${stepMs})`);
         } else {
           const pulseRange = pulseMax - pulseMin;
-          chunkLines.push(`${indent}${scObj}.angle(${d.angle ?? 90})  # ${scPort} → ${d.angle ?? 90}° (pulse ${Math.round(pulseMin + ((d.angle ?? 90) / 180) * pulseRange)} µs)`);
+          const scAngleExpr = asPyExpr(d.angle, "90");
+          const scAngleNum = asFiniteNumber(d.angle);
+          const pulseInfo = scAngleNum == null
+            ? ""
+            : ` (pulse ${Math.round(pulseMin + (scAngleNum / 180) * pulseRange)} µs)`;
+          chunkLines.push(`${indent}${scObj}.angle(${scAngleExpr})  # ${scPort} → ${scAngleExpr}°${pulseInfo}`);
         }
         break;
       }
