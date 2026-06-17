@@ -224,15 +224,6 @@ export function LCD16x2Node() {
           <SelectInput value={mode} onChange={setMode} compact
             options={[{ label: "I2C", value: "i2c" }, { label: "Parallel 4-bit", value: "parallel" }]} />
         </NodeField>
-        {mode === "i2c" && <>
-          <NodeField label="I2C Address">
-            <SelectInput value={address} onChange={setAddress} compact
-              options={[{ label: "0x27 (default)", value: "0x27" }, { label: "0x3F (alt)", value: "0x3F" }]} />
-          </NodeField>
-          <NodeField label="SCL Pin"><NumberInput value={scl} onChange={setScl} /></NodeField>
-          <NodeField label="SDA Pin"><NumberInput value={sda} onChange={setSda} /></NodeField>
-          <AdvancedSection><PinInfo label="SoftI2C" value={`SCL ${scl} · SDA ${sda} @ 400kHz`} /></AdvancedSection>
-        </>}
 
         {/* Mini LCD preview */}
         <div className="px-3 py-1">
@@ -253,24 +244,8 @@ export function LCD16x2Node() {
           </div>
         </div>
 
-        <NodeField label="Cursor Blink"><ToggleInput value={cursorBlink} onChange={setCursorBlink} leftLabel="Off" rightLabel="On" /></NodeField>
-        <NodeField label="Underline"><ToggleInput value={cursorUnderline} onChange={setCursorUnderline} leftLabel="Off" rightLabel="On" /></NodeField>
-        <NodeField label="Backlight"><ToggleInput value={backlight} onChange={setBacklight} leftLabel="Off" rightLabel="On" /></NodeField>
-
-        <NodeField label="Variable">
-          <input value={varName} onChange={e => setVarName(e.target.value)}
-            className="nodrag w-full bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-[11px] font-mono text-green-300 outline-none focus:border-blue-500/60"
-            placeholder="e.g. distance" />
-        </NodeField>
-        <div className="px-3 pb-1.5">
-          <p className="text-[9px] text-[var(--k-dim)] leading-relaxed">
-            In any line, <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> inserts the variable above.
-            Use any other name like <span className="font-mono text-[var(--k-muted)]">{"{temp}"}</span> for additional variables,
-            or <span className="font-mono text-[var(--k-muted)]">{"{c0}"}</span>…<span className="font-mono text-[var(--k-muted)]">{"{c7}"}</span> for custom characters. Each token = 1 column.
-          </p>
-        </div>
-
-        <div className="px-3 pb-2 flex flex-col gap-1.5">
+        {/* Primary action */}
+        <div className="px-3 pt-1 pb-2">
           <button onClick={() => setShowGrid(true)}
             className="nodrag w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-blue-500/40 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 text-xs font-bold transition-all">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -279,14 +254,48 @@ export function LCD16x2Node() {
             </svg>
             16×2 Grid Designer
           </button>
-          <button onClick={() => setShowCharEditor(true)}
-            className="nodrag w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 text-xs font-bold transition-all">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-            Custom Chars (8 slots · 5×8px)
-          </button>
         </div>
+
+        <NodeField label="Backlight"><ToggleInput value={backlight} onChange={setBacklight} leftLabel="Off" rightLabel="On" /></NodeField>
+
+        {/* Everything else lives in Advanced to keep the node compact */}
+        <AdvancedSection>
+          {mode === "i2c" && <>
+            <NodeField label="I2C Address">
+              <SelectInput value={address} onChange={setAddress} compact
+                options={[{ label: "0x27 (default)", value: "0x27" }, { label: "0x3F (alt)", value: "0x3F" }]} />
+            </NodeField>
+            <NodeField label="SCL Pin"><NumberInput value={scl} onChange={setScl} /></NodeField>
+            <NodeField label="SDA Pin"><NumberInput value={sda} onChange={setSda} /></NodeField>
+            <PinInfo label="SoftI2C" value={`SCL ${scl} · SDA ${sda} @ 400kHz`} />
+          </>}
+
+          <NodeField label="Cursor Blink"><ToggleInput value={cursorBlink} onChange={setCursorBlink} leftLabel="Off" rightLabel="On" /></NodeField>
+          <NodeField label="Underline"><ToggleInput value={cursorUnderline} onChange={setCursorUnderline} leftLabel="Off" rightLabel="On" /></NodeField>
+
+          <NodeField label="Variable">
+            <input value={varName} onChange={e => setVarName(e.target.value)}
+              className="nodrag w-full bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-[11px] font-mono text-green-300 outline-none focus:border-blue-500/60"
+              placeholder="e.g. distance" />
+          </NodeField>
+          <div className="px-3 pb-1.5">
+            <p className="text-[9px] text-[var(--k-dim)] leading-relaxed">
+              In any line, <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> inserts the variable above.
+              Use any other name like <span className="font-mono text-[var(--k-muted)]">{"{temp}"}</span> for additional variables,
+              or <span className="font-mono text-[var(--k-muted)]">{"{c0}"}</span>…<span className="font-mono text-[var(--k-muted)]">{"{c7}"}</span> for custom characters. Each token = 1 column.
+            </p>
+          </div>
+
+          <div className="px-3 pb-2">
+            <button onClick={() => setShowCharEditor(true)}
+              className="nodrag w-full flex items-center justify-center gap-2 py-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 text-xs font-bold transition-all">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+              </svg>
+              Custom Chars (8 slots · 5×8px)
+            </button>
+          </div>
+        </AdvancedSection>
       </BaseNode>
 
       {showGrid && (
