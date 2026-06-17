@@ -33,7 +33,7 @@ interface NodeData {
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
   customChars?: boolean[][][]; cursorBlink?: boolean; cursorUnderline?: boolean;
-  colon?: boolean;
+  colon?: boolean; tempVar?: string; humVar?: string;
   animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
@@ -605,6 +605,22 @@ time.sleep(0.1)`);
         if (d.sendToViz !== false) {
           // label = varName so the node's sensorStore lookup matches
           chunkLines.push(`${indent}print(f"SENSOR,distance,${distVar},{${distVar}:.1f}")`);
+        }
+        break;
+      }
+      case "dht11": {
+        const tVar = d.tempVar ?? "temperature";
+        const hVar = d.humVar ?? "humidity";
+        const dPin = d.pin ?? 4;
+        imports.add("import dht");
+        imports.add("from machine import Pin");
+        emitOnce(`dht11_${dPin}`, `_dht11_${dPin} = dht.DHT11(Pin(${dPin}))`);
+        chunkLines.push(`${indent}_dht11_${dPin}.measure()`);
+        chunkLines.push(`${indent}${tVar} = _dht11_${dPin}.temperature()`);
+        chunkLines.push(`${indent}${hVar} = _dht11_${dPin}.humidity()`);
+        if (d.sendToViz !== false) {
+          chunkLines.push(`${indent}print(f"SENSOR,raw,${tVar},{${tVar}}")`);
+          chunkLines.push(`${indent}print(f"SENSOR,raw,${hVar},{${hVar}}")`);
         }
         break;
       }

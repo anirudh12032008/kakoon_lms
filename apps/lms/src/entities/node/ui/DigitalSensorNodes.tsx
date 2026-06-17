@@ -37,6 +37,36 @@ export function TouchSensorNode() {
   );
 }
 
+// ─── DHT11 Temperature & Humidity Sensor ──────────────────────────────────────
+export function DHT11Node() {
+  const [pin, setPin] = useNodeField<number>("pin", 4);
+  const [tempVar, setTempVar] = useNodeField<string>("tempVar", "temperature");
+  const [humVar, setHumVar] = useNodeField<string>("humVar", "humidity");
+  const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
+  return (
+    <BaseNode title="DHT11 Temp / Humidity" color={COLORS.cyan} icon={<SensorIcon />} width="250px">
+      <NodeField label="Data Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
+      <NodeField label="Send to Viz">
+        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
+      </NodeField>
+      <NodeField label="temp °C">
+        <TextInput value={tempVar} onChange={setTempVar} green />
+        <Handle type="source" position={Position.Right} id="temperature" style={{ ...outHS, right: -6 }} />
+      </NodeField>
+      <NodeField label="humidity %">
+        <TextInput value={humVar} onChange={setHumVar} green />
+        <Handle type="source" position={Position.Right} id="humidity" style={{ ...outHS, right: -6 }} />
+      </NodeField>
+      <AdvancedSection>
+        <p className="px-3 pb-2 text-[9px] text-[var(--k-dim)] leading-relaxed">
+          DHT11 needs ~1–2 s between reads. Place this inside a loop with a Sleep ≥ 1 s.
+          Requires the <span className="font-mono text-[var(--k-muted)]">dht</span> module (built-in on most ESP32 firmware).
+        </p>
+      </AdvancedSection>
+    </BaseNode>
+  );
+}
+
 // ─── Soil Moisture Sensor ─────────────────────────────────────────────────────
 export function SoilMoistureSensorNode() {
   const [port, setPort] = useNodeField<string>("port", "1");

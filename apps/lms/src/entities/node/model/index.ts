@@ -8,7 +8,7 @@ import { IfElseNode } from "../ui/ConditionalNodes";
 import { WiFiConnectNode, HTTPGetNode, ESPNOWSenderNode, ESPNOWReceiverNode, TimeOnlineNode } from "../ui/IOTNodes";
 import { AnalogSensorNode } from "../ui/AnalogSensorNode";
 import { UltrasonicSensorNode } from "../ui/UltrasonicSensorNode";
-import { TouchSensorNode, SoilMoistureSensorNode, ButtonDigitalInputNode, FourChannelTouchNode } from "../ui/DigitalSensorNodes";
+import { TouchSensorNode, SoilMoistureSensorNode, ButtonDigitalInputNode, FourChannelTouchNode, DHT11Node } from "../ui/DigitalSensorNodes";
 import { IRSensorNode, IRReceiverNode } from "../ui/IRNodes";
 import { IMUSensorNode, PIRSensorNode } from "../ui/IMUNodes";
 import { OLEDDisplayNode, PlayAnimationNode, ShowImageNode } from "../ui/OLEDNodes";
@@ -57,6 +57,7 @@ export const NODE_TYPES: NodeTypes = {
   ultrasonic: UltrasonicSensorNode,
   touch_sensor: TouchSensorNode,
   soil_moisture: SoilMoistureSensorNode,
+  dht11: DHT11Node,
   ir_receiver: IRReceiverNode,
   ir_sensor: IRSensorNode,
   four_channel_touch: FourChannelTouchNode,
@@ -170,6 +171,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "button_digital_input", label: "Button / Digital Input", color: "#3b82f6", previewDot: "#3b82f6" },
       { type: "touch_sensor", label: "Touch Sensor", color: "#ef4444", previewDot: "#ef4444" },
       { type: "soil_moisture", label: "Soil Moisture Sensor", color: "#f97316", previewDot: "#f97316" },
+      { type: "dht11", label: "DHT11 Temp / Humidity", color: "#06b6d4", previewDot: "#06b6d4" },
       { type: "ir_receiver", label: "IR Receiver", color: "#f97316", previewDot: "#f97316" },
       { type: "ir_sensor", label: "IR Sensor", color: "#f97316", previewDot: "#f97316" },
       { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6" },
