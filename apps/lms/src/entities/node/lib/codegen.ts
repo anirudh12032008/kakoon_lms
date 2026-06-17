@@ -32,7 +32,7 @@ interface NodeData {
   // OLED
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
-  customChars?: boolean[][][];
+  customChars?: boolean[][][]; cursorBlink?: boolean; cursorUnderline?: boolean;
   animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
@@ -906,6 +906,10 @@ time.sleep(0.1)`);
         chunkLines.push(`${indent}lcd.putstr(${renderLcdLine(lcdLine1)})`);
         chunkLines.push(`${indent}lcd.move_to(0, 1)`);
         chunkLines.push(`${indent}lcd.putstr(${renderLcdLine(lcdLine2)})`);
+        // Cursor mode (applied after writing so it shows at the cursor position)
+        if (d.cursorBlink) chunkLines.push(`${indent}lcd.blink_cursor_on()`);
+        else if (d.cursorUnderline) chunkLines.push(`${indent}lcd.show_cursor()`);
+        else chunkLines.push(`${indent}lcd.hide_cursor()`);
         break;
       }
 
