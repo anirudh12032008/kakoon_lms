@@ -137,6 +137,35 @@ body { transition: background-color 0.25s ease; }
   0%, 100% { opacity: 0.3; }
   30%, 70%  { opacity: 1; }
 }
+/* Ultrasonic timing diagram (one 2s cycle):
+   0-12%  TRIG high pulse
+   12-40% sound travels out
+   40-68% echo travels back
+   68-80% ECHO high pulse */
+@keyframes usTrigPulse {
+  0%, 8%   { transform: scaleY(1); }
+  4%       { transform: scaleY(1); }
+  0%, 12%  { opacity: 1; }
+  16%, 100% { opacity: 0.25; }
+}
+@keyframes usEchoPulse {
+  0%, 64%  { opacity: 0.25; }
+  68%, 82% { opacity: 1; }
+  86%, 100% { opacity: 0.25; }
+}
+@keyframes usPing {
+  0%, 12%   { left: 8%; opacity: 0; }
+  16%       { opacity: 1; }
+  40%       { left: 92%; opacity: 1; }
+  44%       { opacity: 1; }
+  68%       { left: 8%; opacity: 1; }
+  72%, 100% { left: 8%; opacity: 0; }
+}
+@keyframes usWaveRing {
+  0%, 10%   { transform: scale(0.4); opacity: 0; }
+  14%       { opacity: 0.9; }
+  40%, 100% { transform: scale(2.4); opacity: 0; }
+}
 @keyframes i2cScan {
   to { width: 100%; }
 }

@@ -14,24 +14,54 @@ import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
 
 // ─── Echo Timing Pulse Visualiser ─────────────────────────────────────────────
+// Animated timing diagram: TRIG fires a 10µs pulse, sound travels to the object
+// and bounces back, ECHO goes high for the round-trip duration.
 function EchoPulseDisplay() {
+  const DUR = "2.4s";
   return (
-    <div className="w-full h-10 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden px-3 flex flex-col justify-center gap-0.5">
-      <div className="flex items-center gap-1">
-        <span className="text-[8px] text-purple-400 font-mono w-7">TRIG</span>
-        <div className="flex-1 flex items-center h-3">
-          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
-          <div className="h-3 w-4 border-t-2 border-l-2 border-r-2 border-purple-500 rounded-t-sm mx-0.5"
-            style={{ animation: "trigPulse 1.6s ease-in-out infinite" }} />
+    <div className="w-full rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden px-2.5 py-2 flex flex-col gap-1.5">
+      {/* Travel lane: sensor → object with a pinging wave */}
+      <div className="relative h-6">
+        {/* sensor (left) */}
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center">
+          <div className="w-3 h-4 rounded-sm bg-purple-500/80" />
+        </div>
+        {/* object (right) */}
+        <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-5 rounded-sm bg-[var(--k-base-400)] border border-[var(--k-border)]" />
+        {/* dashed path */}
+        <div className="absolute left-4 right-3 top-1/2 -translate-y-1/2 h-px"
+          style={{ backgroundImage: "repeating-linear-gradient(90deg,var(--k-border) 0 4px,transparent 4px 8px)" }} />
+        {/* expanding wave rings emitted from sensor */}
+        {[0, 0.12].map((delay, i) => (
+          <div key={i}
+            className="absolute top-1/2 left-4 w-4 h-4 -translate-y-1/2 rounded-full border-2 border-cyan-400"
+            style={{ animation: `usWaveRing ${DUR} ease-out ${delay}s infinite` }} />
+        ))}
+        {/* traveling ping dot */}
+        <div className="absolute top-1/2 w-1.5 h-1.5 -translate-y-1/2 -translate-x-1/2 rounded-full bg-cyan-300 shadow-[0_0_6px_2px_rgba(34,211,238,0.6)]"
+          style={{ animation: `usPing ${DUR} ease-in-out infinite` }} />
+      </div>
+
+      {/* TRIG waveform */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[8px] text-purple-400 font-mono w-7 flex-shrink-0">TRIG</span>
+        <div className="flex-1 flex items-end h-3">
+          <div className="h-[2px] w-3 bg-[var(--k-border)]" />
+          <div className="w-1 self-stretch rounded-sm bg-purple-500"
+            style={{ animation: `usTrigPulse ${DUR} steps(1) infinite` }} />
           <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
         </div>
       </div>
-      <div className="flex items-center gap-1">
-        <span className="text-[8px] text-cyan-400 font-mono w-7">ECHO</span>
-        <div className="flex-1 flex items-center h-3">
-          <div className="h-[2px] w-5 bg-[var(--k-border)]" />
-          <div className="h-3 border-t-2 border-l-2 border-r-2 border-cyan-500 rounded-t-sm mx-0.5"
-            style={{ width: 24, animation: "trigPulse 1.6s ease-in-out 0.3s infinite" }} />
+
+      {/* ECHO waveform — high for the round-trip time */}
+      <div className="flex items-center gap-1.5">
+        <span className="text-[8px] text-cyan-400 font-mono w-7 flex-shrink-0">ECHO</span>
+        <div className="flex-1 flex items-end h-3">
+          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
+          <div className="flex items-end h-full" style={{ animation: `usEchoPulse ${DUR} steps(1) infinite` }}>
+            <div className="h-[2px] w-px bg-cyan-500" />
+            <div className="w-10 self-stretch border-t-2 border-l-2 border-r-2 border-cyan-500 rounded-t-sm" />
+          </div>
           <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
         </div>
       </div>

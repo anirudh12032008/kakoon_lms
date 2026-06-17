@@ -586,13 +586,19 @@ time.sleep(0.1)`);
         const uPins = SENSOR_PORTS[uPort] ?? SENSOR_PORTS["1"];
         const trig  = d.trigPin ?? uPins.trig;
         const echo  = d.echoPin ?? uPins.echo;
-        imports.add("from machine import Pin");
+        const distVar = d.varName ?? "distance";
+        imports.add("from machine import Pin, time_pulse_us");
         imports.add("import time");
         chunkLines.push(`${indent}# Ultrasonic port ${uPort} — TRIG:${trig} ECHO:${echo}`);
         chunkLines.push(`${indent}trig = Pin(${trig}, Pin.OUT)`);
         chunkLines.push(`${indent}echo = Pin(${echo}, Pin.IN)`);
+        chunkLines.push(`${indent}# Send a 10us trigger pulse`);
+        chunkLines.push(`${indent}trig.value(0); time.sleep_us(2)`);
         chunkLines.push(`${indent}trig.value(1); time.sleep_us(10); trig.value(0)`);
-        chunkLines.push(`${indent}${d.varName ?? "distance"} = echo.value()`);
+        chunkLines.push(`${indent}# Measure echo high time (us), timeout 30ms (~5m max range)`);
+        chunkLines.push(`${indent}_dur = time_pulse_us(echo, 1, 30000)`);
+        chunkLines.push(`${indent}# Convert: distance = duration * speed_of_sound / 2 = us * 0.0343 / 2`);
+        chunkLines.push(`${indent}${distVar} = (_dur * 0.0343 / 2) if _dur > 0 else -1`);
         break;
       }
       case "touch_sensor": {
