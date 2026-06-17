@@ -73,12 +73,14 @@ function CustomPinRow({ label, pwmPin, setPwmPin, dirPin, setDirPin }: {
   dirPin: number; setDirPin: (v: number) => void;
 }) {
   return (
-    <div className="px-3 py-1 flex items-center gap-2">
-      <span className="w-[58px] flex-shrink-0 text-[10px] text-[var(--k-muted)] font-medium">{label}</span>
-      <span className="text-[9px] text-[var(--k-muted)] uppercase">pwm</span>
-      <NumberInput value={pwmPin} onChange={setPwmPin} />
-      <span className="text-[9px] text-[var(--k-muted)] uppercase">dir</span>
-      <NumberInput value={dirPin} onChange={setDirPin} />
+    <div className="px-3 py-1">
+      <span className="block text-[10px] text-[var(--k-muted)] font-bold uppercase tracking-wider mb-1">{label}</span>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[9px] text-[var(--k-muted)] uppercase">pwm</span>
+        <NumberInput value={pwmPin} onChange={setPwmPin} className="w-[60px] flex-1" />
+        <span className="text-[9px] text-[var(--k-muted)] uppercase">dir</span>
+        <NumberInput value={dirPin} onChange={setDirPin} className="w-[60px] flex-1" />
+      </div>
     </div>
   );
 }
