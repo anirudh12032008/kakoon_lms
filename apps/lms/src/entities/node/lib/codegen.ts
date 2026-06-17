@@ -352,6 +352,8 @@ def _cm_stop(pwm, d):
         if (e.source !== nodeId) return false;
         const handle = e.sourceHandle ?? "";
         if (handle === "body" || handle === "true" || handle === "false" || handle.startsWith("cmd_")) return false;
+        // BLE connect/disconnect handles are event branches, not the sequel.
+        if (handle === "connected" || handle === "disconnected") return false;
         // For loops using the Y-fallback body, skip the edge we used as body
         if (isLoopNode && !edges.some((b) => b.source === nodeId && b.sourceHandle === "body")) {
           const tgt = nodeMap.get(e.target);
@@ -1181,6 +1183,7 @@ time.sleep(0.1)`);
         setupLines.push(`_BLE_UART = (_BLE_SVC, (_BLE_TX, _BLE_RX,),)`);
         setupLines.push(`((_ble_tx_h, _ble_rx_h),) = _ble.gatts_register_services((_BLE_UART,))`);
         setupLines.push(`_ble_conn = None`);
+        setupLines.push(`_ble_was_conn = False  # edge-detect connect/disconnect in the loop`);
         setupLines.push(`${bleRawVar} = None`);
         if (bleCmdMap && bleCmds.length > 0) {
           const uniqueVars = [...new Set(bleCmds.map(c => c.varName).filter(Boolean))];
@@ -1212,28 +1215,52 @@ time.sleep(0.1)`);
         setupLines.push(`    _ble.gap_advertise(100_000, adv)`);
         setupLines.push(`_ble_adv()`);
 
-        // Loop chunk — process incoming data
+        // Loop chunk — detect connect/disconnect transitions, run wired branches,
+        // and print a status line to the terminal.
+        const bleConnLines    = getBranchLines("connected",    indentLevel + 1);
+        const bleDisconnLines = getBranchLines("disconnected", indentLevel + 1);
+        chunkLines.push(`${indent}# BLE: connection status`);
+        chunkLines.push(`${indent}_ble_now = _ble_conn is not None`);
+        chunkLines.push(`${indent}if _ble_now and not _ble_was_conn:`);
+        chunkLines.push(`${indent}    print("BLE: 1 device connected")`);
+        chunkLines.push(...bleConnLines);
+        chunkLines.push(`${indent}elif _ble_was_conn and not _ble_now:`);
+        chunkLines.push(`${indent}    print("BLE: device disconnected (0 connected)")`);
+        chunkLines.push(...bleDisconnLines);
+        chunkLines.push(`${indent}_ble_was_conn = _ble_now`);
+
+        // Loop chunk — process incoming data.
+        // Build the per-command body first so we only emit the wrapper when at
+        // least one command actually does something (otherwise the block was
+        // just an empty `if ble_data is not None:` followed by the clear line).
         chunkLines.push(`${indent}# BLE: process received data`);
         if (bleCmdMap && bleCmds.length > 0) {
-          chunkLines.push(`${indent}if ${bleRawVar} is not None:`);
+          const cmdBody: string[] = [];
           for (let ci = 0; ci < bleCmds.length; ci++) {
             const cmd = bleCmds[ci];
             if (!cmd.trigger) continue;
-            const handleId = `cmd_${ci}`;
-            const branchLines = getBranchLines(handleId, indentLevel + 2);
+            const branchLines = getBranchLines(`cmd_${ci}`, indentLevel + 2);
             if (branchLines.length > 0) {
-              // Has wired nodes — generate a block for them
-              chunkLines.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
-              chunkLines.push(...branchLines);
+              // Has wired nodes — run them when the command matches.
+              cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
+              cmdBody.push(...branchLines);
+            } else if (cmd.varName) {
+              // No wired nodes but a target variable — assign it.
+              const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
+              cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": ${cmd.varName} = ${val}`);
             } else {
-              // No wired nodes — fall back to variable assignment
-              if (cmd.varName) {
-                const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
-                chunkLines.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": ${cmd.varName} = ${val}`);
-              }
+              // Nothing wired and no variable — at least report it on the terminal
+              // so the command is observable instead of silently doing nothing.
+              cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": print("BLE: received ${cmd.trigger}")`);
             }
           }
-          chunkLines.push(`${indent}    ${bleRawVar} = None  # clear after handling`);
+          if (cmdBody.length > 0) {
+            chunkLines.push(`${indent}if ${bleRawVar} is not None:`);
+            chunkLines.push(...cmdBody);
+            chunkLines.push(`${indent}    ${bleRawVar} = None  # clear after handling`);
+          } else {
+            chunkLines.push(`${indent}# ${bleRawVar} contains last received string (or None)`);
+          }
         } else {
           chunkLines.push(`${indent}# ${bleRawVar} contains last received string (or None)`);
         }
