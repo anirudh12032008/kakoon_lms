@@ -12,7 +12,8 @@ import { persist } from "zustand/middleware";
 interface ProjectStore {
   activeProjectId: string | null;
   activeProjectName: string | null;
-  setActiveProject: (id: string | null, name?: string | null) => void;
+  activeProjectSlug: string | null;
+  setActiveProject: (id: string | null, name?: string | null, slug?: string | null) => void;
   clearActiveProject: () => void;
 }
 
@@ -21,9 +22,11 @@ export const useProjectStore = create<ProjectStore>()(
     (set) => ({
       activeProjectId: null,
       activeProjectName: null,
-      setActiveProject: (activeProjectId, activeProjectName = null) =>
-        set({ activeProjectId, activeProjectName }),
-      clearActiveProject: () => set({ activeProjectId: null, activeProjectName: null }),
+      activeProjectSlug: null,
+      setActiveProject: (activeProjectId, activeProjectName = null, activeProjectSlug = null) =>
+        set({ activeProjectId, activeProjectName, activeProjectSlug }),
+      clearActiveProject: () =>
+        set({ activeProjectId: null, activeProjectName: null, activeProjectSlug: null }),
     }),
     { name: "kokoon-editor-active-project" }
   )

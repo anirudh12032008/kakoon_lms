@@ -32,6 +32,7 @@ export interface ProjectController {
   syncState: SyncState;
   projectId: string | null;
   projectName: string | null;
+  projectSlug: string | null;
   /** Create a brand-new saved project from the current editor state. */
   saveAsNew: (name: string) => Promise<void>;
   /** Rename the active project. */
@@ -54,6 +55,7 @@ export function useProject({
 }: Options): ProjectController {
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const activeProjectName = useProjectStore((s) => s.activeProjectName);
+  const activeProjectSlug = useProjectStore((s) => s.activeProjectSlug);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
 
   const [syncState, setSyncState] = useState<SyncState>("idle");
@@ -87,7 +89,7 @@ export function useProject({
           };
           apply(0);
         }
-        setActiveProject(project.id, project.name);
+        setActiveProject(project.id, project.name, project.slug ?? null);
       })
       .catch(() => { /* missing / offline — start from an empty canvas */ })
       .finally(() => {
@@ -141,7 +143,7 @@ export function useProject({
         meta: buildMeta(),
       });
       loadedIdRef.current = project.id; // prevent the load effect from re-fetching
-      setActiveProject(project.id, project.name);
+      setActiveProject(project.id, project.name, project.slug ?? null);
       setSyncState("saved");
     } catch {
       setSyncState("error");
@@ -151,13 +153,20 @@ export function useProject({
   const rename = useCallback(async (name: string) => {
     const trimmed = name.trim();
     if (!activeProjectId || !trimmed) return;
-    setActiveProject(activeProjectId, trimmed); // optimistic
+    setActiveProject(activeProjectId, trimmed, activeProjectSlug); // optimistic, keep slug
     try {
       await updateProject(activeProjectId, { name: trimmed });
     } catch {
       setSyncState("error");
     }
-  }, [activeProjectId, setActiveProject]);
+  }, [activeProjectId, activeProjectSlug, setActiveProject]);
 
-  return { syncState, projectId: activeProjectId, projectName: activeProjectName, saveAsNew, rename };
+  return {
+    syncState,
+    projectId: activeProjectId,
+    projectName: activeProjectName,
+    projectSlug: activeProjectSlug,
+    saveAsNew,
+    rename,
+  };
 }

@@ -94,6 +94,8 @@ interface NodeCanvasProps {
   className?: string;
   allowedCategories?: string[];
   allowedNodeTypes?: string[];
+  /** View-only: hides the palette and disables editing (shared-link viewing). */
+  readOnly?: boolean;
 }
 
 const getId = () => `node_${crypto.randomUUID().slice(0, 8)}`;
@@ -111,6 +113,7 @@ function NodeCanvasInner({
   onCodeChange,
   onFlowChange,
   allowedNodeTypes,
+  readOnly,
   canvasRef,
 }: NodeCanvasProps & { canvasRef: React.Ref<NodeCanvasRef> }) {
   const [nodes, setNodes] = useState<Node[]>([]);
@@ -287,9 +290,13 @@ function NodeCanvasInner({
   return (
     <div
       ref={wrapperRef}
-      className="canvas-vignette relative h-full w-full"
-      onDrop={onDrop}
-      onDragOver={onDragOver}
+      className={`canvas-vignette relative h-full w-full ${
+        // View-only: block interaction with node fields/buttons while keeping
+        // canvas pan & zoom usable.
+        readOnly ? "[&_.react-flow__node_input]:pointer-events-none [&_.react-flow__node_button]:pointer-events-none [&_.react-flow__node_textarea]:pointer-events-none [&_.react-flow__node_select]:pointer-events-none" : ""
+      }`}
+      onDrop={readOnly ? undefined : onDrop}
+      onDragOver={readOnly ? undefined : onDragOver}
     >
       {/* Empty-state guide — fades out the moment the first block lands */}
       <AnimatePresence>
@@ -318,9 +325,12 @@ function NodeCanvasInner({
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onNodesChange={readOnly ? undefined : onNodesChange}
+        onEdgesChange={readOnly ? undefined : onEdgesChange}
+        onConnect={readOnly ? undefined : onConnect}
+        nodesDraggable={!readOnly}
+        nodesConnectable={!readOnly}
+        elementsSelectable={!readOnly}
         nodeTypes={NODE_TYPES}
         edgeTypes={EDGE_TYPES}
         fitView
@@ -328,7 +338,7 @@ function NodeCanvasInner({
         minZoom={MIN_ZOOM}
         maxZoom={MAX_ZOOM}
         connectionRadius={CONNECTION_RADIUS}
-        deleteKeyCode={["Backspace", "Delete"]}
+        deleteKeyCode={readOnly ? null : ["Backspace", "Delete"]}
         connectionLineStyle={{ stroke: "var(--k-primary)", strokeWidth: 2, filter: "drop-shadow(0 0 6px var(--k-primary))" }}
         defaultEdgeOptions={{ style: { stroke: "var(--k-primary)", strokeWidth: 2 }, animated: true }}
       >
@@ -345,7 +355,7 @@ function NodeCanvasInner({
 }
 
 export const NodeCanvas = forwardRef<NodeCanvasRef, NodeCanvasProps>(
-  function NodeCanvas({ onCodeChange, onFlowChange, className = "", allowedCategories, allowedNodeTypes }, ref) {
+  function NodeCanvas({ onCodeChange, onFlowChange, className = "", allowedCategories, allowedNodeTypes, readOnly }, ref) {
     const [sidebarWidth, setSidebarWidth] = useState(280);
     const isResizing = useRef(false);
 
@@ -373,13 +383,17 @@ export const NodeCanvas = forwardRef<NodeCanvasRef, NodeCanvasProps>(
     return (
       <ReactFlowProvider>
         <div className={`flex h-full w-full ${className}`}>
-          <NodePaletteWrapper width={sidebarWidth} allowedCategories={allowedCategories} allowedNodeTypes={allowedNodeTypes} />
-          <div
-            onMouseDown={startResizing}
-            className="w-1 hover:w-1.5 bg-[var(--k-base-400)] hover:bg-[var(--k-primary)]/50 active:bg-[var(--k-primary)] cursor-col-resize transition-all flex-shrink-0 z-50"
-            style={{ marginRight: "-2px", marginLeft: "-2px" }}
-          />
-          <NodeCanvasInner onCodeChange={onCodeChange} onFlowChange={onFlowChange} allowedNodeTypes={allowedNodeTypes} canvasRef={ref} />
+          {!readOnly && (
+            <>
+              <NodePaletteWrapper width={sidebarWidth} allowedCategories={allowedCategories} allowedNodeTypes={allowedNodeTypes} />
+              <div
+                onMouseDown={startResizing}
+                className="w-1 hover:w-1.5 bg-[var(--k-base-400)] hover:bg-[var(--k-primary)]/50 active:bg-[var(--k-primary)] cursor-col-resize transition-all flex-shrink-0 z-50"
+                style={{ marginRight: "-2px", marginLeft: "-2px" }}
+              />
+            </>
+          )}
+          <NodeCanvasInner onCodeChange={onCodeChange} onFlowChange={onFlowChange} allowedNodeTypes={allowedNodeTypes} readOnly={readOnly} canvasRef={ref} />
         </div>
       </ReactFlowProvider>
     );

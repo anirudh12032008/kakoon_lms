@@ -1,11 +1,16 @@
 import { Router } from "express";
-import { requireAuth } from "../../middleware/auth";
+import { optionalAuth, requireAuth } from "../../middleware/auth";
 import {
   getCourseProject, saveCourseProject,
   listProjects, getProject, createProject, updateProject, deleteProject,
+  getSharedProject,
 } from "./projects.controller";
 
 export const projectsRouter = Router();
+
+// Public, read-only share link — registered BEFORE requireAuth so anyone can
+// open it. optionalAuth still lets the author be recognized for edit access.
+projectsRouter.get("/shared/:slug", optionalAuth, getSharedProject);
 
 projectsRouter.use(requireAuth);
 

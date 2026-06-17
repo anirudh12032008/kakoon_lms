@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Node, Edge } from "@xyflow/react";
 import { useModal } from "@/shared/context/ModalContext";
@@ -40,9 +40,19 @@ export type ViewMode = "blocks" | "split" | "code" | "hardware";
 interface EditorPageProps {
   launchContext?: EditorLaunchContext;
   onBackToDashboard?: () => void;
+  /** View-only shared session — no palette, no editing, no persistence. */
+  readOnly?: boolean;
+  /** Author label shown in read-only mode ("Created by …"). */
+  sharedAuthorName?: string;
+  /** Workspace + code to inject when viewing a shared project read-only. */
+  initialWorkspace?: { nodes: Node[]; edges: Edge[] };
+  initialCode?: string;
 }
 
-export default function EditorPage({ launchContext, onBackToDashboard }: EditorPageProps) {
+export default function EditorPage({
+  launchContext, onBackToDashboard,
+  readOnly = false, sharedAuthorName, initialWorkspace, initialCode,
+}: EditorPageProps) {
   const canvasRef = useRef<NodeCanvasRef>(null);
   const prevBlocksNodesRef = useRef<Node[]>([]);
 
@@ -91,21 +101,34 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
   const isProjectSession = !courseSlug && !!activeProjectId;
 
   useDraft({
-    canvasRef, enabled: !courseSlug && !activeProjectId, isLoadingDraft, setIsLoadingDraft,
+    canvasRef, enabled: !readOnly && !courseSlug && !activeProjectId, isLoadingDraft, setIsLoadingDraft,
     generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
     setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
   });
 
   const { syncState } = useCourseSync({
-    canvasRef, courseSlug, isLoadingDraft, setIsLoadingDraft,
+    canvasRef, courseSlug: readOnly ? undefined : courseSlug, isLoadingDraft, setIsLoadingDraft,
     generatedCode, editableCode,
   });
 
   const project = useProject({
-    canvasRef, enabled: !courseSlug, isLoadingDraft, setIsLoadingDraft, launchContext,
+    canvasRef, enabled: !readOnly && !courseSlug, isLoadingDraft, setIsLoadingDraft, launchContext,
     generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
     setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
   });
+
+  // Read-only shared view: inject the provided workspace once the canvas mounts.
+  useEffect(() => {
+    if (!readOnly || !initialWorkspace) { if (readOnly) setIsLoadingDraft(false); return; }
+    if (initialCode) { setGeneratedCode(initialCode); setEditableCode(initialCode); }
+    const apply = (attempt: number) => {
+      if (canvasRef.current) canvasRef.current.setWorkspace(initialWorkspace);
+      else if (attempt < 40) setTimeout(() => apply(attempt + 1), 50);
+    };
+    apply(0);
+    setIsLoadingDraft(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readOnly]);
 
   // Save / rename the current sandbox as a named project on the user's account.
   const handleSaveProject = useCallback(async () => {
@@ -117,6 +140,23 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
     const name = await prompt("Save project as", launchContext?.title ?? "My project");
     if (name && name.trim()) await project.saveAsNew(name);
   }, [isProjectSession, project, prompt, launchContext]);
+
+  // Copy a public share link for the active project (saving first if needed).
+  const [shareCopied, setShareCopied] = useState(false);
+  const handleShareProject = useCallback(async () => {
+    let slug = project.projectSlug;
+    if (!isProjectSession || !slug) {
+      const name = await prompt("Name this project to share", launchContext?.title ?? "My project");
+      if (!name || !name.trim()) return;
+      await project.saveAsNew(name);
+      slug = useProjectStore.getState().activeProjectSlug;
+    }
+    if (!slug) return;
+    const url = `${window.location.origin}/p/${slug}`;
+    try { await navigator.clipboard.writeText(url); } catch { /* clipboard blocked */ }
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  }, [project, isProjectSession, prompt, launchContext]);
 
   // ── Course missions (auto-tracked levels & challenges) ───────────────────────
   const missions = useCourseMissions(courseSlug);
@@ -412,8 +452,12 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
         syncState={syncState}
         projectSyncState={isProjectSession ? project.syncState : undefined}
         projectName={isProjectSession ? project.projectName : undefined}
-        canSaveProject={!courseSlug}
+        canSaveProject={!courseSlug && !readOnly}
         onSaveProject={handleSaveProject}
+        onShareProject={readOnly ? undefined : handleShareProject}
+        shareCopied={shareCopied}
+        readOnly={readOnly}
+        sharedAuthorName={sharedAuthorName}
         showTutorialsCatalog={tutorial.showTutorialsCatalog}
         onToggleTutorials={() => tutorial.setShowTutorialsCatalog(!tutorial.showTutorialsCatalog)}
         onBackToDashboard={onBackToDashboard}
@@ -469,6 +513,7 @@ export default function EditorPage({ launchContext, onBackToDashboard }: EditorP
             onFlowChange={handleFlowChange}
             allowedCategories={launchRestrictions.allowedCategories}
             allowedNodeTypes={launchRestrictions.allowedNodeTypes}
+            readOnly={readOnly}
           />
         </div>
 

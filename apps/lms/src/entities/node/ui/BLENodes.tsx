@@ -40,6 +40,7 @@ export function BLEModeNode() {
   const [cmdMap,      setCmdMap]      = useNodeField<typeof DEFAULT_CMDS>("cmdMap", DEFAULT_CMDS);
   const [txVarName,   setTxVarName]   = useNodeField<string>("txVarName",   "ble_tx");
   const [enableTx,    setEnableTx]    = useNodeField<boolean>("enableTx",   false);
+  const [logCmds,     setLogCmds]     = useNodeField<boolean>("logCmds",    false);
   const isAdvanced = useAdvancedMode();
 
   const addCmd = () => setCmdMap([...cmdMap, { trigger: "", varName: "", value: "" }]);
@@ -96,6 +97,17 @@ export function BLEModeNode() {
             <div className="text-[9px] text-[var(--k-dim)] text-center py-2">No commands yet</div>
           )}
         </div>
+
+        {/* Log received commands to the serial terminal */}
+        <div className="flex items-center justify-between mt-2">
+          <span className="text-[10px] font-semibold text-[var(--k-text)]">Log to terminal</span>
+          <ToggleInput value={logCmds} onChange={setLogCmds} leftLabel="Off" rightLabel="On" />
+        </div>
+        {logCmds && (
+          <p className="text-[9px] text-[var(--k-dim)] mt-1 leading-relaxed">
+            Prints each command to the serial monitor only when one is received.
+          </p>
+        )}
       </div>
 
       <div className="mx-3 my-1 border-t border-[var(--k-base-300)]" />

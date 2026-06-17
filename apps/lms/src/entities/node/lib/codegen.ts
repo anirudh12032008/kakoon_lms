@@ -33,7 +33,7 @@ interface NodeData {
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
   customChars?: boolean[][][]; cursorBlink?: boolean; cursorUnderline?: boolean;
-  colon?: boolean; tempVar?: string; humVar?: string;
+  colon?: boolean; tempVar?: string; humVar?: string; logCmds?: boolean;
   animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
@@ -1234,24 +1234,32 @@ time.sleep(0.1)`);
         // least one command actually does something (otherwise the block was
         // just an empty `if ble_data is not None:` followed by the clear line).
         chunkLines.push(`${indent}# BLE: process received data`);
-        if (bleCmdMap && bleCmds.length > 0) {
+        const bleLog = d.logCmds ?? false;
+        {
           const cmdBody: string[] = [];
-          for (let ci = 0; ci < bleCmds.length; ci++) {
-            const cmd = bleCmds[ci];
-            if (!cmd.trigger) continue;
-            const branchLines = getBranchLines(`cmd_${ci}`, indentLevel + 2);
-            if (branchLines.length > 0) {
-              // Has wired nodes — run them when the command matches.
-              cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
-              cmdBody.push(...branchLines);
-            } else if (cmd.varName) {
-              // No wired nodes but a target variable — assign it.
-              const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
-              cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": ${cmd.varName} = ${val}`);
-            } else {
-              // Nothing wired and no variable — at least report it on the terminal
-              // so the command is observable instead of silently doing nothing.
-              cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": print("BLE: received ${cmd.trigger}")`);
+          // Log every received command first — only runs inside the
+          // `is not None` guard below, so it never spams "None".
+          if (bleLog) {
+            cmdBody.push(`${indent}    print("BLE RX:", ${bleRawVar})`);
+          }
+          if (bleCmdMap && bleCmds.length > 0) {
+            for (let ci = 0; ci < bleCmds.length; ci++) {
+              const cmd = bleCmds[ci];
+              if (!cmd.trigger) continue;
+              const branchLines = getBranchLines(`cmd_${ci}`, indentLevel + 2);
+              if (branchLines.length > 0) {
+                // Has wired nodes — run them when the command matches.
+                cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
+                cmdBody.push(...branchLines);
+              } else if (cmd.varName) {
+                // No wired nodes but a target variable — assign it.
+                const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
+                cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": ${cmd.varName} = ${val}`);
+              } else if (!bleLog) {
+                // Nothing wired and no variable — report it on the terminal so the
+                // command is observable (skipped when the log toggle already prints it).
+                cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": print("BLE: received ${cmd.trigger}")`);
+              }
             }
           }
           if (cmdBody.length > 0) {
@@ -1261,8 +1269,6 @@ time.sleep(0.1)`);
           } else {
             chunkLines.push(`${indent}# ${bleRawVar} contains last received string (or None)`);
           }
-        } else {
-          chunkLines.push(`${indent}# ${bleRawVar} contains last received string (or None)`);
         }
 
         // TX notify

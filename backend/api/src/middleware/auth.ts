@@ -31,3 +31,20 @@ export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
   if (req.user?.role !== "admin") return next(ApiError.forbidden("Admin only"));
   next();
 }
+
+/**
+ * Attaches req.user when a valid Bearer token is present, but never rejects.
+ * Used by public routes that behave differently for the resource owner
+ * (e.g. a shared project the author can open in edit mode).
+ */
+export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
+  const header = req.headers.authorization;
+  if (header?.startsWith("Bearer ")) {
+    try {
+      req.user = verifyAccessToken(header.slice(7));
+    } catch {
+      /* ignore invalid/expired token — treat as anonymous */
+    }
+  }
+  next();
+}

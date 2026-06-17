@@ -53,7 +53,7 @@ function parseOrThrow<T>(schema: z.ZodSchema<T>, body: unknown): T {
 /** List the current user's standalone projects (lightweight, newest first). */
 export const listProjects = asyncHandler(async (req: Request, res: Response) => {
   const projects = await Project.find({ user: req.user!.sub, course: null })
-    .select("name code updatedAt createdAt")
+    .select("name slug code updatedAt createdAt")
     .sort({ updatedAt: -1 });
   res.json({ projects: projects.map((p) => p.toJSON()) });
 });
@@ -102,6 +102,34 @@ export const deleteProject = asyncHandler(async (req: Request, res: Response) =>
   const project = await Project.findOneAndDelete({ _id: req.params.id, user: req.user!.sub });
   if (!project) throw ApiError.notFound("Project not found");
   res.json({ ok: true });
+});
+
+/**
+ * Public, read-only view of a shared project by slug. Anyone with the link can
+ * see it; `canEdit` is true only when the viewer is the author (compared by the
+ * authenticated user's email), which lets the author open it in edit mode.
+ */
+export const getSharedProject = asyncHandler(async (req: Request, res: Response) => {
+  const project = await Project.findOne({ slug: req.params.slug, course: null })
+    .populate<{ user: { name: string; email: string } }>("user", "name email");
+  if (!project) throw ApiError.notFound("Shared project not found");
+
+  const author = project.user as unknown as { name?: string; email?: string } | null;
+  const canEdit = !!req.user?.email && !!author?.email && req.user.email === author.email;
+
+  res.json({
+    project: {
+      id: project._id,
+      slug: project.slug,
+      name: project.name,
+      workspace: project.workspace,
+      code: project.code,
+      meta: project.meta,
+      updatedAt: project.get("updatedAt"),
+    },
+    authorName: author?.name ?? "Unknown",
+    canEdit,
+  });
 });
 
 /** Get the current user's saved workspace for a course (null if none yet). */

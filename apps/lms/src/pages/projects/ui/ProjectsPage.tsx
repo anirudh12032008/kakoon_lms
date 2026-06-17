@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { FolderOpen, Pencil, Plus, Trash2, Clock, Loader2 } from "lucide-react";
+import { FolderOpen, Pencil, Plus, Trash2, Clock, Loader2, Share2, Check } from "lucide-react";
 import { apiErrorMessage } from "@/shared/api/client";
 import {
-  listProjects, getProject, renameProject, deleteProject,
+  listProjects, getProject, renameProject, deleteProject, shareUrl,
   type ProjectSummary,
 } from "@/shared/api/projects";
 import { useModal } from "@/shared/context/ModalContext";
@@ -41,6 +41,7 @@ export function ProjectsPage() {
   const [projects, setProjects] = useState<ProjectSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
+  const [sharedId, setSharedId] = useState<string | null>(null);
 
   const load = () => {
     listProjects()
@@ -84,6 +85,13 @@ export function ProjectsPage() {
     } catch (e) {
       setError(apiErrorMessage(e, "Could not rename project"));
     }
+  };
+
+  const handleShare = async (p: ProjectSummary) => {
+    if (!p.slug) { setError("This project has no share link yet — open and re-save it."); return; }
+    try { await navigator.clipboard.writeText(shareUrl(p.slug)); } catch { /* clipboard blocked */ }
+    setSharedId(p.id);
+    setTimeout(() => setSharedId((cur) => (cur === p.id ? null : cur)), 2000);
   };
 
   const handleDelete = async (p: ProjectSummary) => {
@@ -171,6 +179,13 @@ export function ProjectsPage() {
                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       : <FolderOpen className="h-3.5 w-3.5" />}
                     Open
+                  </button>
+                  <button
+                    onClick={() => handleShare(p)}
+                    title="Copy share link"
+                    className={`btn btn-ghost btn-sm px-2 ${sharedId === p.id ? "text-success-c" : "text-sub"}`}
+                  >
+                    {sharedId === p.id ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
                   </button>
                   <button onClick={() => handleRename(p)} title="Rename" className="btn btn-ghost btn-sm px-2 text-sub">
                     <Pencil className="h-4 w-4" />

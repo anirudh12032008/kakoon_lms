@@ -1,4 +1,15 @@
+import { randomBytes } from "node:crypto";
 import { Schema, model, type InferSchemaType } from "mongoose";
+
+/** Build a URL-safe, shareable slug from a project name plus a random suffix. */
+export function makeProjectSlug(name: string): string {
+  const base = (name || "project")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "project";
+  return `${base}-${randomBytes(4).toString("hex")}`;
+}
 
 /**
  * A saved editor workspace belonging to a user, optionally tied to a course.
@@ -8,6 +19,8 @@ const projectSchema = new Schema(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true, index: true },
     course: { type: Schema.Types.ObjectId, ref: "Course", default: null, index: true },
+    // Shareable, auto-generated identifier for the public view link.
+    slug: { type: String, unique: true, sparse: true, index: true },
     name: { type: String, required: true, trim: true, maxlength: 120 },
     // ReactFlow workspace: { nodes: [...], edges: [...] }
     workspace: { type: Schema.Types.Mixed, required: true },
@@ -19,6 +32,14 @@ const projectSchema = new Schema(
   },
   { timestamps: true }
 );
+
+// Auto-assign a shareable slug to standalone projects that don't have one yet.
+projectSchema.pre("validate", function assignSlug(next) {
+  if (!this.slug && this.course == null) {
+    this.slug = makeProjectSlug(this.name as string);
+  }
+  next();
+});
 
 projectSchema.set("toJSON", {
   transform: (_doc, ret) => {

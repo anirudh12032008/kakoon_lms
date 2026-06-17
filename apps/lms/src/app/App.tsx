@@ -16,6 +16,7 @@ import { CourseDetailPage } from "@/pages/courses/ui/CourseDetailPage";
 import { useLaunchStore } from "@/shared/launch/launchStore";
 import { useProjectStore } from "@/shared/launch/projectStore";
 import { ProjectsPage } from "@/pages/projects/ui/ProjectsPage";
+import { SharedProjectPage } from "@/pages/projects/ui/SharedProjectPage";
 
 const EditorLaunchDashboard = lazy(() =>
   import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard }))
@@ -100,6 +101,9 @@ export default function App() {
         <XpToastHost />
         <ErrorToastHost />
         <Routes>
+          {/* Public — shared project view link (works for guests and authed users) */}
+          <Route path="/p/:slug" element={<SharedProjectPage />} />
+
           {/* Guest-only */}
           <Route element={<GuestOnlyRoute />}>
             <Route path="/login" element={<LoginPage />} />

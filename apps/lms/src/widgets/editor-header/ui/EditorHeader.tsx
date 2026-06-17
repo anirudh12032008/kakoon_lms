@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles,
   GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2, MoreHorizontal,
-  Save, Pencil,
+  Save, Pencil, Share2, Eye, User,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
@@ -27,6 +27,13 @@ interface EditorHeaderProps {
   canSaveProject?: boolean;
   /** Save the current workspace as a project, or rename the active one. */
   onSaveProject?: () => void;
+  /** Copy a public share link for the project. */
+  onShareProject?: () => void;
+  /** Transient "Copied!" feedback for the share button. */
+  shareCopied?: boolean;
+  /** View-only shared session — hides editing actions, shows author label. */
+  readOnly?: boolean;
+  sharedAuthorName?: string;
   showTutorialsCatalog: boolean;
   onToggleTutorials: () => void;
   onBackToDashboard?: () => void;
@@ -141,6 +148,7 @@ export function EditorHeader({
   viewMode, setViewMode, setIsEditing,
   launchContext, isCourse, syncState,
   projectSyncState, projectName, canSaveProject, onSaveProject,
+  onShareProject, shareCopied, readOnly, sharedAuthorName,
   showTutorialsCatalog, onToggleTutorials, onBackToDashboard,
   onSaveAsTutorial, onExportProject, onImportProject,
 }: EditorHeaderProps) {
@@ -174,12 +182,28 @@ export function EditorHeader({
       <div className="hidden flex-1 items-center justify-center px-2 md:flex min-w-0">
         <div className="flex max-w-[42rem] items-center gap-2 rounded-full px-3 py-1.5 bg-raised border border-subtle">
           {isCourse && <GraduationCap className="h-3.5 w-3.5 text-primary-c shrink-0" />}
-          <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px] text-hint">
-            {projectName ? "project" : launchType}
-          </span>
-          <span className="text-xs font-semibold truncate text-body">{projectName || title}</span>
-          {isCourse && syncState && <SyncIndicator state={syncState} />}
-          {!isCourse && projectName && projectSyncState && <SyncIndicator state={projectSyncState} />}
+          {readOnly ? (
+            <>
+              <span className="badge badge-ghost badge-sm gap-1 text-[10px] text-hint">
+                <Eye className="h-3 w-3" /> View only
+              </span>
+              <span className="text-xs font-semibold truncate text-body">{title}</span>
+              {sharedAuthorName && (
+                <span className="flex items-center gap-1 rounded-full border border-subtle bg-raised px-2.5 py-1 text-[11px] font-semibold text-sub">
+                  <User className="h-3 w-3" /> Created by {sharedAuthorName}
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px] text-hint">
+                {projectName ? "project" : launchType}
+              </span>
+              <span className="text-xs font-semibold truncate text-body">{projectName || title}</span>
+              {isCourse && syncState && <SyncIndicator state={syncState} />}
+              {!isCourse && projectName && projectSyncState && <SyncIndicator state={projectSyncState} />}
+            </>
+          )}
         </div>
       </div>
 
@@ -224,6 +248,17 @@ export function EditorHeader({
           >
             {projectName ? <Pencil className="h-4 w-4" /> : <Save className="h-4 w-4" />}
             <span className="hidden lg:inline text-xs">{projectName ? "Rename" : "Save"}</span>
+          </button>
+        )}
+
+        {onShareProject && (
+          <button
+            onClick={onShareProject}
+            className={`btn btn-ghost btn-sm gap-1.5 ${shareCopied ? "text-success-c" : "text-sub"}`}
+            title="Copy a public share link"
+          >
+            {shareCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+            <span className="hidden lg:inline text-xs">{shareCopied ? "Copied!" : "Share"}</span>
           </button>
         )}
 

@@ -21,6 +21,7 @@ export interface ProjectMeta {
 export interface ProjectSummary {
   id: string;
   name: string;
+  slug?: string;
   code?: string;
   createdAt: string;
   updatedAt: string;
@@ -77,4 +78,32 @@ export async function renameProject(id: string, name: string): Promise<void> {
 
 export async function deleteProject(id: string): Promise<void> {
   await api.delete(`/projects/${id}`);
+}
+
+// ── Public sharing ─────────────────────────────────────────────────────────
+
+export interface SharedProject {
+  project: {
+    id: string;
+    slug: string;
+    name: string;
+    workspace: ProjectWorkspace;
+    code?: string;
+    meta: ProjectMeta | null;
+    updatedAt: string;
+  };
+  authorName: string;
+  /** True only when the signed-in viewer is the author (can open in edit mode). */
+  canEdit: boolean;
+}
+
+/** Fetch a shared project by its slug (public — works for guests too). */
+export async function getSharedProject(slug: string): Promise<SharedProject> {
+  const { data } = await api.get<SharedProject>(`/projects/shared/${slug}`);
+  return data;
+}
+
+/** Build the public, shareable URL for a project slug. */
+export function shareUrl(slug: string): string {
+  return `${window.location.origin}/p/${slug}`;
 }
