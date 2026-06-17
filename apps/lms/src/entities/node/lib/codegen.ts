@@ -50,6 +50,7 @@ interface NodeData {
   leftSpeed?: number; rightSpeed?: number; leftDir?: string; rightDir?: string;
   l1speed?: number; l2speed?: number; r1speed?: number; r2speed?: number;
   l1dir?: string; l2dir?: string; r1dir?: string; r2dir?: string;
+  l1en?: boolean; l2en?: boolean; r1en?: boolean; r2en?: boolean;
   move?: string;
   // Motor custom GPIO overrides
   useCustomPins?: boolean;
@@ -1115,7 +1116,12 @@ time.sleep(0.1)`);
           R2: { pwm: d.r2PwmPin ?? MOTORS.rearRight.pwm,  dir: d.r2DirPin ?? MOTORS.rearRight.dir  },
         };
         if (!d.useCustomPins) emitOnce("drv8833_class", DRV8833_HELPER);
+        // Per-port enable flags — a disabled motor is explicitly stopped, never driven
+        const portEnabled: Record<string, boolean> = {
+          L1: d.l1en ?? true, L2: d.l2en ?? true, R1: d.r1en ?? true, R2: d.r2en ?? true,
+        };
         const makeMotorCall = (port: string, speed: number, dir: string) => {
+          if (!(portEnabled[port] ?? true)) dir = "Coast"; // disabled → coast/stop
           const t = ((dir === "Reverse" ? -speed : speed) / 100).toFixed(2);
           if (d.useCustomPins) {
             const cp = portToCustomPins[port] ?? portToCustomPins["L1"];
@@ -1142,7 +1148,8 @@ time.sleep(0.1)`);
           const speeds = [d.l1speed ?? 50, d.l2speed ?? 50, d.r1speed ?? 50, d.r2speed ?? 50];
           const dirs   = [d.l1dir ?? "Forward", d.l2dir ?? "Forward", d.r1dir ?? "Forward", d.r2dir ?? "Forward"];
           for (let i = 0; i < 4; i++) {
-            chunkLines.push(`${indent}${makeMotorCall(ports[i], speeds[i], dirs[i])}  # ${ports[i]}`);
+            const off = !(portEnabled[ports[i]] ?? true);
+            chunkLines.push(`${indent}${makeMotorCall(ports[i], speeds[i], dirs[i])}  # ${ports[i]}${off ? " (disabled)" : ""}`);
           }
         }
         break;
