@@ -356,18 +356,12 @@ export function MultiMotorControllerNode() {
 
   return (
     <BaseNode title="Multi-Motor Controller" color={COLORS.red} icon={<MotorIcon />} width="270px">
-      <div className="px-3 pt-1 pb-1 flex items-center gap-2">
-        <div className="flex-1">
-          <NodeField label="Sync all">
-            <ToggleInput value={syncMode} onChange={setSyncMode} leftLabel="Indep." rightLabel="Sync" />
-          </NodeField>
-        </div>
-        <div className="flex-1">
-          <NodeField label="View">
-            <ToggleInput value={pairMode} onChange={setPairMode} leftLabel="4-motor" rightLabel="L/R" />
-          </NodeField>
-        </div>
-      </div>
+      <NodeField label="Sync all">
+        <ToggleInput value={syncMode} onChange={setSyncMode} leftLabel="Indep." rightLabel="Sync" />
+      </NodeField>
+      <NodeField label="View">
+        <ToggleInput value={pairMode} onChange={setPairMode} leftLabel="4-motor" rightLabel="L/R" />
+      </NodeField>
 
       {pairMode && !syncMode ? (
         <>
