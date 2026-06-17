@@ -174,7 +174,7 @@ export function CodePanel({
       </div>
 
       {/* Code area */}
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 min-h-0 flex flex-col overflow-auto">
         {isEditing ? (
           <CodeMirror
             value={editableCode}
@@ -193,7 +193,7 @@ export function CodePanel({
               autocompletion: false,
               foldGutter: false,
             }}
-            className="h-full text-xs"
+            className="flex-1 min-h-0 h-full text-xs"
           />
         ) : (
           <div className="flex min-h-full">
