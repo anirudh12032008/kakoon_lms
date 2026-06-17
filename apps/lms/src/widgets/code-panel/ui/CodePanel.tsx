@@ -1,5 +1,40 @@
 import { Code2, Lock, Pencil } from "lucide-react";
+import CodeMirror from "@uiw/react-codemirror";
+import { python } from "@codemirror/lang-python";
+import { EditorView } from "@codemirror/view";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
+
+// CodeMirror theme bound to the app's CSS color tokens so the editor matches the
+// rest of the panel (and follows light/dark automatically via the same vars).
+const cmTheme = EditorView.theme({
+  "&": {
+    backgroundColor: "transparent",
+    color: "var(--k-body, #d4d4d4)",
+    fontSize: "12px",
+    height: "100%",
+  },
+  ".cm-content": {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace",
+    padding: "16px 0",
+  },
+  ".cm-scroller": { lineHeight: "1.5", overflow: "auto" },
+  "&.cm-focused": { outline: "none" },
+  ".cm-gutters": {
+    backgroundColor: "transparent",
+    color: "var(--k-hint, #6b7280)",
+    border: "none",
+  },
+  ".cm-activeLine": { backgroundColor: "var(--k-hover, rgba(255,255,255,0.04))" },
+  ".cm-activeLineGutter": { backgroundColor: "transparent", color: "var(--k-sub, #9ca3af)" },
+  ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--k-primary, #60a5fa)" },
+  "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection": {
+    backgroundColor: "var(--k-primary-tint, rgba(96,165,250,0.25))",
+  },
+  ".cm-matchingBracket": {
+    backgroundColor: "var(--k-primary-tint, rgba(96,165,250,0.2))",
+    outline: "1px solid var(--k-primary, #60a5fa)",
+  },
+}, { dark: true });
 
 // ── Syntax Highlighting ────────────────────────────────────────────────────────
 
@@ -123,12 +158,24 @@ export function CodePanel({
       {/* Code area */}
       <div className="flex-1 overflow-auto">
         {isEditing ? (
-          <textarea
-            className="w-full h-full bg-transparent p-4 font-mono text-xs leading-6 text-body outline-none resize-none placeholder:text-hint"
+          <CodeMirror
             value={editableCode}
-            onChange={(e) => onEditableCodeChange(e.target.value)}
+            onChange={onEditableCodeChange}
+            height="100%"
+            theme={cmTheme}
+            extensions={[python(), EditorView.lineWrapping]}
             placeholder="# Write your Python code here"
-            spellCheck={false}
+            basicSetup={{
+              lineNumbers: true,
+              highlightActiveLine: true,
+              highlightActiveLineGutter: true,
+              bracketMatching: true,
+              closeBrackets: true,
+              indentOnInput: true,
+              autocompletion: false,
+              foldGutter: false,
+            }}
+            className="h-full text-xs"
           />
         ) : (
           <div className="flex min-h-full">
