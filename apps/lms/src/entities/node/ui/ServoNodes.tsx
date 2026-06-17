@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNodes } from "@xyflow/react";
 import {
   BaseNode,
@@ -10,7 +10,7 @@ import {
   useNodeField,
   AdvancedSection,
 } from "./BaseNode";
-import { AngleDial, MotorIcon } from "./_shared";
+import { AngleDial, MotorIcon, SmoothSlider, SpeedVarInput } from "./_shared";
 import { SERVO_MODELS, SERVO_MODEL_ORDER } from "@/entities/board";
 import type { ServoModelId, ServoType } from "@/entities/board";
 
@@ -59,22 +59,33 @@ function ServoModelFields({
 }
 
 // Continuous-rotation (360°) speed slider: -100…100, 0 = stop.
-function ContinuousSpeed({ speed, onChange, color }: { speed: number; onChange: (v: number) => void; color: string }) {
+// `speedVar` optionally binds the speed to a runtime variable (slider becomes a
+// dimmed default while the variable drives the value).
+function ContinuousSpeed({ speed, onChange, color, speedVar, onVarChange }: {
+  speed: number; onChange: (v: number) => void; color: string;
+  speedVar?: string; onVarChange?: (v: string) => void;
+}) {
+  const [disp, setDisp] = useState(speed);
+  useEffect(() => { setDisp(speed); }, [speed]);
+  const usingVar = !!speedVar?.trim();
+  const liveLabel = usingVar
+    ? speedVar!.trim()
+    : (disp === 0 ? "STOP" : disp > 0 ? `+${disp}%` : `${disp}%`);
   return (
     <div className="px-3 py-1">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-        <span className="text-[10px] font-mono text-[var(--k-warning)]">
-          {speed === 0 ? "STOP" : speed > 0 ? `+${speed}%` : `${speed}%`}
+        <span className="text-[10px] font-mono" style={{ color: usingVar ? "#22d3ee" : "var(--k-warning)" }}>
+          {liveLabel}
         </span>
       </div>
-      <input type="range" min={-100} max={100} step={5} value={speed}
-        onChange={e => onChange(Number(e.target.value))}
-        className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: color }} />
+      <SmoothSlider value={speed} onChange={onChange} onLiveChange={setDisp}
+        min={-100} max={100} step={5} color={color} disabled={usingVar} />
       <div className="flex justify-between mt-0.5">
         <span className="text-[8px] text-[var(--k-dim)]">← Reverse</span>
         <span className="text-[8px] text-[var(--k-dim)]">Forward →</span>
       </div>
+      {onVarChange && <SpeedVarInput value={speedVar ?? ""} onChange={onVarChange} />}
     </div>
   );
 }
@@ -100,6 +111,7 @@ export function ServoMotorNode() {
   const [servoType, setServoType]   = useNodeField<ServoType>("servoType", "180");
   const [angle, setAngle]           = useNodeField<number | string>("angle", 90);
   const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 0);
+  const [contSpeedVar, setContSpeedVar] = useNodeField<string>("contSpeedVar", "");
   const angleNum = Number(angle);
   const dialAngle = Number.isFinite(angleNum) ? Math.max(0, Math.min(180, angleNum)) : 90;
   return (
@@ -112,7 +124,7 @@ export function ServoMotorNode() {
         <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
       </AdvancedSection>
       {servoType === "360"
-        ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} />
+        ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} speedVar={contSpeedVar} onVarChange={setContSpeedVar} />
         : (
           <>
             <AngleDial angle={dialAngle} onChange={setAngle} color={SERVO_PRIMARY} />
@@ -135,9 +147,12 @@ export function ServoMotorAdvanceNode() {
   const [speed, setSpeed]           = useNodeField<number>("speed", 50);
   const [steps, setSteps]           = useNodeField<number>("steps", 10);
   const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 60);
+  const [contSpeedVar, setContSpeedVar] = useNodeField<string>("contSpeedVar", "");
   const [sweepPeriod, setSweepPeriod] = useNodeField<number>("sweepPeriod", 1000);
+  const [sweepSpeedDisp, setSweepSpeedDisp] = useState(speed);
   const [bounce, setBounce]         = useNodeField<boolean>("bounce", false);
   const [loop, setLoop]             = useNodeField<boolean>("loop", false);
+  useEffect(() => { setSweepSpeedDisp(speed); }, [speed]);
 
   return (
     <BaseNode title="Servo Sweep" color={SERVO_PRIMARY} icon={<MotorIcon />} width="240px">
@@ -152,7 +167,7 @@ export function ServoMotorAdvanceNode() {
       {servoType === "360" ? (
         <>
           {/* Continuous servo: oscillate forward ↔ reverse */}
-          <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} />
+          <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} speedVar={contSpeedVar} onVarChange={setContSpeedVar} />
           <NodeField label="Period (ms)"><NumberInput value={sweepPeriod} onChange={setSweepPeriod} /></NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
             <p className="text-[9px] text-[var(--k-muted)]">Oscillates {Math.abs(contSpeed)}% forward then reverse, {sweepPeriod}ms each way.</p>
@@ -175,11 +190,10 @@ export function ServoMotorAdvanceNode() {
           <div className="px-3 pb-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-              <span className="text-[10px] font-mono text-[var(--k-warning)]">{speed}%</span>
+              <span className="text-[10px] font-mono text-[var(--k-warning)]">{sweepSpeedDisp}%</span>
             </div>
-            <input type="range" min={1} max={100} step={1} value={speed}
-              onChange={e => setSpeed(Number(e.target.value))}
-              className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: SERVO_PRIMARY }} />
+            <SmoothSlider value={speed} onChange={setSpeed} onLiveChange={setSweepSpeedDisp}
+              min={1} max={100} step={1} color={SERVO_PRIMARY} />
           </div>
 
           {/* Bounce & Loop toggles */}
@@ -217,6 +231,7 @@ export function ServoControllerNode() {
   const [sweepMax, setSweepMax]     = useNodeField<number>("sweepMax", 180);
   const [sweepPeriod, setSweepPeriod] = useNodeField<number>("sweepPeriod", 1000);
   const [contSpeed, setContSpeed]   = useNodeField<number>("contSpeed", 50);
+  const [contSpeedVar, setContSpeedVar] = useNodeField<string>("contSpeedVar", "");
   const [pulseMin, setPulseMin]     = useNodeField<number>("pulseMin", 600);
   const [pulseMax, setPulseMax]     = useNodeField<number>("pulseMax", 2400);
 
@@ -268,21 +283,8 @@ export function ServoControllerNode() {
       )}
 
       {servoType === "360" && (
-        <div className="px-3 py-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-            <span className="text-[10px] font-mono text-[var(--k-warning)]">
-              {contSpeed === 0 ? "STOP" : contSpeed > 0 ? `+${contSpeed}%` : `${contSpeed}%`}
-            </span>
-          </div>
-          <input type="range" min={-100} max={100} step={5} value={contSpeed}
-            onChange={e => setContSpeed(Number(e.target.value))}
-            className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: SERVO_PRIMARY }} />
-          <div className="flex justify-between mt-0.5">
-            <span className="text-[8px] text-[var(--k-dim)]">← Reverse</span>
-            <span className="text-[8px] text-[var(--k-dim)]">Forward →</span>
-          </div>
-        </div>
+        <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY}
+          speedVar={contSpeedVar} onVarChange={setContSpeedVar} />
       )}
 
       {servoType === "180" && mode === "sweep" && (

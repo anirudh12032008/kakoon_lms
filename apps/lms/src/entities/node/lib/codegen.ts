@@ -44,6 +44,11 @@ interface NodeData {
   steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
   sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
   bounce?: boolean; loop?: boolean;
+  // Speed variable bindings — when set, codegen emits the variable name instead
+  // of the literal so the speed can be changed dynamically at runtime.
+  speedVar?: string; contSpeedVar?: string;
+  l1speedVar?: string; l2speedVar?: string; r1speedVar?: string; r2speedVar?: string;
+  leftSpeedVar?: string; rightSpeedVar?: string;
   // Motors
   motorPort?: string; direction?: string;
   syncMode?: boolean; pairMode?: boolean;
@@ -121,6 +126,27 @@ function asFiniteNumber(value: unknown): number | undefined {
     if (Number.isFinite(n)) return n;
   }
   return undefined;
+}
+
+/** Trimmed variable name if one is bound, else null. */
+function speedVarName(varName: unknown): string | null {
+  return typeof varName === "string" && varName.trim() ? varName.trim() : null;
+}
+
+/** A raw speed percentage as a Python expression (variable wins over literal). */
+function speedPyExpr(num: unknown, varName: unknown, fallback: number): string {
+  return speedVarName(varName) ?? String(asFiniteNumber(num) ?? fallback);
+}
+
+/**
+ * A speed as a throttle expression (value / 100). A bound variable stays dynamic
+ * as `(name / 100)`; a literal is precomputed to a float. `negate` flips the sign.
+ */
+function throttlePyExpr(num: unknown, varName: unknown, fallback: number, negate = false): string {
+  const v = speedVarName(varName);
+  if (v) return negate ? `(-${v} / 100)` : `(${v} / 100)`;
+  const n = (asFiniteNumber(num) ?? fallback) * (negate ? -1 : 1);
+  return (n / 100).toFixed(2);
 }
 
 /**
@@ -811,7 +837,7 @@ time.sleep(0.1)`);
         // Re-create the servo with the selected model's pulse range.
         chunkLines.push(`${indent}${sv1} = Servo(${SERVO_PIN_MAP[smPort] ?? 21}, mn=${smModel.pulseMin}, mx=${smModel.pulseMax})  # ${smModel.label}`);
         if (d.servoType === "360") {
-          const spd = d.contSpeed ?? 0;
+          const spd = speedPyExpr(d.contSpeed, d.contSpeedVar, 0);
           chunkLines.push(`${indent}${sv1}.speed(${spd})  # ${smPort} 360° continuous ${spd}%`);
         } else {
           const smAngleExpr = asPyExpr(d.angle, "90");
@@ -832,11 +858,13 @@ time.sleep(0.1)`);
         chunkLines.push(`${indent}${sv2} = Servo(${SERVO_PIN_MAP[swPort] ?? 21}, mn=${swModel.pulseMin}, mx=${swModel.pulseMax})  # ${swModel.label}`);
         if (d.servoType === "360") {
           // Continuous-rotation servo: oscillate forward then reverse.
-          const swSpeed  = Math.abs(d.contSpeed ?? 60);
+          const swVar    = speedVarName(d.contSpeedVar);
+          const swSpeed     = swVar ? `abs(${swVar})`  : String(Math.abs(asFiniteNumber(d.contSpeed) ?? 60));
+          const swSpeedNeg  = swVar ? `-abs(${swVar})` : String(-Math.abs(asFiniteNumber(d.contSpeed) ?? 60));
           const swPeriod = Math.max(5, d.sweepPeriod ?? 1000);
           chunkLines.push(`${indent}# Oscillate ${swPort}: ±${swSpeed}% every ${swPeriod}ms`);
           chunkLines.push(`${indent}${sv2}.speed(${swSpeed}); time.sleep_ms(${swPeriod})`);
-          chunkLines.push(`${indent}${sv2}.speed(${-swSpeed}); time.sleep_ms(${swPeriod})`);
+          chunkLines.push(`${indent}${sv2}.speed(${swSpeedNeg}); time.sleep_ms(${swPeriod})`);
           chunkLines.push(`${indent}${sv2}.speed(0)  # stop`);
         } else {
           const svStart  = d.startAngle ?? 0;
@@ -980,8 +1008,9 @@ time.sleep(0.1)`);
       case "robot_drive": {
         imports.add("from machine import Pin, PWM");
         const move = (d.move as string) ?? "forward";
-        const t    = ((d.speed ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
-        const ti   = (((d.speed ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
+        const rdVar = speedVarName(d.speedVar);
+        const t    = rdVar ? `(${rdVar} / 100)` : ((asFiniteNumber(d.speed) ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
+        const ti   = rdVar ? `(${rdVar} * 0.3 / 100)` : (((asFiniteNumber(d.speed) ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
         chunkLines.push(`${indent}# Robot Drive — ${move}`);
 
         if (d.useCustomPins) {
@@ -1033,8 +1062,9 @@ time.sleep(0.1)`);
         imports.add("from machine import Pin, PWM");
         const mKey  = (d.motorPort as string) ?? "L1";
         const dir   = d.direction ?? "Forward";
-        const speed = d.speed ?? 50;
-        const t2    = (speed / 100).toFixed(2);
+        const dmVar = speedVarName(d.speedVar);
+        const speed = dmVar ?? (asFiniteNumber(d.speed) ?? 50);  // for the trailing "NN%" comment
+        const t2    = throttlePyExpr(d.speed, d.speedVar, 50);
         const throttle = dir === "Reverse" ? `-${t2}` : t2;
 
         if (d.useCustomPins && typeof d.customPwmPin === "number" && typeof d.customDirPin === "number") {
@@ -1076,7 +1106,7 @@ time.sleep(0.1)`);
           chunkLines.push(`${indent}${scObj} = Servo(${SERVO_PIN_MAP[scPort] ?? 21}, mn=${pulseMin}, mx=${pulseMax})  # ${scModel.label}`);
         }
         if (d.servoType === "360") {
-          const spd = d.contSpeed ?? 50;
+          const spd = speedPyExpr(d.contSpeed, d.contSpeedVar, 50);
           chunkLines.push(`${indent}${scObj}.speed(${spd})  # ${scPort} 360° continuous ${spd}%`);
         } else if (d.mode === "sweep") {
           imports.add("import time");
@@ -1120,9 +1150,11 @@ time.sleep(0.1)`);
         const portEnabled: Record<string, boolean> = {
           L1: d.l1en ?? true, L2: d.l2en ?? true, R1: d.r1en ?? true, R2: d.r2en ?? true,
         };
-        const makeMotorCall = (port: string, speed: number, dir: string) => {
+        // speedNum/speedVar resolve to a throttle expression; a bound variable
+        // stays dynamic, otherwise the literal percentage is used.
+        const makeMotorCall = (port: string, speedNum: unknown, speedVar: unknown, dir: string) => {
           if (!(portEnabled[port] ?? true)) dir = "Coast"; // disabled → coast/stop
-          const t = ((dir === "Reverse" ? -speed : speed) / 100).toFixed(2);
+          const t = throttlePyExpr(speedNum, speedVar, 50, dir === "Reverse");
           if (d.useCustomPins) {
             const cp = portToCustomPins[port] ?? portToCustomPins["L1"];
             const { pwmVar, dirVar } = getCustomMotorHandle(cp.pwm, cp.dir);
@@ -1134,22 +1166,22 @@ time.sleep(0.1)`);
           return `${drv.obj}.throttle_${drv.fn}(${t})`;
         };
         if (d.syncMode) {
-          const spd = d.l1speed ?? 50;
           const dir = d.l1dir ?? "Forward";
-          const calls = ["L1","L2","R1","R2"].map(p => makeMotorCall(p, spd, dir)).join("; ");
+          const calls = ["L1","L2","R1","R2"].map(p => makeMotorCall(p, d.l1speed, d.l1speedVar, dir)).join("; ");
           chunkLines.push(`${indent}${calls}  # sync all`);
         } else if (d.pairMode) {
-          const lCalls = ["L1","L2"].map(p => makeMotorCall(p, d.leftSpeed ?? 50, d.leftDir ?? "Forward")).join("; ");
-          const rCalls = ["R1","R2"].map(p => makeMotorCall(p, d.rightSpeed ?? 50, d.rightDir ?? "Forward")).join("; ");
+          const lCalls = ["L1","L2"].map(p => makeMotorCall(p, d.leftSpeed, d.leftSpeedVar, d.leftDir ?? "Forward")).join("; ");
+          const rCalls = ["R1","R2"].map(p => makeMotorCall(p, d.rightSpeed, d.rightSpeedVar, d.rightDir ?? "Forward")).join("; ");
           chunkLines.push(`${indent}${lCalls}  # left side`);
           chunkLines.push(`${indent}${rCalls}  # right side`);
         } else {
-          const ports  = ["L1", "L2", "R1", "R2"] as const;
-          const speeds = [d.l1speed ?? 50, d.l2speed ?? 50, d.r1speed ?? 50, d.r2speed ?? 50];
-          const dirs   = [d.l1dir ?? "Forward", d.l2dir ?? "Forward", d.r1dir ?? "Forward", d.r2dir ?? "Forward"];
+          const ports   = ["L1", "L2", "R1", "R2"] as const;
+          const speeds  = [d.l1speed, d.l2speed, d.r1speed, d.r2speed];
+          const spVars  = [d.l1speedVar, d.l2speedVar, d.r1speedVar, d.r2speedVar];
+          const dirs    = [d.l1dir ?? "Forward", d.l2dir ?? "Forward", d.r1dir ?? "Forward", d.r2dir ?? "Forward"];
           for (let i = 0; i < 4; i++) {
             const off = !(portEnabled[ports[i]] ?? true);
-            chunkLines.push(`${indent}${makeMotorCall(ports[i], speeds[i], dirs[i])}  # ${ports[i]}${off ? " (disabled)" : ""}`);
+            chunkLines.push(`${indent}${makeMotorCall(ports[i], speeds[i], spVars[i], dirs[i])}  # ${ports[i]}${off ? " (disabled)" : ""}`);
           }
         }
         break;

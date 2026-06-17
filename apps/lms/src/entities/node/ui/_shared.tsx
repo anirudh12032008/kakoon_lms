@@ -1,5 +1,5 @@
 // ─── Shared helpers used by 2+ node files ────────────────────────────────────
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { COLORS } from "./BaseNode";
 import { SENSOR_PORTS } from "@/entities/board";
 
@@ -155,6 +155,103 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
         <span className="text-[8px] text-[var(--k-dim)]">{min}°</span>
         <span className="text-[8px] text-[var(--k-dim)]">{max}°</span>
       </div>
+    </div>
+  );
+}
+
+// ─── SmoothSlider ─────────────────────────────────────────────────────────────
+// A range input that stays buttery while dragging: it tracks the value locally
+// and only commits to the (expensive) node store on release — instead of firing
+// a full-canvas re-render on every pixel of movement. `onLiveChange` reports the
+// in-progress value so callers can render a live label without committing.
+export function SmoothSlider({
+  value, onChange, onLiveChange, min = 0, max = 100, step = 1,
+  color = COLORS.orange, disabled = false, className = "",
+}: {
+  value: number; onChange: (v: number) => void; onLiveChange?: (v: number) => void;
+  min?: number; max?: number; step?: number; color?: string; disabled?: boolean; className?: string;
+}) {
+  const [local, setLocal] = useState(value);
+  const latest = useRef(value);
+  const dragging = useRef(false);
+
+  // Adopt external changes only when we're not the one driving them.
+  useEffect(() => {
+    if (!dragging.current) { latest.current = value; setLocal(value); }
+  }, [value]);
+
+  const commit = () => {
+    dragging.current = false;
+    if (latest.current !== value) onChange(latest.current);
+  };
+
+  return (
+    <input
+      type="range" min={min} max={max} step={step} value={local} disabled={disabled}
+      onPointerDown={() => { dragging.current = true; }}
+      onChange={(e) => { const v = Number(e.target.value); latest.current = v; setLocal(v); onLiveChange?.(v); }}
+      onPointerUp={commit} onPointerCancel={commit} onLostPointerCapture={commit}
+      onBlur={commit} onKeyUp={commit}
+      className={`nodrag w-full h-1 cursor-pointer ${className}`}
+      style={{ accentColor: color, opacity: disabled ? 0.4 : 1 }}
+    />
+  );
+}
+
+// ─── SpeedVarInput ────────────────────────────────────────────────────────────
+// Optional variable binding for a speed value. When non-empty, codegen emits the
+// variable name instead of the literal, so the speed can be changed at runtime.
+export function SpeedVarInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const active = value.trim().length > 0;
+  return (
+    <div className="flex items-center gap-1.5 mt-1.5">
+      <span className={`text-[8px] uppercase tracking-wider font-bold shrink-0 ${active ? "text-cyan-400" : "text-[var(--k-dim)]"}`}>var</span>
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="optional — bind to variable"
+        spellCheck={false}
+        className={`nodrag flex-1 min-w-0 rounded px-1.5 py-0.5 text-[10px] font-mono bg-[var(--k-base-300)] border outline-none transition-colors ${
+          active ? "border-cyan-700 text-cyan-400" : "border-[var(--k-border)] text-[var(--k-muted)] focus:border-cyan-800"
+        }`}
+      />
+    </div>
+  );
+}
+
+// ─── SpeedControl ─────────────────────────────────────────────────────────────
+// Label + value readout + smooth slider + optional variable binding. Used by the
+// servo (continuous) and DC-motor speed fields. When a variable is bound the
+// slider dims (the variable drives the speed at runtime) but stays editable so it
+// keeps a sensible default.
+export function SpeedControl({
+  label = "Speed", value, onChange, varName, onVarChange,
+  min = 0, max = 100, step = 1, color = COLORS.orange, signed = false, unit = "%",
+}: {
+  label?: string; value: number; onChange: (v: number) => void;
+  varName: string; onVarChange: (v: string) => void;
+  min?: number; max?: number; step?: number; color?: string; signed?: boolean; unit?: string;
+}) {
+  const [disp, setDisp] = useState(value);
+  useEffect(() => { setDisp(value); }, [value]);
+  const usingVar = varName.trim().length > 0;
+  const readout = signed
+    ? (disp === 0 ? "STOP" : disp > 0 ? `+${disp}${unit}` : `${disp}${unit}`)
+    : `${disp}${unit}`;
+
+  return (
+    <div className="px-3 pt-1.5">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-[var(--k-muted)] font-medium">{label}</span>
+        <span className="text-[10px] font-mono" style={{ color: usingVar ? "#22d3ee" : color }}>
+          {usingVar ? varName.trim() : readout}
+        </span>
+      </div>
+      <SmoothSlider
+        value={value} onChange={onChange} onLiveChange={setDisp}
+        min={min} max={max} step={step} color={color} disabled={usingVar}
+      />
+      <SpeedVarInput value={varName} onChange={onVarChange} />
     </div>
   );
 }

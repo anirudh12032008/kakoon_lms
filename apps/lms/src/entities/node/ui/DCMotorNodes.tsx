@@ -8,7 +8,8 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { MotorIcon } from "./_shared";
+import { MotorIcon, SpeedControl, SmoothSlider, SpeedVarInput } from "./_shared";
+import { useState, useEffect } from "react";
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
 const MOTOR_PORTS = {
@@ -85,6 +86,57 @@ function CustomPinRow({ label, pwmPin, setPwmPin, dirPin, setDirPin }: {
   );
 }
 
+// ─── MotorSpeedRow ────────────────────────────────────────────────────────────
+// One channel of the Multi-Motor Controller: enable toggle, smooth speed slider,
+// optional variable binding, and a direction picker. Module-level (not inlined in
+// the node) so the slider keeps its drag state across re-renders.
+function MotorSpeedRow({ label, speed, setSpeed, dir, setDir, enabled = true, setEnabled, varName, setVarName }: {
+  label: string; speed: number; setSpeed: (v: number) => void; dir: string; setDir: (v: string) => void;
+  enabled?: boolean; setEnabled?: (v: boolean) => void;
+  varName: string; setVarName: (v: string) => void;
+}) {
+  const [disp, setDisp] = useState(speed);
+  useEffect(() => { setDisp(speed); }, [speed]);
+  const usingVar = varName.trim().length > 0;
+  return (
+    <div className="px-3 pt-1.5">
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1.5">
+          {setEnabled && (
+            <button onClick={() => setEnabled(!enabled)} title={enabled ? "Disable motor" : "Enable motor"}
+              className={`nodrag h-3.5 w-6 rounded-full border transition-all flex items-center px-0.5 ${
+                enabled ? "border-orange-500/60 bg-orange-500/20 justify-end" : "border-[var(--k-border)] bg-[var(--k-base-200)] justify-start"
+              }`}
+            >
+              <span className={`h-2.5 w-2.5 rounded-full transition-colors ${enabled ? "bg-orange-400" : "bg-[var(--k-dim)]"}`} />
+            </button>
+          )}
+          <span className={`text-[9px] uppercase tracking-wider font-bold ${enabled ? "text-[var(--k-muted)]" : "text-[var(--k-dim)] line-through"}`}>{label}</span>
+        </div>
+        {enabled
+          ? <span className="text-[10px] font-mono" style={{ color: usingVar ? "#22d3ee" : "#fb923c" }}>{usingVar ? varName.trim() : `${disp}%`}</span>
+          : <span className="text-[9px] font-bold text-[var(--k-dim)]">OFF</span>}
+      </div>
+      {enabled && (
+        <>
+          <SmoothSlider value={speed} onChange={setSpeed} onLiveChange={setDisp}
+            min={0} max={100} step={1} color={COLORS.orange} disabled={usingVar} className="mb-1" />
+          <SpeedVarInput value={varName} onChange={setVarName} />
+          <div className="flex gap-1 mt-1">
+            {DIR_OPTIONS.map(d => (
+              <button key={d.value} onClick={() => setDir(d.value)}
+                className={`nodrag flex-1 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                  dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] bg-[var(--k-base-200)]"
+                }`}
+              >{d.value[0]}</button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Robot Arrow ──────────────────────────────────────────────────────────────
 function RobotArrow({ move }: { move: RobotMove }) {
   const W = 80, H = 64;
@@ -143,6 +195,7 @@ function RobotArrow({ move }: { move: RobotMove }) {
 export function RobotDriveNode() {
   const [move, setMove]   = useNodeField<RobotMove>("move", "forward");
   const [speed, setSpeed] = useNodeField<number>("speed", 75);
+  const [speedVar, setSpeedVar] = useNodeField<string>("speedVar", "");
 
   // Custom GPIO overrides — re-target each wheel's PWM/DIR lines (Advanced mode)
   const [useCustomPins, setUseCustomPins] = useNodeField<boolean>("useCustomPins", false);
@@ -194,15 +247,9 @@ export function RobotDriveNode() {
 
       {/* Speed */}
       {!isStop && (
-        <div className="px-3 pb-2">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-            <span className={`text-[10px] font-mono ${isSpin ? "text-purple-400" : "text-orange-400"}`}>{speed}%</span>
-          </div>
-          <input type="range" min={0} max={100} step={1} value={speed}
-            onChange={e => setSpeed(Number(e.target.value))}
-            className="nodrag w-full h-1 cursor-pointer"
-            style={{ accentColor: isSpin ? "#a78bfa" : COLORS.orange }} />
+        <div className="pb-1">
+          <SpeedControl value={speed} onChange={setSpeed} varName={speedVar} onVarChange={setSpeedVar}
+            color={isSpin ? "#a78bfa" : COLORS.orange} />
         </div>
       )}
 
@@ -238,6 +285,7 @@ export function RobotDriveNode() {
 export function DCMotorSingleNode() {
   const [motorPort, setMotorPort] = useNodeField<MotorKey>("motorPort", "L1");
   const [speed, setSpeed]         = useNodeField<number>("speed", 50);
+  const [speedVar, setSpeedVar]   = useNodeField<string>("speedVar", "");
   const [direction, setDirection] = useNodeField<string>("direction", "Forward");
 
   // Custom GPIO override — drive this motor on different pins than the port's stock wiring
@@ -263,17 +311,10 @@ export function DCMotorSingleNode() {
         )}
       </AdvancedSection>
 
-      <div className="px-3 py-1">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-          <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
-        </div>
-        <input type="range" min={0} max={100} step={1} value={speed}
-          onChange={e => setSpeed(Number(e.target.value))}
-          className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
-      </div>
+      <SpeedControl value={speed} onChange={setSpeed} varName={speedVar} onVarChange={setSpeedVar}
+        color={COLORS.orange} />
 
-      <div className="px-3 pb-2">
+      <div className="px-3 pb-2 pt-1">
         <span className="text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Direction</span>
         <div className="grid grid-cols-4 gap-1 mt-1">
           {DIR_OPTIONS.map(d => (
@@ -313,70 +354,35 @@ export function MultiMotorControllerNode() {
   const [l1speed, setL1speed] = useNodeField<number>("l1speed", 50);
   const [l1dir,   setL1dir]   = useNodeField<string>("l1dir",   "Forward");
   const [l1en,    setL1en]    = useNodeField<boolean>("l1en",   true);
+  const [l1speedVar, setL1speedVar] = useNodeField<string>("l1speedVar", "");
   const [l2speed, setL2speed] = useNodeField<number>("l2speed", 50);
   const [l2dir,   setL2dir]   = useNodeField<string>("l2dir",   "Forward");
   const [l2en,    setL2en]    = useNodeField<boolean>("l2en",   true);
+  const [l2speedVar, setL2speedVar] = useNodeField<string>("l2speedVar", "");
   const [r1speed, setR1speed] = useNodeField<number>("r1speed", 50);
   const [r1dir,   setR1dir]   = useNodeField<string>("r1dir",   "Forward");
   const [r1en,    setR1en]    = useNodeField<boolean>("r1en",   true);
+  const [r1speedVar, setR1speedVar] = useNodeField<string>("r1speedVar", "");
   const [r2speed, setR2speed] = useNodeField<number>("r2speed", 50);
   const [r2dir,   setR2dir]   = useNodeField<string>("r2dir",   "Forward");
   const [r2en,    setR2en]    = useNodeField<boolean>("r2en",   true);
+  const [r2speedVar, setR2speedVar] = useNodeField<string>("r2speedVar", "");
 
   const [leftSpeed,  setLeftSpeed]  = useNodeField<number>("leftSpeed",  50);
   const [rightSpeed, setRightSpeed] = useNodeField<number>("rightSpeed", 50);
   const [leftDir,    setLeftDir]    = useNodeField<string>("leftDir",    "Forward");
   const [rightDir,   setRightDir]   = useNodeField<string>("rightDir",   "Forward");
+  const [leftSpeedVar,  setLeftSpeedVar]  = useNodeField<string>("leftSpeedVar",  "");
+  const [rightSpeedVar, setRightSpeedVar] = useNodeField<string>("rightSpeedVar", "");
 
   const motors = syncMode
-    ? [{ label: "All Motors (synced)", speed: l1speed, setSpeed: setL1speed, dir: l1dir, setDir: setL1dir, enabled: true, setEnabled: undefined }]
+    ? [{ label: "All Motors (synced)", speed: l1speed, setSpeed: setL1speed, dir: l1dir, setDir: setL1dir, enabled: true, setEnabled: undefined, varName: l1speedVar, setVarName: setL1speedVar }]
     : [
-        { label: "L1 – Front Left",  speed: l1speed, setSpeed: setL1speed, dir: l1dir, setDir: setL1dir, enabled: l1en, setEnabled: setL1en },
-        { label: "L2 – Rear Left",   speed: l2speed, setSpeed: setL2speed, dir: l2dir, setDir: setL2dir, enabled: l2en, setEnabled: setL2en },
-        { label: "R1 – Front Right", speed: r1speed, setSpeed: setR1speed, dir: r1dir, setDir: setR1dir, enabled: r1en, setEnabled: setR1en },
-        { label: "R2 – Rear Right",  speed: r2speed, setSpeed: setR2speed, dir: r2dir, setDir: setR2dir, enabled: r2en, setEnabled: setR2en },
+        { label: "L1 – Front Left",  speed: l1speed, setSpeed: setL1speed, dir: l1dir, setDir: setL1dir, enabled: l1en, setEnabled: setL1en, varName: l1speedVar, setVarName: setL1speedVar },
+        { label: "L2 – Rear Left",   speed: l2speed, setSpeed: setL2speed, dir: l2dir, setDir: setL2dir, enabled: l2en, setEnabled: setL2en, varName: l2speedVar, setVarName: setL2speedVar },
+        { label: "R1 – Front Right", speed: r1speed, setSpeed: setR1speed, dir: r1dir, setDir: setR1dir, enabled: r1en, setEnabled: setR1en, varName: r1speedVar, setVarName: setR1speedVar },
+        { label: "R2 – Rear Right",  speed: r2speed, setSpeed: setR2speed, dir: r2dir, setDir: setR2dir, enabled: r2en, setEnabled: setR2en, varName: r2speedVar, setVarName: setR2speedVar },
       ];
-
-  const SpeedRow = ({ label, speed, setSpeed, dir, setDir, enabled = true, setEnabled }: {
-    label: string; speed: number; setSpeed: (v: number) => void; dir: string; setDir: (v: string) => void;
-    enabled?: boolean; setEnabled?: (v: boolean) => void;
-  }) => (
-    <div className="px-3 pt-1.5">
-      <div className="flex items-center justify-between mb-1">
-        <div className="flex items-center gap-1.5">
-          {setEnabled && (
-            <button onClick={() => setEnabled(!enabled)} title={enabled ? "Disable motor" : "Enable motor"}
-              className={`nodrag h-3.5 w-6 rounded-full border transition-all flex items-center px-0.5 ${
-                enabled ? "border-orange-500/60 bg-orange-500/20 justify-end" : "border-[var(--k-border)] bg-[var(--k-base-200)] justify-start"
-              }`}
-            >
-              <span className={`h-2.5 w-2.5 rounded-full transition-colors ${enabled ? "bg-orange-400" : "bg-[var(--k-dim)]"}`} />
-            </button>
-          )}
-          <span className={`text-[9px] uppercase tracking-wider font-bold ${enabled ? "text-[var(--k-muted)]" : "text-[var(--k-dim)] line-through"}`}>{label}</span>
-        </div>
-        {enabled
-          ? <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
-          : <span className="text-[9px] font-bold text-[var(--k-dim)]">OFF</span>}
-      </div>
-      {enabled && (
-        <>
-          <input type="range" min={0} max={100} step={1} value={speed}
-            onChange={e => setSpeed(Number(e.target.value))}
-            className="nodrag w-full h-1 cursor-pointer mb-1" style={{ accentColor: COLORS.orange }} />
-          <div className="flex gap-1">
-            {DIR_OPTIONS.map(d => (
-              <button key={d.value} onClick={() => setDir(d.value)}
-                className={`nodrag flex-1 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                  dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] bg-[var(--k-base-200)]"
-                }`}
-              >{d.value[0]}</button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
 
   return (
     <BaseNode title="Multi-Motor Controller" color={COLORS.red} icon={<MotorIcon />} width="270px">
@@ -389,11 +395,11 @@ export function MultiMotorControllerNode() {
 
       {pairMode && !syncMode ? (
         <>
-          <SpeedRow label="Left (L1+L2)" speed={leftSpeed} setSpeed={setLeftSpeed} dir={leftDir} setDir={setLeftDir} />
-          <SpeedRow label="Right (R1+R2)" speed={rightSpeed} setSpeed={setRightSpeed} dir={rightDir} setDir={setRightDir} />
+          <MotorSpeedRow label="Left (L1+L2)" speed={leftSpeed} setSpeed={setLeftSpeed} dir={leftDir} setDir={setLeftDir} varName={leftSpeedVar} setVarName={setLeftSpeedVar} />
+          <MotorSpeedRow label="Right (R1+R2)" speed={rightSpeed} setSpeed={setRightSpeed} dir={rightDir} setDir={setRightDir} varName={rightSpeedVar} setVarName={setRightSpeedVar} />
         </>
       ) : (
-        motors.map(m => <SpeedRow key={m.label} {...m} />)
+        motors.map(m => <MotorSpeedRow key={m.label} {...m} />)
       )}
 
       <AdvancedSection>
