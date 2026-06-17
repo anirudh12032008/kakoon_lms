@@ -172,7 +172,7 @@ export function LCD16x2Node() {
   const [cursorBlink, setCursorBlink] = useNodeField<boolean>("cursorBlink", false);
   const [cursorUnderline, setCursorUnderline] = useNodeField<boolean>("cursorUnderline", false);
   const [backlight, setBacklight] = useNodeField<boolean>("backlight", true);
-  const [formatStr, setFormatStr] = useNodeField<string>("formatStr", "Dist: {v} cm");
+  const [varName, setVarName] = useNodeField<string>("varName", "distance");
   const [customChars, setCustomChars] = useNodeField<LCDCharPixels[]>("customChars",
     Array.from({ length: 8 }, makeBlankChar));
 
@@ -218,14 +218,16 @@ export function LCD16x2Node() {
         <NodeField label="Underline"><ToggleInput value={cursorUnderline} onChange={setCursorUnderline} leftLabel="Off" rightLabel="On" /></NodeField>
         <NodeField label="Backlight"><ToggleInput value={backlight} onChange={setBacklight} leftLabel="Off" rightLabel="On" /></NodeField>
 
-        <div className="px-3 pt-2 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Sensor Format String</span>
-        </div>
-        <div className="px-3 pb-1.5">
-          <input value={formatStr} onChange={e => setFormatStr(e.target.value)}
+        <NodeField label="Variable">
+          <input value={varName} onChange={e => setVarName(e.target.value)}
             className="nodrag w-full bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-[11px] font-mono text-green-300 outline-none focus:border-blue-500/60"
-            placeholder="e.g. Dist: {v} cm" />
-          <p className="text-[9px] text-[var(--k-dim)] mt-1">Use <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> for live sensor value</p>
+            placeholder="e.g. distance" />
+        </NodeField>
+        <div className="px-3 pb-1.5">
+          <p className="text-[9px] text-[var(--k-dim)] leading-relaxed">
+            In any line type <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> to insert the variable above,
+            or <span className="font-mono text-[var(--k-muted)]">{"{c0}"}</span>…<span className="font-mono text-[var(--k-muted)]">{"{c7}"}</span> to insert a custom character.
+          </p>
         </div>
 
         <div className="px-3 pb-2 flex flex-col gap-1.5">

@@ -32,6 +32,7 @@ interface NodeData {
   // OLED
   driver?: boolean; resolution?: string; sck?: number; sda?: number; scl?: number;
   staticPixels?: boolean[][]; animFrames?: boolean[][][]; line1?: string; line2?: string;
+  customChars?: boolean[][][];
   animFile?: string;
   // 7-seg / LCD
   clk?: number; dio?: number; number?: number; address?: string;
@@ -851,16 +852,45 @@ time.sleep(0.1)`);
         const sda = d.sda ?? OLED.sda;
         const lcdLine1 = typeof d.line1 === "string" ? d.line1 : "Hello";
         const lcdLine2 = typeof d.line2 === "string" ? d.line2 : "World";
+        const lcdVar = typeof d.varName === "string" ? d.varName.trim() : "";
+        // Render a line to a Python string/f-string literal. Supports tokens:
+        //   {v}        → the live variable (uses an f-string)
+        //   {c0}..{c7} → custom character slots via chr(n)
+        const renderLcdLine = (text: string): string => {
+          let s = text.slice(0, 16);
+          let isF = false;
+          s = s.replace(/\{c([0-7])\}/g, (_m, n) => { isF = true; return `{chr(${n})}`; });
+          if (s.includes("{v}")) {
+            if (lcdVar) { isF = true; s = s.split("{v}").join(`{${lcdVar}}`); }
+            else { s = s.split("{v}").join(""); } // no variable wired → drop token
+          }
+          // JSON.stringify gives us a safely-escaped double-quoted literal; the
+          // curly-brace expressions we inserted are preserved for the f-string.
+          return isF ? `f${JSON.stringify(s)}` : JSON.stringify(s);
+        };
         imports.add("from machine import SoftI2C, Pin");
         imports.add("from i2c_lcd import I2cLcd");
         setupLines.push(`i2c_lcd_bus = SoftI2C(sda=Pin(${sda}), scl=Pin(${scl}), freq=400000)`);
         setupLines.push(`lcd = I2cLcd(i2c_lcd_bus, ${d.address ?? "0x27"}, 2, 16)`);
+        // Upload custom characters (once) for any non-blank editor slot.
+        const lcdChars = Array.isArray(d.customChars) ? (d.customChars as unknown[]) : [];
+        lcdChars.forEach((ch, idx) => {
+          if (!Array.isArray(ch)) return;
+          const rows = ch as boolean[][];
+          if (!rows.some((r) => Array.isArray(r) && r.some(Boolean))) return; // blank
+          const bytes = rows.slice(0, 8).map((r) => {
+            let b = 0;
+            (r || []).forEach((on, c) => { if (on && c < 5) b |= 1 << (4 - c); });
+            return `0x${b.toString(16).padStart(2, "0").toUpperCase()}`;
+          });
+          setupLines.push(`lcd.custom_char(${idx}, bytearray([${bytes.join(", ")}]))`);
+        });
         if (d.backlight === false) chunkLines.push(`${indent}lcd.backlight_off()`);
         else chunkLines.push(`${indent}lcd.backlight_on()`);
         chunkLines.push(`${indent}lcd.clear()`);
-        chunkLines.push(`${indent}lcd.putstr(${JSON.stringify(lcdLine1.slice(0, 16))})`);
+        chunkLines.push(`${indent}lcd.putstr(${renderLcdLine(lcdLine1)})`);
         chunkLines.push(`${indent}lcd.move_to(0, 1)`);
-        chunkLines.push(`${indent}lcd.putstr(${JSON.stringify(lcdLine2.slice(0, 16))})`);
+        chunkLines.push(`${indent}lcd.putstr(${renderLcdLine(lcdLine2)})`);
         break;
       }
 
