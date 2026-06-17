@@ -4,12 +4,14 @@ import {
   BaseNode,
   NodeField,
   SelectInput,
+  NumberInput,
   ToggleInput,
   useNodeField,
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
 import { DisplayIcon } from "./_shared";
+import { OLED } from "@/entities/board/model/hardwareConfig";
 
 // ─── Portal Modal ─────────────────────────────────────────────────────────────
 function Modal({ title, onClose, children, wide }: {
@@ -163,7 +165,8 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
 export function LCD16x2Node() {
   const [mode, setMode] = useNodeField<string>("mode", "i2c");
   const [address, setAddress] = useNodeField<string>("address", "0x27");
-  const [sensorPort, setSensorPort] = useNodeField<string>("sensorPort", "1");
+  const [scl, setScl] = useNodeField<number>("scl", OLED.scl);
+  const [sda, setSda] = useNodeField<number>("sda", OLED.sda);
   const [line1, setLine1] = useNodeField<string>("line1", "Hello");
   const [line2, setLine2] = useNodeField<string>("line2", "World");
   const [cursorBlink, setCursorBlink] = useNodeField<boolean>("cursorBlink", false);
@@ -179,13 +182,6 @@ export function LCD16x2Node() {
 
   const previewLines: [string, string] = [line1.slice(0, 16).padEnd(16, " "), line2.slice(0, 16).padEnd(16, " ")];
 
-  // Port → GPIO mapping (I2C lines)
-  const PORT_PINS: Record<string, { scl: number; sda: number }> = {
-    "1": { scl: 4, sda: 5 },
-    "2": { scl: 1, sda: 2 },
-  };
-  const pins = PORT_PINS[sensorPort] ?? { scl: 4, sda: 5 };
-
   return (
     <>
       <BaseNode title="16×2 LCD" color={COLORS.blue} icon={<DisplayIcon />} width="270px">
@@ -198,11 +194,9 @@ export function LCD16x2Node() {
             <SelectInput value={address} onChange={setAddress} compact
               options={[{ label: "0x27 (default)", value: "0x27" }, { label: "0x3F (alt)", value: "0x3F" }]} />
           </NodeField>
-          <NodeField label="Sensor Port">
-            <SelectInput value={sensorPort} onChange={setSensorPort} compact
-              options={[{ label: "Port 1 (SCL 4 / SDA 5)", value: "1" }, { label: "Port 2 (SCL 1 / SDA 2)", value: "2" }]} />
-          </NodeField>
-          <AdvancedSection><PinInfo label="SCL / SDA" value={`GPIO ${pins.scl} / ${pins.sda}`} /></AdvancedSection>
+          <NodeField label="SCL Pin"><NumberInput value={scl} onChange={setScl} /></NodeField>
+          <NodeField label="SDA Pin"><NumberInput value={sda} onChange={setSda} /></NodeField>
+          <AdvancedSection><PinInfo label="SoftI2C" value={`SCL ${scl} · SDA ${sda} @ 400kHz`} /></AdvancedSection>
         </>}
 
         {/* Mini LCD preview */}

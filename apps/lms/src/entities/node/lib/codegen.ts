@@ -846,14 +846,9 @@ time.sleep(0.1)`);
 
       // ─── New Display Nodes ─────────────────────────────────────────────────
       case "lcd_16x2": {
-        // Port → GPIO mapping (must match LCD16x2Node's PORT_PINS)
-        const lcdPorts: Record<string, { scl: number; sda: number }> = {
-          "1": { scl: 4, sda: 5 },
-          "2": { scl: 1, sda: 2 },
-        };
-        const lcdPins = lcdPorts[(d.sensorPort ?? "1") as string] ?? lcdPorts["1"];
-        const scl = d.scl ?? lcdPins.scl;
-        const sda = d.sda ?? lcdPins.sda;
+        // Shares the OLED I2C bus pins by default; overridable on the node.
+        const scl = d.scl ?? OLED.scl;
+        const sda = d.sda ?? OLED.sda;
         const lcdLine1 = typeof d.line1 === "string" ? d.line1 : "Hello";
         const lcdLine2 = typeof d.line2 === "string" ? d.line2 : "World";
         imports.add("from machine import SoftI2C, Pin");
