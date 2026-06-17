@@ -11,9 +11,16 @@ export interface ErrorToast {
   hint?: string;
 }
 
+export interface ReportErrorInput {
+  message: string;
+  code?: string;
+  /** Explicit guidance. When omitted, falls back to the API catalog hint for `code`. */
+  hint?: string;
+}
+
 interface ErrorToastState {
   toasts: ErrorToast[];
-  pushError: (input: { message: string; code?: string }) => void;
+  pushError: (input: ReportErrorInput) => void;
   dismiss: (id: number) => void;
 }
 
@@ -21,18 +28,18 @@ let nextId = 1;
 
 export const useErrorToasts = create<ErrorToastState>((set, get) => ({
   toasts: [],
-  pushError: ({ message, code }) => {
+  pushError: ({ message, code, hint }) => {
     // De-dupe: if the same code+message is already on screen, don't stack it.
     const exists = get().toasts.some((t) => t.code === code && t.message === message);
     if (exists) return;
     set((s) => ({
-      toasts: [...s.toasts, { id: nextId++, message, code, hint: errorHint(code) }],
+      toasts: [...s.toasts, { id: nextId++, message, code, hint: hint ?? errorHint(code) }],
     }));
   },
   dismiss: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
 }));
 
-/** Imperative entry point so non-React code (the axios interceptor) can report errors. */
-export function reportError(input: { message: string; code?: string }) {
+/** Imperative entry point so non-React code (the axios interceptor, terminal) can report errors. */
+export function reportError(input: ReportErrorInput) {
   useErrorToasts.getState().pushError(input);
 }

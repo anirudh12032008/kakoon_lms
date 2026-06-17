@@ -8,6 +8,8 @@ import {
   uploadCodeToESP32,
 } from "@/features/editor/serial-connect/lib/serial";
 import { tryParseSensorLine, useSensorStore } from "@/shared/lib/sensorStore";
+import { reportError } from "@/shared/error/errorToastStore";
+import { classifyTerminalError } from "@/features/editor/serial-connect/lib/terminalErrors";
 
 type ConnectionType = "usb" | "wifi";
 
@@ -30,6 +32,9 @@ export function useSerialConnection() {
   const addLog = useCallback((message: string) => {
     const timestamp = new Date().toLocaleTimeString();
     setLogs((prev) => [...prev.slice(-99), `[${timestamp}] ${message}`]);
+    // Surface terminal errors as a coded popup so they aren't missed in the log.
+    const err = classifyTerminalError(message);
+    if (err) reportError({ message: err.title, code: err.code, hint: err.hint });
   }, []);
 
   const clearLogs = useCallback(() => setLogs([]), []);
