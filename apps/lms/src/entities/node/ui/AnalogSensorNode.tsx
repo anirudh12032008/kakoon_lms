@@ -5,6 +5,7 @@ import {
   NodeField,
   TextInput,
   NumberInput,
+  ToggleInput,
   useNodeField,
   makeHandleStyle,
   AdvancedSection,
@@ -68,6 +69,7 @@ export function AnalogSensorNode() {
   const [sampleRate, setSampleRate] = useNodeField<number>("sampleRate", 100);
   const [threshold, setThreshold] = useNodeField<number>("threshold", 2048);
   const [threshVar, setThreshVar] = useNodeField<string>("threshVar", "thresh_hit");
+  const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
 
   const reading = useSensorStore(s => s.readings[varName]);
   const live = !!reading && (Date.now() - reading.ts) < ANALOG_STALE_MS;
@@ -93,6 +95,9 @@ export function AnalogSensorNode() {
   return (
     <BaseNode title="Analog Sensor" color={COLORS.purple} icon={<SensorIcon />} width="260px">
       <NodeField label="ADC Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
+      <NodeField label="Send to Viz">
+        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
+      </NodeField>
 
       <AdvancedSection>
         <NodeField label="Sample (ms)"><NumberInput value={sampleRate} onChange={setSampleRate} /></NodeField>

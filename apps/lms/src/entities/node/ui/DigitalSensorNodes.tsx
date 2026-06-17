@@ -19,10 +19,14 @@ const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "transl
 export function TouchSensorNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
   const [varName, setVarName] = useNodeField<string>("varName", "touch_value");
+  const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
   return (
     <BaseNode title="Touch Sensor" color={COLORS.red} icon={<SensorIcon />} width="240px">
       <NodeField label="Sensor Port">
         <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
+      </NodeField>
+      <NodeField label="Send to Viz">
+        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
       </NodeField>
       <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>
       <NodeField label="Touch Value">
@@ -37,10 +41,14 @@ export function TouchSensorNode() {
 export function SoilMoistureSensorNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
   const [varName, setVarName] = useNodeField<string>("varName", "value");
+  const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
   return (
     <BaseNode title="Soil Moisture Sensor" color={COLORS.orange} icon={<SensorIcon />} width="240px">
       <NodeField label="Sensor Port">
         <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
+      </NodeField>
+      <NodeField label="Send to Viz">
+        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
       </NodeField>
       <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>
       <NodeField label="Value">
@@ -125,6 +133,7 @@ export function FourChannelTouchNode() {
   const [t2, setT2] = useNodeField<string>("t2", "touch2");
   const [t3, setT3] = useNodeField<string>("t3", "touch3");
   const [t4, setT4] = useNodeField<string>("t4", "touch4");
+  const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
 
   const outputs = [
     { label: "touch1", val: t1, set: setT1, id: "t1" },
@@ -136,6 +145,9 @@ export function FourChannelTouchNode() {
   return (
     <BaseNode title="4-Channel Touch Sensor" color={COLORS.cyan} icon={<SensorIcon />} width="260px">
       <NodeField label="Port"><SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact /></NodeField>
+      <NodeField label="Send to Viz">
+        <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
+      </NodeField>
       <AdvancedSection>
         <NodeField label="Touch Pin 1"><NumberInput value={pin1} onChange={setPin1} /></NodeField>
         <NodeField label="Touch Pin 2"><NumberInput value={pin2} onChange={setPin2} /></NodeField>

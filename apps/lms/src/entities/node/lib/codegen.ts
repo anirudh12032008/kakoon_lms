@@ -608,17 +608,25 @@ time.sleep(0.1)`);
       case "touch_sensor": {
         const tPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
         const tPins = SENSOR_PORTS[tPort] ?? SENSOR_PORTS["1"];
+        const vn = d.varName ?? "touch_value";
         imports.add("from machine import TouchPad, Pin");
-        chunkLines.push(`${indent}${d.varName ?? "touch_value"} = TouchPad(Pin(${d.pin ?? tPins.sda})).read()`);
+        chunkLines.push(`${indent}${vn} = TouchPad(Pin(${d.pin ?? tPins.sda})).read()`);
+        if (d.sendToViz !== false) {
+          chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
+        }
         break;
       }
       case "soil_moisture": {
         const sPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
         const sPins = SENSOR_PORTS[sPort] ?? SENSOR_PORTS["1"];
         const smPin = d.pin ?? sPins.sda;
+        const vn = d.varName ?? "value";
         imports.add("from machine import ADC, Pin");
         setupLines.push(`soil_moisture_${smPin} = ADC(Pin(${smPin}))`);
-        chunkLines.push(`${indent}${d.varName ?? "value"} = soil_moisture_${smPin}.read_u16()`);
+        chunkLines.push(`${indent}${vn} = soil_moisture_${smPin}.read_u16()`);
+        if (d.sendToViz !== false) {
+          chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
+        }
         break;
       }
       case "ir_receiver": {
@@ -657,6 +665,11 @@ time.sleep(0.1)`);
         chunkLines.push(`${indent}${d.t2 ?? "touch2"} = TouchPad(Pin(${d.pin2 ?? 5})).read()`);
         chunkLines.push(`${indent}${d.t3 ?? "touch3"} = TouchPad(Pin(${d.pin3 ?? 6})).read()`);
         chunkLines.push(`${indent}${d.t4 ?? "touch4"} = TouchPad(Pin(${d.pin4 ?? 7})).read()`);
+        if (d.sendToViz !== false) {
+          for (const ch of [d.t1 ?? "touch1", d.t2 ?? "touch2", d.t3 ?? "touch3", d.t4 ?? "touch4"]) {
+            chunkLines.push(`${indent}print(f"SENSOR,raw,${ch},{${ch}}")`);
+          }
+        }
         break;
 
       // ─── Display ───────────────────────────────────────────────────────────
@@ -811,11 +824,16 @@ time.sleep(0.1)`);
         break;
 
       // ─── New Sensor Nodes ──────────────────────────────────────────────────
-      case "analog_sensor":
+      case "analog_sensor": {
+        const vn = d.varName ?? "analog_val";
         imports.add("from machine import ADC, Pin");
         setupLines.push(`adc_${d.pin ?? 34} = ADC(Pin(${d.pin ?? 34}))`);
-        chunkLines.push(`${indent}${d.varName ?? "analog_val"} = adc_${d.pin ?? 34}.read_u16() >> 4  # 12-bit`);
+        chunkLines.push(`${indent}${vn} = adc_${d.pin ?? 34}.read_u16() >> 4  # 12-bit`);
+        if (d.sendToViz !== false) {
+          chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
+        }
         break;
+      }
       case "button_digital_input":
         imports.add("from machine import Pin");
         {
