@@ -844,16 +844,29 @@ time.sleep(0.1)`);
         break;
 
       // ─── New Display Nodes ─────────────────────────────────────────────────
-      case "lcd_16x2":
+      case "lcd_16x2": {
+        // Port → GPIO mapping (must match LCD16x2Node's PORT_PINS)
+        const lcdPorts: Record<string, { scl: number; sda: number }> = {
+          "1": { scl: 4, sda: 5 },
+          "2": { scl: 1, sda: 2 },
+        };
+        const lcdPins = lcdPorts[(d.sensorPort ?? "1") as string] ?? lcdPorts["1"];
+        const scl = d.scl ?? lcdPins.scl;
+        const sda = d.sda ?? lcdPins.sda;
+        const lcdLine1 = typeof d.line1 === "string" ? d.line1 : "Hello";
+        const lcdLine2 = typeof d.line2 === "string" ? d.line2 : "World";
         imports.add("from machine import I2C, Pin");
-        imports.add("import lcd_api, i2c_lcd");
-        setupLines.push(`i2c_lcd_bus = I2C(0, scl=Pin(${d.scl ?? 22}), sda=Pin(${d.sda ?? 21}), freq=400000)`);
-        setupLines.push(`lcd = i2c_lcd.I2cLcd(i2c_lcd_bus, ${d.address ?? "0x27"}, 2, 16)`);
+        imports.add("from i2c_lcd import I2cLcd");
+        setupLines.push(`i2c_lcd_bus = I2C(0, scl=Pin(${scl}), sda=Pin(${sda}), freq=400000)`);
+        setupLines.push(`lcd = I2cLcd(i2c_lcd_bus, ${d.address ?? "0x27"}, 2, 16)`);
+        if (d.backlight === false) chunkLines.push(`${indent}lcd.backlight_off()`);
+        else chunkLines.push(`${indent}lcd.backlight_on()`);
         chunkLines.push(`${indent}lcd.clear()`);
-        chunkLines.push(`${indent}lcd.putstr(${d.line1 ?? "'Hello'"})`);
+        chunkLines.push(`${indent}lcd.putstr(${JSON.stringify(lcdLine1.slice(0, 16))})`);
         chunkLines.push(`${indent}lcd.move_to(0, 1)`);
-        chunkLines.push(`${indent}lcd.putstr(${d.line2 ?? "'World'"})`);
+        chunkLines.push(`${indent}lcd.putstr(${JSON.stringify(lcdLine2.slice(0, 16))})`);
         break;
+      }
 
       // ─── New GPIO/Output Nodes ─────────────────────────────────────────────
       case "rgb_led_matrix":

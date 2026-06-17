@@ -49,6 +49,24 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
     category: "Display",
     size: "2 KB",
   },
+  {
+    id: "i2c_lcd",
+    name: "i2c_lcd.py",
+    description: "HD44780 16×2 / 20×4 character LCD over PCF8574 I2C backpack",
+    trigger: "i2c_lcd",
+    path: "/libs/i2c_lcd.py",
+    category: "Display",
+    size: "2 KB",
+  },
+  {
+    id: "lcd_api",
+    name: "lcd_api.py",
+    description: "HD44780 character LCD base API (required by i2c_lcd.py)",
+    trigger: "I2cLcd",
+    path: "/libs/lcd_api.py",
+    category: "Display",
+    size: "3 KB",
+  },
   // ── Sensor ───────────────────────────────────────────────────────────────────
   {
     id: "lsm6ds3",
