@@ -107,15 +107,38 @@ function CharEditor({ pixels, onChange }: { pixels: LCDCharPixels; onChange: (p:
   );
 }
 
+// Split a line into display "units" — each token ({v}, {name}, {c0}..{c7})
+// counts as a single LCD column; every other character is its own column.
+const LCD_TOKEN_RE = /^(\{c[0-7]\}|\{[A-Za-z_]\w*\})/;
+function tokenizeLcdLine(line: string): string[] {
+  const units: string[] = [];
+  let i = 0;
+  while (i < line.length) {
+    const m = line.slice(i).match(LCD_TOKEN_RE);
+    if (m) { units.push(m[0]); i += m[0].length; }
+    else { units.push(line[i]); i += 1; }
+  }
+  return units;
+}
+const isLcdToken = (u: string) => u.length > 1;
+// Compact label shown inside a single grid cell for a token.
+const lcdTokenLabel = (u: string) => u.replace(/^\{|\}$/g, "");
+
 // ─── 16×2 LCD Grid Designer ───────────────────────────────────────────────────
 function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLinesChange: (l: [string, string]) => void }) {
   const COLS = 16;
-  const chars = lines.map(l => l.padEnd(COLS, " ").slice(0, COLS).split(""));
+  // Each cell is a unit (single char or a whole token), padded to 16 columns.
+  const cells = lines.map(l => {
+    const u = tokenizeLcdLine(l).slice(0, COLS);
+    while (u.length < COLS) u.push(" ");
+    return u;
+  });
   const setChar = (row: number, col: number, ch: string) => {
     const newLines: [string, string] = [...lines] as [string, string];
-    const arr = newLines[row].padEnd(COLS, " ").split("");
-    arr[col] = ch || " ";
-    newLines[row] = arr.join("");
+    const units = tokenizeLcdLine(newLines[row]);
+    while (units.length <= col) units.push(" ");
+    units[col] = ch || " ";
+    newLines[row] = units.join("").replace(/ +$/, "");
     onLinesChange(newLines);
   };
 
@@ -126,10 +149,15 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
         {[0, 1].map(row => (
           <div key={row} className="flex gap-px">
             {Array.from({ length: COLS }, (_, col) => {
-              const ch = chars[row][col] || " ";
+              const ch = cells[row][col] || " ";
+              const token = isLcdToken(ch);
               return (
-                <div key={col}
-                  className="w-7 h-7 flex items-center justify-center text-[11px] font-mono text-green-300 bg-[#0a1a0a] hover:bg-[#0d2a0d] border border-[#1a2a1a] cursor-text transition-colors"
+                <div key={col} title={token ? ch : undefined}
+                  className={`w-7 h-7 flex items-center justify-center font-mono border cursor-text transition-colors overflow-hidden ${
+                    token
+                      ? "text-[7px] leading-none text-cyan-300 bg-cyan-500/15 border-cyan-500/40"
+                      : "text-[11px] text-green-300 bg-[#0a1a0a] hover:bg-[#0d2a0d] border-[#1a2a1a]"
+                  }`}
                   contentEditable suppressContentEditableWarning
                   onKeyDown={e => {
                     e.preventDefault();
@@ -138,7 +166,9 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
                   }}
                   style={{ outline: "none" }}
                 >
-                  {ch === " " ? <span className="text-[#1a3a1a]">·</span> : ch}
+                  {token
+                    ? <span className="px-px truncate">{lcdTokenLabel(ch)}</span>
+                    : ch === " " ? <span className="text-[#1a3a1a]">·</span> : ch}
                 </div>
               );
             })}
@@ -180,7 +210,12 @@ export function LCD16x2Node() {
   const [showCharEditor, setShowCharEditor] = useState(false);
   const [activeChar, setActiveChar] = useState(0);
 
-  const previewLines: [string, string] = [line1.slice(0, 16).padEnd(16, " "), line2.slice(0, 16).padEnd(16, " ")];
+  // Each token occupies one column in the preview, mirroring the real LCD.
+  const previewUnits: string[][] = [line1, line2].map(l => {
+    const u = tokenizeLcdLine(l).slice(0, 16);
+    while (u.length < 16) u.push(" ");
+    return u;
+  });
 
   return (
     <>
@@ -202,11 +237,15 @@ export function LCD16x2Node() {
         {/* Mini LCD preview */}
         <div className="px-3 py-1">
           <div className="rounded-lg border border-[#2a3a2a] bg-[#0a1a0a] px-2 py-1.5">
-            {previewLines.map((line, i) => (
+            {previewUnits.map((units, i) => (
               <div key={i} className="flex">
-                {line.split("").map((ch, j) => (
-                  <span key={j} className="text-[10px] leading-4 text-green-300 font-mono w-[9px] text-center">
-                    {ch === " " ? " " : ch}
+                {units.map((u, j) => (
+                  <span key={j}
+                    className={`leading-4 font-mono w-[9px] text-center overflow-hidden ${
+                      isLcdToken(u) ? "text-[6px] text-cyan-300 bg-cyan-500/15 rounded-[1px]" : "text-[10px] text-green-300"
+                    }`}
+                    title={isLcdToken(u) ? u : undefined}>
+                    {isLcdToken(u) ? lcdTokenLabel(u).slice(0, 2) : u === " " ? " " : u}
                   </span>
                 ))}
               </div>
@@ -225,8 +264,9 @@ export function LCD16x2Node() {
         </NodeField>
         <div className="px-3 pb-1.5">
           <p className="text-[9px] text-[var(--k-dim)] leading-relaxed">
-            In any line type <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> to insert the variable above,
-            or <span className="font-mono text-[var(--k-muted)]">{"{c0}"}</span>…<span className="font-mono text-[var(--k-muted)]">{"{c7}"}</span> to insert a custom character.
+            In any line, <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> inserts the variable above.
+            Use any other name like <span className="font-mono text-[var(--k-muted)]">{"{temp}"}</span> for additional variables,
+            or <span className="font-mono text-[var(--k-muted)]">{"{c0}"}</span>…<span className="font-mono text-[var(--k-muted)]">{"{c7}"}</span> for custom characters. Each token = 1 column.
           </p>
         </div>
 

@@ -854,17 +854,32 @@ time.sleep(0.1)`);
         const lcdLine2 = typeof d.line2 === "string" ? d.line2 : "World";
         const lcdVar = typeof d.varName === "string" ? d.varName.trim() : "";
         // Render a line to a Python string/f-string literal. Supports tokens:
-        //   {v}        → the live variable (uses an f-string)
+        //   {v}        → the default Variable field (uses an f-string)
+        //   {name}     → any Python variable by name (multiple per line)
         //   {c0}..{c7} → custom character slots via chr(n)
         const renderLcdLine = (text: string): string => {
-          let s = text.slice(0, 16);
-          let isF = false;
-          s = s.replace(/\{c([0-7])\}/g, (_m, n) => { isF = true; return `{chr(${n})}`; });
-          if (s.includes("{v}")) {
-            if (lcdVar) { isF = true; s = s.split("{v}").join(`{${lcdVar}}`); }
-            else { s = s.split("{v}").join(""); } // no variable wired → drop token
+          // Collect up to 16 display "units" without splitting a token across
+          // the column cap — each token occupies a single LCD column.
+          const units: string[] = [];
+          let i = 0;
+          while (i < text.length && units.length < 16) {
+            const m = text.slice(i).match(/^(\{c[0-7]\}|\{[A-Za-z_]\w*\})/);
+            if (m) { units.push(m[0]); i += m[0].length; }
+            else { units.push(text[i]); i += 1; }
           }
-          // JSON.stringify gives us a safely-escaped double-quoted literal; the
+          let s = units.join("");
+          let isF = false;
+          // Custom characters → chr(n)
+          s = s.replace(/\{c([0-7])\}/g, (_m, n) => { isF = true; return `{chr(${n})}`; });
+          // Variables: {v} maps to the Variable field, {name} maps directly.
+          s = s.replace(/\{([A-Za-z_]\w*)\}/g, (_m, name) => {
+            if (name === "v") {
+              if (!lcdVar) return "";       // no variable wired → drop token
+              isF = true; return `{${lcdVar}}`;
+            }
+            isF = true; return `{${name}}`;
+          });
+          // JSON.stringify gives a safely-escaped double-quoted literal; the
           // curly-brace expressions we inserted are preserved for the f-string.
           return isF ? `f${JSON.stringify(s)}` : JSON.stringify(s);
         };
