@@ -2,7 +2,25 @@ import { Code2, Lock, Pencil } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
+import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+import { tags as t } from "@lezer/highlight";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
+
+// Syntax colors mirror the read-only highlighter in highlightCode() below, so the
+// editor and block/code views look identical:
+//   keywords → --k-primary (violet) · strings → --k-warning (amber)
+//   functions → --k-accent (cyan)   · numbers → --k-secondary (fuchsia)
+//   comments → --k-dim               · text    → --k-text
+const cmHighlight = HighlightStyle.define([
+  { tag: [t.keyword, t.controlKeyword, t.operatorKeyword, t.definitionKeyword,
+          t.moduleKeyword, t.bool, t.null, t.self], color: "var(--k-primary)" },
+  { tag: [t.string, t.special(t.string), t.regexp, t.character], color: "var(--k-warning)" },
+  { tag: [t.function(t.variableName), t.function(t.propertyName), t.labelName],
+    color: "var(--k-accent)" },
+  { tag: [t.number, t.integer, t.float], color: "var(--k-secondary)" },
+  { tag: [t.comment, t.lineComment, t.blockComment], color: "var(--k-dim)" },
+  { tag: [t.variableName, t.propertyName, t.operator, t.punctuation], color: "var(--k-text)" },
+]);
 
 // CodeMirror theme bound to the app's CSS color tokens so the editor matches the
 // rest of the panel (and follows light/dark automatically via the same vars).
@@ -163,7 +181,7 @@ export function CodePanel({
             onChange={onEditableCodeChange}
             height="100%"
             theme={cmTheme}
-            extensions={[python(), EditorView.lineWrapping]}
+            extensions={[python(), EditorView.lineWrapping, syntaxHighlighting(cmHighlight)]}
             placeholder="# Write your Python code here"
             basicSetup={{
               lineNumbers: true,
