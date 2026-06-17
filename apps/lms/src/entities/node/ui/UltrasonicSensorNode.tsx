@@ -26,9 +26,9 @@ function EchoPulseDisplay({ live, distanceCm }: { live: boolean; distanceCm: num
   // echo pulse width. Farther object = later/longer echo.
   const frac = distanceCm != null ? Math.max(0.12, Math.min(1, distanceCm / 200)) : 0.6;
   const objLeft = `${8 + frac * 78}%`;       // sensor at 8%, object up to ~86%
-  const echoW = Math.round(4 + frac * 36);    // echo bar width 4–40px
+  const easing = (name: string) => (name === "usWaveScroll" ? "linear" : "ease-in-out");
   const anim = (name: string, delay = 0) =>
-    live ? `${name} ${DUR} ${name === "usWaveRing" || name === "usPing" ? "ease-in-out" : "steps(1)"} ${delay}s infinite` : "none";
+    live ? `${name} ${DUR} ${easing(name)} ${delay}s infinite` : "none";
 
   return (
     <div className={`w-full rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden px-2.5 py-2 flex flex-col gap-1.5 transition-opacity ${live ? "" : "opacity-50"}`}>
@@ -43,49 +43,42 @@ function EchoPulseDisplay({ live, distanceCm }: { live: boolean; distanceCm: num
       </div>
 
       {/* Travel lane: sensor → object with a pinging wave */}
-      <div className="relative h-6">
+      <div className="relative h-9">
         {/* sensor (left) */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-4 rounded-sm bg-purple-500/80" />
+        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-5 rounded-sm bg-purple-500/80" />
         {/* object — positioned by measured distance */}
-        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-1.5 h-5 rounded-sm bg-[var(--k-base-400)] border border-[var(--k-border)] transition-all duration-300"
+        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-1.5 h-6 rounded-sm bg-[var(--k-base-400)] border border-[var(--k-border)] transition-all duration-300"
           style={{ left: live ? objLeft : "86%" }} />
         {/* dashed path */}
         <div className="absolute left-4 right-3 top-1/2 -translate-y-1/2 h-px"
           style={{ backgroundImage: "repeating-linear-gradient(90deg,var(--k-border) 0 4px,transparent 4px 8px)" }} />
+
+        {/* sonar wave arcs emitted from the sensor */}
+        <svg className="absolute left-3 top-0 h-full" width="22" viewBox="0 0 22 36" fill="none" preserveAspectRatio="none">
+          {[0, 0.25, 0.5].map((delay, i) => (
+            <path key={i} d="M2 6 Q14 18 2 30" stroke="#22d3ee" strokeWidth="1.5" strokeLinecap="round"
+              style={{ animation: anim("usSonar", delay), opacity: live ? undefined : 0 }} />
+          ))}
+        </svg>
+
         {/* expanding wave rings emitted from sensor */}
         {[0, 0.12].map((delay, i) => (
           <div key={i}
             className="absolute top-1/2 left-4 w-4 h-4 -translate-y-1/2 rounded-full border-2 border-cyan-400"
             style={{ animation: anim("usWaveRing", delay), opacity: live ? undefined : 0 }} />
         ))}
+
+        {/* traveling sine wave riding the path */}
+        <svg className="absolute left-4 right-3 top-1/2 -translate-y-1/2 h-4 overflow-visible" viewBox="0 0 120 16"
+          preserveAspectRatio="none" fill="none" style={{ opacity: live ? 0.9 : 0 }}>
+          <path d="M0 8 Q6 0 12 8 T24 8 T36 8 T48 8 T60 8 T72 8 T84 8 T96 8 T108 8 T120 8"
+            stroke="#67e8f9" strokeWidth="1.5" strokeLinecap="round"
+            style={{ animation: anim("usWaveScroll") }} />
+        </svg>
+
         {/* traveling ping dot */}
         <div className="absolute top-1/2 w-1.5 h-1.5 -translate-y-1/2 -translate-x-1/2 rounded-full bg-cyan-300 shadow-[0_0_6px_2px_rgba(34,211,238,0.6)]"
           style={{ animation: anim("usPing"), opacity: live ? undefined : 0 }} />
-      </div>
-
-      {/* TRIG waveform */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[8px] text-purple-400 font-mono w-7 flex-shrink-0">TRIG</span>
-        <div className="flex-1 flex items-end h-3">
-          <div className="h-[2px] w-3 bg-[var(--k-border)]" />
-          <div className="w-1 self-stretch rounded-sm bg-purple-500"
-            style={{ animation: anim("usTrigPulse"), opacity: live ? undefined : 0.3 }} />
-          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
-        </div>
-      </div>
-
-      {/* ECHO waveform — high for the round-trip time (width scales with distance) */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[8px] text-cyan-400 font-mono w-7 flex-shrink-0">ECHO</span>
-        <div className="flex-1 flex items-end h-3">
-          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
-          <div className="flex items-end h-full" style={{ animation: anim("usEchoPulse"), opacity: live ? undefined : 0.3 }}>
-            <div className="h-[2px] w-px bg-cyan-500" />
-            <div className="self-stretch border-t-2 border-l-2 border-r-2 border-cyan-500 rounded-t-sm transition-all duration-300"
-              style={{ width: live ? echoW : 24 }} />
-          </div>
-          <div className="h-[2px] flex-1 bg-[var(--k-border)]" />
-        </div>
       </div>
     </div>
   );
