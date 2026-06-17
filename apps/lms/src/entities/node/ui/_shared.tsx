@@ -72,7 +72,7 @@ export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultr
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Fixed GPIO — Port {port}</span>
-        <span className="text-[9px] font-mono text-purple-400">locked</span>
+        <span className="text-[9px] font-mono text-[var(--k-primary)]">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
         {mode === "i2c" ? (
@@ -148,8 +148,8 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
         {arcPath(0, pct, color, 5)}
         <circle cx={knobX} cy={knobY} r={6} fill={color} />
         <circle cx={knobX} cy={knobY} r={3} fill="var(--k-base-100)" />
-        <text x={CX} y={CY - 4} textAnchor="middle" fill="white" fontSize={14} fontWeight="bold" fontFamily="monospace">{angle}</text>
-        <text x={CX} y={CY + 9} textAnchor="middle" fill="#6b7280" fontSize={8}>degrees</text>
+        <text x={CX} y={CY - 4} textAnchor="middle" fill="var(--k-text)" fontSize={14} fontWeight="bold" fontFamily="monospace">{angle}</text>
+        <text x={CX} y={CY + 9} textAnchor="middle" fill="var(--k-muted)" fontSize={8}>degrees</text>
       </svg>
       <div className="flex justify-between w-[88px] px-1">
         <span className="text-[8px] text-[var(--k-dim)]">{min}°</span>

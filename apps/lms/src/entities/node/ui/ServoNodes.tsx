@@ -9,7 +9,6 @@ import {
   ToggleInput,
   useNodeField,
   AdvancedSection,
-  COLORS,
 } from "./BaseNode";
 import { AngleDial, MotorIcon } from "./_shared";
 import { SERVO_MODELS, SERVO_MODEL_ORDER } from "@/entities/board";
@@ -28,6 +27,10 @@ type ServoKey = keyof typeof SERVO_PORTS;
 const SERVO_OPTIONS = (Object.keys(SERVO_PORTS) as ServoKey[]).map(k => ({ label: SERVO_PORTS[k].label, value: k }));
 
 const SERVO_MODEL_OPTIONS = SERVO_MODEL_ORDER.map(k => ({ label: SERVO_MODELS[k].label, value: k }));
+const SERVO_PRIMARY = "var(--k-warning)";
+const SERVO_SECONDARY = "var(--k-info)";
+const SERVO_TERTIARY = "var(--k-success)";
+const SEQUENCER_ACCENT = "var(--k-primary)";
 
 // Servo model + travel-type selector, shared by the servo nodes.
 function ServoModelFields({
@@ -61,7 +64,7 @@ function ContinuousSpeed({ speed, onChange, color }: { speed: number; onChange: 
     <div className="px-3 py-1">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-        <span className="text-[10px] font-mono text-orange-400">
+        <span className="text-[10px] font-mono text-[var(--k-warning)]">
           {speed === 0 ? "STOP" : speed > 0 ? `+${speed}%` : `${speed}%`}
         </span>
       </div>
@@ -81,7 +84,7 @@ function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
         <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Signal pin — fixed GPIO</span>
-        <span className="text-[9px] font-mono text-orange-400">locked</span>
+        <span className="text-[9px] font-mono text-[var(--k-warning)]">locked</span>
       </div>
       <div className="flex gap-2 mt-0.5">
         <span className="text-[10px] text-[var(--k-muted)]">GPIO <span className="text-[var(--k-text)] font-mono">{SERVO_PORTS[servoKey].pin}</span></span>
@@ -100,7 +103,7 @@ export function ServoMotorNode() {
   const angleNum = Number(angle);
   const dialAngle = Number.isFinite(angleNum) ? Math.max(0, Math.min(180, angleNum)) : 90;
   return (
-    <BaseNode title="Servo Motor" color={COLORS.orange} icon={<MotorIcon />} width="240px">
+    <BaseNode title="Servo Motor" color={SERVO_PRIMARY} icon={<MotorIcon />} width="240px">
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
@@ -109,10 +112,10 @@ export function ServoMotorNode() {
         <ServoModelFields model={servoModel} onModelChange={setServoModel} servoType={servoType} onTypeChange={setServoType} />
       </AdvancedSection>
       {servoType === "360"
-        ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
+        ? <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} />
         : (
           <>
-            <AngleDial angle={dialAngle} onChange={setAngle} color={COLORS.orange} />
+            <AngleDial angle={dialAngle} onChange={setAngle} color={SERVO_PRIMARY} />
             <NodeField label="Set Angle (°)">
               <TextInput value={String(angle ?? "")} onChange={setAngle} />
             </NodeField>
@@ -137,7 +140,7 @@ export function ServoMotorAdvanceNode() {
   const [loop, setLoop]             = useNodeField<boolean>("loop", false);
 
   return (
-    <BaseNode title="Servo Sweep" color={COLORS.orange} icon={<MotorIcon />} width="240px">
+    <BaseNode title="Servo Sweep" color={SERVO_PRIMARY} icon={<MotorIcon />} width="240px">
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
@@ -149,7 +152,7 @@ export function ServoMotorAdvanceNode() {
       {servoType === "360" ? (
         <>
           {/* Continuous servo: oscillate forward ↔ reverse */}
-          <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={COLORS.orange} />
+          <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} />
           <NodeField label="Period (ms)"><NumberInput value={sweepPeriod} onChange={setSweepPeriod} /></NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
             <p className="text-[9px] text-[var(--k-muted)]">Oscillates {Math.abs(contSpeed)}% forward then reverse, {sweepPeriod}ms each way.</p>
@@ -161,22 +164,22 @@ export function ServoMotorAdvanceNode() {
           <div className="flex px-2 gap-2 pb-1">
             <div className="flex flex-col items-center flex-1">
               <span className="text-[9px] text-[var(--k-muted)] mb-0.5">Start</span>
-              <AngleDial angle={startAngle} onChange={setStartAngle} max={endAngle} color="#60a5fa" />
+              <AngleDial angle={startAngle} onChange={setStartAngle} max={endAngle} color={SERVO_SECONDARY} />
             </div>
             <div className="flex flex-col items-center flex-1">
               <span className="text-[9px] text-[var(--k-muted)] mb-0.5">End</span>
-              <AngleDial angle={endAngle} onChange={setEndAngle} min={startAngle} color={COLORS.orange} />
+              <AngleDial angle={endAngle} onChange={setEndAngle} min={startAngle} color={SERVO_PRIMARY} />
             </div>
           </div>
 
           <div className="px-3 pb-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-              <span className="text-[10px] font-mono text-orange-400">{speed}%</span>
+              <span className="text-[10px] font-mono text-[var(--k-warning)]">{speed}%</span>
             </div>
             <input type="range" min={1} max={100} step={1} value={speed}
               onChange={e => setSpeed(Number(e.target.value))}
-              className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
+              className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: SERVO_PRIMARY }} />
           </div>
 
           {/* Bounce & Loop toggles */}
@@ -231,7 +234,7 @@ export function ServoControllerNode() {
   };
 
   return (
-    <BaseNode title="Servo Controller" color={COLORS.orange} icon={<MotorIcon />} width="260px">
+    <BaseNode title="Servo Controller" color={SERVO_PRIMARY} icon={<MotorIcon />} width="260px">
       <NodeField label="Servo Port">
         <SelectInput value={servoPort} onChange={v => setServoPort(v as ServoKey)} compact options={SERVO_OPTIONS} />
       </NodeField>
@@ -253,13 +256,13 @@ export function ServoControllerNode() {
 
       {servoType === "180" && mode === "standard" && (
         <>
-          <AngleDial angle={dialAngle} onChange={setAngle} color={COLORS.orange} />
+          <AngleDial angle={dialAngle} onChange={setAngle} color={SERVO_PRIMARY} />
           <NodeField label="Set Angle (°)">
             <TextInput value={String(angle ?? "")} onChange={setAngle} />
           </NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] flex items-center justify-between">
             <span className="text-[9px] text-[var(--k-muted)]">Pulse @ {String(angle)}°</span>
-            <span className="text-[10px] font-mono text-orange-400">{pulseUs == null ? "auto" : `${pulseUs} µs`}</span>
+            <span className="text-[10px] font-mono text-[var(--k-warning)]">{pulseUs == null ? "auto" : `${pulseUs} µs`}</span>
           </div>
         </>
       )}
@@ -268,13 +271,13 @@ export function ServoControllerNode() {
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-            <span className="text-[10px] font-mono text-orange-400">
+            <span className="text-[10px] font-mono text-[var(--k-warning)]">
               {contSpeed === 0 ? "STOP" : contSpeed > 0 ? `+${contSpeed}%` : `${contSpeed}%`}
             </span>
           </div>
           <input type="range" min={-100} max={100} step={5} value={contSpeed}
             onChange={e => setContSpeed(Number(e.target.value))}
-            className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.orange }} />
+            className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: SERVO_PRIMARY }} />
           <div className="flex justify-between mt-0.5">
             <span className="text-[8px] text-[var(--k-dim)]">← Reverse</span>
             <span className="text-[8px] text-[var(--k-dim)]">Forward →</span>
@@ -287,11 +290,11 @@ export function ServoControllerNode() {
           <div className="px-3 pb-1 flex gap-4">
             <div className="flex flex-col items-center">
               <span className="text-[9px] text-[var(--k-muted)] mb-0.5">Min</span>
-              <AngleDial angle={sweepMin} onChange={setSweepMin} max={sweepMax} color="#60a5fa" />
+              <AngleDial angle={sweepMin} onChange={setSweepMin} max={sweepMax} color={SERVO_SECONDARY} />
             </div>
             <div className="flex flex-col items-center">
               <span className="text-[9px] text-[var(--k-muted)] mb-0.5">Max</span>
-              <AngleDial angle={sweepMax} onChange={setSweepMax} min={sweepMin} color={COLORS.orange} />
+              <AngleDial angle={sweepMax} onChange={setSweepMax} min={sweepMin} color={SERVO_PRIMARY} />
             </div>
           </div>
           <NodeField label="Period (ms)"><NumberInput value={sweepPeriod} onChange={setSweepPeriod} /></NodeField>
@@ -373,11 +376,11 @@ export function MultiServoSequencerNode() {
     setKeyframes(keyframes.filter((_, i) => i !== idx));
   };
 
-  const SERVO_COLORS = [COLORS.orange, "#60a5fa", "#34d399"];
+  const SERVO_COLORS = [SERVO_PRIMARY, SERVO_SECONDARY, SERVO_TERTIARY];
   const currentAngles = playing ? keyframes[playIdx]?.angles ?? [90,90,90] : keyframes[0]?.angles ?? [90,90,90];
 
   return (
-    <BaseNode title="Multi-Servo Sequencer" color={COLORS.purple} icon={<MotorIcon />} width="290px">
+    <BaseNode title="Multi-Servo Sequencer" color={SEQUENCER_ACCENT} icon={<MotorIcon />} width="290px">
       {([s1port, s2port, s3port] as ServoKey[]).map((p, i) => {
         const setters = [setS1port, setS2port, setS3port];
         return (
@@ -406,24 +409,38 @@ export function MultiServoSequencerNode() {
             return (
               <div key={i} className="absolute top-0 h-full flex flex-col justify-center"
                 style={{ left: `${pct}%`, transform: "translateX(-50%)" }}>
-                <div className={`w-1.5 h-4 rounded-sm transition-all ${isActive ? "bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]" : "bg-[var(--k-base-400)]"}`} />
+                <div
+                  className={`w-1.5 h-4 rounded-sm transition-all ${isActive ? "bg-[var(--k-primary)]" : "bg-[var(--k-base-400)]"}`}
+                  style={isActive ? { boxShadow: "0 0 6px color-mix(in srgb, var(--k-primary) 80%, transparent)" } : undefined}
+                />
               </div>
             );
           })}
           {playing && (
-            <div className="absolute top-0 bottom-0 w-0.5 bg-purple-400/70 transition-all"
-              style={{ left: `${(playIdx / Math.max(1, keyframes.length - 1)) * 100}%` }} />
+            <div className="absolute top-0 bottom-0 w-0.5 transition-all"
+              style={{ backgroundColor: "color-mix(in srgb, var(--k-primary) 70%, transparent)",
+                left: `${(playIdx / Math.max(1, keyframes.length - 1)) * 100}%` }}
+            />
           )}
         </div>
       </div>
 
       <div className="max-h-48 overflow-y-auto px-3 flex flex-col gap-1.5 pb-1">
         {keyframes.map((kf, kfIdx) => (
-          <div key={kfIdx} className={`rounded-lg border p-2 transition-all ${playing && kfIdx === playIdx ? "border-purple-500/60 bg-purple-500/5" : "border-[var(--k-border)] bg-[var(--k-base-300)]"}`}>
+          <div
+            key={kfIdx}
+            className="rounded-lg border p-2 transition-all"
+            style={playing && kfIdx === playIdx
+              ? {
+                borderColor: "color-mix(in srgb, var(--k-primary) 60%, transparent)",
+                backgroundColor: "color-mix(in srgb, var(--k-primary) 6%, transparent)",
+              }
+              : undefined}
+          >
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[9px] font-bold text-[var(--k-muted)]">KF {kfIdx + 1} @ {kf.time}ms</span>
               <button onClick={() => removeKeyframe(kfIdx)}
-                className="nodrag text-[9px] text-[var(--k-dim)] hover:text-red-400 transition-colors px-1">✕</button>
+                className="nodrag text-[9px] text-[var(--k-dim)] transition-colors px-1 hover:text-[var(--k-error)]">✕</button>
             </div>
             <div className="flex gap-2">
               {kf.angles.map((a, sIdx) => (
@@ -446,9 +463,18 @@ export function MultiServoSequencerNode() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Preview</span>
             <button onClick={playing ? stopPlay : startPlay}
-              className={`nodrag px-2 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                playing ? "border-red-500/40 text-red-400 bg-red-500/10" : "border-purple-500/40 text-purple-400 bg-purple-500/10"
-              }`}
+              className="nodrag px-2 py-0.5 rounded text-[9px] font-bold border transition-all"
+              style={playing
+                ? {
+                  borderColor: "color-mix(in srgb, var(--k-error) 40%, transparent)",
+                  color: "var(--k-error)",
+                  backgroundColor: "color-mix(in srgb, var(--k-error) 10%, transparent)",
+                }
+                : {
+                  borderColor: "color-mix(in srgb, var(--k-primary) 40%, transparent)",
+                  color: "var(--k-primary)",
+                  backgroundColor: "color-mix(in srgb, var(--k-primary) 10%, transparent)",
+                }}
             >{playing ? "⏹ Stop" : "▶ Play"}</button>
           </div>
           <div className="flex justify-around">
@@ -468,7 +494,7 @@ export function MultiServoSequencerNode() {
                     <path d={`M${x1},${y1} A${r},${r},0,${largeArc},1,${kx},${ky}`}
                       fill="none" stroke={SERVO_COLORS[i]} strokeWidth={3} strokeLinecap="round" opacity={0.7} />
                     <circle cx={kx} cy={ky} r={3} fill={SERVO_COLORS[i]} />
-                    <text x={cx} y={cy + 4} textAnchor="middle" fill="white" fontSize={9} fontFamily="monospace">{a}°</text>
+                    <text x={cx} y={cy + 4} textAnchor="middle" fill="var(--k-text)" fontSize={9} fontFamily="monospace">{a}°</text>
                   </svg>
                   <span className="text-[8px]" style={{ color: SERVO_COLORS[i] }}>S{i + 1}</span>
                 </div>
@@ -480,7 +506,12 @@ export function MultiServoSequencerNode() {
 
       <div className="px-3 pb-2 flex gap-2">
         <button onClick={addKeyframe}
-          className="nodrag flex-1 py-1 rounded-lg border border-purple-500/40 text-purple-400 text-[10px] font-bold hover:bg-purple-500/10 transition-all">
+          className="nodrag flex-1 py-1 rounded-lg border text-[10px] font-bold transition-all"
+          style={{
+            borderColor: "color-mix(in srgb, var(--k-primary) 40%, transparent)",
+            color: "var(--k-primary)",
+            backgroundColor: "color-mix(in srgb, var(--k-primary) 10%, transparent)",
+          }}>
           + Add Keyframe
         </button>
         <button
@@ -530,7 +561,7 @@ export function ServoCalibrationNode() {
   };
 
   return (
-    <BaseNode title="Servo Calibration" color={COLORS.cyan} icon={
+    <BaseNode title="Servo Calibration" color="var(--k-accent)" icon={
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
       </svg>
@@ -538,7 +569,7 @@ export function ServoCalibrationNode() {
       <div className="mx-3 mb-2 px-2.5 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
         <div className="flex items-center justify-between">
           <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Canvas Servo Nodes</span>
-          <span className="text-[10px] font-mono text-cyan-400">{servoNodes.length} found</span>
+          <span className="text-[10px] font-mono text-[var(--k-accent)]">{servoNodes.length} found</span>
         </div>
         {servoNodes.length === 0 && (
           <p className="text-[10px] text-[var(--k-dim)] mt-1">Add Servo Motor or Servo Controller nodes to the canvas.</p>
@@ -547,11 +578,18 @@ export function ServoCalibrationNode() {
 
       <div className="px-3 pb-2">
         <button onClick={centerAll}
-          className={`nodrag w-full py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2 ${
-            centered
-              ? "border-green-500/40 bg-green-500/10 text-green-400"
-              : "border-cyan-500/40 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20"
-          }`}
+          className="nodrag w-full py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-2"
+          style={centered
+            ? {
+              borderColor: "color-mix(in srgb, var(--k-success) 40%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--k-success) 10%, transparent)",
+              color: "var(--k-success)",
+            }
+            : {
+              borderColor: "color-mix(in srgb, var(--k-accent) 40%, transparent)",
+              backgroundColor: "color-mix(in srgb, var(--k-accent) 10%, transparent)",
+              color: "var(--k-accent)",
+            }}
         >
           {centered ? "✓ All Centered!" : "Center All Servos (90°)"}
         </button>
@@ -571,13 +609,13 @@ export function ServoCalibrationNode() {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] font-bold text-[var(--k-text)]">{portLabel(n)}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-mono text-cyan-400">{pulse} µs</span>
-                      <span className="text-[10px] font-mono text-orange-400">{a}°</span>
+                      <span className="text-[9px] font-mono text-[var(--k-accent)]">{pulse} µs</span>
+                      <span className="text-[10px] font-mono text-[var(--k-warning)]">{a}°</span>
                     </div>
                   </div>
                   <input type="range" min={0} max={180} step={1} value={a}
                     onChange={e => setOverride(n.id, Number(e.target.value))}
-                    className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.cyan }} />
+                    className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: "var(--k-accent)" }} />
                 </div>
               );
             })}
@@ -585,8 +623,14 @@ export function ServoCalibrationNode() {
         </>
       )}
 
-      <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
-        <p className="text-[9px] text-amber-400/80">Compile-time utility only — does not generate runtime code.</p>
+      <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border"
+        style={{
+          borderColor: "color-mix(in srgb, var(--k-warning) 20%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--k-warning) 5%, transparent)",
+        }}>
+        <p className="text-[9px]" style={{ color: "color-mix(in srgb, var(--k-warning) 80%, var(--k-text) 20%)" }}>
+          Compile-time utility only — does not generate runtime code.
+        </p>
       </div>
     </BaseNode>
   );
