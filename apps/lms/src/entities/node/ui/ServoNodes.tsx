@@ -9,6 +9,7 @@ import {
   ToggleInput,
   useNodeField,
   AdvancedSection,
+  COLORS,
 } from "./BaseNode";
 import { AngleDial, MotorIcon, SmoothSlider, SpeedVarInput } from "./_shared";
 import { SERVO_MODELS, SERVO_MODEL_ORDER } from "@/entities/board";
