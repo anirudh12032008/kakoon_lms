@@ -11,8 +11,8 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { AngleDial, MotorIcon, SmoothSlider, SpeedVarInput } from "./_shared";
-import { SERVO_MODELS, SERVO_MODEL_ORDER } from "@/entities/board";
+import { AngleDial, MotorIcon, SmoothSlider, SpeedVarInput, PORT_OPTIONS } from "./_shared";
+import { SERVO_MODELS, SERVO_MODEL_ORDER, SENSOR_PORTS } from "@/entities/board";
 import type { ServoModelId, ServoType } from "@/entities/board";
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
@@ -531,34 +531,40 @@ export function MultiServoSequencerNode() {
   );
 }
 
-// ─── Shadow Arm (4 pots → input) ───────────────────────────────────────────────
+// ─── Shadow Arm (ADS1115 pots over I2C → variables) ─────────────────────────────
 export function ShadowArmNode() {
-  const [potPins, setPotPins] = useNodeField<number[]>("potPins", [4, 5, 1, 2]);
-  const [potMin, setPotMin]   = useNodeField<number[]>("potMin", [800, 800, 800, 800]);
-  const [potMax, setPotMax]   = useNodeField<number[]>("potMax", [64000, 64000, 64000, 64000]);
+  const [port, setPort]       = useNodeField<string>("port", "1");
+  const [address, setAddress] = useNodeField<string>("address", "0x48");
+  const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
+  const [potMin, setPotMin]   = useNodeField<number[]>("potMin", [300, 300, 300, 300]);
+  const [potMax, setPotMax]   = useNodeField<number[]>("potMax", [26000, 26000, 26000, 26000]);
   const [alpha, setAlpha]     = useNodeField<number>("shadowAlpha", 25);
 
   const setAt = (arr: number[], set: (v: number[]) => void) =>
     (i: number, v: number) => set(arr.map((x, j) => (j === i ? v : x)));
-  const setPin = setAt(potPins, setPotPins);
   const setMin = setAt(potMin, setPotMin);
   const setMax = setAt(potMax, setPotMax);
+  const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
+  const sp = SENSOR_PORTS[port as keyof typeof SENSOR_PORTS] ?? SENSOR_PORTS["1"];
 
   return (
-    <BaseNode title="Shadow Arm (4 Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="250px">
+    <BaseNode title="Shadow Arm (I2C Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="250px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">Reads 4 potentiometers → exposes <span className="font-mono text-cyan-400">read_shadow()</span>. Pair with a <span className="text-orange-400">Main Arm</span> node.</p>
+        <p className="text-[9px] text-[var(--k-muted)]">ADS1115 (4 pots over I2C) → writes <span className="font-mono text-cyan-400">{pre}1 {pre}2 {pre}3 {pre}4</span>. Drop inside a Forever Loop, before <span className="text-orange-400">Main Arm</span>.</p>
       </div>
-      {[0, 1, 2, 3].map(i => (
-        <NodeField key={i} label={`Joint ${i + 1}`}>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS.cyan }} />
-            <span className="text-[9px] text-[var(--k-muted)]">GPIO</span>
-            <NumberInput value={potPins[i]} onChange={v => setPin(i, v)} />
-          </div>
-        </NodeField>
-      ))}
+      <NodeField label="I2C Port">
+        <SelectInput value={port} onChange={setPort} compact options={PORT_OPTIONS} />
+      </NodeField>
+      <NodeField label="ADS1115 address">
+        <TextInput value={address} onChange={setAddress} placeholder="0x48" />
+      </NodeField>
+      <NodeField label="Variable prefix">
+        <TextInput value={prefix} onChange={setPrefix} placeholder="j" />
+      </NodeField>
       <AdvancedSection>
+        <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
+          <span className="text-[9px] text-[var(--k-muted)]">Bus — SCL <span className="font-mono text-[var(--k-text)]">{sp.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{sp.sda}</span></span>
+        </div>
         <div className="px-3 pt-1 pb-0.5">
           <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Calibration (raw ADC min → max)</span>
         </div>
@@ -588,13 +594,49 @@ export function ShadowArmNode() {
   );
 }
 
+// A control that can be driven by a variable, a physical switch (active-low
+// GPIO), or both — used for the Main Arm's Mode and Record controls.
+function ControlSource({
+  title, hint, varName, onVarChange, switchPin, onSwitchChange, defaultPin,
+}: {
+  title: string; hint: string;
+  varName: string; onVarChange: (v: string) => void;
+  switchPin: number; onSwitchChange: (v: number) => void; defaultPin: number;
+}) {
+  const swOn = switchPin >= 0;
+  return (
+    <div className="mx-3 mb-1.5 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">{title}</span>
+      </div>
+      <p className="text-[8px] text-[var(--k-dim)] mb-1.5">{hint}</p>
+      <div className="flex items-center gap-1.5 mb-1.5">
+        <span className="text-[8px] uppercase font-bold text-cyan-400 w-9 shrink-0">var</span>
+        <TextInput value={varName} onChange={onVarChange} placeholder="optional" />
+      </div>
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => onSwitchChange(swOn ? -1 : defaultPin)}
+          className={`nodrag px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border transition-all w-9 shrink-0 ${
+            swOn ? "border-orange-500/50 text-orange-400 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
+          }`}>sw</button>
+        {swOn
+          ? <div className="flex items-center gap-1.5"><span className="text-[8px] text-[var(--k-muted)]">GPIO</span><NumberInput value={switchPin} onChange={onSwitchChange} /></div>
+          : <span className="text-[8px] text-[var(--k-dim)]">switch off</span>}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Arm (4 servos → output, mirror + record/playback) ─────────────────────
 export function MainArmNode() {
   const [mode, setMode]       = useNodeField<string>("mode", "mirror");
+  const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
+  const [jointSource, setJointSource] = useNodeField<string>("jointSource", "shadow");
   const [frameMs, setFrameMs] = useNodeField<number>("frameMs", 20);
-  const [loop, setLoop]       = useNodeField<boolean>("loop", true);
-  const [recPin, setRecPin]   = useNodeField<number>("recPin", 6);
-  const [playPin, setPlayPin] = useNodeField<number>("playPin", 7);
+  const [modeVar, setModeVar] = useNodeField<string>("modeVar", "");
+  const [modeSwitchPin, setModeSwitchPin] = useNodeField<number>("modeSwitchPin", 6);
+  const [recVar, setRecVar]   = useNodeField<string>("recVar", "");
+  const [recSwitchPin, setRecSwitchPin]   = useNodeField<number>("recSwitchPin", 7);
   const [servoLo, setServoLo] = useNodeField<number[]>("servoLo", [0, 0, 0, 0]);
   const [servoHi, setServoHi] = useNodeField<number[]>("servoHi", [180, 180, 180, 180]);
   const [servoInv, setServoInv] = useNodeField<boolean[]>("servoInv", [false, false, false, false]);
@@ -605,15 +647,25 @@ export function MainArmNode() {
   const setHi = setNumAt(servoHi, setServoHi);
   const toggleInv = (i: number) => setServoInv(servoInv.map((x, j) => (j === i ? !x : x)));
 
+  const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
   const PORT_KEYS = Object.keys(SERVO_PORTS) as ServoKey[];
 
   return (
-    <BaseNode title="Main Arm (S1–S4)" color={COLORS.orange} icon={<MotorIcon />} width="260px">
+    <BaseNode title="Main Arm (S1–S4)" color={COLORS.orange} icon={<MotorIcon />} width="270px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">Drives 4 servos from the <span className="text-cyan-400">Shadow Arm</span>. Add a Shadow Arm node too.</p>
+        <p className="text-[9px] text-[var(--k-muted)]">Self-contained controller. Drives 4 servos from <span className="font-mono text-cyan-400">{pre}1 {pre}2 {pre}3 {pre}4</span>.</p>
       </div>
 
-      <NodeField label="Mode">
+      <NodeField label="Variable prefix">
+        <TextInput value={prefix} onChange={setPrefix} placeholder="j" />
+      </NodeField>
+
+      <NodeField label="Joints from">
+        <ToggleInput value={jointSource === "manual"} onChange={on => setJointSource(on ? "manual" : "shadow")}
+          leftLabel="Shadow" rightLabel="Variables" />
+      </NodeField>
+
+      <NodeField label="Default mode">
         <SelectInput value={mode} onChange={setMode} compact
           options={[
             { label: "Live Mirror", value: "mirror" },
@@ -621,21 +673,18 @@ export function MainArmNode() {
           ]} />
       </NodeField>
 
-      {mode === "mirror" && (
-        <NodeField label="Run">
-          <ToggleInput value={loop} onChange={setLoop} leftLabel="Once" rightLabel="∞ Loop" />
-        </NodeField>
-      )}
-
-      {mode === "record" && (
-        <>
-          <NodeField label="Record btn (GPIO)"><NumberInput value={recPin} onChange={setRecPin} /></NodeField>
-          <NodeField label="Playback btn (GPIO)"><NumberInput value={playPin} onChange={setPlayPin} /></NodeField>
-          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-            <p className="text-[9px] text-[var(--k-muted)]">Press <b>Record</b> to capture the shadow arm, press again to stop. Press <b>Playback</b> to replay onto the main arm.</p>
-          </div>
-        </>
-      )}
+      <ControlSource
+        title="Mode control (mirror ↔ record)"
+        hint="Switch closed OR variable truthy → record/playback mode. Else the default mode above."
+        varName={modeVar} onVarChange={setModeVar}
+        switchPin={modeSwitchPin} onSwitchChange={setModeSwitchPin} defaultPin={6}
+      />
+      <ControlSource
+        title="Record control (capture ↔ play)"
+        hint="In record mode: switch/var ON → capture the arm; OFF → replay the captured sequence."
+        varName={recVar} onVarChange={setRecVar}
+        switchPin={recSwitchPin} onSwitchChange={setRecSwitchPin} defaultPin={7}
+      />
 
       <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
 

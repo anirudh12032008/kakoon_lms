@@ -68,10 +68,11 @@ interface NodeData {
   s1port?: string; s2port?: string; s3port?: string;
   keyframes?: Array<{ angles?: number[] }>;
   keyframeDelay?: number;
-  // Shadow arm (pots) / Main arm (servos) — master-slave puppet rig
-  potPins?: number[]; potMin?: number[]; potMax?: number[]; shadowAlpha?: number;
+  // Shadow arm (ADS1115 pots over I2C) / Main arm (servos) — master-slave puppet rig
+  potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
   servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[];
-  frameMs?: number; recPin?: number; playPin?: number;
+  frameMs?: number; jointSource?: string;
+  modeVar?: string; modeSwitchPin?: number; recVar?: string; recSwitchPin?: number;
   // Touch
   t1?: string; t2?: string; t3?: string; t4?: string;
   // PIR / IR
@@ -902,18 +903,32 @@ time.sleep(0.1)`);
         }
         break;
       }
-      // ─── Puppet rig: Shadow arm (pots) → Main arm (servos) ──────────────────
+      // ─── Puppet rig: Shadow arm (ADS1115 pots over I2C) → vars → Main arm ───
       case "shadow_arm": {
-        imports.add("from machine import Pin, ADC");
-        const pins = Array.isArray(d.potPins) ? d.potPins : [4, 5, 1, 2];
-        const pmin = Array.isArray(d.potMin) ? d.potMin : [800, 800, 800, 800];
-        const pmax = Array.isArray(d.potMax) ? d.potMax : [64000, 64000, 64000, 64000];
+        imports.add("from machine import SoftI2C, Pin");
+        imports.add("import time");
+        const sp    = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
+        const spins = SENSOR_PORTS[sp] ?? SENSOR_PORTS["1"];
+        const addr  = d.address ?? "0x48";
+        const pre   = (typeof d.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(d.varPrefix)) ? d.varPrefix : "j";
+        const pmin  = Array.isArray(d.potMin) ? d.potMin : [300, 300, 300, 300];
+        const pmax  = Array.isArray(d.potMax) ? d.potMax : [26000, 26000, 26000, 26000];
         const alpha = ((typeof d.shadowAlpha === "number" ? d.shadowAlpha : 25) / 100).toFixed(2);
         emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
-        emitOnce("shadow_arm", `# --- Shadow arm: 4 pots → 0..180° (call read_shadow()) ---
-_pot_adc = [ADC(Pin(p)) for p in [${pins.join(", ")}]]
-for _a in _pot_adc:
-    _a.atten(ADC.ATTN_11DB)   # full ~0-3.3V range
+        emitOnce("shadow_arm", `# --- Shadow arm: ADS1115 4-ch ADC over I2C (Port ${sp}: SCL ${spins.scl} / SDA ${spins.sda}) ---
+_ads_i2c = SoftI2C(scl=Pin(${spins.scl}), sda=Pin(${spins.sda}))
+_ADS_ADDR = ${addr}
+
+def _ads_read(ch):
+    # single-shot, single-ended AINch vs GND, +/-4.096V, 128 SPS
+    cfg = 0x8383 | ((4 + ch) << 12)
+    _ads_i2c.writeto_mem(_ADS_ADDR, 0x01, bytes([cfg >> 8, cfg & 0xFF]))
+    time.sleep_ms(9)
+    _b = _ads_i2c.readfrom_mem(_ADS_ADDR, 0x00, 2)
+    _v = (_b[0] << 8) | _b[1]
+    if _v > 32767: _v -= 65536
+    return _v if _v > 0 else 0
+
 _POT_MIN = [${pmin.join(", ")}]
 _POT_MAX = [${pmax.join(", ")}]
 _SHADOW_ALPHA = ${alpha}
@@ -921,13 +936,19 @@ _shadow_state = [90.0, 90.0, 90.0, 90.0]
 
 def read_shadow():
     for _i in range(4):
-        _raw = _pot_adc[_i].read_u16()
+        _raw = _ads_read(_i)
         _rng = _POT_MAX[_i] - _POT_MIN[_i]
         _ang = (_raw - _POT_MIN[_i]) * 180 / _rng if _rng else 0
         _ang = _clamp(_ang, 0, 180)
         _shadow_state[_i] += _SHADOW_ALPHA * (_ang - _shadow_state[_i])
     return [int(v) for v in _shadow_state]`);
-        chunkLines.push(`${indent}# Shadow arm ready — read_shadow() returns [a0, a1, a2, a3]`);
+        // Refresh the joint variables from the pots (run this inside a Forever Loop).
+        chunkLines.push(`${indent}${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()`);
+        if (d.sendToViz !== false) {
+          for (let i = 1; i <= 4; i++) {
+            chunkLines.push(`${indent}print(f"SENSOR,raw,${pre}${i},{${pre}${i}}")`);
+          }
+        }
         break;
       }
       case "main_arm": {
@@ -935,55 +956,66 @@ def read_shadow():
         imports.add("import time");
         emitOnce("servo_class", buildServoHelperBlock());
         emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
+        const pre = (typeof d.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(d.varPrefix)) ? d.varPrefix : "j";
         const lo  = Array.isArray(d.servoLo)  ? d.servoLo  : [0, 0, 0, 0];
         const hi  = Array.isArray(d.servoHi)  ? d.servoHi  : [180, 180, 180, 180];
         const inv = Array.isArray(d.servoInv) ? d.servoInv : [false, false, false, false];
         const fm  = Math.max(5, typeof d.frameMs === "number" ? d.frameMs : 20);
-        emitOnce("main_arm_setup", `# --- Main arm: 4 servos on S1-S4 (needs Shadow Arm's read_shadow) ---
+        const vars = `[${pre}1, ${pre}2, ${pre}3, ${pre}4]`;
+        const useShadow = (d.jointSource ?? "shadow") !== "manual";
+
+        // A control resolves at runtime from a switch (active-low GPIO) OR a
+        // variable — either can drive it. Falls back to the static Mode field.
+        const validVar = (s?: string) =>
+          (typeof s === "string" && /^[A-Za-z_]\w*$/.test(s.trim())) ? s.trim() : "";
+        const modeV = validVar(d.modeVar);
+        const recV  = validVar(d.recVar);
+        const modeSw = typeof d.modeSwitchPin === "number" && d.modeSwitchPin >= 0;
+        const recSw  = typeof d.recSwitchPin  === "number" && d.recSwitchPin  >= 0;
+        const modeParts: string[] = [];
+        if (modeSw) modeParts.push(`(_mode_sw.value() == 0)`);
+        if (modeV)  modeParts.push(`bool(${modeV})`);
+        const modeExpr = modeParts.length ? modeParts.join(" or ") : (d.mode === "record" ? "True" : "False");
+        const recParts: string[] = [];
+        if (recSw) recParts.push(`(_rec_sw.value() == 0)`);
+        if (recV)  recParts.push(`bool(${recV})`);
+        const recExpr = recParts.length ? recParts.join(" or ") : "False";
+
+        emitOnce("main_arm_setup", `# --- Main arm: 4 servos on S1-S4, driven from variables ---
 _arm = [s1, s2, s3, s4]
 _ARM_LO  = [${lo.join(", ")}]
 _ARM_HI  = [${hi.join(", ")}]
 _ARM_INV = [${inv.map(b => (b ? "True" : "False")).join(", ")}]
+${pre}1 = ${pre}2 = ${pre}3 = ${pre}4 = 90   # joint vars (set by shadow arm or manually)
 
 def drive_arm(angles):
     for _i in range(4):
         _a = 180 - angles[_i] if _ARM_INV[_i] else angles[_i]
         _arm[_i].angle(_clamp(_a, _ARM_LO[_i], _ARM_HI[_i]))`);
-        if (d.mode === "record") {
-          const recPin  = typeof d.recPin  === "number" ? d.recPin  : 6;
-          const playPin = typeof d.playPin === "number" ? d.playPin : 7;
-          chunkLines.push(`${indent}# Main arm — live mirror + record (GPIO ${recPin}) / playback (GPIO ${playPin})`);
-          chunkLines.push(`${indent}_btn_rec = Pin(${recPin}, Pin.IN, Pin.PULL_UP)`);
-          chunkLines.push(`${indent}_btn_play = Pin(${playPin}, Pin.IN, Pin.PULL_UP)`);
-          chunkLines.push(`${indent}_rec = False; _buf = []; _lr = 1; _lp = 1`);
-          chunkLines.push(`${indent}print("Arm recorder ready")`);
-          chunkLines.push(`${indent}while True:`);
-          chunkLines.push(`${indent}    _r = _btn_rec.value(); _p = _btn_play.value()`);
-          chunkLines.push(`${indent}    if _lr == 1 and _r == 0:`);
-          chunkLines.push(`${indent}        _rec = not _rec`);
-          chunkLines.push(`${indent}        if _rec: _buf = []`);
-          chunkLines.push(`${indent}        print("REC" if _rec else "STOP %d frames" % len(_buf))`);
-          chunkLines.push(`${indent}    _lr = _r`);
-          chunkLines.push(`${indent}    _ang = read_shadow()`);
-          chunkLines.push(`${indent}    drive_arm(_ang)              # live mirror`);
-          chunkLines.push(`${indent}    if _rec: _buf.append(_ang)`);
-          chunkLines.push(`${indent}    if _lp == 1 and _p == 0 and _buf:`);
-          chunkLines.push(`${indent}        print("PLAY %d frames" % len(_buf))`);
-          chunkLines.push(`${indent}        for _f in _buf:`);
-          chunkLines.push(`${indent}            drive_arm(_f); time.sleep_ms(${fm})`);
-          chunkLines.push(`${indent}    _lp = _p`);
-          chunkLines.push(`${indent}    time.sleep_ms(${fm})`);
-        } else {
-          const loopOn = d.loop !== false;
-          chunkLines.push(`${indent}# Main arm — live mirror of shadow arm`);
-          if (loopOn) {
-            chunkLines.push(`${indent}while True:`);
-            chunkLines.push(`${indent}    drive_arm(read_shadow())`);
-            chunkLines.push(`${indent}    time.sleep_ms(${fm})`);
-          } else {
-            chunkLines.push(`${indent}drive_arm(read_shadow())`);
-          }
-        }
+
+        chunkLines.push(`${indent}# Main arm controller — mode + record via variable / switch`);
+        if (modeSw) chunkLines.push(`${indent}_mode_sw = Pin(${d.modeSwitchPin}, Pin.IN, Pin.PULL_UP)`);
+        if (recSw)  chunkLines.push(`${indent}_rec_sw = Pin(${d.recSwitchPin}, Pin.IN, Pin.PULL_UP)`);
+        chunkLines.push(`${indent}_buf = []; _prev_rec = False`);
+        chunkLines.push(`${indent}print("Main arm ready")`);
+        chunkLines.push(`${indent}while True:`);
+        if (useShadow) chunkLines.push(`${indent}    ${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()   # refresh from pots`);
+        chunkLines.push(`${indent}    _frame = ${vars}`);
+        chunkLines.push(`${indent}    _record_mode = ${modeExpr}`);
+        chunkLines.push(`${indent}    _recording = (${recExpr}) and _record_mode`);
+        chunkLines.push(`${indent}    if _recording and not _prev_rec:`);
+        chunkLines.push(`${indent}        _buf = []; print("REC")`);
+        chunkLines.push(`${indent}    if not _recording and _prev_rec:`);
+        chunkLines.push(`${indent}        print("STOP %d frames" % len(_buf))`);
+        chunkLines.push(`${indent}    _prev_rec = _recording`);
+        chunkLines.push(`${indent}    if _recording:`);
+        chunkLines.push(`${indent}        drive_arm(_frame); _buf.append(_frame)   # mirror + capture`);
+        chunkLines.push(`${indent}    elif _record_mode and _buf:`);
+        chunkLines.push(`${indent}        for _f in _buf:                          # play captured sequence`);
+        chunkLines.push(`${indent}            drive_arm(_f); time.sleep_ms(${fm})`);
+        chunkLines.push(`${indent}    else:`);
+        chunkLines.push(`${indent}        drive_arm(_frame)                        # live mirror`);
+        chunkLines.push(`${indent}    time.sleep_ms(${fm})`);
         break;
       }
       case "l298n_motor":
