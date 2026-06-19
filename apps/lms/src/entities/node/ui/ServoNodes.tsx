@@ -530,6 +530,138 @@ export function MultiServoSequencerNode() {
   );
 }
 
+// ─── Shadow Arm (4 pots → input) ───────────────────────────────────────────────
+export function ShadowArmNode() {
+  const [potPins, setPotPins] = useNodeField<number[]>("potPins", [4, 5, 1, 2]);
+  const [potMin, setPotMin]   = useNodeField<number[]>("potMin", [800, 800, 800, 800]);
+  const [potMax, setPotMax]   = useNodeField<number[]>("potMax", [64000, 64000, 64000, 64000]);
+  const [alpha, setAlpha]     = useNodeField<number>("shadowAlpha", 25);
+
+  const setAt = (arr: number[], set: (v: number[]) => void) =>
+    (i: number, v: number) => set(arr.map((x, j) => (j === i ? v : x)));
+  const setPin = setAt(potPins, setPotPins);
+  const setMin = setAt(potMin, setPotMin);
+  const setMax = setAt(potMax, setPotMax);
+
+  return (
+    <BaseNode title="Shadow Arm (4 Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="250px">
+      <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+        <p className="text-[9px] text-[var(--k-muted)]">Reads 4 potentiometers → exposes <span className="font-mono text-cyan-400">read_shadow()</span>. Pair with a <span className="text-orange-400">Main Arm</span> node.</p>
+      </div>
+      {[0, 1, 2, 3].map(i => (
+        <NodeField key={i} label={`Joint ${i + 1}`}>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: COLORS.cyan }} />
+            <span className="text-[9px] text-[var(--k-muted)]">GPIO</span>
+            <NumberInput value={potPins[i]} onChange={v => setPin(i, v)} />
+          </div>
+        </NodeField>
+      ))}
+      <AdvancedSection>
+        <div className="px-3 pt-1 pb-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Calibration (raw ADC min → max)</span>
+        </div>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
+            <span className="text-[9px] w-6 text-[var(--k-muted)] font-mono">J{i + 1}</span>
+            <NumberInput value={potMin[i]} onChange={v => setMin(i, v)} />
+            <span className="text-[8px] text-[var(--k-dim)]">→</span>
+            <NumberInput value={potMax[i]} onChange={v => setMax(i, v)} />
+          </div>
+        ))}
+        <div className="px-3 py-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-[var(--k-muted)] font-medium">Smoothing</span>
+            <span className="text-[10px] font-mono text-cyan-400">{alpha}%</span>
+          </div>
+          <input type="range" min={1} max={100} step={1} value={alpha}
+            onChange={e => setAlpha(Number(e.target.value))}
+            className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.cyan }} />
+          <div className="flex justify-between mt-0.5">
+            <span className="text-[8px] text-[var(--k-dim)]">Smoother</span>
+            <span className="text-[8px] text-[var(--k-dim)]">Snappier</span>
+          </div>
+        </div>
+      </AdvancedSection>
+    </BaseNode>
+  );
+}
+
+// ─── Main Arm (4 servos → output, mirror + record/playback) ─────────────────────
+export function MainArmNode() {
+  const [mode, setMode]       = useNodeField<string>("mode", "mirror");
+  const [frameMs, setFrameMs] = useNodeField<number>("frameMs", 20);
+  const [loop, setLoop]       = useNodeField<boolean>("loop", true);
+  const [recPin, setRecPin]   = useNodeField<number>("recPin", 6);
+  const [playPin, setPlayPin] = useNodeField<number>("playPin", 7);
+  const [servoLo, setServoLo] = useNodeField<number[]>("servoLo", [0, 0, 0, 0]);
+  const [servoHi, setServoHi] = useNodeField<number[]>("servoHi", [180, 180, 180, 180]);
+  const [servoInv, setServoInv] = useNodeField<boolean[]>("servoInv", [false, false, false, false]);
+
+  const setNumAt = (arr: number[], set: (v: number[]) => void) =>
+    (i: number, v: number) => set(arr.map((x, j) => (j === i ? v : x)));
+  const setLo = setNumAt(servoLo, setServoLo);
+  const setHi = setNumAt(servoHi, setServoHi);
+  const toggleInv = (i: number) => setServoInv(servoInv.map((x, j) => (j === i ? !x : x)));
+
+  const PORT_KEYS = Object.keys(SERVO_PORTS) as ServoKey[];
+
+  return (
+    <BaseNode title="Main Arm (S1–S4)" color={COLORS.orange} icon={<MotorIcon />} width="260px">
+      <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+        <p className="text-[9px] text-[var(--k-muted)]">Drives 4 servos from the <span className="text-cyan-400">Shadow Arm</span>. Add a Shadow Arm node too.</p>
+      </div>
+
+      <NodeField label="Mode">
+        <SelectInput value={mode} onChange={setMode} compact
+          options={[
+            { label: "Live Mirror", value: "mirror" },
+            { label: "Record / Playback", value: "record" },
+          ]} />
+      </NodeField>
+
+      {mode === "mirror" && (
+        <NodeField label="Run">
+          <ToggleInput value={loop} onChange={setLoop} leftLabel="Once" rightLabel="∞ Loop" />
+        </NodeField>
+      )}
+
+      {mode === "record" && (
+        <>
+          <NodeField label="Record btn (GPIO)"><NumberInput value={recPin} onChange={setRecPin} /></NodeField>
+          <NodeField label="Playback btn (GPIO)"><NumberInput value={playPin} onChange={setPlayPin} /></NodeField>
+          <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+            <p className="text-[9px] text-[var(--k-muted)]">Press <b>Record</b> to capture the shadow arm, press again to stop. Press <b>Playback</b> to replay onto the main arm.</p>
+          </div>
+        </>
+      )}
+
+      <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
+
+      <AdvancedSection>
+        <div className="px-3 pt-1 pb-0.5">
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>
+        </div>
+        {[0, 1, 2, 3].map(i => (
+          <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
+            <span className="text-[9px] w-9 text-[var(--k-muted)] font-mono">{PORT_KEYS[i]}</span>
+            <NumberInput value={servoLo[i]} onChange={v => setLo(i, Math.max(0, Math.min(180, v)))} />
+            <span className="text-[8px] text-[var(--k-dim)]">→</span>
+            <NumberInput value={servoHi[i]} onChange={v => setHi(i, Math.max(0, Math.min(180, v)))} />
+            <button onClick={() => toggleInv(i)}
+              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                servoInv[i] ? "border-orange-500/50 text-orange-400 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
+              }`}>⇄</button>
+          </div>
+        ))}
+        <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+          <p className="text-[9px] text-[var(--k-muted)]">⇄ flips a joint if it mirrors backwards. Pins fixed: S1 {SERVO_PORTS.S1.pin} · S2 {SERVO_PORTS.S2.pin} · S3 {SERVO_PORTS.S3.pin} · S4 {SERVO_PORTS.S4.pin}.</p>
+        </div>
+      </AdvancedSection>
+    </BaseNode>
+  );
+}
+
 // ─── Servo Calibration ────────────────────────────────────────────────────────
 export function ServoCalibrationNode() {
   const allNodes = useNodes();
