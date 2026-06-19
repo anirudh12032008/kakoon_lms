@@ -556,10 +556,10 @@ export function ShadowArmNode() {
         <SelectInput value={port} onChange={setPort} compact options={PORT_OPTIONS} />
       </NodeField>
       <NodeField label="ADS1115 address">
-        <TextInput value={address} onChange={setAddress} placeholder="0x48" />
+        <TextInput value={address} onChange={setAddress}  />
       </NodeField>
       <NodeField label="Variable prefix">
-        <TextInput value={prefix} onChange={setPrefix} placeholder="j" />
+        <TextInput value={prefix} onChange={setPrefix}  />
       </NodeField>
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
@@ -612,7 +612,7 @@ function ControlSource({
       <p className="text-[8px] text-[var(--k-dim)] mb-1.5">{hint}</p>
       <div className="flex items-center gap-1.5 mb-1.5">
         <span className="text-[8px] uppercase font-bold text-cyan-400 w-9 shrink-0">var</span>
-        <TextInput value={varName} onChange={onVarChange} placeholder="optional" />
+        <TextInput value={varName} onChange={onVarChange} />
       </div>
       <div className="flex items-center gap-1.5">
         <button onClick={() => onSwitchChange(swOn ? -1 : defaultPin)}
@@ -657,7 +657,7 @@ export function MainArmNode() {
       </div>
 
       <NodeField label="Variable prefix">
-        <TextInput value={prefix} onChange={setPrefix} placeholder="j" />
+        <TextInput value={prefix} onChange={setPrefix} />
       </NodeField>
 
       <NodeField label="Joints from">
