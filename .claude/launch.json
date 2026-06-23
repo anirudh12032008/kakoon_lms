@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "lms-dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--workspace=apps/lms"],
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "lms", "dev"],
       "port": 5173
     }
   ]

@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useMemo, useState } from "react";
-import { Handle, Position, useNodeId, useReactFlow, useStore } from "@xyflow/react";
+import { Handle, Position, useNodeId, useReactFlow, useStore, useUpdateNodeInternals } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "@/shared/context/ModalContext";
 import { PlusCircle } from "lucide-react";
@@ -225,6 +225,24 @@ export function NodeAdvancedFooter() {
   );
 }
 
+/**
+ * React Flow measures each handle's on-screen position once at mount and only
+ * re-measures when a ResizeObserver reports a border-box change. The node
+ * wrappers below animate in with a Framer Motion `scale`/`y` transform, so the
+ * mount-time measurement is captured while the node is still scaled down — and
+ * since a CSS transform never changes the border-box, the ResizeObserver never
+ * fires to correct it. The result is wires that point at a shifted spot instead
+ * of the connector. Calling `updateNodeInternals` once the entrance transform
+ * settles forces a fresh, accurate handle measurement.
+ */
+function useReMeasureOnSettle() {
+  const nodeId = useNodeId();
+  const updateNodeInternals = useUpdateNodeInternals();
+  return useCallback(() => {
+    if (nodeId) updateNodeInternals(nodeId);
+  }, [nodeId, updateNodeInternals]);
+}
+
 export function makeHandleStyle(color: string) {
   return {
     width: 12,
@@ -375,6 +393,7 @@ export function BaseNode({
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   const nodeId = useNodeId();
   const isSelected = useStore(s => nodeId ? (s.nodes.find(n => n.id === nodeId)?.selected ?? false) : false);
+  const reMeasure = useReMeasureOnSettle();
 
   if (circular) {
     return (
@@ -383,6 +402,7 @@ export function BaseNode({
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: disabled ? 0.55 : 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 380, damping: 26 }}
+        onAnimationComplete={reMeasure}
         style={{
           width: "130px", height: "130px", borderRadius: "50%",
           background: "var(--k-base-200)",
@@ -412,6 +432,7 @@ export function BaseNode({
       initial={{ opacity: 0, scale: 0.88, y: 8 }}
       animate={{ opacity: disabled ? 0.55 : 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      onAnimationComplete={reMeasure}
       style={{
         width, minWidth: "160px",
         background: "var(--k-base-200)",
@@ -452,12 +473,14 @@ export function LoopNode({
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   const nodeId = useNodeId();
   const isSelected = useStore(s => nodeId ? (s.nodes.find(n => n.id === nodeId)?.selected ?? false) : false);
+  const reMeasure = useReMeasureOnSettle();
   return (
     <motion.div
       className="relative overflow-visible"
       initial={{ opacity: 0, scale: 0.88, y: 8 }}
       animate={{ opacity: disabled ? 0.55 : 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      onAnimationComplete={reMeasure}
       style={{
         width, background: "var(--k-base-200)",
         border: `2.5px solid ${isSelected ? color : color + "66"}`,
@@ -495,12 +518,14 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
   const nodeId = useNodeId();
   const isSelected = useStore(s => nodeId ? (s.nodes.find(n => n.id === nodeId)?.selected ?? false) : false);
+  const reMeasure = useReMeasureOnSettle();
   return (
     <motion.div
       className="relative overflow-visible rounded-xl"
       initial={{ opacity: 0, scale: 0.88, y: 8 }}
       animate={{ opacity: disabled ? 0.55 : 1, scale: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 380, damping: 26, mass: 0.8 }}
+      onAnimationComplete={reMeasure}
       style={{
         width: "260px", background: "var(--k-base-200)",
         border: `1px solid ${isSelected ? color + "aa" : "var(--k-border)"}`,

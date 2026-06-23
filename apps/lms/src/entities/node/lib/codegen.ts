@@ -90,6 +90,7 @@ interface NodeData {
   minVal?: number; maxVal?: number;
   from?: number; to?: number;
   outputMode?: string; loopDelay?: number; durationMs?: number;
+  sleepEnabled?: boolean; sleepMs?: number;
   animationName?: string; imageName?: string;
   width?: number; height?: number; csPin?: number; mosi?: number; miso?: number;
 }
