@@ -559,34 +559,38 @@ time.sleep(0.1)`);
       }
 
       // ─── Loops ─────────────────────────────────────────────────────────────
-      case "forever_loop":
+      case "forever_loop": {
         chunkLines.push(`${indent}while True:`);
-        {
-          const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
-          chunkLines.push(...(bodyLines.length > 0 ? bodyLines : [`${indent}    pass`]));
-        }
+        const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
+        if (d.sleepEnabled) imports.add("import time");
+        const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
+        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
         break;
-      case "for_loop":
+      }
+      case "for_loop": {
         chunkLines.push(`${indent}for ${d.variable ?? "i"} in range(${d.start ?? 0}, ${d.end ?? 10}, ${d.step ?? 1}):`);
-        {
-          const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
-          chunkLines.push(...(bodyLines.length > 0 ? bodyLines : [`${indent}    pass`]));
-        }
+        const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
+        if (d.sleepEnabled) imports.add("import time");
+        const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
+        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
         break;
-      case "while_loop":
+      }
+      case "while_loop": {
         chunkLines.push(`${indent}while ${d.condition ?? "True"}:`);
-        {
-          const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
-          chunkLines.push(...(bodyLines.length > 0 ? bodyLines : [`${indent}    pass`]));
-        }
+        const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
+        if (d.sleepEnabled) imports.add("import time");
+        const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
+        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
         break;
-      case "repeat":
+      }
+      case "repeat": {
         chunkLines.push(`${indent}for _ in range(${d.times ?? 1}):`);
-        {
-          const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
-          chunkLines.push(...(bodyLines.length > 0 ? bodyLines : [`${indent}    pass`]));
-        }
+        const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
+        if (d.sleepEnabled) imports.add("import time");
+        const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
+        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
         break;
+      }
       case "break":
         chunkLines.push(`${indent}break`);
         break;

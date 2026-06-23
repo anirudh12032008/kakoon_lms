@@ -8,6 +8,8 @@ import {
   useNodeField,
   makeHandleStyle,
   NodeToggleButton,
+  NodeAdvancedFooter,
+  AdvancedSection,
   COLORS,
 } from "./BaseNode";
 
@@ -45,12 +47,13 @@ export function ForeverLoopNode() {
   const color = COLORS.cyan;
   const hs = makeHandleStyle(color);
   const [disabled, setDisabled] = useNodeField<boolean>("disabled", false);
+  const [sleepEnabled, setSleepEnabled] = useNodeField<boolean>("sleepEnabled", false);
+  const [sleepMs, setSleepMs] = useNodeField<number>("sleepMs", 1000);
   return (
     <div
-      className="relative flex flex-col items-center justify-center gap-2 animate-fade-in"
+      className="relative flex flex-col items-center animate-fade-in overflow-hidden"
       style={{
         width: "180px",
-        height: "90px",
         borderRadius: "22px",
         background: "var(--k-base-200)",
         border: `2.5px solid ${color}`,
@@ -60,8 +63,35 @@ export function ForeverLoopNode() {
     >
       <NodeToggleButton value={disabled} onChange={setDisabled} className="absolute right-3 top-3" />
       <Handle type="target" position={Position.Top} style={{ ...hs, top: -7 }} />
-      <div className="text-sm font-bold text-[var(--k-text)]">Forever Loop</div>
-      <div style={{ color }}><RefreshIcon /></div>
+      <div className="flex flex-col items-center justify-center gap-2 py-4">
+        <div className="text-sm font-bold text-[var(--k-text)]">Forever Loop</div>
+        <div style={{ color }}><RefreshIcon /></div>
+      </div>
+      <AdvancedSection>
+        <div className="w-full border-t border-[var(--k-border)]" />
+        <div className="flex flex-col gap-0.5 py-1.5 w-full">
+          <NodeField label="Sleep">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
+              className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+              style={{
+                background: sleepEnabled ? color + "33" : "var(--k-base-300)",
+                color: sleepEnabled ? color : "var(--k-text-muted)",
+                border: `1.5px solid ${sleepEnabled ? color : "var(--k-border)"}`,
+              }}
+            >
+              {sleepEnabled ? "ON" : "OFF"}
+            </button>
+          </NodeField>
+          {sleepEnabled && (
+            <NodeField label="ms">
+              <NumberInput value={sleepMs} onChange={setSleepMs} />
+            </NodeField>
+          )}
+        </div>
+      </AdvancedSection>
+      <NodeAdvancedFooter />
       <Handle type="source" position={Position.Bottom} style={{ ...hs, bottom: -7 }} />
       <Handle type="source" position={Position.Right} id="body" style={{ ...hs, right: -7 }} />
     </div>
@@ -74,12 +104,36 @@ export function ForLoopNode() {
   const [start, setStart] = useNodeField<number>("start", 0);
   const [end, setEnd] = useNodeField<number>("end", 10);
   const [step, setStep] = useNodeField<number>("step", 1);
+  const [sleepEnabled, setSleepEnabled] = useNodeField<boolean>("sleepEnabled", false);
+  const [sleepMs, setSleepMs] = useNodeField<number>("sleepMs", 1000);
+  const color = COLORS.purple;
   return (
-    <LoopNode title="For Loop" color={COLORS.purple} icon={<InfinityIcon />} hasRightHandle width="210px">
+    <LoopNode title="For Loop" color={color} icon={<InfinityIcon />} hasRightHandle width="210px">
       <NodeField label="Variable"><TextInput value={variable} onChange={setVariable} /></NodeField>
       <NodeField label="Start"><NumberInput value={start} onChange={setStart} /></NodeField>
       <NodeField label="End"><NumberInput value={end} onChange={setEnd} /></NodeField>
       <NodeField label="Step"><NumberInput value={step} onChange={setStep} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="Sleep">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
+            className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+            style={{
+              background: sleepEnabled ? color + "33" : "var(--k-base-300)",
+              color: sleepEnabled ? color : "var(--k-text-muted)",
+              border: `1.5px solid ${sleepEnabled ? color : "var(--k-border)"}`,
+            }}
+          >
+            {sleepEnabled ? "ON" : "OFF"}
+          </button>
+        </NodeField>
+        {sleepEnabled && (
+          <NodeField label="ms">
+            <NumberInput value={sleepMs} onChange={setSleepMs} />
+          </NodeField>
+        )}
+      </AdvancedSection>
     </LoopNode>
   );
 }
@@ -87,9 +141,33 @@ export function ForLoopNode() {
 // ─── While Loop ───────────────────────────────────────────────────────────────
 export function WhileLoopNode() {
   const [condition, setCondition] = useNodeField<string>("condition", "True");
+  const [sleepEnabled, setSleepEnabled] = useNodeField<boolean>("sleepEnabled", false);
+  const [sleepMs, setSleepMs] = useNodeField<number>("sleepMs", 1000);
+  const color = COLORS.green;
   return (
-    <LoopNode title="While Loop" color={COLORS.green} hasRightHandle width="210px">
+    <LoopNode title="While Loop" color={color} hasRightHandle width="210px">
       <NodeField label="Condition"><TextInput value={condition} onChange={setCondition} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="Sleep">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
+            className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+            style={{
+              background: sleepEnabled ? color + "33" : "var(--k-base-300)",
+              color: sleepEnabled ? color : "var(--k-text-muted)",
+              border: `1.5px solid ${sleepEnabled ? color : "var(--k-border)"}`,
+            }}
+          >
+            {sleepEnabled ? "ON" : "OFF"}
+          </button>
+        </NodeField>
+        {sleepEnabled && (
+          <NodeField label="ms">
+            <NumberInput value={sleepMs} onChange={setSleepMs} />
+          </NodeField>
+        )}
+      </AdvancedSection>
     </LoopNode>
   );
 }
@@ -97,9 +175,33 @@ export function WhileLoopNode() {
 // ─── Repeat ───────────────────────────────────────────────────────────────────
 export function RepeatNode() {
   const [times, setTimes] = useNodeField<number>("times", 1);
+  const [sleepEnabled, setSleepEnabled] = useNodeField<boolean>("sleepEnabled", false);
+  const [sleepMs, setSleepMs] = useNodeField<number>("sleepMs", 1000);
+  const color = COLORS.blue;
   return (
-    <LoopNode title="Repeat" color={COLORS.blue} hasRightHandle width="210px">
+    <LoopNode title="Repeat" color={color} hasRightHandle width="210px">
       <NodeField label="times"><NumberInput value={times} onChange={setTimes} /></NodeField>
+      <AdvancedSection>
+        <NodeField label="Sleep">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
+            className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+            style={{
+              background: sleepEnabled ? color + "33" : "var(--k-base-300)",
+              color: sleepEnabled ? color : "var(--k-text-muted)",
+              border: `1.5px solid ${sleepEnabled ? color : "var(--k-border)"}`,
+            }}
+          >
+            {sleepEnabled ? "ON" : "OFF"}
+          </button>
+        </NodeField>
+        {sleepEnabled && (
+          <NodeField label="ms">
+            <NumberInput value={sleepMs} onChange={setSleepMs} />
+          </NodeField>
+        )}
+      </AdvancedSection>
     </LoopNode>
   );
 }
