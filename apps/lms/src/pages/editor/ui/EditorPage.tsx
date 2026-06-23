@@ -31,7 +31,7 @@ import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import { NodeActionsProvider } from "@/shared/context/NodeActionsContext";
 import { ESP32FilesPanel } from "@/features/editor/esp32-files/ui/ESP32FilesPanel";
-import { HardwareView, syncAddHwNode, syncRemoveHwNode, isFlowSyncSuppressed } from "@/widgets/hardware-view/ui/HardwareView";
+import { HardwareView, syncAddHwNode, syncRemoveHwNode, isFlowSyncSuppressed, resyncHwFromBlocks } from "@/widgets/hardware-view/ui/HardwareView";
 import { removeAnim, markOnDevice } from "@/shared/lib/animRegistry";
 
 export type LessonContext = EditorLaunchContext;
@@ -195,6 +195,23 @@ export default function EditorPage({
     // Auto-evaluate course missions against the live node graph.
     missions.evaluate(nds.map((n) => n.type ?? ""), nds.length);
   }, [tutorial, missions]);
+
+  // ── Sync: reconcile hardware view on every switch into it ───────────────────
+  // The incremental diff in handleFlowChange can drift (e.g. draft load,
+  // project switch, hardware-initiated changes). A full reconcile on each
+  // view transition guarantees both canvases always show the same state.
+  useEffect(() => {
+    if (viewMode === "hardware") {
+      const workspace = canvasRef.current?.getWorkspace();
+      if (workspace) resyncHwFromBlocks(workspace.nodes);
+    } else {
+      // Returning from hardware view: reset prevBlocksNodesRef to the current
+      // blocks state so the next handleFlowChange diff starts from a clean baseline.
+      const workspace = canvasRef.current?.getWorkspace();
+      if (workspace) prevBlocksNodesRef.current = workspace.nodes;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewMode]);
 
   // ── Launch restrictions ──────────────────────────────────────────────────────
   const launchRestrictions = useMemo(() => ({

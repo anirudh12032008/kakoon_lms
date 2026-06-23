@@ -650,6 +650,29 @@ export function syncRemoveHwNode(logicId: string): void {
   }
 }
 
+/**
+ * Full reconcile: called every time the user switches to the hardware view.
+ * Ensures the hw canvas exactly mirrors the current blocks canvas state —
+ * handles any drift that accumulated while the hardware canvas was unmounted.
+ */
+export function resyncHwFromBlocks(logicNodes: Node[]): void {
+  const logicNodeMap = new Map(logicNodes.map(n => [n.id, n]));
+
+  // Remove hw nodes whose logic counterpart no longer exists in blocks canvas
+  for (const logicId of Object.keys(_logicToHw)) {
+    if (!logicNodeMap.has(logicId)) {
+      syncRemoveHwNode(logicId);
+    }
+  }
+
+  // Add hw nodes for any hw-mappable blocks node that doesn't have one yet
+  for (const node of logicNodes) {
+    if (!_logicToHw[node.id]) {
+      syncAddHwNode(node.id, node.type ?? "", node.data as Record<string, unknown>);
+    }
+  }
+}
+
 // ─── Inner hardware canvas ────────────────────────────────────────────────────
 
 interface InnerProps {
