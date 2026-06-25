@@ -12,6 +12,7 @@ import {
   BackgroundVariant,
   Controls,
   MiniMap,
+  Panel,
   BaseEdge,
   getBezierPath,
   applyNodeChanges,
@@ -29,6 +30,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
+import { Undo2, Redo2 } from "lucide-react";
 import { NODE_TYPES } from "@/entities/node/model";
 import { generatePythonFromFlow } from "@/entities/node/lib/codegen";
 import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/entities/custom-node/model/customNodes";
@@ -124,21 +126,131 @@ function NodeCanvasInner({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const { screenToFlowPosition, getViewport } = useReactFlow();
 
+  // ── Undo / redo history ────────────────────────────────────────────────────
+  // Live mirrors of state so history helpers always read the latest snapshot
+  // without re-creating callbacks on every node/edge change.
+  const nodesRef = useRef(nodes);
+  const edgesRef = useRef(edges);
+  nodesRef.current = nodes;
+  edgesRef.current = edges;
+
+  type Snapshot = { nodes: Node[]; edges: Edge[] };
+  const HISTORY_LIMIT = 100;
+  const pastRef = useRef<Snapshot[]>([]);
+  const futureRef = useRef<Snapshot[]>([]);
+  // Bumped whenever the stacks change so the toolbar buttons re-render.
+  const [historyVersion, setHistoryVersion] = useState(0);
+  // Pre-change snapshot held while a burst of changes (drag, typing) settles.
+  const pendingRef = useRef<Snapshot | null>(null);
+  const pendingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // True while we apply an undo/redo so the resulting changes aren't re-recorded.
+  const restoringRef = useRef(false);
+
+  const cloneSnapshot = (n: Node[], e: Edge[]): Snapshot => ({
+    nodes: structuredClone(n),
+    edges: structuredClone(e),
+  });
+
+  // Immediately push the current state onto the undo stack (for discrete edits
+  // like add/connect/paste that bypass onNodesChange).
+  const recordHistory = useCallback(() => {
+    pastRef.current.push(cloneSnapshot(nodesRef.current, edgesRef.current));
+    if (pastRef.current.length > HISTORY_LIMIT) pastRef.current.shift();
+    futureRef.current = [];
+    setHistoryVersion((v) => v + 1);
+  }, []);
+
+  // Debounced: capture the pre-change state at the start of a burst, then commit
+  // it once the burst settles — collapsing a drag or a run of keystrokes into a
+  // single undo step.
+  const scheduleHistory = useCallback(() => {
+    if (restoringRef.current) return;
+    if (!pendingRef.current) {
+      pendingRef.current = cloneSnapshot(nodesRef.current, edgesRef.current);
+    }
+    if (pendingTimer.current) clearTimeout(pendingTimer.current);
+    pendingTimer.current = setTimeout(() => {
+      if (pendingRef.current) {
+        pastRef.current.push(pendingRef.current);
+        if (pastRef.current.length > HISTORY_LIMIT) pastRef.current.shift();
+        futureRef.current = [];
+        pendingRef.current = null;
+        setHistoryVersion((v) => v + 1);
+      }
+    }, 400);
+  }, []);
+
+  const restoreSnapshot = useCallback((snap: Snapshot) => {
+    restoringRef.current = true;
+    setNodes(snap.nodes);
+    setEdges(snap.edges);
+    // Release the guard after React applies the new state and its follow-up
+    // (dimensions/select) changes have flushed.
+    setTimeout(() => { restoringRef.current = false; }, 0);
+  }, []);
+
+  const undo = useCallback(() => {
+    // Flush any in-flight burst so the latest edit is undoable too.
+    if (pendingTimer.current) clearTimeout(pendingTimer.current);
+    if (pendingRef.current) {
+      pastRef.current.push(pendingRef.current);
+      pendingRef.current = null;
+    }
+    const prev = pastRef.current.pop();
+    if (!prev) return;
+    futureRef.current.push(cloneSnapshot(nodesRef.current, edgesRef.current));
+    restoreSnapshot(prev);
+    setHistoryVersion((v) => v + 1);
+  }, [restoreSnapshot]);
+
+  const redo = useCallback(() => {
+    const next = futureRef.current.pop();
+    if (!next) return;
+    pastRef.current.push(cloneSnapshot(nodesRef.current, edgesRef.current));
+    restoreSnapshot(next);
+    setHistoryVersion((v) => v + 1);
+  }, [restoreSnapshot]);
+
+  const resetHistory = useCallback(() => {
+    if (pendingTimer.current) clearTimeout(pendingTimer.current);
+    pendingRef.current = null;
+    pastRef.current = [];
+    futureRef.current = [];
+    setHistoryVersion((v) => v + 1);
+  }, []);
+
+  // A change batch is worth recording only if it mutates the graph — plain
+  // selection/dimension/measurement changes are noise.
+  const isHistoryWorthy = (changes: Array<{ type: string }>) =>
+    changes.some((c) => c.type === "position" || c.type === "remove" || c.type === "add" || c.type === "replace");
+
   const onNodesChange = useCallback(
-    (changes: NodeChange[]) => setNodes((nds) => applyNodeChanges(changes, nds) as Node[]),
-    []
+    (changes: NodeChange[]) => {
+      if (isHistoryWorthy(changes)) scheduleHistory();
+      setNodes((nds) => applyNodeChanges(changes, nds) as Node[]);
+    },
+    [scheduleHistory]
   );
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => setEdges((eds) => applyEdgeChanges(changes, eds) as Edge[]),
-    []
+    (changes: EdgeChange[]) => {
+      if (isHistoryWorthy(changes)) scheduleHistory();
+      setEdges((eds) => applyEdgeChanges(changes, eds) as Edge[]);
+    },
+    [scheduleHistory]
   );
   const onConnect = useCallback(
-    (params: Connection) =>
+    (params: Connection) => {
+      recordHistory();
       setEdges((eds) =>
         addEdge({ ...params, style: { stroke: "var(--k-primary)", strokeWidth: 2 }, animated: true }, eds) as Edge[]
-      ),
-    []
+      );
+    },
+    [recordHistory]
   );
+
+  const canUndo = pastRef.current.length > 0 || pendingRef.current !== null;
+  const canRedo = futureRef.current.length > 0;
+  void historyVersion; // re-render trigger for the canUndo/canRedo flags above
 
   useEffect(() => {
     const code = generatePythonFromFlow(nodes, edges);
@@ -171,6 +283,7 @@ function NodeCanvasInner({
     pasteCountRef.current += 1;
     const offset = 36 * pasteCountRef.current;
 
+    recordHistory();
     const idMap = new Map<string, string>();
     const newNodes = clip.nodes.map((n) => {
       const id = getId();
@@ -193,7 +306,7 @@ function NodeCanvasInner({
     // Deselect everything else so the pasted copies become the active selection.
     setNodes((nds) => nds.map((n) => ({ ...n, selected: false })).concat(newNodes));
     setEdges((eds) => eds.map((e) => ({ ...e, selected: false })).concat(newEdges));
-  }, []);
+  }, [recordHistory]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -201,7 +314,16 @@ function NodeCanvasInner({
       // Don't fight the browser when the user has text selected.
       if (window.getSelection()?.toString()) return;
       const key = e.key.toLowerCase();
-      if (key === "c") {
+      if (readOnly) return;
+      if (key === "z") {
+        // Cmd/Ctrl+Z undo, Cmd/Ctrl+Shift+Z redo.
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+      } else if (key === "y") {
+        e.preventDefault();
+        redo();
+      } else if (key === "c") {
         if (copySelection()) e.preventDefault();
       } else if (key === "v") {
         if (clipboardRef.current) { e.preventDefault(); pasteClipboard(); }
@@ -211,7 +333,7 @@ function NodeCanvasInner({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [copySelection, pasteClipboard]);
+  }, [copySelection, pasteClipboard, undo, redo, readOnly]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -228,6 +350,7 @@ function NodeCanvasInner({
         const allowedNodeTypeSet = allowedNodeTypes ? new Set(allowedNodeTypes) : undefined;
         if (!isCustomNodeTemplateAllowed(template, allowedNodeTypeSet)) return;
         const instanced = instantiateCustomNodeTemplate(template, position);
+        recordHistory();
         setNodes((nds) => nds.concat(instanced.nodes as Node[]));
         setEdges((eds) => eds.concat(instanced.edges as Edge[]));
         return;
@@ -239,8 +362,9 @@ function NodeCanvasInner({
     const nodeType = e.dataTransfer.getData("application/reactflow-nodetype");
     if (!nodeType) return;
     if (allowedNodeTypes && !allowedNodeTypes.includes(nodeType)) return;
+    recordHistory();
     setNodes((nds) => nds.concat({ id: getId(), type: nodeType, position, data: { label: nodeType } }));
-  }, [allowedNodeTypes, screenToFlowPosition]);
+  }, [allowedNodeTypes, screenToFlowPosition, recordHistory]);
 
   useImperativeHandle(canvasRef, () => ({
     getCode: () => generatePythonFromFlow(nodes, edges),
@@ -250,6 +374,8 @@ function NodeCanvasInner({
     setWorkspace: (ws) => {
       setNodes((ws.nodes || []).map((n) => ({ ...n, selected: false })));
       setEdges((ws.edges || []).map((e) => ({ ...e, selected: false })));
+      // A freshly loaded workspace is the new baseline — discard prior history.
+      resetHistory();
     },
     addNode: (type: string, data: Record<string, unknown> = {}) => {
       let position = { x: 200, y: 200 };
@@ -264,10 +390,12 @@ function NodeCanvasInner({
         position.y += (Math.random() - 0.5) * 40;
       }
       const id = getId();
+      recordHistory();
       setNodes((nds) => [...nds, { id, type, position, data: { label: type, ...data } }]);
       return id;
     },
     removeNode: (id: string) => {
+      recordHistory();
       setNodes((nds) => nds.filter((n) => n.id !== id));
       setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
     },
@@ -344,6 +472,32 @@ function NodeCanvasInner({
       >
         <Background id="dots" color="var(--k-dim)" gap={52} size={1.5} variant={BackgroundVariant.Dots} style={{ backgroundColor: "var(--k-base-100)" }} />
         <Controls style={{ background: "var(--k-base-300)", border: "1px solid var(--k-base-400)", borderRadius: "8px" }} />
+        {!readOnly && (
+          <Panel position="top-right">
+            <div className="flex items-center gap-1 rounded-lg border border-subtle bg-raised p-1 shadow-sm">
+              <button
+                type="button"
+                onClick={undo}
+                disabled={!canUndo}
+                title="Undo (Ctrl+Z)"
+                aria-label="Undo"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-sub transition-colors hover:bg-[var(--k-base-300)] hover:text-primary-c disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-sub"
+              >
+                <Undo2 className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={redo}
+                disabled={!canRedo}
+                title="Redo (Ctrl+Shift+Z)"
+                aria-label="Redo"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-sub transition-colors hover:bg-[var(--k-base-300)] hover:text-primary-c disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:bg-transparent disabled:hover:text-sub"
+              >
+                <Redo2 className="h-4 w-4" />
+              </button>
+            </div>
+          </Panel>
+        )}
         <MiniMap
           nodeColor="var(--k-primary)"
           maskColor="color-mix(in srgb, var(--k-base-100) 78%, transparent)"

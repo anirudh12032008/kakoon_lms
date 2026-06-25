@@ -57,6 +57,111 @@ function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
   );
 }
 
+const PORT_OPTIONS: { label: string; value: MotorKey }[] = [
+  { label: "L1", value: "L1" },
+  { label: "L2", value: "L2" },
+  { label: "R1", value: "R1" },
+  { label: "R2", value: "R2" },
+];
+
+// Default placement: which port is wired to each wheel position
+const DEFAULT_PLACEMENT: Record<"fl" | "fr" | "rl" | "rr", MotorKey> = {
+  fl: "L1", fr: "R1", rl: "L2", rr: "R2",
+};
+
+function MotorPlacementSection({
+  fl, setFl, fr, setFr, rl, setRl, rr, setRr,
+}: {
+  fl: MotorKey; setFl: (v: MotorKey) => void;
+  fr: MotorKey; setFr: (v: MotorKey) => void;
+  rl: MotorKey; setRl: (v: MotorKey) => void;
+  rr: MotorKey; setRr: (v: MotorKey) => void;
+}) {
+  const isDefault =
+    fl === DEFAULT_PLACEMENT.fl && fr === DEFAULT_PLACEMENT.fr &&
+    rl === DEFAULT_PLACEMENT.rl && rr === DEFAULT_PLACEMENT.rr;
+
+  return (
+    <div className="px-3 pb-2">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[9px] uppercase tracking-wider font-bold text-[var(--k-muted)]">Motor Placement</span>
+        {!isDefault && (
+          <button
+            type="button"
+            className="nodrag text-[9px] text-amber-400/80 hover:text-amber-300 font-semibold transition-colors"
+            onClick={() => { setFl("L1"); setFr("R1"); setRl("L2"); setRr("R2"); }}
+          >
+            Reset
+          </button>
+        )}
+      </div>
+
+      {/* Top-down robot diagram with port selectors at each wheel corner */}
+      <div className="relative flex flex-col items-center gap-1.5">
+        {/* FRONT label */}
+        <span className="text-[8px] font-bold uppercase tracking-widest text-[var(--k-dim)]">▲ Front</span>
+
+        {/* Front axle */}
+        <div className="flex items-center gap-2 w-full justify-between">
+          <WheelSlot label="FL" value={fl} onChange={setFl} />
+          <WheelSlot label="FR" value={fr} onChange={setFr} align="right" />
+        </div>
+
+        {/* Robot body */}
+        <div
+          className="w-10 h-7 rounded border flex items-center justify-center"
+          style={{ background: "var(--k-base-300)", borderColor: "var(--k-border)" }}
+        >
+          <span className="text-[10px]" style={{ color: COLORS.orange }}>🤖</span>
+        </div>
+
+        {/* Rear axle */}
+        <div className="flex items-center gap-2 w-full justify-between">
+          <WheelSlot label="RL" value={rl} onChange={setRl} />
+          <WheelSlot label="RR" value={rr} onChange={setRr} align="right" />
+        </div>
+
+        {/* REAR label */}
+        <span className="text-[8px] font-bold uppercase tracking-widest text-[var(--k-dim)]">▼ Rear</span>
+      </div>
+
+      {!isDefault && (
+        <p className="mt-1.5 text-[9px] text-amber-400/75 leading-relaxed">
+          ⚠️ Non-default wiring — make sure each port matches your physical motor connections.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function WheelSlot({
+  label, value, onChange, align = "left",
+}: {
+  label: string; value: MotorKey; onChange: (v: MotorKey) => void; align?: "left" | "right";
+}) {
+  const isDefault = value === DEFAULT_PLACEMENT[label.toLowerCase() as "fl" | "fr" | "rl" | "rr"];
+  return (
+    <div className={`flex flex-col items-${align === "right" ? "end" : "start"} gap-0.5`}>
+      <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: isDefault ? "var(--k-dim)" : COLORS.orange }}>
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as MotorKey)}
+        className="nodrag rounded px-1.5 py-0.5 text-[10px] font-mono font-bold outline-none"
+        style={{
+          background: "var(--k-base-300)",
+          border: `1.5px solid ${isDefault ? "var(--k-border)" : COLORS.orange + "99"}`,
+          color: isDefault ? "var(--k-muted)" : COLORS.orange,
+          width: "48px",
+        }}
+      >
+        {PORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.value}</option>)}
+      </select>
+    </div>
+  );
+}
+
 // ─── Custom GPIO override controls (Advanced mode) ────────────────────────────
 // Lets users re-target a motor's PWM + DIR lines to different GPIOs than the
 // board's stock DRV8833 wiring — useful for custom/breadboard motor setups.
@@ -197,16 +302,22 @@ export function RobotDriveNode() {
   const [speed, setSpeed] = useNodeField<number>("speed", 75);
   const [speedVar, setSpeedVar] = useNodeField<string>("speedVar", "");
 
+  // Motor placement — which board port is wired to each wheel position (Advanced mode)
+  const [flPort, setFlPort] = useNodeField<MotorKey>("flPort", DEFAULT_PLACEMENT.fl);
+  const [frPort, setFrPort] = useNodeField<MotorKey>("frPort", DEFAULT_PLACEMENT.fr);
+  const [rlPort, setRlPort] = useNodeField<MotorKey>("rlPort", DEFAULT_PLACEMENT.rl);
+  const [rrPort, setRrPort] = useNodeField<MotorKey>("rrPort", DEFAULT_PLACEMENT.rr);
+
   // Custom GPIO overrides — re-target each wheel's PWM/DIR lines (Advanced mode)
   const [useCustomPins, setUseCustomPins] = useNodeField<boolean>("useCustomPins", false);
-  const [flPwmPin, setFlPwmPin] = useNodeField<number>("flPwmPin", MOTOR_PORTS.L1.pwm);
-  const [flDirPin, setFlDirPin] = useNodeField<number>("flDirPin", MOTOR_PORTS.L1.dir);
-  const [frPwmPin, setFrPwmPin] = useNodeField<number>("frPwmPin", MOTOR_PORTS.R1.pwm);
-  const [frDirPin, setFrDirPin] = useNodeField<number>("frDirPin", MOTOR_PORTS.R1.dir);
-  const [rlPwmPin, setRlPwmPin] = useNodeField<number>("rlPwmPin", MOTOR_PORTS.L2.pwm);
-  const [rlDirPin, setRlDirPin] = useNodeField<number>("rlDirPin", MOTOR_PORTS.L2.dir);
-  const [rrPwmPin, setRrPwmPin] = useNodeField<number>("rrPwmPin", MOTOR_PORTS.R2.pwm);
-  const [rrDirPin, setRrDirPin] = useNodeField<number>("rrDirPin", MOTOR_PORTS.R2.dir);
+  const [flPwmPin, setFlPwmPin] = useNodeField<number>("flPwmPin", MOTOR_PORTS[flPort].pwm);
+  const [flDirPin, setFlDirPin] = useNodeField<number>("flDirPin", MOTOR_PORTS[flPort].dir);
+  const [frPwmPin, setFrPwmPin] = useNodeField<number>("frPwmPin", MOTOR_PORTS[frPort].pwm);
+  const [frDirPin, setFrDirPin] = useNodeField<number>("frDirPin", MOTOR_PORTS[frPort].dir);
+  const [rlPwmPin, setRlPwmPin] = useNodeField<number>("rlPwmPin", MOTOR_PORTS[rlPort].pwm);
+  const [rlDirPin, setRlDirPin] = useNodeField<number>("rlDirPin", MOTOR_PORTS[rlPort].dir);
+  const [rrPwmPin, setRrPwmPin] = useNodeField<number>("rrPwmPin", MOTOR_PORTS[rrPort].pwm);
+  const [rrDirPin, setRrDirPin] = useNodeField<number>("rrDirPin", MOTOR_PORTS[rrPort].dir);
 
   const current = ROBOT_MOVES.find(m => m.value === move) ?? ROBOT_MOVES[0];
   const isStop  = move === "stop";
@@ -254,6 +365,14 @@ export function RobotDriveNode() {
       )}
 
       <AdvancedSection>
+        {/* Motor placement — assign which port is physically connected to each wheel */}
+        <MotorPlacementSection
+          fl={flPort} setFl={setFlPort}
+          fr={frPort} setFr={setFrPort}
+          rl={rlPort} setRl={setRlPort}
+          rr={rrPort} setRr={setRrPort}
+        />
+
         {/* Hardware info */}
         <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 — all 4 motors</span>

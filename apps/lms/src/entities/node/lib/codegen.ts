@@ -64,6 +64,8 @@ interface NodeData {
   r1PwmPin?: number; r1DirPin?: number; r2PwmPin?: number; r2DirPin?: number;
   flPwmPin?: number; flDirPin?: number; frPwmPin?: number; frDirPin?: number;
   rlPwmPin?: number; rlDirPin?: number; rrPwmPin?: number; rrDirPin?: number;
+  // Motor placement — which board port (L1/L2/R1/R2) is physically wired to each wheel position
+  flPort?: string; frPort?: string; rlPort?: string; rrPort?: string;
   // Multi-servo sequencer
   s1port?: string; s2port?: string; s3port?: string;
   keyframes?: Array<{ angles?: number[] }>;
@@ -1142,29 +1144,58 @@ def drive_arm(angles):
         const ti   = rdVar ? `(${rdVar} * 0.3 / 100)` : (((asFiniteNumber(d.speed) ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
         chunkLines.push(`${indent}# Robot Drive — ${move}`);
 
+        // GPIO pins for each named motor port — must match MOTOR_PORTS in DCMotorNodes.tsx
+        const PORT_GPIO: Record<string, { pwm: number; dir: number }> = {
+          L1: { pwm: 17, dir: 18 }, L2: { pwm: 37, dir: 38 },
+          R1: { pwm: 45, dir: 46 }, R2: { pwm: 15, dir: 16 },
+        };
+
+        const flPort = (d.flPort as string) ?? "L1";
+        const frPort = (d.frPort as string) ?? "R1";
+        const rlPort = (d.rlPort as string) ?? "L2";
+        const rrPort = (d.rrPort as string) ?? "R2";
+        const hasCustomPlacement = flPort !== "L1" || frPort !== "R1" || rlPort !== "L2" || rrPort !== "R2";
+
+        // Per-wheel throttle expression for each move (null = stop)
+        const moveThrottles: Record<string, Record<"FL" | "FR" | "RL" | "RR", string | null>> = {
+          forward:    { FL: t,        FR: t,        RL: t,        RR: t        },
+          backward:   { FL: `-${t}`,  FR: `-${t}`,  RL: `-${t}`,  RR: `-${t}`  },
+          left:       { FL: ti,       FR: t,        RL: ti,       RR: t        },
+          right:      { FL: t,        FR: ti,       RL: t,        RR: ti       },
+          spin_left:  { FL: `-${t}`,  FR: t,        RL: `-${t}`,  RR: t        },
+          spin_right: { FL: t,        FR: `-${t}`,  RL: t,        RR: `-${t}`  },
+          stop:       { FL: null,     FR: null,     RL: null,     RR: null     },
+        };
+
         if (d.useCustomPins) {
-          // Per-wheel throttle expression for each move (null = stop)
-          const moveThrottles: Record<string, Record<"FL" | "FR" | "RL" | "RR", string | null>> = {
-            forward:    { FL: t,        FR: t,        RL: t,        RR: t        },
-            backward:   { FL: `-${t}`,  FR: `-${t}`,  RL: `-${t}`,  RR: `-${t}`  },
-            left:       { FL: ti,       FR: t,        RL: ti,       RR: t        },
-            right:      { FL: t,        FR: ti,       RL: t,        RR: ti       },
-            spin_left:  { FL: `-${t}`,  FR: t,        RL: `-${t}`,  RR: t        },
-            spin_right: { FL: t,        FR: `-${t}`,  RL: t,        RR: `-${t}`  },
-            stop:       { FL: null,     FR: null,     RL: null,     RR: null     },
-          };
+          // Manual GPIO override — raw pins take full precedence over placement
           const throttles = moveThrottles[move] ?? moveThrottles.forward;
           const WHEELS = [
-            { name: "FL" as const, pwm: d.flPwmPin ?? MOTORS.frontLeft.pwm,  dir: d.flDirPin ?? MOTORS.frontLeft.dir  },
-            { name: "FR" as const, pwm: d.frPwmPin ?? MOTORS.frontRight.pwm, dir: d.frDirPin ?? MOTORS.frontRight.dir },
-            { name: "RL" as const, pwm: d.rlPwmPin ?? MOTORS.rearLeft.pwm,   dir: d.rlDirPin ?? MOTORS.rearLeft.dir   },
-            { name: "RR" as const, pwm: d.rrPwmPin ?? MOTORS.rearRight.pwm,  dir: d.rrDirPin ?? MOTORS.rearRight.dir  },
+            { name: "FL" as const, pwm: d.flPwmPin ?? PORT_GPIO[flPort].pwm, dir: d.flDirPin ?? PORT_GPIO[flPort].dir },
+            { name: "FR" as const, pwm: d.frPwmPin ?? PORT_GPIO[frPort].pwm, dir: d.frDirPin ?? PORT_GPIO[frPort].dir },
+            { name: "RL" as const, pwm: d.rlPwmPin ?? PORT_GPIO[rlPort].pwm, dir: d.rlDirPin ?? PORT_GPIO[rlPort].dir },
+            { name: "RR" as const, pwm: d.rrPwmPin ?? PORT_GPIO[rrPort].pwm, dir: d.rrDirPin ?? PORT_GPIO[rrPort].dir },
           ];
           for (const w of WHEELS) {
             const { pwmVar, dirVar } = getCustomMotorHandle(w.pwm, w.dir);
             const thr = throttles[w.name];
             if (thr === null) chunkLines.push(`${indent}_cm_stop(${pwmVar}, ${dirVar})  # ${w.name}`);
             else chunkLines.push(`${indent}_cm_drive(${pwmVar}, ${dirVar}, ${thr})  # ${w.name}`);
+          }
+        } else if (hasCustomPlacement) {
+          // Non-default motor placement — resolve port → GPIO and drive each wheel directly
+          const throttles = moveThrottles[move] ?? moveThrottles.forward;
+          const WHEELS = [
+            { name: "FL" as const, port: flPort, ...PORT_GPIO[flPort] },
+            { name: "FR" as const, port: frPort, ...PORT_GPIO[frPort] },
+            { name: "RL" as const, port: rlPort, ...PORT_GPIO[rlPort] },
+            { name: "RR" as const, port: rrPort, ...PORT_GPIO[rrPort] },
+          ];
+          for (const w of WHEELS) {
+            const { pwmVar, dirVar } = getCustomMotorHandle(w.pwm, w.dir);
+            const thr = throttles[w.name];
+            if (thr === null) chunkLines.push(`${indent}_cm_stop(${pwmVar}, ${dirVar})  # ${w.name} (${w.port})`);
+            else chunkLines.push(`${indent}_cm_drive(${pwmVar}, ${dirVar}, ${thr})  # ${w.name} (${w.port})`);
           }
         } else {
           emitOnce("drv8833_class", DRV8833_HELPER);

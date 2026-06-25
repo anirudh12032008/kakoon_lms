@@ -51,7 +51,7 @@ export function ForeverLoopNode() {
   const [sleepMs, setSleepMs] = useNodeField<number>("sleepMs", 1000);
   return (
     <div
-      className="relative flex flex-col items-center animate-fade-in overflow-hidden"
+      className="relative flex flex-col items-center animate-fade-in overflow-visible"
       style={{
         width: "180px",
         borderRadius: "22px",
