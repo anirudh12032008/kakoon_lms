@@ -72,6 +72,7 @@ interface NodeData {
   keyframeDelay?: number;
   // Shadow arm (ADS1115 pots over I2C) / Main arm (servos) — master-slave puppet rig
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
+  channelMap?: number[];
   servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[];
   frameMs?: number; jointSource?: string;
   modeVar?: string; modeSwitchPin?: number; recVar?: string; recSwitchPin?: number;
@@ -282,18 +283,31 @@ class DRV8833:
     def stop_all(self): self.stop_a(); self.stop_b()
 
 
-def _mp(pin): return PWM(Pin(pin, Pin.OUT), freq=1000)
-def _dp(pin): return Pin(pin, Pin.OUT)
+def _mp(pin):
+    p = PWM(Pin(pin, Pin.OUT), freq=1000)
+    p.duty_u16(0)  # force 0% — a fresh PWM defaults to a non-zero duty on ESP32
+    return p
+def _dp(pin):
+    p = Pin(pin, Pin.OUT)
+    p.value(0)
+    return p
 
 front = DRV8833(_mp(${MOTORS.frontRight.pwm}), _dp(${MOTORS.frontRight.dir}), _mp(${MOTORS.frontLeft.pwm}), _dp(${MOTORS.frontLeft.dir}))
 rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _mp(${MOTORS.rearLeft.pwm}),  _dp(${MOTORS.rearLeft.dir}))
+front.stop_all(); rear.stop_all()  # guarantee a stopped state at boot, before any command runs
 `;
 
   // --- Custom-pin motor driver — for users who re-target a motor's PWM/DIR
   // lines to GPIOs other than the board's stock DRV8833 wiring (Advanced mode).
   const CUSTOM_MOTOR_HELPER = `# --- Custom-pin motor driver (PWM + DIR on user-chosen GPIOs) ---
-def _cm_pwm(pin): return PWM(Pin(pin, Pin.OUT), freq=40000)
-def _cm_dir(pin): return Pin(pin, Pin.OUT)
+def _cm_pwm(pin):
+    p = PWM(Pin(pin, Pin.OUT), freq=40000)
+    p.duty_u16(0)  # force 0% — a fresh PWM defaults to a non-zero duty on ESP32
+    return p
+def _cm_dir(pin):
+    p = Pin(pin, Pin.OUT)
+    p.value(0)
+    return p
 
 def _cm_drive(pwm, d, t):
     d.value(0 if t >= 0 else 1)
@@ -913,37 +927,34 @@ time.sleep(0.1)`);
       // ─── Puppet rig: Shadow arm (ADS1115 pots over I2C) → vars → Main arm ───
       case "shadow_arm": {
         imports.add("from machine import SoftI2C, Pin");
-        imports.add("import time");
-        const sp    = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
-        const spins = SENSOR_PORTS[sp] ?? SENSOR_PORTS["1"];
-        const addr  = d.address ?? "0x48";
+        imports.add("from ads1115 import ADS1115");
+        // I2C bus: "display" = OLED bus (shared with ADS), else a sensor port.
+        const busSel = d.port ?? "display";
+        const bus = busSel === "display"
+          ? { scl: OLED.scl, sda: OLED.sda }
+          : (SENSOR_PORTS[busSel as keyof typeof SENSOR_PORTS] ?? SENSOR_PORTS["1"]);
+        const addr = (d.address ?? "0x48").trim();
+        const addrArg = (addr === "0x48" || addr === "72") ? "" : `address=${addr}, `;
         const pre   = (typeof d.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(d.varPrefix)) ? d.varPrefix : "j";
-        const pmin  = Array.isArray(d.potMin) ? d.potMin : [300, 300, 300, 300];
-        const pmax  = Array.isArray(d.potMax) ? d.potMax : [26000, 26000, 26000, 26000];
+        const ch    = Array.isArray(d.channelMap) ? d.channelMap : [0, 1, 2, 3];
+        const pmin  = Array.isArray(d.potMin) ? d.potMin : [0.0, 0.0, 0.0, 0.0];
+        const pmax  = Array.isArray(d.potMax) ? d.potMax : [3.3, 3.3, 3.3, 3.3];
         const alpha = ((typeof d.shadowAlpha === "number" ? d.shadowAlpha : 25) / 100).toFixed(2);
         emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
-        emitOnce("shadow_arm", `# --- Shadow arm: ADS1115 4-ch ADC over I2C (Port ${sp}: SCL ${spins.scl} / SDA ${spins.sda}) ---
-_ads_i2c = SoftI2C(scl=Pin(${spins.scl}), sda=Pin(${spins.sda}))
-_ADS_ADDR = ${addr}
-
-def _ads_read(ch):
-    # single-shot, single-ended AINch vs GND, +/-4.096V, 128 SPS
-    cfg = 0x8383 | ((4 + ch) << 12)
-    _ads_i2c.writeto_mem(_ADS_ADDR, 0x01, bytes([cfg >> 8, cfg & 0xFF]))
-    time.sleep_ms(9)
-    _b = _ads_i2c.readfrom_mem(_ADS_ADDR, 0x00, 2)
-    _v = (_b[0] << 8) | _b[1]
-    if _v > 32767: _v -= 65536
-    return _v if _v > 0 else 0
-
-_POT_MIN = [${pmin.join(", ")}]
-_POT_MAX = [${pmax.join(", ")}]
+        emitOnce("shadow_arm", `# --- Shadow arm: ADS1115 4 pots over I2C (SCL ${bus.scl} / SDA ${bus.sda}) ---
+# Channels -> A0 base, A1 gripper, A2 bottom elbow, A3 top elbow (remappable)
+_ads_i2c = SoftI2C(scl=Pin(${bus.scl}), sda=Pin(${bus.sda}), freq=100_000)
+_ads = ADS1115(_ads_i2c, ${addrArg}gain=1)
+_CH = [${ch.join(", ")}]        # joint -> ADC channel
+_POT_MIN = [${pmin.join(", ")}]  # volts at each joint's low end
+_POT_MAX = [${pmax.join(", ")}]  # volts at each joint's high end
 _SHADOW_ALPHA = ${alpha}
 _shadow_state = [90.0, 90.0, 90.0, 90.0]
 
 def read_shadow():
+    _v = _ads.read_all_voltage()   # [A0, A1, A2, A3] volts (0..3.3)
     for _i in range(4):
-        _raw = _ads_read(_i)
+        _raw = _v[_CH[_i]]
         _rng = _POT_MAX[_i] - _POT_MIN[_i]
         _ang = (_raw - _POT_MIN[_i]) * 180 / _rng if _rng else 0
         _ang = _clamp(_ang, 0, 180)
