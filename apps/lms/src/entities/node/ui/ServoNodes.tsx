@@ -663,6 +663,7 @@ export function MainArmNode() {
   const [modeSwitchPin, setModeSwitchPin] = useNodeField<number>("modeSwitchPin", 6);
   const [recVar, setRecVar]   = useNodeField<string>("recVar", "");
   const [recSwitchPin, setRecSwitchPin]   = useNodeField<number>("recSwitchPin", 7);
+  const [servoPorts, setServoPorts] = useNodeField<string[]>("servoPorts", ["S1", "S2", "S3", "S4"]);
   const [servoLo, setServoLo] = useNodeField<number[]>("servoLo", [0, 0, 0, 0]);
   const [servoHi, setServoHi] = useNodeField<number[]>("servoHi", [180, 180, 180, 180]);
   const [servoInv, setServoInv] = useNodeField<boolean[]>("servoInv", [false, false, false, false]);
@@ -671,13 +672,13 @@ export function MainArmNode() {
     (i: number, v: number) => set(arr.map((x, j) => (j === i ? v : x)));
   const setLo = setNumAt(servoLo, setServoLo);
   const setHi = setNumAt(servoHi, setServoHi);
+  const setPort = (i: number, v: string) => setServoPorts(servoPorts.map((x, j) => (j === i ? v : x)));
   const toggleInv = (i: number) => setServoInv(servoInv.map((x, j) => (j === i ? !x : x)));
 
   const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
-  const PORT_KEYS = Object.keys(SERVO_PORTS) as ServoKey[];
 
   return (
-    <BaseNode title="Main Arm (S1–S4)" color={COLORS.orange} icon={<MotorIcon />} width="270px">
+    <BaseNode title="Main Arm" color={COLORS.orange} icon={<MotorIcon />} width="270px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
         <p className="text-[9px] text-[var(--k-muted)]">Self-contained controller. Drives 4 servos from <span className="font-mono text-cyan-400">{pre}1 {pre}2 {pre}3 {pre}4</span>.</p>
       </div>
@@ -699,28 +700,40 @@ export function MainArmNode() {
           ]} />
       </NodeField>
 
-      <ControlSource
-        title="Mode control (mirror ↔ record)"
-        hint="Switch closed OR variable truthy → record/playback mode. Else the default mode above."
-        varName={modeVar} onVarChange={setModeVar}
-        switchPin={modeSwitchPin} onSwitchChange={setModeSwitchPin} defaultPin={6}
-      />
-      <ControlSource
-        title="Record control (capture ↔ play)"
-        hint="In record mode: switch/var ON → capture the arm; OFF → replay the captured sequence."
-        varName={recVar} onVarChange={setRecVar}
-        switchPin={recSwitchPin} onSwitchChange={setRecSwitchPin} defaultPin={7}
-      />
-
-      <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
+      <div className="px-3 pt-1 pb-0.5">
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → servo port</span>
+      </div>
+      {[0, 1, 2, 3].map(i => (
+        <NodeField key={i} label={`${pre}${i + 1}`}>
+          <SelectInput value={servoPorts[i]} onChange={v => setPort(i, v)} compact options={SERVO_OPTIONS} />
+        </NodeField>
+      ))}
 
       <AdvancedSection>
+        <div className="px-3 pt-1 pb-1">
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Controls — variable / switch</span>
+        </div>
+        <ControlSource
+          title="Mode (mirror ↔ record)"
+          hint="Switch closed OR variable truthy → record/playback mode. Else the default mode above."
+          varName={modeVar} onVarChange={setModeVar}
+          switchPin={modeSwitchPin} onSwitchChange={setModeSwitchPin} defaultPin={6}
+        />
+        <ControlSource
+          title="Record (capture ↔ play)"
+          hint="In record mode: switch/var ON → capture; OFF → replay the captured sequence."
+          varName={recVar} onVarChange={setRecVar}
+          switchPin={recSwitchPin} onSwitchChange={setRecSwitchPin} defaultPin={7}
+        />
+
+        <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
+
         <div className="px-3 pt-1 pb-0.5">
           <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>
         </div>
         {[0, 1, 2, 3].map(i => (
           <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
-            <span className="text-[9px] w-9 text-[var(--k-muted)] font-mono">{PORT_KEYS[i]}</span>
+            <span className="text-[9px] w-12 text-[var(--k-muted)] font-mono">{pre}{i + 1}·{servoPorts[i]}</span>
             <NumberInput value={servoLo[i]} onChange={v => setLo(i, Math.max(0, Math.min(180, v)))} />
             <span className="text-[8px] text-[var(--k-dim)]">→</span>
             <NumberInput value={servoHi[i]} onChange={v => setHi(i, Math.max(0, Math.min(180, v)))} />
@@ -731,7 +744,7 @@ export function MainArmNode() {
           </div>
         ))}
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-          <p className="text-[9px] text-[var(--k-muted)]">⇄ flips a joint if it mirrors backwards. Pins fixed: S1 {SERVO_PORTS.S1.pin} · S2 {SERVO_PORTS.S2.pin} · S3 {SERVO_PORTS.S3.pin} · S4 {SERVO_PORTS.S4.pin}.</p>
+          <p className="text-[9px] text-[var(--k-muted)]">⇄ flips a joint if it mirrors backwards. Ports: S1 {SERVO_PORTS.S1.pin} · S2 {SERVO_PORTS.S2.pin} · S3 {SERVO_PORTS.S3.pin} · S4 {SERVO_PORTS.S4.pin}.</p>
         </div>
       </AdvancedSection>
     </BaseNode>

@@ -73,7 +73,7 @@ interface NodeData {
   // Shadow arm (ADS1115 pots over I2C) / Main arm (servos) — master-slave puppet rig
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
   channelMap?: number[];
-  servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[];
+  servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[]; servoPorts?: string[];
   frameMs?: number; jointSource?: string;
   modeVar?: string; modeSwitchPin?: number; recVar?: string; recSwitchPin?: number;
   // Touch
@@ -218,8 +218,9 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
         markServoPort(d.s3port ?? "S3");
         break;
       case "main_arm":
-        markServoPort("S1"); markServoPort("S2");
-        markServoPort("S3"); markServoPort("S4");
+        (Array.isArray(d.servoPorts) && d.servoPorts.length === 4
+          ? d.servoPorts
+          : ["S1", "S2", "S3", "S4"]).forEach(markServoPort);
         break;
     }
   }
@@ -981,6 +982,10 @@ def read_shadow():
         const fm  = Math.max(5, typeof d.frameMs === "number" ? d.frameMs : 20);
         const vars = `[${pre}1, ${pre}2, ${pre}3, ${pre}4]`;
         const useShadow = (d.jointSource ?? "shadow") !== "manual";
+        const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
+        const armPorts = (Array.isArray(d.servoPorts) && d.servoPorts.length === 4)
+          ? d.servoPorts : ["S1", "S2", "S3", "S4"];
+        const armList = armPorts.map(p => PORT_TO_SV[p] ?? "s1").join(", ");
 
         // A control resolves at runtime from a switch (active-low GPIO) OR a
         // variable — either can drive it. Falls back to the static Mode field.
@@ -999,8 +1004,8 @@ def read_shadow():
         if (recV)  recParts.push(`bool(${recV})`);
         const recExpr = recParts.length ? recParts.join(" or ") : "False";
 
-        emitOnce("main_arm_setup", `# --- Main arm: 4 servos on S1-S4, driven from variables ---
-_arm = [s1, s2, s3, s4]
+        emitOnce("main_arm_setup", `# --- Main arm: ${pre}1..${pre}4 -> servos ${armPorts.join(", ")} ---
+_arm = [${armList}]
 _ARM_LO  = [${lo.join(", ")}]
 _ARM_HI  = [${hi.join(", ")}]
 _ARM_INV = [${inv.map(b => (b ? "True" : "False")).join(", ")}]
