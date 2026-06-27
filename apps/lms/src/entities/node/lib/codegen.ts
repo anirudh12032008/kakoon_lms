@@ -929,6 +929,7 @@ time.sleep(0.1)`);
       case "shadow_arm": {
         imports.add("from machine import SoftI2C, Pin");
         imports.add("from ads1115 import ADS1115");
+        imports.add("import time");
         // I2C bus: "display" = OLED bus (shared with ADS), else a sensor port.
         const busSel = d.port ?? "display";
         const bus = busSel === "display"
@@ -945,6 +946,14 @@ time.sleep(0.1)`);
         emitOnce("shadow_arm", `# --- Shadow arm: ADS1115 4 pots over I2C (SCL ${bus.scl} / SDA ${bus.sda}) ---
 # Channels -> A0 base, A1 gripper, A2 bottom elbow, A3 top elbow (remappable)
 _ads_i2c = SoftI2C(scl=Pin(${bus.scl}), sda=Pin(${bus.sda}), freq=100_000)
+_ADS_ADDR = ${addr}
+# Cold-start: wait for the ADS1115 to appear on the bus before first read.
+for _ in range(20):
+    if _ADS_ADDR in _ads_i2c.scan():
+        break
+    time.sleep_ms(50)
+else:
+    print("WARN: ADS1115 @", hex(_ADS_ADDR), "not found — check wiring; scan:", _ads_i2c.scan())
 _ads = ADS1115(_ads_i2c, ${addrArg}gain=1)
 _CH = [${ch.join(", ")}]        # joint -> ADC channel
 _POT_MIN = [${pmin.join(", ")}]  # volts at each joint's low end
