@@ -219,7 +219,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "servo_controller", label: "Servo Controller", color: "#f97316", previewDot: "#f97316" },
       { type: "multi_servo_sequencer", label: "Multi-Servo Sequencer", color: "#8b5cf6", previewDot: "#8b5cf6" },
       { type: "shadow_arm", label: "Shadow Arm (Pots)", color: "#06b6d4", previewDot: "#06b6d4" },
-      { type: "main_arm", label: "Main Arm (Servos)", color: "#f97316", previewDot: "#f97316" },
+      { type: "main_arm", label: "Main Arm (Robo)", color: "#f97316", previewDot: "#f97316" },
     ],
   },
   {

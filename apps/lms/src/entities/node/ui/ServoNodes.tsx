@@ -641,49 +641,12 @@ export function ShadowArmNode() {
 
 // A control that can be driven by a variable, a physical switch (active-low
 // GPIO), or both — used for the Main Arm's Mode and Record controls.
-function ControlSource({
-  title, hint, varName, onVarChange, switchPin, onSwitchChange, defaultPin,
-}: {
-  title: string; hint: string;
-  varName: string; onVarChange: (v: string) => void;
-  switchPin: number; onSwitchChange: (v: number) => void; defaultPin: number;
-}) {
-  const swOn = switchPin >= 0;
-  return (
-    <div className="mx-3 mb-1.5 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">{title}</span>
-      </div>
-      <p className="text-[8px] text-[var(--k-dim)] mb-1.5">{hint}</p>
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <span className="text-[8px] uppercase font-bold text-cyan-400 w-9 shrink-0">var</span>
-        <TextInput value={varName} onChange={onVarChange} />
-      </div>
-      <div className="flex items-center gap-1.5">
-        <button onClick={() => onSwitchChange(swOn ? -1 : defaultPin)}
-          className={`nodrag px-1.5 py-0.5 rounded text-[8px] font-bold uppercase border transition-all w-9 shrink-0 ${
-            swOn ? "border-orange-500/50 text-orange-400 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
-          }`}>sw</button>
-        {swOn
-          ? <div className="flex items-center gap-1.5"><span className="text-[8px] text-[var(--k-muted)]">GPIO</span><NumberInput value={switchPin} onChange={onSwitchChange} /></div>
-          : <span className="text-[8px] text-[var(--k-dim)]">switch off</span>}
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Arm (4 servos → output, mirror + record/playback) ─────────────────────
-export function MainArmNode() {
-  const [mode, setMode]       = useNodeField<string>("mode", "mirror");
-  const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
-  const [jointSource, setJointSource] = useNodeField<string>("jointSource", "shadow");
-  const [frameMs, setFrameMs] = useNodeField<number>("frameMs", 20);
-  const [modeVar, setModeVar] = useNodeField<string>("modeVar", "");
-  const [modeSwitchPin, setModeSwitchPin] = useNodeField<number>("modeSwitchPin", 6);
-  const [recVar, setRecVar]   = useNodeField<string>("recVar", "");
-  const [recSwitchPin, setRecSwitchPin]   = useNodeField<number>("recSwitchPin", 7);
+// Shared servo-output config (ports / limits / invert / slew / frame rate).
+// Self-contained — reads its own node fields.
+function ArmServoConfig({ pre }: { pre: string }) {
   const [servoPorts, setServoPorts] = useNodeField<string[]>("servoPorts", ["S1", "S2", "S3", "S4"]);
   const [slew, setSlew]       = useNodeField<number>("slew", 0);
+  const [frameMs, setFrameMs] = useNodeField<number>("frameMs", 20);
   const [servoLo, setServoLo] = useNodeField<number[]>("servoLo", [0, 0, 0, 0]);
   const [servoHi, setServoHi] = useNodeField<number[]>("servoHi", [180, 180, 180, 180]);
   const [servoInv, setServoInv] = useNodeField<boolean[]>("servoInv", [false, false, false, false]);
@@ -695,31 +658,8 @@ export function MainArmNode() {
   const setPort = (i: number, v: string) => setServoPorts(servoPorts.map((x, j) => (j === i ? v : x)));
   const toggleInv = (i: number) => setServoInv(servoInv.map((x, j) => (j === i ? !x : x)));
 
-  const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
-
   return (
-    <BaseNode title="Main Arm" color={COLORS.orange} icon={<MotorIcon />} width="270px">
-      <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">Self-contained controller. Drives 4 servos from <span className="font-mono text-cyan-400">{pre}1 {pre}2 {pre}3 {pre}4</span>.</p>
-      </div>
-
-      <NodeField label="Variable prefix">
-        <TextInput value={prefix} onChange={setPrefix} />
-      </NodeField>
-
-      <NodeField label="Joints from">
-        <ToggleInput value={jointSource === "manual"} onChange={on => setJointSource(on ? "manual" : "shadow")}
-          leftLabel="Shadow" rightLabel="Variables" />
-      </NodeField>
-
-      <NodeField label="Default mode">
-        <SelectInput value={mode} onChange={setMode} compact
-          options={[
-            { label: "Live Mirror", value: "mirror" },
-            { label: "Record / Playback", value: "record" },
-          ]} />
-      </NodeField>
-
+    <>
       <div className="px-3 pt-1 pb-0.5">
         <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → servo port</span>
       </div>
@@ -728,45 +668,70 @@ export function MainArmNode() {
           <SelectInput value={servoPorts[i]} onChange={v => setPort(i, v)} compact options={SERVO_OPTIONS} />
         </NodeField>
       ))}
+      <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
+      <NodeField label="Slew limit (°/frame)"><NumberInput value={slew} onChange={v => setSlew(Math.max(0, Math.round(v)))} /></NodeField>
+      <div className="px-3 pt-1 pb-0.5">
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>
+      </div>
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
+          <span className="text-[9px] w-12 text-[var(--k-muted)] font-mono">{pre}{i + 1}·{servoPorts[i]}</span>
+          <NumberInput value={servoLo[i]} onChange={v => setLo(i, Math.max(0, Math.min(180, v)))} />
+          <span className="text-[8px] text-[var(--k-dim)]">→</span>
+          <NumberInput value={servoHi[i]} onChange={v => setHi(i, Math.max(0, Math.min(180, v)))} />
+          <button onClick={() => toggleInv(i)}
+            className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+              servoInv[i] ? "border-orange-500/50 text-orange-400 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
+            }`}>⇄</button>
+        </div>
+      ))}
+    </>
+  );
+}
+
+// ─── Arm — Live (continuous shadow → servos) ────────────────────────────────────
+// ─── Main Arm — single controller: Live + 2-button record/capture + OLED ───────
+export function MainArmNode() {
+  const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
+  const [jointSource, setJointSource] = useNodeField<string>("jointSource", "shadow");
+  const [btn1Pin, setBtn1Pin] = useNodeField<number>("btn1Pin", 10);
+  const [btn2Pin, setBtn2Pin] = useNodeField<number>("btn2Pin", 11);
+  const [moveMs, setMoveMs]   = useNodeField<number>("moveMs", 4000);
+  const [oledAddress, setOledAddress] = useNodeField<string>("oledAddress", "0x3c");
+  const [oledDriver, setOledDriver]   = useNodeField<boolean>("oledDriver", false);
+  const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
+
+  return (
+    <BaseNode title="Main Arm" color={COLORS.orange} icon={<MotorIcon />} width="270px">
+      <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+        <p className="text-[9px] text-[var(--k-muted)]">One node: <b>Live</b> by default. BTN1 tap → record, BTN2 → capture a point, BTN1 tap → save, BTN1 hold &gt;3s → play. Status shows on the OLED.</p>
+      </div>
+
+      <NodeField label="Variable prefix"><TextInput value={prefix} onChange={setPrefix} /></NodeField>
+      <NodeField label="Joints from">
+        <ToggleInput value={jointSource === "manual"} onChange={on => setJointSource(on ? "manual" : "shadow")}
+          leftLabel="Shadow" rightLabel="Variables" />
+      </NodeField>
+      <NodeField label="BTN1 (rec/save/play)"><NumberInput value={btn1Pin} onChange={v => setBtn1Pin(Math.max(0, Math.round(v)))} /></NodeField>
+      <NodeField label="BTN2 (capture point)"><NumberInput value={btn2Pin} onChange={v => setBtn2Pin(Math.max(0, Math.round(v)))} /></NodeField>
+
+      <div className="mx-3 my-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+        <p className="text-[9px] text-[var(--k-muted)] leading-relaxed">Buttons are active-low (to GND). Each leg moves over <b>{(moveMs / 1000).toFixed(1)}s</b> with all servos arriving together.</p>
+      </div>
 
       <AdvancedSection>
-        <div className="px-3 pt-1 pb-1">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Controls — variable / switch</span>
-        </div>
-        <ControlSource
-          title="Mode (mirror ↔ record)"
-          hint="Switch closed OR variable truthy → record/playback mode. Else the default mode above."
-          varName={modeVar} onVarChange={setModeVar}
-          switchPin={modeSwitchPin} onSwitchChange={setModeSwitchPin} defaultPin={6}
-        />
-        <ControlSource
-          title="Record (capture ↔ play)"
-          hint="In record mode: switch/var ON → capture; OFF → replay the captured sequence."
-          varName={recVar} onVarChange={setRecVar}
-          switchPin={recSwitchPin} onSwitchChange={setRecSwitchPin} defaultPin={7}
-        />
-
-        <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
-        <NodeField label="Slew limit (°/frame)"><NumberInput value={slew} onChange={v => setSlew(Math.max(0, Math.round(v)))} /></NodeField>
-
+        <NodeField label="Move time (ms / leg)"><NumberInput value={moveMs} onChange={v => setMoveMs(Math.max(100, Math.round(v)))} /></NodeField>
         <div className="px-3 pt-1 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">OLED display</span>
         </div>
-        {[0, 1, 2, 3].map(i => (
-          <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
-            <span className="text-[9px] w-12 text-[var(--k-muted)] font-mono">{pre}{i + 1}·{servoPorts[i]}</span>
-            <NumberInput value={servoLo[i]} onChange={v => setLo(i, Math.max(0, Math.min(180, v)))} />
-            <span className="text-[8px] text-[var(--k-dim)]">→</span>
-            <NumberInput value={servoHi[i]} onChange={v => setHi(i, Math.max(0, Math.min(180, v)))} />
-            <button onClick={() => toggleInv(i)}
-              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
-                servoInv[i] ? "border-orange-500/50 text-orange-400 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
-              }`}>⇄</button>
-          </div>
-        ))}
-        <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-          <p className="text-[9px] text-[var(--k-muted)]">⇄ flips a joint if it mirrors backwards. Ports: S1 {SERVO_PORTS.S1.pin} · S2 {SERVO_PORTS.S2.pin} · S3 {SERVO_PORTS.S3.pin} · S4 {SERVO_PORTS.S4.pin}.</p>
+        <NodeField label="Driver">
+          <ToggleInput value={oledDriver} onChange={setOledDriver} leftLabel="SH1106" rightLabel="SSD1306" />
+        </NodeField>
+        <NodeField label="OLED address"><TextInput value={oledAddress} onChange={setOledAddress} /></NodeField>
+        <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
+          <span className="text-[9px] text-[var(--k-muted)]">OLED bus — SCL <span className="font-mono text-[var(--k-text)]">{OLED.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{OLED.sda}</span> (shared with ADS)</span>
         </div>
+        <ArmServoConfig pre={pre} />
       </AdvancedSection>
     </BaseNode>
   );

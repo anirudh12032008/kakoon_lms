@@ -74,6 +74,7 @@ interface NodeData {
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
   channelMap?: number[]; shadowInv?: boolean[]; oversample?: number; deadband?: number;
   servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[]; servoPorts?: string[]; slew?: number;
+  btn1Pin?: number; btn2Pin?: number; moveMs?: number; oledAddress?: string; oledDriver?: boolean;
   frameMs?: number; jointSource?: string;
   modeVar?: string; modeSwitchPin?: number; recVar?: string; recSwitchPin?: number;
   // Touch
@@ -322,6 +323,45 @@ def _cm_stop(pwm, d):
   // Helper: emit a shared helper block only once per script
   const emitOnce = (key: string, code: string) => {
     if (!setupOnce.has(key)) { setupOnce.add(key); setupLines.push(code); }
+  };
+
+  // Shared servo-output for the Arm Live / Record / Play nodes. Defines _arm,
+  // drive_arm(), the recording file path, and the file player — all once.
+  // Returns the variable prefix and frame delay for the calling node.
+  const buildArmOutputOnce = (dd: NodeData): { pre: string; fm: number } => {
+    const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
+    const pre  = (typeof dd.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(dd.varPrefix)) ? dd.varPrefix : "j";
+    const lo   = Array.isArray(dd.servoLo)  ? dd.servoLo  : [0, 0, 0, 0];
+    const hi   = Array.isArray(dd.servoHi)  ? dd.servoHi  : [180, 180, 180, 180];
+    const inv  = Array.isArray(dd.servoInv) ? dd.servoInv : [false, false, false, false];
+    const slew = Math.max(0, typeof dd.slew === "number" ? dd.slew : 0);
+    const ports = (Array.isArray(dd.servoPorts) && dd.servoPorts.length === 4) ? dd.servoPorts : ["S1", "S2", "S3", "S4"];
+    const armList = ports.map(p => PORT_TO_SV[p] ?? "s1").join(", ");
+    const fm = Math.max(5, typeof dd.frameMs === "number" ? dd.frameMs : 20);
+    imports.add("from machine import Pin, PWM");
+    imports.add("import time");
+    emitOnce("servo_class", buildServoHelperBlock());
+    emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
+    emitOnce("arm_output", `# --- Arm output: ${pre}1..${pre}4 -> servos ${ports.join(", ")} ---
+_arm = [${armList}]
+_ARM_LO  = [${lo.join(", ")}]
+_ARM_HI  = [${hi.join(", ")}]
+_ARM_INV = [${inv.map(b => (b ? "True" : "False")).join(", ")}]
+_SLEW = ${slew}   # max deg/frame (0 = unlimited)
+_arm_cur = [90, 90, 90, 90]
+${pre}1 = ${pre}2 = ${pre}3 = ${pre}4 = 90   # joint vars (set by shadow arm or manually)
+
+def drive_arm(angles):
+    for _i in range(4):
+        _t = 180 - angles[_i] if _ARM_INV[_i] else angles[_i]
+        _t = _clamp(_t, _ARM_LO[_i], _ARM_HI[_i])
+        if _SLEW > 0:
+            _d = _t - _arm_cur[_i]
+            if _d > _SLEW: _t = _arm_cur[_i] + _SLEW
+            elif _d < -_SLEW: _t = _arm_cur[_i] - _SLEW
+        _arm_cur[_i] = _t
+        _arm[_i].angle(_t)`);
+    return { pre, fm };
   };
 
   // Create (once) and return the variable names for a custom-pin motor's
@@ -994,86 +1034,86 @@ def read_shadow():
         }
         break;
       }
+      // ─── Robo Arm: one node — Live default, 2-button record/capture, OLED ──
       case "main_arm": {
-        imports.add("from machine import Pin, PWM");
-        imports.add("import time");
-        emitOnce("servo_class", buildServoHelperBlock());
-        emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
-        const pre = (typeof d.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(d.varPrefix)) ? d.varPrefix : "j";
-        const lo  = Array.isArray(d.servoLo)  ? d.servoLo  : [0, 0, 0, 0];
-        const hi  = Array.isArray(d.servoHi)  ? d.servoHi  : [180, 180, 180, 180];
-        const inv = Array.isArray(d.servoInv) ? d.servoInv : [false, false, false, false];
-        const fm  = Math.max(5, typeof d.frameMs === "number" ? d.frameMs : 20);
-        const slew = Math.max(0, typeof d.slew === "number" ? d.slew : 0);
-        const vars = `[${pre}1, ${pre}2, ${pre}3, ${pre}4]`;
+        const { pre, fm } = buildArmOutputOnce(d);
+        imports.add("from machine import SoftI2C, Pin");
         const useShadow = (d.jointSource ?? "shadow") !== "manual";
-        const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
-        const armPorts = (Array.isArray(d.servoPorts) && d.servoPorts.length === 4)
-          ? d.servoPorts : ["S1", "S2", "S3", "S4"];
-        const armList = armPorts.map(p => PORT_TO_SV[p] ?? "s1").join(", ");
+        const b1 = typeof d.btn1Pin === "number" ? d.btn1Pin : 10;
+        const b2 = typeof d.btn2Pin === "number" ? d.btn2Pin : 11;
+        const moveMs = Math.max(100, typeof d.moveMs === "number" ? d.moveMs : 4000);
+        const oledAddr = (typeof d.oledAddress === "string" && d.oledAddress.trim()) ? d.oledAddress.trim() : "0x3c";
+        const useSSD = d.oledDriver === true;
+        const oledLib = useSSD ? "ssd1306" : "sh1106";
+        const oledClass = useSSD ? "SSD1306_I2C" : "SH1106_I2C";
+        imports.add(`import ${oledLib}`);
 
-        // A control resolves at runtime from a switch (active-low GPIO) OR a
-        // variable — either can drive it. Falls back to the static Mode field.
-        const validVar = (s?: string) =>
-          (typeof s === "string" && /^[A-Za-z_]\w*$/.test(s.trim())) ? s.trim() : "";
-        const modeV = validVar(d.modeVar);
-        const recV  = validVar(d.recVar);
-        const modeSw = typeof d.modeSwitchPin === "number" && d.modeSwitchPin >= 0;
-        const recSw  = typeof d.recSwitchPin  === "number" && d.recSwitchPin  >= 0;
-        const modeParts: string[] = [];
-        if (modeSw) modeParts.push(`(_mode_sw.value() == 0)`);
-        if (modeV)  modeParts.push(`bool(${modeV})`);
-        const modeExpr = modeParts.length ? modeParts.join(" or ") : (d.mode === "record" ? "True" : "False");
-        const recParts: string[] = [];
-        if (recSw) recParts.push(`(_rec_sw.value() == 0)`);
-        if (recV)  recParts.push(`bool(${recV})`);
-        const recExpr = recParts.length ? recParts.join(" or ") : "False";
+        emitOnce("arm_program", `# --- Robo arm: OLED status + RAM sequence + coordinated playback ---
+_MOVE_MS = ${moveMs}   # ms to travel from one captured position to the next
+_FRAME = ${fm}         # interpolation step interval (ms)
+_seq = []              # captured positions (joint space), e.g. [[a0,a1,a2,a3], ...]
+_live_pos = [90, 90, 90, 90]
 
-        emitOnce("main_arm_setup", `# --- Main arm: ${pre}1..${pre}4 -> servos ${armPorts.join(", ")} ---
-_arm = [${armList}]
-_ARM_LO  = [${lo.join(", ")}]
-_ARM_HI  = [${hi.join(", ")}]
-_ARM_INV = [${inv.map(b => (b ? "True" : "False")).join(", ")}]
-_SLEW = ${slew}   # max deg/frame the servo may move (0 = unlimited)
-_arm_cur = [90, 90, 90, 90]
-${pre}1 = ${pre}2 = ${pre}3 = ${pre}4 = 90   # joint vars (set by shadow arm or manually)
+_oled_i2c = SoftI2C(scl=Pin(${OLED.scl}), sda=Pin(${OLED.sda}))
+_oled = ${oledLib}.${oledClass}(${OLED.width}, ${OLED.height}, _oled_i2c, addr=${oledAddr})
 
-def drive_arm(angles):
-    for _i in range(4):
-        _t = 180 - angles[_i] if _ARM_INV[_i] else angles[_i]
-        _t = _clamp(_t, _ARM_LO[_i], _ARM_HI[_i])
-        if _SLEW > 0:                       # slew-rate limit for smooth glide
-            _d = _t - _arm_cur[_i]
-            if _d > _SLEW: _t = _arm_cur[_i] + _SLEW
-            elif _d < -_SLEW: _t = _arm_cur[_i] - _SLEW
-        _arm_cur[_i] = _t
-        _arm[_i].angle(_t)`);
+def _oled_msg(a, b=""):
+    _oled.fill(0)
+    _oled.text(a, 0, 22)
+    _oled.text(b, 0, 40)
+    _oled.show()
 
-        chunkLines.push(`${indent}# Main arm controller — mode + record via variable / switch`);
-        if (modeSw) chunkLines.push(`${indent}_mode_sw = Pin(${d.modeSwitchPin}, Pin.IN, Pin.PULL_UP)`);
-        if (recSw)  chunkLines.push(`${indent}_rec_sw = Pin(${d.recSwitchPin}, Pin.IN, Pin.PULL_UP)`);
-        chunkLines.push(`${indent}_buf = []; _prev_rec = False`);
-        chunkLines.push(`${indent}print("Main arm ready")`);
+def _play_sequence():
+    # Coordinated move: every servo interpolates over the SAME number of steps,
+    # so all 4 arrive at each waypoint together (per-servo speed scales with its
+    # distance). Each leg takes _MOVE_MS regardless of how far the joints travel.
+    if not _seq:
+        _oled_msg("No combo", "saved"); time.sleep_ms(800); return
+    _oled_msg("Playing", "%d pts" % len(_seq))
+    _cur = list(_live_pos)
+    _steps = max(1, _MOVE_MS // _FRAME)
+    for _tgt in _seq:
+        for _s in range(1, _steps + 1):
+            _f = _s / _steps
+            drive_arm([int(_cur[_k] + (_tgt[_k] - _cur[_k]) * _f) for _k in range(4)])
+            time.sleep_ms(_FRAME)
+        _cur = list(_tgt)
+    _oled_msg("Done"); time.sleep_ms(600)`);
+
+        chunkLines.push(`${indent}# Robo arm — Live default | BTN1 tap: rec/save | BTN2: capture point | BTN1 hold >3s: play`);
+        chunkLines.push(`${indent}_btn1 = Pin(${b1}, Pin.IN, Pin.PULL_UP)`);
+        chunkLines.push(`${indent}_btn2 = Pin(${b2}, Pin.IN, Pin.PULL_UP)`);
+        chunkLines.push(`${indent}_mode = 0          # 0 = live, 1 = recording`);
+        chunkLines.push(`${indent}_b1_down = None    # ticks_ms when BTN1 pressed`);
+        chunkLines.push(`${indent}_b2_prev = 1`);
+        chunkLines.push(`${indent}_oled_msg("Live Mode")`);
+        chunkLines.push(`${indent}print("Robo arm ready - Live Mode")`);
         chunkLines.push(`${indent}while True:`);
-        if (useShadow) chunkLines.push(`${indent}    ${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()   # refresh from pots`);
-        chunkLines.push(`${indent}    _frame = ${vars}`);
-        chunkLines.push(`${indent}    _record_mode = ${modeExpr}`);
-        chunkLines.push(`${indent}    _recording = (${recExpr}) and _record_mode`);
-        chunkLines.push(`${indent}    if _recording and not _prev_rec:`);
-        chunkLines.push(`${indent}        _buf = []; print("REC")`);
-        chunkLines.push(`${indent}    if not _recording and _prev_rec:`);
-        chunkLines.push(`${indent}        print("STOP %d frames" % len(_buf))`);
-        chunkLines.push(`${indent}    _prev_rec = _recording`);
-        chunkLines.push(`${indent}    if _recording:`);
-        chunkLines.push(`${indent}        drive_arm(_frame); _buf.append(_frame)   # mirror + capture`);
-        chunkLines.push(`${indent}    elif _record_mode and _buf:`);
-        chunkLines.push(`${indent}        for _f in _buf:                          # play captured sequence`);
-        chunkLines.push(`${indent}            drive_arm(_f); time.sleep_ms(${fm})`);
-        chunkLines.push(`${indent}    else:`);
-        chunkLines.push(`${indent}        drive_arm(_frame)                        # live mirror`);
-        chunkLines.push(`${indent}    time.sleep_ms(${fm})`);
+        if (useShadow) chunkLines.push(`${indent}    ${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()`);
+        chunkLines.push(`${indent}    _live_pos = [${pre}1, ${pre}2, ${pre}3, ${pre}4]`);
+        chunkLines.push(`${indent}    drive_arm(_live_pos)              # live mirror (also while recording)`);
+        chunkLines.push(`${indent}    _v1 = _btn1.value(); _v2 = _btn2.value(); _now = time.ticks_ms()`);
+        chunkLines.push(`${indent}    # BTN1: detect tap vs long-press (>3s) on release`);
+        chunkLines.push(`${indent}    if _v1 == 0 and _b1_down is None:`);
+        chunkLines.push(`${indent}        _b1_down = _now`);
+        chunkLines.push(`${indent}    elif _v1 == 1 and _b1_down is not None:`);
+        chunkLines.push(`${indent}        _held = time.ticks_diff(_now, _b1_down); _b1_down = None`);
+        chunkLines.push(`${indent}        if _held >= 3000:                  # long press -> play saved combo`);
+        chunkLines.push(`${indent}            _play_sequence(); _mode = 0; _oled_msg("Live Mode")`);
+        chunkLines.push(`${indent}        elif _mode == 0:                   # tap -> enter recording`);
+        chunkLines.push(`${indent}            _mode = 1; _seq = []; _oled_msg("Recording", "0 pts")`);
+        chunkLines.push(`${indent}        else:                              # tap -> save & back to live`);
+        chunkLines.push(`${indent}            _mode = 0; _oled_msg("Saved", "%d pts" % len(_seq))`);
+        chunkLines.push(`${indent}            time.sleep_ms(800); _oled_msg("Live Mode")`);
+        chunkLines.push(`${indent}    # BTN2: capture current position as a waypoint (only while recording)`);
+        chunkLines.push(`${indent}    if _mode == 1 and _v2 == 0 and _b2_prev == 1:`);
+        chunkLines.push(`${indent}        _seq.append([${pre}1, ${pre}2, ${pre}3, ${pre}4])`);
+        chunkLines.push(`${indent}        _oled_msg("Recording", "%d pts" % len(_seq))`);
+        chunkLines.push(`${indent}    _b2_prev = _v2`);
+        chunkLines.push(`${indent}    time.sleep_ms(_FRAME)`);
         break;
       }
+
       case "l298n_motor":
         // Deprecated — generates a warning comment but still basic code
         imports.add("from machine import Pin");
