@@ -549,15 +549,19 @@ export function ShadowArmNode() {
   const [address, setAddress] = useNodeField<string>("address", "0x48");
   const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
   const [channelMap, setChannelMap] = useNodeField<number[]>("channelMap", [0, 1, 2, 3]);
+  const [shadowInv, setShadowInv] = useNodeField<boolean[]>("shadowInv", [false, false, false, false]);
   const [potMin, setPotMin]   = useNodeField<number[]>("potMin", [0, 0, 0, 0]);
   const [potMax, setPotMax]   = useNodeField<number[]>("potMax", [3.3, 3.3, 3.3, 3.3]);
   const [alpha, setAlpha]     = useNodeField<number>("shadowAlpha", 25);
+  const [oversample, setOversample] = useNodeField<number>("oversample", 2);
+  const [deadband, setDeadband]     = useNodeField<number>("deadband", 1);
 
   const setAt = (arr: number[], set: (v: number[]) => void) =>
     (i: number, v: number) => set(arr.map((x, j) => (j === i ? v : x)));
   const setChannel = setAt(channelMap, setChannelMap);
   const setMin = setAt(potMin, setPotMin);
   const setMax = setAt(potMax, setPotMax);
+  const toggleInv = (i: number) => setShadowInv(shadowInv.map((x, j) => (j === i ? !x : x)));
   const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
   const bus = port === "display"
     ? { scl: OLED.scl, sda: OLED.sda }
@@ -583,7 +587,13 @@ export function ShadowArmNode() {
       </div>
       {[0, 1, 2, 3].map(i => (
         <NodeField key={i} label={`${pre}${i + 1}`}>
-          <SelectInput value={String(channelMap[i])} onChange={v => setChannel(i, Number(v))} compact options={SHADOW_CH_OPTIONS} />
+          <div className="flex items-center gap-1.5">
+            <SelectInput value={String(channelMap[i])} onChange={v => setChannel(i, Number(v))} compact options={SHADOW_CH_OPTIONS} />
+            <button onClick={() => toggleInv(i)} title="Invert direction"
+              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                shadowInv[i] ? "border-cyan-500/50 text-cyan-400 bg-cyan-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
+              }`}>⇄</button>
+          </div>
         </NodeField>
       ))}
 
@@ -614,6 +624,15 @@ export function ShadowArmNode() {
             <span className="text-[8px] text-[var(--k-dim)]">Smoother</span>
             <span className="text-[8px] text-[var(--k-dim)]">Snappier</span>
           </div>
+        </div>
+        <NodeField label="Oversampling">
+          <NumberInput value={oversample} onChange={v => setOversample(Math.max(1, Math.round(v)))} />
+        </NodeField>
+        <NodeField label="Deadband (°)">
+          <NumberInput value={deadband} onChange={v => setDeadband(Math.max(0, Math.round(v)))} />
+        </NodeField>
+        <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+          <p className="text-[9px] text-[var(--k-muted)]">More oversampling = less noise but slower. Deadband stops servo buzz when holding still. ⇄ flips a joint's direction.</p>
         </div>
       </AdvancedSection>
     </BaseNode>
@@ -664,6 +683,7 @@ export function MainArmNode() {
   const [recVar, setRecVar]   = useNodeField<string>("recVar", "");
   const [recSwitchPin, setRecSwitchPin]   = useNodeField<number>("recSwitchPin", 7);
   const [servoPorts, setServoPorts] = useNodeField<string[]>("servoPorts", ["S1", "S2", "S3", "S4"]);
+  const [slew, setSlew]       = useNodeField<number>("slew", 0);
   const [servoLo, setServoLo] = useNodeField<number[]>("servoLo", [0, 0, 0, 0]);
   const [servoHi, setServoHi] = useNodeField<number[]>("servoHi", [180, 180, 180, 180]);
   const [servoInv, setServoInv] = useNodeField<boolean[]>("servoInv", [false, false, false, false]);
@@ -727,6 +747,7 @@ export function MainArmNode() {
         />
 
         <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
+        <NodeField label="Slew limit (°/frame)"><NumberInput value={slew} onChange={v => setSlew(Math.max(0, Math.round(v)))} /></NodeField>
 
         <div className="px-3 pt-1 pb-0.5">
           <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>

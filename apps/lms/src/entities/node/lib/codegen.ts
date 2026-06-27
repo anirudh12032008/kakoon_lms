@@ -72,8 +72,8 @@ interface NodeData {
   keyframeDelay?: number;
   // Shadow arm (ADS1115 pots over I2C) / Main arm (servos) — master-slave puppet rig
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
-  channelMap?: number[];
-  servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[]; servoPorts?: string[];
+  channelMap?: number[]; shadowInv?: boolean[]; oversample?: number; deadband?: number;
+  servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[]; servoPorts?: string[]; slew?: number;
   frameMs?: number; jointSource?: string;
   modeVar?: string; modeSwitchPin?: number; recVar?: string; recSwitchPin?: number;
   // Touch
@@ -941,7 +941,10 @@ time.sleep(0.1)`);
         const ch    = Array.isArray(d.channelMap) ? d.channelMap : [0, 1, 2, 3];
         const pmin  = Array.isArray(d.potMin) ? d.potMin : [0.0, 0.0, 0.0, 0.0];
         const pmax  = Array.isArray(d.potMax) ? d.potMax : [3.3, 3.3, 3.3, 3.3];
+        const sinv  = Array.isArray(d.shadowInv) ? d.shadowInv : [false, false, false, false];
         const alpha = ((typeof d.shadowAlpha === "number" ? d.shadowAlpha : 25) / 100).toFixed(2);
+        const over  = Math.max(1, typeof d.oversample === "number" ? d.oversample : 2);
+        const dead  = Math.max(0, typeof d.deadband === "number" ? d.deadband : 1);
         emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
         emitOnce("shadow_arm", `# --- Shadow arm: ADS1115 4 pots over I2C (SCL ${bus.scl} / SDA ${bus.sda}) ---
 # Channels -> A0 base, A1 gripper, A2 bottom elbow, A3 top elbow (remappable)
@@ -956,20 +959,32 @@ else:
     print("WARN: ADS1115 @", hex(_ADS_ADDR), "not found — check wiring; scan:", _ads_i2c.scan())
 _ads = ADS1115(_ads_i2c, ${addrArg}gain=1)
 _CH = [${ch.join(", ")}]        # joint -> ADC channel
+_INV = [${sinv.map(b => (b ? "True" : "False")).join(", ")}]   # per-joint direction flip
 _POT_MIN = [${pmin.join(", ")}]  # volts at each joint's low end
 _POT_MAX = [${pmax.join(", ")}]  # volts at each joint's high end
-_SHADOW_ALPHA = ${alpha}
+_SHADOW_ALPHA = ${alpha}   # EMA smoothing (lower = smoother, more lag)
+_OVERSAMPLE = ${over}      # ADC reads averaged per frame (noise filter)
+_DEADBAND = ${dead}        # ignore changes smaller than this (anti-jitter)
 _shadow_state = [90.0, 90.0, 90.0, 90.0]
+_shadow_out = [90, 90, 90, 90]
 
 def read_shadow():
-    _v = _ads.read_all_voltage()   # [A0, A1, A2, A3] volts (0..3.3)
+    _acc = [0.0, 0.0, 0.0, 0.0]
+    for _s in range(_OVERSAMPLE):
+        _v = _ads.read_all_voltage()   # [A0, A1, A2, A3] volts (0..3.3)
+        for _i in range(4):
+            _acc[_i] += _v[_CH[_i]]
     for _i in range(4):
-        _raw = _v[_CH[_i]]
+        _raw = _acc[_i] / _OVERSAMPLE
         _rng = _POT_MAX[_i] - _POT_MIN[_i]
         _ang = (_raw - _POT_MIN[_i]) * 180 / _rng if _rng else 0
+        if _INV[_i]:
+            _ang = 180 - _ang
         _ang = _clamp(_ang, 0, 180)
-        _shadow_state[_i] += _SHADOW_ALPHA * (_ang - _shadow_state[_i])
-    return [int(v) for v in _shadow_state]`);
+        _shadow_state[_i] += _SHADOW_ALPHA * (_ang - _shadow_state[_i])   # EMA
+        if abs(int(_shadow_state[_i]) - _shadow_out[_i]) >= _DEADBAND:    # deadband
+            _shadow_out[_i] = int(_shadow_state[_i])
+    return list(_shadow_out)`);
         // Refresh the joint variables from the pots (run this inside a Forever Loop).
         chunkLines.push(`${indent}${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()`);
         if (d.sendToViz !== false) {
@@ -989,6 +1004,7 @@ def read_shadow():
         const hi  = Array.isArray(d.servoHi)  ? d.servoHi  : [180, 180, 180, 180];
         const inv = Array.isArray(d.servoInv) ? d.servoInv : [false, false, false, false];
         const fm  = Math.max(5, typeof d.frameMs === "number" ? d.frameMs : 20);
+        const slew = Math.max(0, typeof d.slew === "number" ? d.slew : 0);
         const vars = `[${pre}1, ${pre}2, ${pre}3, ${pre}4]`;
         const useShadow = (d.jointSource ?? "shadow") !== "manual";
         const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
@@ -1018,12 +1034,20 @@ _arm = [${armList}]
 _ARM_LO  = [${lo.join(", ")}]
 _ARM_HI  = [${hi.join(", ")}]
 _ARM_INV = [${inv.map(b => (b ? "True" : "False")).join(", ")}]
+_SLEW = ${slew}   # max deg/frame the servo may move (0 = unlimited)
+_arm_cur = [90, 90, 90, 90]
 ${pre}1 = ${pre}2 = ${pre}3 = ${pre}4 = 90   # joint vars (set by shadow arm or manually)
 
 def drive_arm(angles):
     for _i in range(4):
-        _a = 180 - angles[_i] if _ARM_INV[_i] else angles[_i]
-        _arm[_i].angle(_clamp(_a, _ARM_LO[_i], _ARM_HI[_i]))`);
+        _t = 180 - angles[_i] if _ARM_INV[_i] else angles[_i]
+        _t = _clamp(_t, _ARM_LO[_i], _ARM_HI[_i])
+        if _SLEW > 0:                       # slew-rate limit for smooth glide
+            _d = _t - _arm_cur[_i]
+            if _d > _SLEW: _t = _arm_cur[_i] + _SLEW
+            elif _d < -_SLEW: _t = _arm_cur[_i] - _SLEW
+        _arm_cur[_i] = _t
+        _arm[_i].angle(_t)`);
 
         chunkLines.push(`${indent}# Main arm controller — mode + record via variable / switch`);
         if (modeSw) chunkLines.push(`${indent}_mode_sw = Pin(${d.modeSwitchPin}, Pin.IN, Pin.PULL_UP)`);
