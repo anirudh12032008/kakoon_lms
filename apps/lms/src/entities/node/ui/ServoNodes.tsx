@@ -698,7 +698,7 @@ export function MainArmNode() {
   const [btn2Pin, setBtn2Pin] = useNodeField<number>("btn2Pin", 11);
   const [moveMs, setMoveMs]   = useNodeField<number>("moveMs", 4000);
   const [oledAddress, setOledAddress] = useNodeField<string>("oledAddress", "0x3c");
-  const [oledDriver, setOledDriver]   = useNodeField<boolean>("oledDriver", false);
+  const [oledDriver, setOledDriver]   = useNodeField<boolean>("oledDriver", true);
   const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
 
   return (

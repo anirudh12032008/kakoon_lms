@@ -1055,12 +1055,12 @@ _seq = []              # captured positions (joint space), e.g. [[a0,a1,a2,a3], 
 _live_pos = [90, 90, 90, 90]
 
 _oled_i2c = SoftI2C(scl=Pin(${OLED.scl}), sda=Pin(${OLED.sda}))
-_oled = ${oledLib}.${oledClass}(${OLED.width}, ${OLED.height}, _oled_i2c, addr=${oledAddr})
+_oled = ${oledLib}.${oledClass}(128, 32, _oled_i2c, addr=${oledAddr})
 
 def _oled_msg(a, b=""):
     _oled.fill(0)
-    _oled.text(a, 0, 22)
-    _oled.text(b, 0, 40)
+    _oled.text(a, 0, 4)
+    if b: _oled.text(b, 0, 20)
     _oled.show()
 
 def _play_sequence():
@@ -1086,6 +1086,10 @@ def _play_sequence():
         chunkLines.push(`${indent}_mode = 0          # 0 = live, 1 = recording`);
         chunkLines.push(`${indent}_b1_down = None    # ticks_ms when BTN1 pressed`);
         chunkLines.push(`${indent}_b2_prev = 1`);
+        chunkLines.push(`${indent}# Calibrate: home every joint to 90° so the arm always starts from a known centre`);
+        chunkLines.push(`${indent}_oled_msg("Centering", "all 90 deg")`);
+        chunkLines.push(`${indent}drive_arm([90, 90, 90, 90])`);
+        chunkLines.push(`${indent}time.sleep_ms(600)             # let the servos physically reach centre`);
         chunkLines.push(`${indent}_oled_msg("Live Mode")`);
         chunkLines.push(`${indent}print("Robo arm ready - Live Mode")`);
         chunkLines.push(`${indent}while True:`);
