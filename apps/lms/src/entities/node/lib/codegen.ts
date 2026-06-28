@@ -1100,7 +1100,7 @@ def _play_sequence():
         chunkLines.push(`${indent}while True:`);
         if (useShadow) chunkLines.push(`${indent}    ${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()`);
         chunkLines.push(`${indent}    _live_pos = [${pre}1, ${pre}2, ${pre}3, ${pre}4]`);
-        chunkLines.push(`${indent}    print("[LIVE] j1=%d j2=%d j3=%d j4=%d" % (${pre}1, ${pre}2, ${pre}3, ${pre}4))`);
+        chunkLines.push(`${indent}    if _mode == 0: print("[LIVE] j1=%d j2=%d j3=%d j4=%d" % (${pre}1, ${pre}2, ${pre}3, ${pre}4))`);
         chunkLines.push(`${indent}    drive_arm(_live_pos)              # live mirror (also while recording)`);
         chunkLines.push(`${indent}    _v1 = _btn1.value(); _v2 = _btn2.value(); _now = time.ticks_ms()`);
         chunkLines.push(`${indent}    # BTN1: detect tap vs long-press (>3s) on release`);
