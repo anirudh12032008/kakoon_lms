@@ -1058,10 +1058,14 @@ _oled_i2c = SoftI2C(scl=Pin(${OLED.scl}), sda=Pin(${OLED.sda}))
 _oled = ${oledLib}.${oledClass}(128, 32, _oled_i2c, addr=${oledAddr})
 
 def _oled_msg(a, b=""):
-    _oled.fill(0)
-    _oled.text(a, 0, 4)
-    if b: _oled.text(b, 0, 20)
-    _oled.show()
+    print("[ARM]", a, b)
+    try:
+        _oled.fill(0)
+        _oled.text(a, 0, 4)
+        if b: _oled.text(b, 0, 20)
+        _oled.show()
+    except Exception as _e:
+        print("[OLED ERR]", _e)
 
 def _play_sequence():
     # Coordinated move: every servo interpolates over the SAME number of steps,
@@ -1069,6 +1073,7 @@ def _play_sequence():
     # distance). Each leg takes _MOVE_MS regardless of how far the joints travel.
     if not _seq:
         _oled_msg("No combo", "saved"); time.sleep_ms(800); return
+    print("[ARM] Playing %d pts: %s" % (len(_seq), _seq))
     _oled_msg("Playing", "%d pts" % len(_seq))
     _cur = list(_live_pos)
     _steps = max(1, _MOVE_MS // _FRAME)
@@ -1095,6 +1100,7 @@ def _play_sequence():
         chunkLines.push(`${indent}while True:`);
         if (useShadow) chunkLines.push(`${indent}    ${pre}1, ${pre}2, ${pre}3, ${pre}4 = read_shadow()`);
         chunkLines.push(`${indent}    _live_pos = [${pre}1, ${pre}2, ${pre}3, ${pre}4]`);
+        chunkLines.push(`${indent}    print("[LIVE] j1=%d j2=%d j3=%d j4=%d" % (${pre}1, ${pre}2, ${pre}3, ${pre}4))`);
         chunkLines.push(`${indent}    drive_arm(_live_pos)              # live mirror (also while recording)`);
         chunkLines.push(`${indent}    _v1 = _btn1.value(); _v2 = _btn2.value(); _now = time.ticks_ms()`);
         chunkLines.push(`${indent}    # BTN1: detect tap vs long-press (>3s) on release`);
@@ -1106,12 +1112,15 @@ def _play_sequence():
         chunkLines.push(`${indent}            _play_sequence(); _mode = 0; _oled_msg("Live Mode")`);
         chunkLines.push(`${indent}        elif _mode == 0:                   # tap -> enter recording`);
         chunkLines.push(`${indent}            _mode = 1; _seq = []; _oled_msg("Recording", "0 pts")`);
+        chunkLines.push(`${indent}            print("[ARM] Recording started")`);
         chunkLines.push(`${indent}        else:                              # tap -> save & back to live`);
+        chunkLines.push(`${indent}            print("[ARM] Saved %d pts: %s" % (len(_seq), _seq))`);
         chunkLines.push(`${indent}            _mode = 0; _oled_msg("Saved", "%d pts" % len(_seq))`);
         chunkLines.push(`${indent}            time.sleep_ms(800); _oled_msg("Live Mode")`);
         chunkLines.push(`${indent}    # BTN2: capture current position as a waypoint (only while recording)`);
         chunkLines.push(`${indent}    if _mode == 1 and _v2 == 0 and _b2_prev == 1:`);
         chunkLines.push(`${indent}        _seq.append([${pre}1, ${pre}2, ${pre}3, ${pre}4])`);
+        chunkLines.push(`${indent}        print("[CAPTURE] pt %d: j1=%d j2=%d j3=%d j4=%d" % (len(_seq), ${pre}1, ${pre}2, ${pre}3, ${pre}4))`);
         chunkLines.push(`${indent}        _oled_msg("Recording", "%d pts" % len(_seq))`);
         chunkLines.push(`${indent}    _b2_prev = _v2`);
         chunkLines.push(`${indent}    time.sleep_ms(_FRAME)`);
