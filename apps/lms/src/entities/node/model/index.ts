@@ -15,7 +15,7 @@ import { OLEDDisplayNode, PlayAnimationNode, ShowImageNode } from "../ui/OLEDNod
 import { LCD16x2Node } from "../ui/LCDNodes";
 import { MAX7219Node } from "../ui/MatrixNodes";
 import { SevenSegNode } from "../ui/SevenSegNodes";
-import { ServoMotorNode, ServoMotorAdvanceNode, ServoControllerNode, MultiServoSequencerNode, ShadowArmNode, MainArmNode } from "../ui/ServoNodes";
+import { ServoMotorNode, ServoMotorAdvanceNode, ServoControllerNode, MultiServoSequencerNode, ShadowArmNode, MainArmNode, ArmCalibrationNode } from "../ui/ServoNodes";
 import { DCMotorSingleNode, MultiMotorControllerNode, L298NMotorDriverNode, RobotDriveNode } from "../ui/DCMotorNodes";
 import { MapRangeNode, RandomNumberNode, ClampNode } from "../ui/MathNodes";
 import { I2CScannerNode } from "../ui/ToolNodes";
@@ -81,6 +81,7 @@ export const NODE_TYPES: NodeTypes = {
   multi_servo_sequencer: MultiServoSequencerNode,
   shadow_arm: ShadowArmNode,
   main_arm: MainArmNode,
+  arm_calibration: ArmCalibrationNode,
   map_range: MapRangeNode,
   random_number: RandomNumberNode,
   clamp: ClampNode,
@@ -220,6 +221,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "multi_servo_sequencer", label: "Multi-Servo Sequencer", color: "#8b5cf6", previewDot: "#8b5cf6" },
       { type: "shadow_arm", label: "Shadow Arm (Pots)", color: "#06b6d4", previewDot: "#06b6d4" },
       { type: "main_arm", label: "Main Arm (Robo)", color: "#f97316", previewDot: "#f97316" },
+      { type: "arm_calibration", label: "Arm Calibration", color: "#06b6d4", previewDot: "#06b6d4" },
     ],
   },
   {

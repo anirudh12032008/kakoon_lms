@@ -73,6 +73,7 @@ interface NodeData {
   // Shadow arm (pots on GPIO ADC pins) / Main arm (servos) — master-slave puppet rig
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
   potPins?: number[]; channelMap?: number[]; shadowInv?: boolean[]; oversample?: number; deadband?: number;
+  calBtnPin?: number;
   servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[]; servoPorts?: string[]; slew?: number;
   btn1Pin?: number; btn2Pin?: number; moveMs?: number; oledAddress?: string; oledDriver?: boolean;
   frameMs?: number; jointSource?: string;
@@ -991,6 +992,14 @@ for _p in _POT_PINS:
 _INV = [${sinv.map(b => (b ? "True" : "False")).join(", ")}]   # per-joint direction flip
 _POT_MIN = [${pmin.join(", ")}]  # raw ADC (read_u16, 0..65535) at each joint's low end
 _POT_MAX = [${pmax.join(", ")}]  # raw ADC at each joint's high end
+try:                                  # auto-load calibration if it exists
+    import json
+    with open("/shadow_calib.json") as _cf:
+        _cd = json.load(_cf)
+    _POT_MIN = _cd["min"]; _POT_MAX = _cd["max"]
+    print("Loaded /shadow_calib.json:", _POT_MIN, _POT_MAX)
+except Exception:
+    pass
 _SHADOW_ALPHA = ${alpha}   # EMA smoothing (lower = smoother, more lag)
 _OVERSAMPLE = ${over}      # ADC reads averaged per frame (noise filter)
 _DEADBAND = ${dead}        # ignore changes smaller than this (anti-jitter)
@@ -1112,6 +1121,51 @@ def _play_sequence():
         chunkLines.push(`${indent}        _oled_msg("Recording", "%d pts" % len(_seq))`);
         chunkLines.push(`${indent}    _b2_prev = _v2`);
         chunkLines.push(`${indent}    time.sleep_ms(_FRAME)`);
+        break;
+      }
+
+      // ─── Shadow Arm calibration: one-shot, sweep each joint, tap to lock ─────
+      case "arm_calibration": {
+        imports.add("from machine import ADC, Pin");
+        imports.add("import time");
+        const pre  = (typeof d.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(d.varPrefix)) ? d.varPrefix : "j";
+        const pins = Array.isArray(d.potPins) ? d.potPins : [4, 5, 1, 2];
+        const bpin = typeof d.calBtnPin === "number" ? d.calBtnPin : 10;
+        emitOnce("arm_cal_setup", `# --- Shadow Arm calibration rig (pots on GPIO, BTN${bpin} to advance) ---
+_CAL_PINS = [${pins.join(", ")}]
+_cal_adc = []
+for _p in _CAL_PINS:
+    _a = ADC(Pin(_p)); _a.atten(ADC.ATTN_11DB); _cal_adc.append(_a)
+_cal_btn = Pin(${bpin}, Pin.IN, Pin.PULL_UP)
+_CAL_NAMES = ("base", "gripper", "bottom elbow", "top elbow")
+
+def _cal_tap():                        # debounced falling-edge, waits for release
+    if _cal_btn.value() == 0:
+        time.sleep_ms(30)
+        if _cal_btn.value() == 0:
+            while _cal_btn.value() == 0:
+                time.sleep_ms(10)
+            return True
+    return False`);
+        chunkLines.push(`${indent}_cal_min = [65535, 65535, 65535, 65535]`);
+        chunkLines.push(`${indent}_cal_max = [0, 0, 0, 0]`);
+        chunkLines.push(`${indent}print("=== Shadow Arm Calibration - sweep each joint fully, tap BTN${bpin} to lock ===")`);
+        chunkLines.push(`${indent}for _j in range(4):`);
+        chunkLines.push(`${indent}    _lo = 65535; _hi = 0`);
+        chunkLines.push(`${indent}    print("Joint %d (%s): move to BOTH extremes, then tap BTN${bpin}" % (_j + 1, _CAL_NAMES[_j]))`);
+        chunkLines.push(`${indent}    while not _cal_tap():`);
+        chunkLines.push(`${indent}        _v = _cal_adc[_j].read_u16()`);
+        chunkLines.push(`${indent}        if _v < _lo: _lo = _v`);
+        chunkLines.push(`${indent}        if _v > _hi: _hi = _v`);
+        chunkLines.push(`${indent}        print("SENSOR,raw,${pre}%d,%d" % (_j + 1, _v))`);
+        chunkLines.push(`${indent}        time.sleep_ms(20)`);
+        chunkLines.push(`${indent}    _cal_min[_j] = _lo; _cal_max[_j] = _hi`);
+        chunkLines.push(`${indent}    print("Joint %d locked -> min=%d max=%d (range %d)" % (_j + 1, _lo, _hi, _hi - _lo))`);
+        chunkLines.push(`${indent}import json`);
+        chunkLines.push(`${indent}with open("/shadow_calib.json", "w") as _f:`);
+        chunkLines.push(`${indent}    json.dump({"min": _cal_min, "max": _cal_max}, _f)`);
+        chunkLines.push(`${indent}print("Saved /shadow_calib.json:", _cal_min, _cal_max)`);
+        chunkLines.push(`${indent}print("=== Calibration done - now flash your normal Shadow + Main Arm program ===")`);
         break;
       }
 

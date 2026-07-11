@@ -617,6 +617,44 @@ export function ShadowArmNode() {
   );
 }
 
+// ─── Shadow Arm Calibration (one-shot) ──────────────────────────────────────────
+// Flash this ALONE, sweep each joint to its extremes, tap the button to lock its
+// min/max. Writes /shadow_calib.json which the Shadow Arm auto-loads on startup.
+export function ArmCalibrationNode() {
+  const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
+  const [potPins, setPotPins] = useNodeField<number[]>("potPins", [4, 5, 1, 2]);
+  const [calBtnPin, setCalBtnPin] = useNodeField<number>("calBtnPin", 10);
+
+  const setPin = (i: number, v: number) => setPotPins(potPins.map((x, j) => (j === i ? v : x)));
+  const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
+  const JOINT_NAMES = ["base", "gripper", "bottom elbow", "top elbow"];
+
+  return (
+    <BaseNode title="Arm Calibration" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
+      <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
+        <p className="text-[9px] text-[var(--k-muted)]">Run this <span className="text-cyan-400 font-bold">once, alone</span>. Sweep each joint fully both ways, then tap BTN{calBtnPin} to lock. Saves <span className="font-mono text-cyan-400">/shadow_calib.json</span> — the Shadow Arm loads it automatically. Watch values on the <span className="text-cyan-400">dashboard</span>.</p>
+      </div>
+      <NodeField label="Variable prefix">
+        <TextInput value={prefix} onChange={setPrefix} />
+      </NodeField>
+      <NodeField label="Advance button (GPIO)">
+        <NumberInput value={calBtnPin} onChange={v => setCalBtnPin(Math.max(0, Math.round(v)))} />
+      </NodeField>
+      <div className="px-3 pt-1 pb-0.5">
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → GPIO pin</span>
+      </div>
+      {[0, 1, 2, 3].map(i => (
+        <NodeField key={i} label={`${pre}${i + 1} · ${JOINT_NAMES[i]}`}>
+          <NumberInput value={potPins[i]} onChange={v => setPin(i, Math.max(0, Math.round(v)))} />
+        </NodeField>
+      ))}
+      <div className="mx-3 my-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
+        <p className="text-[9px] text-[var(--k-muted)]">Pins must match your Shadow Arm node. After the last joint locks, re-flash your normal program.</p>
+      </div>
+    </BaseNode>
+  );
+}
+
 // A control that can be driven by a variable, a physical switch (active-low
 // GPIO), or both — used for the Main Arm's Mode and Record controls.
 // Shared servo-output config (ports / limits / invert / slew / frame rate).
