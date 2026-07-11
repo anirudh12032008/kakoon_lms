@@ -11,8 +11,8 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { AngleDial, MotorIcon, SmoothSlider, SpeedVarInput, PORT_OPTIONS } from "./_shared";
-import { SERVO_MODELS, SERVO_MODEL_ORDER, SENSOR_PORTS, OLED } from "@/entities/board";
+import { AngleDial, MotorIcon, SmoothSlider, SpeedVarInput } from "./_shared";
+import { SERVO_MODELS, SERVO_MODEL_ORDER, OLED } from "@/entities/board";
 import type { ServoModelId, ServoType } from "@/entities/board";
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
@@ -531,64 +531,42 @@ export function MultiServoSequencerNode() {
   );
 }
 
-// ─── Shadow Arm (ADS1115 pots over I2C → variables) ─────────────────────────────
-const SHADOW_BUS_OPTIONS = [
-  { label: `Display bus (${OLED.scl}/${OLED.sda})`, value: "display" },
-  ...PORT_OPTIONS,
-];
-// ADC channel → joint, per the kit's wiring (remappable for different builds).
-const SHADOW_CH_OPTIONS = [
-  { label: "A0 · base", value: "0" },
-  { label: "A1 · gripper", value: "1" },
-  { label: "A2 · bottom elbow", value: "2" },
-  { label: "A3 · top elbow", value: "3" },
-];
-
+// ─── Shadow Arm (pots on GPIO ADC pins → variables) ─────────────────────────────
 export function ShadowArmNode() {
-  const [port, setPort]       = useNodeField<string>("port", "display");
-  const [address, setAddress] = useNodeField<string>("address", "0x48");
   const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
-  const [channelMap, setChannelMap] = useNodeField<number[]>("channelMap", [0, 1, 2, 3]);
+  const [potPins, setPotPins] = useNodeField<number[]>("potPins", [4, 5, 1, 2]);
   const [shadowInv, setShadowInv] = useNodeField<boolean[]>("shadowInv", [false, false, false, false]);
   const [potMin, setPotMin]   = useNodeField<number[]>("potMin", [0, 0, 0, 0]);
-  const [potMax, setPotMax]   = useNodeField<number[]>("potMax", [3.3, 3.3, 3.3, 3.3]);
+  const [potMax, setPotMax]   = useNodeField<number[]>("potMax", [65535, 65535, 65535, 65535]);
   const [alpha, setAlpha]     = useNodeField<number>("shadowAlpha", 25);
   const [oversample, setOversample] = useNodeField<number>("oversample", 2);
   const [deadband, setDeadband]     = useNodeField<number>("deadband", 1);
 
   const setAt = (arr: number[], set: (v: number[]) => void) =>
     (i: number, v: number) => set(arr.map((x, j) => (j === i ? v : x)));
-  const setChannel = setAt(channelMap, setChannelMap);
+  const setPin = setAt(potPins, setPotPins);
   const setMin = setAt(potMin, setPotMin);
   const setMax = setAt(potMax, setPotMax);
   const toggleInv = (i: number) => setShadowInv(shadowInv.map((x, j) => (j === i ? !x : x)));
   const pre = /^[A-Za-z_]\w*$/.test(prefix) ? prefix : "j";
-  const bus = port === "display"
-    ? { scl: OLED.scl, sda: OLED.sda }
-    : (SENSOR_PORTS[port as keyof typeof SENSOR_PORTS] ?? SENSOR_PORTS["1"]);
+  const JOINT_NAMES = ["base", "gripper", "bottom elbow", "top elbow"];
 
   return (
-    <BaseNode title="Shadow Arm (I2C Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
+    <BaseNode title="Shadow Arm (Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">ADS1115 (4 pots over I2C) → defines <span className="font-mono text-cyan-400">read_shadow()</span> for the <span className="text-orange-400">Main Arm</span>. Just drop both on the canvas — no loop needed.</p>
+        <p className="text-[9px] text-[var(--k-muted)]">4 pots wired straight to GPIO ADC pins → defines <span className="font-mono text-cyan-400">read_shadow()</span> for the <span className="text-orange-400">Main Arm</span>. Just drop both on the canvas — no loop needed.</p>
       </div>
-      <NodeField label="I2C Bus">
-        <SelectInput value={port} onChange={setPort} compact options={SHADOW_BUS_OPTIONS} />
-      </NodeField>
-      <NodeField label="ADS1115 address">
-        <TextInput value={address} onChange={setAddress}  />
-      </NodeField>
       <NodeField label="Variable prefix">
         <TextInput value={prefix} onChange={setPrefix}  />
       </NodeField>
 
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → ADC channel</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → GPIO pin</span>
       </div>
       {[0, 1, 2, 3].map(i => (
-        <NodeField key={i} label={`${pre}${i + 1}`}>
+        <NodeField key={i} label={`${pre}${i + 1} · ${JOINT_NAMES[i]}`}>
           <div className="flex items-center gap-1.5">
-            <SelectInput value={String(channelMap[i])} onChange={v => setChannel(i, Number(v))} compact options={SHADOW_CH_OPTIONS} />
+            <NumberInput value={potPins[i]} onChange={v => setPin(i, Math.max(0, Math.round(v)))} />
             <button onClick={() => toggleInv(i)} title="Invert direction"
               className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
                 shadowInv[i] ? "border-cyan-500/50 text-cyan-400 bg-cyan-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
@@ -599,10 +577,10 @@ export function ShadowArmNode() {
 
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] text-[var(--k-muted)]">Bus — SCL <span className="font-mono text-[var(--k-text)]">{bus.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{bus.sda}</span> · 100 kHz</span>
+          <span className="text-[9px] text-[var(--k-muted)]">Pots read via <span className="font-mono text-[var(--k-text)]">read_u16()</span> (0–65535, 11 dB atten). Default pins 4/5/1/2 = the two sensor ports.</span>
         </div>
         <div className="px-3 pt-1 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Calibration (volts min → max)</span>
+          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Calibration (ADC min → max)</span>
         </div>
         {[0, 1, 2, 3].map(i => (
           <div key={i} className="px-3 pb-1 flex items-center gap-1.5">

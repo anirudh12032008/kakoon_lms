@@ -70,9 +70,9 @@ interface NodeData {
   s1port?: string; s2port?: string; s3port?: string;
   keyframes?: Array<{ angles?: number[] }>;
   keyframeDelay?: number;
-  // Shadow arm (ADS1115 pots over I2C) / Main arm (servos) — master-slave puppet rig
+  // Shadow arm (pots on GPIO ADC pins) / Main arm (servos) — master-slave puppet rig
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
-  channelMap?: number[]; shadowInv?: boolean[]; oversample?: number; deadband?: number;
+  potPins?: number[]; channelMap?: number[]; shadowInv?: boolean[]; oversample?: number; deadband?: number;
   servoLo?: number[]; servoHi?: number[]; servoInv?: boolean[]; servoPorts?: string[]; slew?: number;
   btn1Pin?: number; btn2Pin?: number; moveMs?: number; oledAddress?: string; oledDriver?: boolean;
   frameMs?: number; jointSource?: string;
@@ -967,41 +967,30 @@ time.sleep(0.1)`);
       }
       // ─── Puppet rig: Shadow arm (ADS1115 pots over I2C) → vars → Main arm ───
       case "shadow_arm": {
-        imports.add("from machine import SoftI2C, Pin");
-        imports.add("from ads1115 import ADS1115");
+        imports.add("from machine import ADC, Pin");
         imports.add("import time");
-        // I2C bus: "display" = OLED bus (shared with ADS), else a sensor port.
-        const busSel = d.port ?? "display";
-        const bus = busSel === "display"
-          ? { scl: OLED.scl, sda: OLED.sda }
-          : (SENSOR_PORTS[busSel as keyof typeof SENSOR_PORTS] ?? SENSOR_PORTS["1"]);
-        const addr = (d.address ?? "0x48").trim();
-        const addrArg = (addr === "0x48" || addr === "72") ? "" : `address=${addr}, `;
         const pre   = (typeof d.varPrefix === "string" && /^[A-Za-z_]\w*$/.test(d.varPrefix)) ? d.varPrefix : "j";
-        const ch    = Array.isArray(d.channelMap) ? d.channelMap : [0, 1, 2, 3];
-        const pmin  = Array.isArray(d.potMin) ? d.potMin : [0.0, 0.0, 0.0, 0.0];
-        const pmax  = Array.isArray(d.potMax) ? d.potMax : [3.3, 3.3, 3.3, 3.3];
+        // joint -> GPIO pin (pots wired directly to ADC-capable pins).
+        // Defaults: the two sensor ports (GPIO 4/5 and 1/2), all ADC1 on the S3.
+        const pins  = Array.isArray(d.potPins) ? d.potPins : [4, 5, 1, 2];
+        const pmin  = Array.isArray(d.potMin) ? d.potMin : [0, 0, 0, 0];
+        const pmax  = Array.isArray(d.potMax) ? d.potMax : [65535, 65535, 65535, 65535];
         const sinv  = Array.isArray(d.shadowInv) ? d.shadowInv : [false, false, false, false];
         const alpha = ((typeof d.shadowAlpha === "number" ? d.shadowAlpha : 25) / 100).toFixed(2);
         const over  = Math.max(1, typeof d.oversample === "number" ? d.oversample : 2);
         const dead  = Math.max(0, typeof d.deadband === "number" ? d.deadband : 1);
         emitOnce("clamp_fn", `def _clamp(v, lo, hi):\n    return lo if v < lo else hi if v > hi else v`);
-        emitOnce("shadow_arm", `# --- Shadow arm: ADS1115 4 pots over I2C (SCL ${bus.scl} / SDA ${bus.sda}) ---
-# Channels -> A0 base, A1 gripper, A2 bottom elbow, A3 top elbow (remappable)
-_ads_i2c = SoftI2C(scl=Pin(${bus.scl}), sda=Pin(${bus.sda}), freq=100_000)
-_ADS_ADDR = ${addr}
-# Cold-start: wait for the ADS1115 to appear on the bus before first read.
-for _ in range(20):
-    if _ADS_ADDR in _ads_i2c.scan():
-        break
-    time.sleep_ms(50)
-else:
-    print("WARN: ADS1115 @", hex(_ADS_ADDR), "not found — check wiring; scan:", _ads_i2c.scan())
-_ads = ADS1115(_ads_i2c, ${addrArg}gain=1)
-_CH = [${ch.join(", ")}]        # joint -> ADC channel
+        emitOnce("shadow_arm", `# --- Shadow arm: 4 pots read directly on GPIO ADC pins ---
+# joints -> base, gripper, bottom elbow, top elbow (pins remappable)
+_POT_PINS = [${pins.join(", ")}]   # GPIO pin per joint
+_adc = []
+for _p in _POT_PINS:
+    _a = ADC(Pin(_p))
+    _a.atten(ADC.ATTN_11DB)         # full 0-3.3V range
+    _adc.append(_a)
 _INV = [${sinv.map(b => (b ? "True" : "False")).join(", ")}]   # per-joint direction flip
-_POT_MIN = [${pmin.join(", ")}]  # volts at each joint's low end
-_POT_MAX = [${pmax.join(", ")}]  # volts at each joint's high end
+_POT_MIN = [${pmin.join(", ")}]  # raw ADC (read_u16, 0..65535) at each joint's low end
+_POT_MAX = [${pmax.join(", ")}]  # raw ADC at each joint's high end
 _SHADOW_ALPHA = ${alpha}   # EMA smoothing (lower = smoother, more lag)
 _OVERSAMPLE = ${over}      # ADC reads averaged per frame (noise filter)
 _DEADBAND = ${dead}        # ignore changes smaller than this (anti-jitter)
@@ -1009,11 +998,10 @@ _shadow_state = [90.0, 90.0, 90.0, 90.0]
 _shadow_out = [90, 90, 90, 90]
 
 def read_shadow():
-    _acc = [0.0, 0.0, 0.0, 0.0]
+    _acc = [0, 0, 0, 0]
     for _s in range(_OVERSAMPLE):
-        _v = _ads.read_all_voltage()   # [A0, A1, A2, A3] volts (0..3.3)
         for _i in range(4):
-            _acc[_i] += _v[_CH[_i]]
+            _acc[_i] += _adc[_i].read_u16()   # raw 0..65535
     for _i in range(4):
         _raw = _acc[_i] / _OVERSAMPLE
         _rng = _POT_MAX[_i] - _POT_MIN[_i]
