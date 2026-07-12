@@ -1,10 +1,11 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { PencilLine, Trash2, Search, X } from "lucide-react";
 import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "@/entities/node/model";
 import { NODE_HINTS } from "@/entities/node/model/hints";
 import { useCustomNodes, type CustomNodeTemplate, isCustomNodeTemplateAllowed } from "@/entities/custom-node/model/customNodes";
 import { useModal } from "@/shared/context/ModalContext";
 import { GlobalAdvancedToggle } from "@/shared/context/NodeModeContext";
+import { useTutorialFocus } from "@/features/editor/tutorial/model/tutorialFocus";
 
 // Color accent per category id — purely visual, easy to change
 const CAT_COLORS: Record<string, { dot: string; text: string; bg: string }> = {
@@ -100,6 +101,7 @@ function CategorySection({ category, isOpen, onToggle, allowedNodeTypes }: {
     <div className={`overflow-hidden rounded-xl border transition-colors ${isOpen ? "border-subtle bg-panel" : "border-transparent"}`}>
       <button
         onClick={onToggle}
+        data-category-id={category.id}
         className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-xl transition-colors group ${isOpen ? "" : "hover:bg-hover"}`}
       >
         {/* Colored icon chip */}
@@ -143,6 +145,13 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(() =>
     NODE_CATEGORIES.find((c) => !allowedCategories || allowedCategories.includes(c.id))?.id ?? null
   );
+
+  // When an interactive tutorial points at a block in a collapsed section, open
+  // that section automatically so the highlight + drag hand have a visible target.
+  const focusCategoryId = useTutorialFocus((s) => s.focusCategoryId);
+  useEffect(() => {
+    if (focusCategoryId) setOpenCategoryId(focusCategoryId);
+  }, [focusCategoryId]);
 
   const allowedCategorySet = useMemo(() => allowedCategories ? new Set(allowedCategories) : null, [allowedCategories]);
   const allowedNodeTypeSet  = useMemo(() => allowedNodeTypes  ? new Set(allowedNodeTypes)  : null, [allowedNodeTypes]);

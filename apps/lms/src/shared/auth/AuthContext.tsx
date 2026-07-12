@@ -15,6 +15,23 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+/**
+ * Dev-only auth bypass. Active only in a dev build AND when
+ * `VITE_AUTH_BYPASS=true` is set, so it can never ship in a production bundle.
+ * Lets us reach protected routes (e.g. the editor / interactive tutorials)
+ * without a running auth backend. Note: real API calls that need a token
+ * (course sync, saved projects) will still fail — this only clears the gate.
+ */
+const AUTH_BYPASS = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === "true";
+
+const DEV_USER: AuthUser = {
+  id: "dev-user",
+  name: "Dev User",
+  email: "dev@kokoon.local",
+  role: "admin",
+  avatarColor: "#34d399",
+};
+
 /** The API serializes Mongo docs with `_id`; normalize to the `id` our types promise. */
 function normalizeUser(raw: AuthUser & { _id?: string }): AuthUser {
   return { ...raw, id: raw.id ?? raw._id ?? "" };
@@ -26,6 +43,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Bootstrap: try to silently refresh the session on first load.
   useEffect(() => {
+    if (AUTH_BYPASS) {
+      setUser(DEV_USER);
+      setStatus("authed");
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {

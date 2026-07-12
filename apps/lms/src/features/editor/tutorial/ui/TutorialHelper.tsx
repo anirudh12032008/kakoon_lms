@@ -3,6 +3,7 @@ import { type Tutorial, type TutorialStep } from "@/features/editor/tutorial/lib
 import type { Node, Edge } from "@xyflow/react";
 import { Check, X, ArrowRight, Play, Award, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { NODE_CATEGORIES } from "@/entities/node/model";
+import { useTutorialFocus } from "@/features/editor/tutorial/model/tutorialFocus";
 
 interface TutorialHelperProps {
   tutorial: Tutorial;
@@ -105,6 +106,19 @@ export function TutorialHelper({
 
   useEffect(() => { setIsInitializing(true); }, [tutorial.id]);
   useEffect(() => { if (nodes.length === 0) setIsInitializing(false); }, [nodes]);
+
+  // Tell the palette which section to auto-open. Only "add_node" steps need a
+  // palette block; connect/edit-field steps act on nodes already on the canvas.
+  const setFocus = useTutorialFocus((s) => s.setFocus);
+  useEffect(() => {
+    if (!isCompleted && step?.actionType === "add_node" && step.nodeType) {
+      setFocus(getCategoryForNodeType(step.nodeType), step.nodeType);
+    } else {
+      setFocus(null, null);
+    }
+  }, [step, isCompleted, setFocus]);
+  // Clear focus when the helper unmounts (tutorial quit/completed).
+  useEffect(() => () => setFocus(null, null), [setFocus]);
 
   const getElementForField = (nodeId: string, fieldName: string): HTMLElement | null => {
     const container = document.querySelector(`[data-id="${nodeId}"]`);
@@ -390,10 +404,10 @@ export function TutorialHelper({
       <div className="fixed inset-0 z-30 dimming-backdrop pointer-events-none" />
 
       <div ref={catOutlineRef} style={{ display: "none", boxSizing: "border-box" }}
-        className="fixed z-40 pointer-events-none border border-white/60 bg-[var(--k-base-400)] shadow-[0_0_10px_rgba(255,255,255,0.15)] rounded-lg" />
+        className="fixed z-40 pointer-events-none border-2 border-emerald-400/90 bg-emerald-400/10 shadow-[0_0_16px_rgba(16,185,129,0.55)] rounded-lg animate-[pulse_1.5s_infinite]" />
 
       <div ref={palOutlineRef} style={{ display: "none", boxSizing: "border-box" }}
-        className="fixed z-40 pointer-events-none border border-white/60 bg-[var(--k-base-400)] shadow-[0_0_10px_rgba(255,255,255,0.15)] rounded-lg" />
+        className="fixed z-40 pointer-events-none border-2 border-emerald-400/90 bg-emerald-400/10 shadow-[0_0_16px_rgba(16,185,129,0.55)] rounded-lg animate-[pulse_1.5s_infinite]" />
 
       <div ref={srcNodeOutlineRef} style={{ display: "none", boxSizing: "border-box" }}
         className="fixed z-35 pointer-events-none border border-emerald-500/60 bg-emerald-500/5 shadow-[0_0_10px_rgba(16,185,129,0.2)] rounded-xl" />
