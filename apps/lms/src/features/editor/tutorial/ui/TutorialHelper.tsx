@@ -104,7 +104,19 @@ export function TutorialHelper({
   const midpointGrabHandRef = useRef<HTMLDivElement>(null);
   const fieldHighlightRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { setIsInitializing(true); }, [tutorial.id]);
+  // "Initializing" guards against a stale/leftover node graph instantly
+  // (mis)completing step 1 right as a fresh tutorial's canvas-clear lands.
+  // On a *fresh* start (handleSelectTutorial clears the canvas first),
+  // nodes.length hitting 0 confirms the clear landed. On a *resumed* tutorial
+  // (e.g. page refresh mid-tutorial), the canvas is restored with nodes
+  // already present and length never touches 0 — so a timeout fallback is
+  // required, or the completion-check effect below would stay gated forever
+  // and no step could ever advance again.
+  useEffect(() => {
+    setIsInitializing(true);
+    const timeout = setTimeout(() => setIsInitializing(false), 600);
+    return () => clearTimeout(timeout);
+  }, [tutorial.id]);
   useEffect(() => { if (nodes.length === 0) setIsInitializing(false); }, [nodes]);
 
   // Tell the palette which section to auto-open. Only "add_node" steps need a
