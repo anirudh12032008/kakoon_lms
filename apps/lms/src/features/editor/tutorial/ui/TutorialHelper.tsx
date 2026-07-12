@@ -142,7 +142,7 @@ export function TutorialHelper({
       const present = nodes.filter((n) => n.type === step.nodeType).length;
       if (present >= required) onStepComplete();
     } else if (step.actionType === "edit_field" && step.fieldName) {
-      const liveNode = nodes.find((n) => n.type === step.nodeType);
+      const liveNode = findLiveNodeByTutorialId(step.nodeId, step.nodeType, tutorial.nodes || [], nodes);
       if (liveNode) {
         const currentValue = liveNode.data?.[step.fieldName];
         if (currentValue !== undefined && String(currentValue) === String(step.fieldValue)) onStepComplete();
@@ -161,7 +161,7 @@ export function TutorialHelper({
       });
       if (connectionExists) onStepComplete();
     }
-  }, [nodes, edges, step, onStepComplete, isInitializing]);
+  }, [nodes, edges, step, onStepComplete, isInitializing, tutorial.nodes]);
 
   useEffect(() => {
     let animationFrameId: number;
@@ -341,7 +341,7 @@ export function TutorialHelper({
           if (r.current) r.current.style.display = "none";
         });
 
-        const liveNode = nodes.find((n) => n.type === step.nodeType);
+        const liveNode = findLiveNodeByTutorialId(step.nodeId, step.nodeType, tutorial.nodes || [], nodes);
         if (liveNode) {
           const fieldEl = getElementForField(liveNode.id, step.fieldName!);
           if (fieldEl && fieldHighlightRef.current) {
@@ -360,7 +360,7 @@ export function TutorialHelper({
 
     animationFrameId = requestAnimationFrame(update);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [step, nodes, isCompleted]);
+  }, [step, nodes, isCompleted, tutorial.nodes]);
 
   const progressPercent = Math.min(100, Math.round((currentStepIndex / tutorial.steps.length) * 100));
 
