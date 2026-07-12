@@ -148,17 +148,17 @@ export function TutorialHelper({
         if (currentValue !== undefined && String(currentValue) === String(step.fieldValue)) onStepComplete();
       }
     } else if (step.actionType === "connect") {
-      const connectionExists = edges.some((edge) => {
-        const srcNode = nodes.find((n) => n.id === edge.source);
-        const tgtNode = nodes.find((n) => n.id === edge.target);
-        if (!srcNode || !tgtNode) return false;
-        return (
-          srcNode.type === step.sourceType &&
-          tgtNode.type === step.targetType &&
-          (!step.sourceHandle || edge.sourceHandle === step.sourceHandle) &&
-          (!step.targetHandle || edge.targetHandle === step.targetHandle)
-        );
-      });
+      // Resolve the exact occurrence this step means (e.g. "Push Button #2"),
+      // not just "any node of this type" — otherwise wiring the wrong pair of
+      // same-type nodes can falsely complete this step (or never complete it).
+      const srcNode = findLiveNodeByTutorialId(step.sourceId, step.sourceType, tutorial.nodes || [], nodes);
+      const tgtNode = findLiveNodeByTutorialId(step.targetId, step.targetType, tutorial.nodes || [], nodes);
+      const connectionExists = !!srcNode && !!tgtNode && edges.some((edge) =>
+        edge.source === srcNode.id &&
+        edge.target === tgtNode.id &&
+        (!step.sourceHandle || edge.sourceHandle === step.sourceHandle) &&
+        (!step.targetHandle || edge.targetHandle === step.targetHandle)
+      );
       if (connectionExists) onStepComplete();
     }
   }, [nodes, edges, step, onStepComplete, isInitializing, tutorial.nodes]);
