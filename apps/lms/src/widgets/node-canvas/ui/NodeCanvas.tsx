@@ -439,7 +439,7 @@ function NodeCanvasInner({
             className="pointer-events-none absolute inset-0 z-0 flex flex-col items-center justify-center gap-3"
           >
             <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-subtle bg-raised text-3xl shadow-sm">
-              🤖
+             
             </div>
             <p className="text-[15px] font-bold text-sub">Let's build something!</p>
             <p className="max-w-[260px] text-center text-[13px] leading-relaxed text-hint">

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./styles/App.css";
-import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
+import { buildLaunchContext, EDITOR_MODE_PRESETS } from "@/entities/editor-launch/model/config";
 import { XpToastHost, useGamification } from "@/entities/gamification";
 import { ErrorToastHost } from "@/shared/error/ErrorToastHost";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -18,18 +18,12 @@ import { useProjectStore } from "@/shared/launch/projectStore";
 import { ProjectsPage } from "@/pages/projects/ui/ProjectsPage";
 import { SharedProjectPage } from "@/pages/projects/ui/SharedProjectPage";
 
-const EditorLaunchDashboard = lazy(() =>
-  import("@/pages/editor-launch/ui/EditorLaunchDashboard").then((mod) => ({ default: mod.EditorLaunchDashboard }))
-);
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
 
 function PageLoader() {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl">⚡</span>
-        <span className="text-lg font-bold text-primary-c">Kokoon</span>
-      </div>
+      <span className="text-lg font-semibold text-body">Kokoon</span>
       <span className="loading loading-spinner loading-md text-primary-c" />
     </div>
   );
@@ -45,13 +39,18 @@ function GamificationBridge() {
   return null;
 }
 
+// The workspace the editor opens with when nothing else was chosen.
+const DEFAULT_LAUNCH_PRESET =
+  EDITOR_MODE_PRESETS.find((p) => p.id === "full-workshop") ?? EDITOR_MODE_PRESETS[0];
+
 // ── Editor route — reads the launch context from the store ────────────────────
 function EditorRoute() {
   const navigate = useNavigate();
-  const context = useLaunchStore((s) => s.context);
+  const storedContext = useLaunchStore((s) => s.context);
   const setContext = useLaunchStore((s) => s.setContext);
 
-  if (!context) return <Navigate to="/courses" replace />;
+  // No entry page any more — fall straight into the default workspace.
+  const context = storedContext ?? buildLaunchContext(DEFAULT_LAUNCH_PRESET);
 
   const courseSlug = context.courseSlug;
 
@@ -69,23 +68,17 @@ function EditorRoute() {
   );
 }
 
-// ── Launch dashboard route — the mode/kit/custom workspace picker ─────────────
+// ── Launch route — the picker is gone; go straight to the editor ──────────────
 function LaunchRoute() {
-  const navigate = useNavigate();
   const setContext = useLaunchStore((s) => s.setContext);
 
-  const onLaunch = (ctx: EditorLaunchContext) => {
-    // A fresh mode/kit/custom launch is a new sandbox — unbind any open project.
+  useEffect(() => {
+    // A fresh launch is a new sandbox — unbind any open project.
     useProjectStore.getState().clearActiveProject();
-    setContext(ctx);
-    navigate("/editor");
-  };
+    setContext(buildLaunchContext(DEFAULT_LAUNCH_PRESET));
+  }, [setContext]);
 
-  return (
-    <Suspense fallback={<PageLoader />}>
-      <EditorLaunchDashboard onLaunch={onLaunch} />
-    </Suspense>
-  );
+  return <Navigate to="/editor" replace />;
 }
 
 function AdminRoute() {

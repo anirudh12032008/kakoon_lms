@@ -20,7 +20,7 @@ export function DashboardHeader() {
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-subtle bg-panel/90 px-5 py-3 backdrop-blur-xl">
       <div className="flex items-center gap-2">
         <button onClick={() => navigate("/courses")} className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-lg">⚡</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-lg"></div>
           <span className="text-xl font-black tracking-tight text-body">Kokoon</span>
         </button>
         <nav className="ml-3 hidden items-center gap-1 sm:flex">

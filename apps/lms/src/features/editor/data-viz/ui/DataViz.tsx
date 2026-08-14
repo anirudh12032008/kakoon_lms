@@ -17,9 +17,9 @@ import { X, Activity, Radio, Gauge } from "lucide-react";
 export type VizPanel = "imu" | "sensor" | "radar";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-/** Strip the "[HH:MM:SS] 📥 " prefix that addLog prepends */
+/** Strip the "[HH:MM:SS] " prefix that addLog prepends */
 function stripLogPrefix(line: string): string {
-  return line.replace(/^\[.*?\]\s*📥\s*/, "").trim();
+  return line.replace(/^\[.*?\]\s*\s*/, "").trim();
 }
 
 function useDrag(initialPos: { x: number; y: number }) {
@@ -694,7 +694,7 @@ function PIRCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
         </svg>
         <div className="flex-1">
           <span className="text-[15px] font-bold block mb-1.5 transition-colors duration-300" style={{ color }}>
-            {!live ? "🔌 Waiting..." : detected ? "🏃 Motion!" : "😴 All Clear"}
+            {!live ? "Waiting..." : detected ? "Motion!" : "All Clear"}
           </span>
           <DigitalTimeline values={ch.values} color="#22c55e" />
         </div>
@@ -714,7 +714,7 @@ function IRBeamCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
       <div className="flex items-center gap-3 my-2">
         <div className="w-9 h-10 rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 transition-all"
           style={{ borderColor: beamClr, background: `${beamClr}15` }}>
-          <span className="text-sm leading-none">📡</span>
+          <span className="text-sm leading-none"></span>
           <span className="text-[7px] font-bold" style={{ color: beamClr }}>TX</span>
         </div>
         <div className="flex-1 flex items-center">
@@ -723,7 +723,7 @@ function IRBeamCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
               <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
               <div className="w-7 h-7 rounded-full bg-red-500/20 border-2 border-red-500/60 flex items-center justify-center mx-1 flex-shrink-0"
                 style={{ animation: "pulse 0.7s ease-in-out infinite" }}>
-                <span className="text-base">🚫</span>
+                <span className="text-base"></span>
               </div>
               <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
             </>
@@ -735,12 +735,12 @@ function IRBeamCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
         </div>
         <div className="w-9 h-10 rounded-xl border-2 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 transition-all"
           style={{ borderColor: beamClr, background: `${beamClr}15` }}>
-          <span className="text-sm leading-none">👁️</span>
+          <span className="text-sm leading-none"></span>
           <span className="text-[7px] font-bold" style={{ color: beamClr }}>RX</span>
         </div>
       </div>
       <span className="text-[13px] font-bold block mb-1.5 transition-colors duration-300" style={{ color: beamClr }}>
-        {!live ? "🔌 Waiting..." : blocked ? "🚫 Something's There!" : "✅ Path Clear!"}
+        {!live ? "Waiting..." : blocked ? "Something's There!" : "Path Clear!"}
       </span>
       <DigitalTimeline values={ch.values} color={beamClr} />
     </div>
@@ -753,7 +753,7 @@ function IRRemoteCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   return (
     <div className="rounded-2xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-3">
       <ChannelHeader label={ch.label} badge="IR Remote" color="#f97316" live={live} />
-      <p className="text-[9px] text-[var(--k-dim)] mb-2">📱 Point your remote at the receiver</p>
+      <p className="text-[9px] text-[var(--k-dim)] mb-2">Point your remote at the receiver</p>
       <div className="flex items-center justify-center py-3 px-3 mb-2 rounded-xl bg-[var(--k-base-200)] border border-[var(--k-border)]">
         <span className="text-2xl font-mono font-bold tracking-widest"
           style={{ color: live ? "#f97316" : "var(--k-base-400)",
@@ -777,7 +777,7 @@ function IRRemoteCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
 
 function DigitalCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
   const on    = live && ch.latest !== 0;
-  const emoji = !live ? "❓" : on ? "🟢" : "⚫";
+  const emoji = !live ? "" : on ? "" : "";
   const label = !live ? "Waiting..." : on ? "It's ON!" : "It's OFF";
   const color = on ? "#22c55e" : "#52525b";
   return (
@@ -945,9 +945,9 @@ export function RadarPanel({ logs, onClose }: { logs: string[]; onClose: () => v
   const sweepRad = ((sweepAngle - 90) * Math.PI) / 180;
 
   const zone = !latest ? "—"
-    : latest.distance < 50 ? "🔴 CLOSE"
-    : latest.distance < 150 ? "🟡 MID"
-    : latest.distance < RADAR_MAX_CM ? "🟢 FAR"
+    : latest.distance < 50 ? "CLOSE"
+    : latest.distance < 150 ? "MID"
+    : latest.distance < RADAR_MAX_CM ? "FAR"
     : "· No echo";
 
   return (

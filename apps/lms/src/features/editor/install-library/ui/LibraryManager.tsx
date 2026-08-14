@@ -86,7 +86,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
       <div className="flex items-center gap-3 px-3 py-2.5 border-b border-[var(--k-base-200)] last:border-0 hover:bg-[var(--k-base-100)] transition-colors group">
         <div className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm"
           style={{ background: `${cc}15`, border: `1px solid ${cc}30` }}>
-          {done ? "✅" : error ? "❌" : "📄"}
+          {done ? "" : error ? "" : ""}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5">
@@ -237,7 +237,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
                   : "border-[var(--k-border)] bg-[var(--k-base-100)] hover:border-[var(--k-dim)] hover:bg-[var(--k-base-300)]"
               }`}
             >
-              <div className="text-3xl mb-2">📂</div>
+              <div className="text-3xl mb-2"></div>
               <p className="text-xs font-semibold text-[var(--k-text)] mb-1">Drop a .py file here or click to browse</p>
               <p className="text-[10px] text-[var(--k-dim)]">Upload any MicroPython library directly to your ESP32</p>
               <input ref={fileInputRef} type="file" accept=".py" className="hidden"
@@ -249,7 +249,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
 
             {customFile && (
               <div className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-xl border border-[var(--k-base-400)] bg-[var(--k-base-100)]">
-                <span className="text-lg">📄</span>
+                <span className="text-lg"></span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-mono font-semibold text-white truncate">{customFile.name}</p>
                   <p className="text-[10px] text-[var(--k-dim)]">{(customFile.size / 1024).toFixed(1)} KB</p>
@@ -259,8 +259,8 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
                         style={{ width: `${customProgress}%` }} />
                     </div>
                   )}
-                  {customProgress === "done" && <p className="text-[10px] text-emerald-400 mt-0.5">✅ Installed successfully!</p>}
-                  {customProgress === "error" && <p className="text-[10px] text-red-400 mt-0.5">❌ Upload failed. Try again.</p>}
+                  {customProgress === "done" && <p className="text-[10px] text-emerald-400 mt-0.5">Installed successfully!</p>}
+                  {customProgress === "error" && <p className="text-[10px] text-red-400 mt-0.5">Upload failed. Try again.</p>}
                 </div>
                 <button onClick={() => { setCustomFile(null); setCustomProgress(null); }}
                   className="text-[var(--k-dim)] hover:text-[var(--k-text)] transition-colors text-lg font-bold">×</button>

@@ -89,7 +89,7 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
       {/* Status */}
       <div className="flex-1 space-y-1.5">
         <span className="text-[13px] font-bold block transition-colors duration-300" style={{ color: statusColor }}>
-          {!live ? "🔌 Waiting..." : detected ? "🏃 Motion!" : "😴 All Clear"}
+          {!live ? "Waiting..." : detected ? "Motion!" : "All Clear"}
         </span>
         <div className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full inline-block"

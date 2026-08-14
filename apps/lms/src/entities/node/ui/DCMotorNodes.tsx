@@ -112,7 +112,7 @@ function MotorPlacementSection({
           className="w-10 h-7 rounded border flex items-center justify-center"
           style={{ background: "var(--k-base-300)", borderColor: "var(--k-border)" }}
         >
-          <span className="text-[10px]" style={{ color: COLORS.orange }}>🤖</span>
+          <span className="text-[10px]" style={{ color: COLORS.orange }}></span>
         </div>
 
         {/* Rear axle */}
@@ -127,7 +127,7 @@ function MotorPlacementSection({
 
       {!isDefault && (
         <p className="mt-1.5 text-[9px] text-amber-400/75 leading-relaxed">
-          ⚠️ Non-default wiring — make sure each port matches your physical motor connections.
+          Non-default wiring — make sure each port matches your physical motor connections.
         </p>
       )}
     </div>
@@ -387,7 +387,7 @@ export function RobotDriveNode() {
         {useCustomPins && (
           <div className="mb-1">
             <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
-              ⚠️ Overrides the board's stock DRV8833 wiring — only use this if your motors are wired to these GPIOs.
+              Overrides the board's stock DRV8833 wiring — only use this if your motors are wired to these GPIOs.
             </p>
             <CustomPinRow label="Front-Left"  pwmPin={flPwmPin} setPwmPin={setFlPwmPin} dirPin={flDirPin} setDirPin={setFlDirPin} />
             <CustomPinRow label="Front-Right" pwmPin={frPwmPin} setPwmPin={setFrPwmPin} dirPin={frDirPin} setDirPin={setFrDirPin} />
@@ -423,7 +423,7 @@ export function DCMotorSingleNode() {
         {useCustomPins && (
           <div className="mb-1">
             <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
-              ⚠️ Drives this motor on custom GPIOs instead of port {motorPort}'s stock wiring.
+              Drives this motor on custom GPIOs instead of port {motorPort}'s stock wiring.
             </p>
             <CustomPinRow label="Motor" pwmPin={customPwmPin} setPwmPin={setCustomPwmPin} dirPin={customDirPin} setDirPin={setCustomDirPin} />
           </div>
@@ -537,7 +537,7 @@ export function MultiMotorControllerNode() {
         {useCustomPins && (
           <div className="mb-1">
             <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
-              ⚠️ Overrides the board's stock DRV8833 wiring — only use this if your motors are wired to these GPIOs.
+              Overrides the board's stock DRV8833 wiring — only use this if your motors are wired to these GPIOs.
             </p>
             <CustomPinRow label="L1" pwmPin={l1PwmPin} setPwmPin={setL1PwmPin} dirPin={l1DirPin} setDirPin={setL1DirPin} />
             <CustomPinRow label="L2" pwmPin={l2PwmPin} setPwmPin={setL2PwmPin} dirPin={l2DirPin} setDirPin={setL2DirPin} />
@@ -556,7 +556,7 @@ export function L298NMotorDriverNode() {
   return (
     <BaseNode title="L298N Motor Driver" color={COLORS.red} icon={<MotorIcon />} width="220px">
       <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
-        <p className="text-[10px] text-amber-400">⚠️ Deprecated — use Multi-Motor Controller (DRV8833) instead.</p>
+        <p className="text-[10px] text-amber-400">Deprecated — use Multi-Motor Controller (DRV8833) instead.</p>
       </div>
       <NodeField label="Direction">
         <SelectInput value={direction} onChange={setDirection} compact

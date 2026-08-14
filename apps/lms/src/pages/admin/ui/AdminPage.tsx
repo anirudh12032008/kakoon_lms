@@ -69,7 +69,7 @@ function LoginScreen({ onAuth }: { onAuth: () => void }) {
     <div className="fixed inset-0 bg-[var(--k-base-100)] flex items-center justify-center">
       <div className="w-full max-w-sm mx-4 rounded-2xl border border-[var(--k-border)] bg-[var(--k-base-300)] p-8 shadow-2xl">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-lg">🔐</div>
+          <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-lg"></div>
           <div>
             <p className="text-sm font-bold text-white">Admin Access</p>
             <p className="text-xs text-[var(--k-muted)]">Kokoon Tutorial Builder</p>
@@ -374,7 +374,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
                 className="px-4 py-2.5 rounded-xl border border-[var(--k-border)] text-[var(--k-muted)] hover:text-[var(--k-text)] text-sm font-semibold transition-all">
                 {showJson ? "Hide" : "Show"} JSON
               </button>
-              {saved && <span className="text-xs text-emerald-400 font-semibold">✓ Saved!</span>}
+              {saved && <span className="text-xs text-emerald-400 font-semibold">Saved!</span>}
               {error && <span className="text-xs text-red-400">{error}</span>}
             </div>
 

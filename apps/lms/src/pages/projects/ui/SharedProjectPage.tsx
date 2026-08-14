@@ -14,7 +14,7 @@ function CenterCard({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page text-center">
       <div className="flex items-center gap-3">
-        <span className="text-2xl">⚡</span>
+        <span className="text-2xl"></span>
         <span className="text-lg font-bold text-primary-c">Kokoon</span>
       </div>
       {children}

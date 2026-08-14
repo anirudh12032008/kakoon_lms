@@ -44,7 +44,7 @@ export function DesignerHub({ onClose, onAddNode, defaultTab = "oled", onSaveOLE
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-subtle bg-panel flex-shrink-0">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gradient text-xl">🎨</div>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-gradient text-xl"></div>
             <div className="min-w-0">
               <h2 className="truncate text-base font-black tracking-tight text-body">Designer Hub</h2>
               <p className="truncate text-xs text-hint">Draw pixel art & light shows, then drop them onto the canvas as blocks</p>
@@ -52,9 +52,9 @@ export function DesignerHub({ onClose, onAddNode, defaultTab = "oled", onSaveOLE
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <div className="flex rounded-full bg-raised p-1.5 gap-1.5">
-              <Tab label="OLED" icon="🖥️" active={activeTab === "oled"}     onClick={() => setActiveTab("oled")} />
-              <Tab label="NeoPixel" icon="💡" active={activeTab === "neopixel"} onClick={() => setActiveTab("neopixel")} />
-              <Tab label="Matrix"   icon="⬛"  active={activeTab === "matrix"}   onClick={() => setActiveTab("matrix")} />
+              <Tab label="OLED" icon="" active={activeTab === "oled"}     onClick={() => setActiveTab("oled")} />
+              <Tab label="NeoPixel" icon="" active={activeTab === "neopixel"} onClick={() => setActiveTab("neopixel")} />
+              <Tab label="Matrix"   icon=""  active={activeTab === "matrix"}   onClick={() => setActiveTab("matrix")} />
             </div>
             <button onClick={onClose} title="Close" className="flex items-center justify-center rounded-full border border-subtle h-11 w-11 text-sub transition-colors hover:bg-hover hover:text-body">
               <X className="w-5 h-5" />

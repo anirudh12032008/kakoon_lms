@@ -384,7 +384,7 @@ export function TutorialHelper({
             <Award className="w-4 h-4 animate-bounce" />
           </div>
           <div className="flex-1 text-left min-w-0">
-            <h4 className="text-xs font-bold text-white">Tutorial Completed! 🎉</h4>
+            <h4 className="text-xs font-bold text-white">Tutorial Completed!</h4>
             <p className="text-[11px] text-[var(--k-muted)] mt-1 leading-relaxed font-medium">
               Awesome work! You've successfully completed "{tutorial.title}". Feel free to keep playing with it!
             </p>

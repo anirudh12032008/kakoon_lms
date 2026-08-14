@@ -91,7 +91,7 @@ function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
       className="group shine-sweep relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-shadow hover:shadow-xl hover:shadow-primary/20"
     >
       <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
-        🧰
+       
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
@@ -192,10 +192,10 @@ export function CoursesPage() {
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-48 left-1/4 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-[140px]" />
         <div className="absolute top-1/3 -right-40 h-96 w-96 rounded-full bg-secondary/10 blur-[140px]" />
-        <span className="anim-float absolute right-[12%] top-24 hidden text-4xl opacity-[0.08] lg:block">⚙️</span>
-        <span className="anim-float absolute left-[6%] top-1/2 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-2.4s" }}>🔩</span>
-        <span className="anim-float absolute right-[28%] bottom-24 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-4.8s" }}>⚡</span>
-        <span className="anim-float absolute left-[30%] top-32 hidden text-2xl opacity-[0.06] lg:block" style={{ animationDelay: "-1.2s" }}>🤖</span>
+        <span className="anim-float absolute right-[12%] top-24 hidden text-4xl opacity-[0.08] lg:block"></span>
+        <span className="anim-float absolute left-[6%] top-1/2 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-2.4s" }}></span>
+        <span className="anim-float absolute right-[28%] bottom-24 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-4.8s" }}></span>
+        <span className="anim-float absolute left-[30%] top-32 hidden text-2xl opacity-[0.06] lg:block" style={{ animationDelay: "-1.2s" }}></span>
       </div>
 
       <DashboardHeader />
@@ -205,7 +205,7 @@ export function CoursesPage() {
           <h1 className="text-3xl font-black tracking-tight">
             {user ? (
               <>
-                <span className="text-brand-gradient">Hey {user.name.split(" ")[0]}</span> 👋
+                <span className="text-brand-gradient">Hey {user.name.split(" ")[0]}</span>
               </>
             ) : (
               <span className="text-body">Robot Courses</span>

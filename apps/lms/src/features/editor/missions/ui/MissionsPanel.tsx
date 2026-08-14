@@ -138,7 +138,7 @@ export function MissionsPanel({ missions }: { missions: Missions }) {
                   )}
 
                   <p className="mt-3 text-[10px] leading-relaxed text-hint">
-                    ✨ Levels &amp; challenges complete automatically as you add the right blocks.
+                    Levels &amp; challenges complete automatically as you add the right blocks.
                   </p>
                 </div>
               </motion.div>

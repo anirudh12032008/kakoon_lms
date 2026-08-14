@@ -21,7 +21,7 @@ const IR_STALE_MS = 3000;
 // ─── IR Beam Display ──────────────────────────────────────────────────────────
 function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
   const beamColor  = blocked ? "#ef4444" : "#22c55e";
-  const stateLabel = !live ? "🔌 Waiting..." : blocked ? "🚫 Blocked!" : "✅ All Clear!";
+  const stateLabel = !live ? "Waiting..." : blocked ? "Blocked!" : "All Clear!";
   const stateColor = !live ? "#52525b"       : blocked ? "#ef4444"   : "#22c55e";
 
   return (
@@ -37,7 +37,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
         {/* TX emitter */}
         <div className="w-8 h-9 rounded-lg border-2 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 transition-all duration-300"
           style={{ borderColor: beamColor, background: `${beamColor}15` }}>
-          <span className="text-[8px] font-bold leading-none" style={{ color: beamColor }}>📡</span>
+          <span className="text-[8px] font-bold leading-none" style={{ color: beamColor }}></span>
           <span className="text-[7px] font-bold" style={{ color: beamColor }}>TX</span>
         </div>
 
@@ -48,7 +48,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
               <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
               <div className="w-6 h-6 flex items-center justify-center rounded-full bg-red-500/20 border-2 border-red-500/60 flex-shrink-0 mx-1"
                 style={{ animation: "pulse 0.7s ease-in-out infinite" }}>
-                <span className="text-[10px]">🚫</span>
+                <span className="text-[10px]"></span>
               </div>
               <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
             </>
@@ -62,7 +62,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
         {/* RX receiver */}
         <div className="w-8 h-9 rounded-lg border-2 flex flex-col items-center justify-center gap-0.5 flex-shrink-0 transition-all duration-300"
           style={{ borderColor: beamColor, background: `${beamColor}15` }}>
-          <span className="text-[8px] font-bold leading-none" style={{ color: beamColor }}>👁️</span>
+          <span className="text-[8px] font-bold leading-none" style={{ color: beamColor }}></span>
           <span className="text-[7px] font-bold" style={{ color: beamColor }}>RX</span>
         </div>
       </div>
@@ -140,7 +140,7 @@ function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
         </span>
       </div>
 
-      <p className="text-[8px] text-[var(--k-dim)] mt-1.5 text-center">📱 Point your remote at the receiver!</p>
+      <p className="text-[8px] text-[var(--k-dim)] mt-1.5 text-center">Point your remote at the receiver!</p>
     </div>
   );
 }

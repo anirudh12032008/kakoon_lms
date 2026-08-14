@@ -108,7 +108,7 @@ export const useGamification = create<GamificationStore>()(
           newToasts.push({
             id: ++toastId,
             kind: "level-up",
-            icon: "🎉",
+            icon: "",
             title: `Level ${nextLevel.level} — ${nextLevel.title}!`,
             subtitle: "Keep building to reach the next rank",
           });
@@ -223,7 +223,7 @@ export const useGamification = create<GamificationStore>()(
               {
                 id: ++toastId,
                 kind: "xp",
-                title: "Course complete! 🏆",
+                title: "Course complete!",
                 xp: XP_REWARDS.courseComplete,
               },
             ],

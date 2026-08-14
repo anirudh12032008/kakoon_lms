@@ -197,7 +197,7 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
       <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
         {filtered.length === 0 && search.trim() && (
           <div className="flex flex-col items-center gap-1.5 px-3 py-8 text-center">
-            <span className="text-xl">🔍</span>
+            <span className="text-xl"></span>
             <p className="text-[13px] font-semibold text-sub">No blocks found</p>
             <p className="text-[11.5px] text-hint">Try a different word, like "motor" or "sensor".</p>
           </div>

@@ -48,13 +48,13 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
     if (mode === "preview") {
       canvasRef.current?.setWorkspace({ nodes: tutorial.nodes, edges: tutorial.edges });
       setShowTutorialsCatalog(false);
-      addLog(`✨ Preview loaded: "${tutorial.title}"!`);
+      addLog(`Preview loaded: "${tutorial.title}"!`);
     } else {
       canvasRef.current?.setWorkspace({ nodes: [], edges: [] });
       setActiveTutorial(tutorial);
       setCurrentStepIndex(0);
       setShowTutorialsCatalog(false);
-      addLog(`🚀 Starting interactive tutorial: "${tutorial.title}"!`);
+      addLog(`Starting interactive tutorial: "${tutorial.title}"!`);
     }
   }, [canvasRef, addLog]);
 
@@ -74,7 +74,7 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
       localStorage.setItem("kokoon-completed-tutorials", JSON.stringify(updated));
       return updated;
     });
-    addLog(`🎉 Congratulations! Completed tutorial: "${activeTutorial.title}"!`);
+    addLog(`Congratulations! Completed tutorial: "${activeTutorial.title}"!`);
     setActiveTutorial(null);
   }, [activeTutorial, addLog]);
 

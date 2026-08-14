@@ -76,7 +76,7 @@ export function AchievementsModal({ open, onClose }: { open: boolean; onClose: (
               <StatTile icon={<Zap className="h-4 w-4 text-primary-c" fill="currentColor" />} value={profile.xp} label="Total XP" />
               <StatTile icon={<Flame className="h-4 w-4 text-warning-c" fill={streak > 0 ? "currentColor" : "none"} />} value={streak} label="Day streak" />
               <StatTile icon={<Medal className="h-4 w-4 text-secondary-c" />} value={`${unlockedCount}/${ACHIEVEMENTS.length}`} label="Badges" />
-              <StatTile icon={<span className="text-sm">🏆</span>} value={profile.coursesCompleted.length} label="Courses" />
+              <StatTile icon={<span className="text-sm"></span>} value={profile.coursesCompleted.length} label="Courses" />
             </div>
 
             {/* Badge grid */}

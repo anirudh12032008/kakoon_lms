@@ -13,7 +13,7 @@ interface OLEDDesign { id: string; name: string; frames: number[][]; fps: number
 function copyText(s: string) { navigator.clipboard.writeText(s).catch(() => {}); }
 
 const OLED_PRESETS: { name: string; pixels: number[] }[] = [
-  { name: "Smiley 😊", pixels: (() => {
+  { name: "Smiley", pixels: (() => {
     const f = new Array(128 * 64).fill(0);
     const c = [64, 32], r = 20;
     for (let y = 0; y < 64; y++) for (let x = 0; x < 128; x++) {
@@ -26,7 +26,7 @@ const OLED_PRESETS: { name: string; pixels: number[] }[] = [
     for (let x=50;x<=78;x++) { const y=Math.round(c[1]+12+Math.sin((x-c[0])*Math.PI/28)*5); if(y>=0&&y<64) f[y*128+x]=1; }
     return f;
   })() },
-  { name: "Heart ❤️", pixels: (() => {
+  { name: "Heart", pixels: (() => {
     const f = new Array(128*64).fill(0);
     for (let y=0;y<64;y++) for (let x=0;x<128;x++) {
       const nx=(x-64)/15, ny=(y-35)/15;
@@ -34,7 +34,7 @@ const OLED_PRESETS: { name: string; pixels: number[] }[] = [
     }
     return f;
   })() },
-  { name: "WiFi 📶", pixels: (() => {
+  { name: "WiFi", pixels: (() => {
     const f = new Array(128*64).fill(0);
     const cx=64, cy=48;
     [[22,6],[16,4],[10,3]].forEach(([r,t]) => {
@@ -487,12 +487,12 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   const code = generateOLEDCode(design);
 
   const tools: { id: OLEDTool; icon: string; label: string }[] = [
-    { id: "pen",    icon: "✏️", label: "Pen" },
-    { id: "eraser", icon: "⬜", label: "Eraser" },
+    { id: "pen",    icon: "", label: "Pen" },
+    { id: "eraser", icon: "", label: "Eraser" },
     { id: "line",   icon: "╱",  label: "Line" },
     { id: "rect",   icon: "▭",  label: "Rect" },
     { id: "circle", icon: "○",  label: "Circle" },
-    { id: "fill",   icon: "🪣", label: "Fill" },
+    { id: "fill",   icon: "", label: "Fill" },
   ];
 
   return (
@@ -519,7 +519,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-[0.14em] mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-[var(--k-primary)]">Edit</div>
           <button onClick={() => { pushHistory(frames); invertFrame(); }}
             className="w-full text-left text-xs text-[var(--k-muted)] hover:text-[var(--k-text)] px-2 py-1 rounded-lg border border-[var(--k-border)] hover:bg-[var(--k-base-400)] hover:border-[var(--k-dim)] transition-all">
-            ⬛ Invert
+            Invert
           </button>
           <div className="grid grid-cols-3 gap-0.5 mt-1">
             <div />
@@ -553,7 +553,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           </div>
           <button onClick={() => { pushHistory(frames); stampTextOnFrame(); }}
             className="mt-1 w-full py-1 rounded-lg bg-[color-mix(in_srgb,var(--k-primary)_15%,transparent)] text-[var(--k-primary)] border border-[color-mix(in_srgb,var(--k-primary)_30%,transparent)] text-xs font-bold transition-all hover:bg-[color-mix(in_srgb,var(--k-primary)_25%,transparent)]">
-            🔤 Stamp on frame
+            Stamp on frame
           </button>
         </div>
 
@@ -569,7 +569,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             ))}
             <button onClick={clearFrame}
               className="text-left text-xs text-red-400 hover:text-red-300 px-2 py-1 rounded-lg hover:bg-red-500/10 transition-all">
-              🗑 Clear
+              Clear
             </button>
           </div>
         </div>
@@ -595,7 +595,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           {/* Save to Library — always works, no device needed */}
           <button onClick={saveToLibrary}
             className="w-full mb-1.5 text-xs px-2 py-1 rounded-lg bg-[color-mix(in_srgb,var(--k-primary)_15%,transparent)] text-[var(--k-primary)] border border-[color-mix(in_srgb,var(--k-primary)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--k-primary)_25%,transparent)] transition-all font-bold">
-            💾 Save to Library
+            Save to Library
           </button>
 
           <div className="flex flex-col gap-1">
@@ -625,7 +625,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
                   )}
                   <button onClick={() => deleteFromLibrary(entry.name)}
                     className="text-[11px] text-red-500 border border-red-500/20 rounded px-1 py-0.5 hover:bg-red-500/10 transition-all">
-                    ✕
+                   
                   </button>
                 </div>
               </div>
@@ -670,7 +670,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
                 ? "bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/40"
                 : "text-[var(--k-muted)] border-[var(--k-border)] hover:text-fuchsia-400 hover:border-fuchsia-500/30"
             }`}>
-            📷 Import
+            Import
           </button>
 
           {frames.length > 1 && (
@@ -872,7 +872,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               }`}
             >
               <PlusCircle className="w-3 h-3" />
-              {addedToCanvas ? "Added! ✓" : "Add to Canvas"}
+              {addedToCanvas ? "Added!" : "Add to Canvas"}
             </button>
           )}
 
@@ -904,8 +904,8 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
                 <span className="relative flex items-center gap-1.5">
                   {saveDeviceState === "saving" ? (
                     <><span className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin inline-block" /> Uploading… {uploadProgress}%</>
-                  ) : saveDeviceState === "saved" ? "✅ Saved to device!" :
-                     saveDeviceState === "failed" ? "❌ Not connected / failed" : (
+                  ) : saveDeviceState === "saved" ? "Saved to device!" :
+                     saveDeviceState === "failed" ? "Not connected / failed" : (
                     <><Upload className="w-3 h-3" /> Save to Device</>
                   )}
                 </span>
@@ -919,7 +919,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           <div className="absolute bottom-14 right-4 w-72 max-h-64 bg-[var(--k-base-100)] border border-[var(--k-border)] rounded-xl shadow-2xl flex flex-col overflow-hidden z-10">
             <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--k-border)]">
               <span className="text-xs text-[var(--k-muted)] font-bold uppercase tracking-[0.14em]">MicroPython</span>
-              <button onClick={() => setShowCode(false)} className="text-[var(--k-dim)] hover:text-[var(--k-text)] text-xs">✕</button>
+              <button onClick={() => setShowCode(false)} className="text-[var(--k-dim)] hover:text-[var(--k-text)] text-xs"></button>
             </div>
             <pre className="flex-1 overflow-auto p-3 text-[11px] font-mono text-green-400 leading-relaxed">
               {code}

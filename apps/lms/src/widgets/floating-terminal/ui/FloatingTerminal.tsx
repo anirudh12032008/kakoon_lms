@@ -2,11 +2,11 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import { Trash2, X, Terminal, PanelBottom, PictureInPicture2 } from "lucide-react";
 
 function logColor(log: string): string {
-  if (log.includes("❌") || log.includes("error") || log.includes("Error")) return "text-error-c";
-  if (log.includes("✅") || log.includes("🚀") || log.includes("success"))  return "text-success-c";
-  if (log.includes("⚠️") || log.includes("warning"))                        return "text-warning-c";
-  if (log.includes("📥") || log.includes(">>>"))                            return "text-accent-c";
-  if (log.includes("📤") || log.includes("Sending"))                        return "text-primary-c";
+  if (log.includes("") || log.includes("error") || log.includes("Error")) return "text-error-c";
+  if (log.includes("") || log.includes("") || log.includes("success"))  return "text-success-c";
+  if (log.includes("") || log.includes("warning"))                        return "text-warning-c";
+  if (log.includes("") || log.includes(">>>"))                            return "text-accent-c";
+  if (log.includes("") || log.includes("Sending"))                        return "text-primary-c";
   return "text-sub";
 }
 

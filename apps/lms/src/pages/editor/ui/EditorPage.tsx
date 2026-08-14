@@ -230,16 +230,16 @@ export default function EditorPage({
   const uploadLibFile = useCallback(async (
     filename: string, content: string, onProgress: (p: number) => void
   ): Promise<boolean> => {
-    if (!isConnected) { addLog("⚠️ Not connected"); return false; }
+    if (!isConnected) { addLog("Not connected"); return false; }
 
     // Guard: if the content looks like HTML (e.g. a 404 from the dev server),
     // bail out immediately with a clear error rather than writing garbage to the board.
     if (content.trimStart().startsWith("<!") || content.trimStart().startsWith("<html")) {
-      addLog(`❌ ${filename}: library file not found on server (got HTML instead of Python)`);
+      addLog(`${filename}: library file not found on server (got HTML instead of Python)`);
       return false;
     }
 
-    addLog(`📦 Installing ${filename}…`);
+    addLog(`Installing ${filename}…`);
     onProgress(5);
 
     try {
@@ -269,10 +269,10 @@ export default function EditorPage({
       const closeCode = `_kf.close()\nprint('LIB_OK:${filename}')\n`;
       await sendCode(closeCode);
       onProgress(100);
-      addLog(`✅ ${filename} installed to ESP32`);
+      addLog(`${filename} installed to ESP32`);
       return true;
     } catch {
-      addLog(`❌ Failed to install ${filename}`);
+      addLog(`Failed to install ${filename}`);
       return false;
     }
   }, [isConnected, addLog, sendCode]);
@@ -282,10 +282,10 @@ export default function EditorPage({
     frames: number[][], fps: number, name: string,
     onProgress?: (pct: number) => void
   ): Promise<boolean> => {
-    if (!isConnected) { addLog("⚠️ Not connected to ESP32"); return false; }
+    if (!isConnected) { addLog("Not connected to ESP32"); return false; }
     onProgress?.(0);
 
-    addLog(`📤 Saving animation "${name}" to ESP32...`);
+    addLog(`Saving animation "${name}" to ESP32...`);
 
     const safeName = name.replace(/[^a-z0-9_]/gi, '_').toLowerCase();
     const numFrames = frames.length;
@@ -328,14 +328,14 @@ export default function EditorPage({
 
       await sendCode(`_oaf.close()\nprint('ANIM_SAVED:${safeName}')\n`);
       onProgress?.(100);
-      addLog(`✅ Animation "${name}" saved to /anim/${safeName}.bin`);
+      addLog(`Animation "${name}" saved to /anim/${safeName}.bin`);
 
       // Mark as on-device in the local animation registry
       markOnDevice(safeName, true);
 
       return true;
     } catch {
-      addLog(`❌ Failed to save animation "${name}"`);
+      addLog(`Failed to save animation "${name}"`);
       return false;
     }
   }, [isConnected, addLog, sendCode]);
@@ -345,14 +345,14 @@ export default function EditorPage({
     const safeName = name.replace(/[^a-z0-9_]/gi, "_").toLowerCase();
     // Always remove from local registry
     removeAnim(name);
-    addLog(`🗑 Removed "${name}" from library`);
+    addLog(`Removed "${name}" from library`);
     // If connected, also delete from device
     if (isConnected) {
       try {
         await sendCode(`import os\ntry: os.remove('/anim/${safeName}.bin')\nexcept: pass\nprint('ANIM_DEL:${safeName}')\n`);
-        addLog(`🗑 Deleted /anim/${safeName}.bin from ESP32`);
+        addLog(`Deleted /anim/${safeName}.bin from ESP32`);
       } catch {
-        addLog(`⚠️ Could not delete from device — file may still be there`);
+        addLog(`Could not delete from device — file may still be there`);
       }
     }
   }, [isConnected, addLog, sendCode]);
@@ -365,12 +365,12 @@ export default function EditorPage({
 
   const handleRun = useCallback(async () => {
     const code = getCurrentCode();
-    if (!code.trim()) { addLog("⚠️ No code to run. Add some blocks first!"); return; }
-    if (!isConnected) { addLog("⚠️ Not connected to ESP32. Click Connect first."); return; }
+    if (!code.trim()) { addLog("No code to run. Add some blocks first!"); return; }
+    if (!isConnected) { addLog("Not connected to ESP32. Click Connect first."); return; }
     setIsSending(true);
     const success = await sendCode(code);
     setIsSending(false);
-    if (success) addLog("🚀 Code sent to ESP32!");
+    if (success) addLog("Code sent to ESP32!");
   }, [getCurrentCode, isConnected, sendCode, addLog]);
 
   const handleStop = useCallback(async () => {
@@ -379,12 +379,12 @@ export default function EditorPage({
 
   const handleUpload = useCallback(async () => {
     const code = getCurrentCode();
-    if (!code.trim()) { addLog("⚠️ No code to upload."); return; }
-    if (!isConnected) { addLog("⚠️ Not connected to ESP32."); return; }
+    if (!code.trim()) { addLog("No code to upload."); return; }
+    if (!isConnected) { addLog("Not connected to ESP32."); return; }
     setIsUploading(true);
     const success = await uploadCode(code);
     setIsUploading(false);
-    if (success) addLog("💾 Code saved to ESP32! It will run on boot.");
+    if (success) addLog("Code saved to ESP32! It will run on boot.");
   }, [getCurrentCode, isConnected, uploadCode, addLog]);
 
   // ── Export / Import ───────────────────────────────────────────────────────────
@@ -436,7 +436,7 @@ export default function EditorPage({
           } catch { /* corrupted flow data */ }
         }
       } catch {
-        addLog("❌ Failed to import project — invalid JSON file.");
+        addLog("Failed to import project — invalid JSON file.");
       }
     };
     reader.readAsText(file);

@@ -118,7 +118,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "general",
     label: "General",
-    icon: "🌐",
+    icon: "",
     nodes: [
       { type: "print", label: "Print", color: "#3b82f6", previewDot: "#3b82f6" },
       { type: "variable", label: "Variable", color: "#eab308", previewDot: "#eab308" },
@@ -148,7 +148,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "gpio",
     label: "GPIO",
-    icon: "🔲",
+    icon: "",
     nodes: [
       { type: "gpio_pin", label: "GPIO Pin", color: "#22c55e", previewDot: "#22c55e" },
       { type: "pin_write", label: "Pin Write", color: "#f97316", previewDot: "#f97316" },
@@ -167,7 +167,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "sensor",
     label: "Sensor",
-    icon: "📡",
+    icon: "",
     nodes: [
       { type: "analog_sensor", label: "Analog Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
       { type: "ultrasonic", label: "Ultrasonic Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
@@ -185,7 +185,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "iot",
     label: "IoT",
-    icon: "📶",
+    icon: "",
     nodes: [
       { type: "wifi_connect", label: "WiFi Connect", color: "#ef4444", previewDot: "#ef4444" },
       { type: "http_get", label: "HTTP GET", color: "#14b8a6", previewDot: "#14b8a6" },
@@ -197,7 +197,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "display",
     label: "Display",
-    icon: "🖥",
+    icon: "",
     nodes: [
       { type: "oled_display", label: "OLED Display 128×64", color: "#8b5cf6", previewDot: "#8b5cf6" },
       { type: "lcd_16x2", label: "16×2 LCD Node", color: "#3b82f6", previewDot: "#3b82f6" },
@@ -210,7 +210,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "motors",
     label: "Motors",
-    icon: "⚙️",
+    icon: "",
     nodes: [
       { type: "robot_drive", label: "Robot Drive", color: "#f97316", previewDot: "#f97316" },
       { type: "dc_motor_single", label: "DC Motor (Single)", color: "#f97316", previewDot: "#f97316" },
@@ -227,7 +227,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "comms",
     label: "Comms",
-    icon: "📡",
+    icon: "",
     nodes: [
       { type: "ble_mode", label: "BLE Mode", color: "#3b82f6", previewDot: "#3b82f6" },
       { type: "wifi_node", label: "WiFi Node", color: "#14b8a6", previewDot: "#14b8a6" },
@@ -239,7 +239,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "logic",
     label: "Logic",
-    icon: "⚡",
+    icon: "",
     nodes: [
       { type: "timer_interval", label: "Timer / Interval", color: "#14b8a6", previewDot: "#14b8a6" },
       { type: "variable_state", label: "Variable / State", color: "#eab308", previewDot: "#eab308" },
@@ -249,7 +249,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "power",
     label: "Power",
-    icon: "🔋",
+    icon: "",
     nodes: [
       { type: "deep_sleep", label: "Deep Sleep / Power", color: "#ef4444", previewDot: "#ef4444" },
       { type: "ota_update", label: "OTA Update", color: "#14b8a6", previewDot: "#14b8a6" },
@@ -259,7 +259,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
   {
     id: "tools",
     label: "Tools",
-    icon: "🔧",
+    icon: "",
     nodes: [
       { type: "i2c_scanner", label: "I2C Scanner", color: "#3b82f6", previewDot: "#3b82f6" },
       { type: "servo_calibration", label: "Servo Calibration", color: "#14b8a6", previewDot: "#14b8a6" },

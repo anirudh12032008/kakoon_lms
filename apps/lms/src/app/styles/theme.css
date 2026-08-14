@@ -121,45 +121,26 @@
   .text-warning-c  { color: var(--k-warning); }
   .text-info-c     { color: var(--k-info); }
 
-  /* Gradient brand background — oversized + slowly panning so it feels alive */
-  .bg-brand-gradient {
-    background: linear-gradient(135deg, var(--k-primary), var(--k-secondary), var(--k-primary));
-    background-size: 220% 220%;
-    animation: brandPan 9s ease-in-out infinite;
-  }
+  /* Brand background — flat */
+  .bg-brand-gradient { background: var(--k-primary); }
 
-  /* Gradient text for hero headings */
-  .text-brand-gradient {
-    background: linear-gradient(120deg, var(--k-primary), var(--k-secondary), var(--k-accent), var(--k-primary));
-    background-size: 280% 100%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: brandPan 12s ease-in-out infinite;
-  }
+  /* Hero heading text — flat */
+  .text-brand-gradient { color: var(--k-text); }
 
-  /* Diagonal light sweep — add .shine-sweep to a relative overflow-hidden box */
-  .shine-sweep::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 42%, rgba(255,255,255,0.22) 50%, transparent 58%);
-    background-size: 300% 100%;
-    background-position: 120% 0;
-    animation: shineSweep 5.5s ease-in-out infinite;
-    pointer-events: none;
-  }
+  /* Light sweep — disabled */
+  .shine-sweep::after { content: none; }
 
-  /* Soft vignette to give big surfaces (canvas) depth */
-  .canvas-vignette::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    pointer-events: none;
-    background:
-      radial-gradient(120% 90% at 50% 45%, transparent 62%, color-mix(in srgb, var(--k-base-100) 55%, transparent) 100%);
-  }
+  /* Canvas vignette — disabled */
+  .canvas-vignette::before { content: none; }
+}
+
+/* ── TEMPORARY FLAT PASS ──────────────────────────────────────
+   Neutralises every Tailwind gradient utility to a solid surface.
+   Delete this block to restore the gradient look.            */
+[class*="bg-gradient-to-"],
+[class*="bg-linear-to-"] {
+  background-image: none !important;
+  background-color: var(--k-base-300) !important;
 }
 
 @keyframes brandPan {

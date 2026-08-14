@@ -63,7 +63,7 @@ export function classifyTerminalError(line: string): TerminalError | null {
       return { code: def.code, title: def.title, hint: def.hint, detail: cleanLine(line) };
     }
   }
-  const looksLikeError = /❌|traceback|exception|\bfail(?:ed)?\b|\berror\b|\w+Error:/i.test(line);
+  const looksLikeError = /|traceback|exception|\bfail(?:ed)?\b|\berror\b|\w+Error:/i.test(line);
   if (looksLikeError) {
     return { code: GENERIC_CODE, title: "Terminal error", detail: cleanLine(line) };
   }

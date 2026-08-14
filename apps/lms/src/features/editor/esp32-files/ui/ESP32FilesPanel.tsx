@@ -81,9 +81,9 @@ function buildScanPython(path: string): string {
   ].join("\n");
 }
 
-// ─── strip the "[HH:MM:SS] 📥 " prefix that addLog prepends ──────────────────
+// ─── strip the "[HH:MM:SS] " prefix that addLog prepends ──────────────────
 function stripPrefix(line: string): string {
-  return line.replace(/^\[.*?\]\s*📥\s*/, "").trim();
+  return line.replace(/^\[.*?\]\s*\s*/, "").trim();
 }
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -119,20 +119,20 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
         setEntries(parsed);
         setStatus(`${parsed.length} item${parsed.length !== 1 ? "s" : ""}`);
       } catch {
-        setStatus("❌ Could not parse file listing");
+        setStatus("Could not parse file listing");
       }
       setScanning(false);
     } else if (errLine) {
       if (scanTimeout.current) clearTimeout(scanTimeout.current);
       const msg = errLine.slice("FS_ERR:".length);
-      setStatus(msg.includes("ENOENT") || msg.includes("OSError") ? "📁 Folder doesn't exist yet" : `❌ ${msg}`);
+      setStatus(msg.includes("ENOENT") || msg.includes("OSError") ? "Folder doesn't exist yet" : `${msg}`);
       setScanning(false);
     }
   }, [logs, scanning]);
 
   // ── start a scan ──────────────────────────────────────────────────────────
   const scan = useCallback(async (targetPath: string) => {
-    if (!isConnected) { setStatus("⚠️ Connect to ESP32 first"); return; }
+    if (!isConnected) { setStatus("Connect to ESP32 first"); return; }
     setScanning(true);
     setStatus("Scanning…");
     setEntries([]);
@@ -143,14 +143,14 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
     if (scanTimeout.current) clearTimeout(scanTimeout.current);
     scanTimeout.current = setTimeout(() => {
       setScanning(false);
-      setStatus("❌ No response from device (timeout)");
+      setStatus("No response from device (timeout)");
     }, 8000);
 
     const ok = await sendCode(buildScanPython(targetPath));
     if (!ok) {
       clearTimeout(scanTimeout.current!);
       setScanning(false);
-      setStatus("❌ Failed to send — not connected?");
+      setStatus("Failed to send — not connected?");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, logs.length, sendCode]);
@@ -231,7 +231,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       {/* Not connected banner */}
       {!isConnected && (
         <div className="px-3 py-2 text-[10px] text-amber-400 bg-amber-500/10 border-b border-[var(--k-border)] flex-shrink-0">
-          ⚡ Connect to ESP32 to browse files
+          Connect to ESP32 to browse files
         </div>
       )}
 
@@ -268,9 +268,9 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
                 {entry.isDir
                   ? <FolderOpen className="w-4 h-4 text-amber-400" />
                   : entry.name.endsWith(".bin")
-                    ? <span className="text-base leading-none">🎬</span>
+                    ? <span className="text-base leading-none"></span>
                     : entry.name.endsWith(".py")
-                      ? <span className="text-base leading-none">🐍</span>
+                      ? <span className="text-base leading-none"></span>
                       : <FileText className="w-4 h-4 text-[var(--k-muted)]" />
                 }
               </span>
@@ -303,7 +303,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
 
       {/* Status bar */}
       <div className="px-3 py-1.5 border-t border-[var(--k-border)] bg-[var(--k-base-100)] flex items-center justify-between flex-shrink-0">
-        <span className="text-[9px] text-[var(--k-dim)] truncate">{scanning ? "⏳ " : ""}{status}</span>
+        <span className="text-[9px] text-[var(--k-dim)] truncate">{scanning ? "" : ""}{status}</span>
         <span className="text-[9px] font-mono text-[var(--k-dim)] flex-shrink-0 ml-2">{path}</span>
       </div>
     </div>,

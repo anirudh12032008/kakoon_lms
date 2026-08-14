@@ -174,7 +174,7 @@ export function CourseDetailPage() {
         <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-subtle bg-raised p-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-base font-bold text-body">
-              {course.enrolled ? "You're enrolled 🎉" : "Free to enroll"}
+              {course.enrolled ? "You're enrolled" : "Free to enroll"}
             </p>
             <p className="text-sm text-sub">
               {course.enrolled
@@ -303,7 +303,7 @@ export function CourseDetailPage() {
                         </span>
                         {isCurrent && (
                           <span className="rounded-full bg-brand-gradient px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white">
-                            ⭐ Up next
+                            Up next
                           </span>
                         )}
                       </div>

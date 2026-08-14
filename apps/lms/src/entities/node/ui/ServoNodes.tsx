@@ -443,7 +443,7 @@ export function MultiServoSequencerNode() {
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[9px] font-bold text-[var(--k-muted)]">KF {kfIdx + 1} @ {kf.time}ms</span>
               <button onClick={() => removeKeyframe(kfIdx)}
-                className="nodrag text-[9px] text-[var(--k-dim)] transition-colors px-1 hover:text-[var(--k-error)]">✕</button>
+                className="nodrag text-[9px] text-[var(--k-dim)] transition-colors px-1 hover:text-[var(--k-error)]"></button>
             </div>
             <div className="flex gap-2">
               {kf.angles.map((a, sIdx) => (
@@ -478,7 +478,7 @@ export function MultiServoSequencerNode() {
                   color: "var(--k-primary)",
                   backgroundColor: "color-mix(in srgb, var(--k-primary) 10%, transparent)",
                 }}
-            >{playing ? "⏹ Stop" : "▶ Play"}</button>
+            >{playing ? "Stop" : "▶ Play"}</button>
           </div>
           <div className="flex justify-around">
             {currentAngles.map((a, i) => {
@@ -523,7 +523,7 @@ export function MultiServoSequencerNode() {
             navigator.clipboard.writeText(`[${arr}]`).catch(() => {});
           }}
           className="nodrag flex-1 py-1 rounded-lg border border-[var(--k-border)] text-[var(--k-muted)] text-[10px] font-bold hover:border-[var(--k-dim)] hover:text-[var(--k-text)] transition-all">
-          ⎘ Export
+          Export
         </button>
       </div>
       </AdvancedSection>
@@ -816,7 +816,7 @@ export function ServoCalibrationNode() {
               color: "var(--k-accent)",
             }}
         >
-          {centered ? "✓ All Centered!" : "Center All Servos (90°)"}
+          {centered ? "All Centered!" : "Center All Servos (90°)"}
         </button>
       </div>
 

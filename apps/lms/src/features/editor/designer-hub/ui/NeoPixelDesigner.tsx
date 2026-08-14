@@ -13,18 +13,18 @@ const PALETTE: RGB[] = [
 ];
 
 const NEOPIXEL_EFFECTS = [
-  { id: "rainbow_wave", name: "🌈 Rainbow Wave" },
-  { id: "pulse_red",    name: "❤️ Pulse Red" },
-  { id: "chase_white",  name: "⚡ Chase White" },
-  { id: "twinkle",      name: "✨ Twinkle" },
-  { id: "fire",         name: "🔥 Fire" },
-  { id: "ocean",        name: "🌊 Ocean" },
-  { id: "police",       name: "🚓 Police" },
-  { id: "comet",        name: "☄️ Comet (your color)" },
-  { id: "breathe",      name: "🫧 Breathe (your color)" },
-  { id: "candy",        name: "🍬 Candy Cane" },
-  { id: "sparkle_pop",  name: "🎉 Sparkle Pop" },
-  { id: "gradient",     name: "🌈 Gradient (your color)" },
+  { id: "rainbow_wave", name: "Rainbow Wave" },
+  { id: "pulse_red",    name: "Pulse Red" },
+  { id: "chase_white",  name: "Chase White" },
+  { id: "twinkle",      name: "Twinkle" },
+  { id: "fire",         name: "Fire" },
+  { id: "ocean",        name: "Ocean" },
+  { id: "police",       name: "Police" },
+  { id: "comet",        name: "Comet (your color)" },
+  { id: "breathe",      name: "Breathe (your color)" },
+  { id: "candy",        name: "Candy Cane" },
+  { id: "sparkle_pop",  name: "Sparkle Pop" },
+  { id: "gradient",     name: "Gradient (your color)" },
 ];
 
 // 8-LED police strobe: blue half / red half with a sweeping grey "off" wipe
@@ -317,7 +317,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
             {(["strip","grid"] as const).map((m) => (
               <button key={m} onClick={() => setMode(m)}
                 className={`text-xs font-bold py-1.5 rounded-lg transition-all ${m === mode ? "bg-violet-500/20 text-violet-300 border border-violet-500/30" : "text-[var(--k-muted)] border border-transparent hover:bg-[var(--k-base-400)]"}`}>
-                {m === "strip" ? "💡 LED Strip" : "⬜ LED Grid"}
+                {m === "strip" ? "LED Strip" : "LED Grid"}
               </button>
             ))}
           </div>
@@ -374,7 +374,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
                 ? "bg-white/10 border-white/40 text-white"
                 : "bg-[var(--k-base-100)] border-[var(--k-border)] text-[var(--k-muted)] hover:text-[var(--k-text)]"
             }`}>
-            ⬛ Off (LED dark)
+            Off (LED dark)
           </button>
         </div>
 
@@ -400,7 +400,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
                 ? "bg-green-500/20 border-green-500/40 text-green-400"
                 : "bg-violet-500/15 border-violet-500/40 text-violet-400 hover:bg-violet-500/25"
             }`}>
-            <Save className="w-3 h-3" />{justSaved ? "Saved! ✓" : "Save Animation"}
+            <Save className="w-3 h-3" />{justSaved ? "Saved!" : "Save Animation"}
           </button>
         </div>
 
@@ -534,7 +534,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
+              {addedToCanvas ? "Added to Canvas!" : "Add to Canvas"}
             </button>
           </div>
         )}

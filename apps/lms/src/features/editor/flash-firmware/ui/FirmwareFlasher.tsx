@@ -51,7 +51,7 @@ export function FirmwareFlasher({ onClose }: Props) {
     let transport: InstanceType<typeof Transport> | null = null;
 
     try {
-      push("⏳ Connecting to ESP32-S3 bootloader…");
+      push("Connecting to ESP32-S3 bootloader…");
       transport = new Transport(selectedPort, false);
 
       const loader = new ESPLoader({
@@ -65,23 +65,23 @@ export function FirmwareFlasher({ onClose }: Props) {
       });
 
       await loader.main();
-      push("✅ Connected");
+      push("Connected");
 
       setState("erasing");
       setProgress(10);
-      push("🗑  Erasing flash (~10s)…");
+      push(" Erasing flash (~10s)…");
       await loader.eraseFlash();
       setProgress(25);
-      push("✅ Erased");
+      push("Erased");
 
       setState("flashing");
-      push("⬇️  Loading MicroPython v1.25.0…");
+      push(" Loading MicroPython v1.25.0…");
       const res = await fetch("/firmware/esp32s3-micropython.bin");
       if (!res.ok) throw new Error(`Firmware fetch failed (${res.status})`);
       const data = new Uint8Array(await res.arrayBuffer());
       if (data[0] !== 0xE9) throw new Error(`Invalid firmware header (0x${data[0].toString(16)})`);
-      push(`✅ ${(data.length / 1024).toFixed(0)} KB ready`);
-      push("⚡ Writing…");
+      push(`${(data.length / 1024).toFixed(0)} KB ready`);
+      push("Writing…");
 
       await loader.writeFlash({
         fileArray: [{ data, address: 0x0 }],
@@ -92,15 +92,15 @@ export function FirmwareFlasher({ onClose }: Props) {
       });
 
       setProgress(100);
-      push("✅ Done!");
-      push("🎉 ESP32-S3 is running MicroPython v1.25.0. Connect now.");
+      push("Done!");
+      push("ESP32-S3 is running MicroPython v1.25.0. Connect now.");
       await loader.after();
       setState("done");
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       if (!msg.toLowerCase().includes("no port selected")) {
-        push(`❌ ${msg}`);
+        push(`${msg}`);
         setState("error");
       } else {
         setState("idle");
@@ -123,7 +123,7 @@ export function FirmwareFlasher({ onClose }: Props) {
   };
   const stateLabel: Record<FlashState, string> = {
     idle: "Ready", connecting: "Connecting…", erasing: "Erasing…",
-    flashing: "Flashing…", done: "Done! 🎉", error: "Error",
+    flashing: "Flashing…", done: "Done!", error: "Error",
   };
 
   const noSerial = !("serial" in navigator);
@@ -188,7 +188,7 @@ export function FirmwareFlasher({ onClose }: Props) {
 
           {/* Boot instructions */}
           <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1.5">
-            <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠️ Enter bootloader first</p>
+            <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Enter bootloader first</p>
             {[
               <>Hold <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">BOOT</kbd> button</>,
               <>Press &amp; release <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">RESET</kbd> (or replug USB)</>,
@@ -222,10 +222,10 @@ export function FirmwareFlasher({ onClose }: Props) {
                 ? <span className="text-[var(--k-dim)]">Log will appear here…</span>
                 : log.map((l, i) => (
                   <div key={i} className={
-                    l.includes("❌") ? "text-red-400" :
-                    l.includes("✅") || l.includes("🎉") ? "text-green-400" :
-                    l.includes("⚡") || l.includes("⬇️") ? "text-violet-400" :
-                    l.includes("🗑") ? "text-orange-400" : "text-[var(--k-muted)]"
+                    l.includes("") ? "text-red-400" :
+                    l.includes("") || l.includes("") ? "text-green-400" :
+                    l.includes("") || l.includes("") ? "text-violet-400" :
+                    l.includes("") ? "text-orange-400" : "text-[var(--k-muted)]"
                   }>{l}</div>
                 ))
               }

@@ -76,7 +76,7 @@ export function TutorialsDashboard({
         const updated = [...existing.filter((t) => t.id !== newTutorial.id), newTutorial];
         localStorage.setItem("Kokoon-custom-tutorials", JSON.stringify(updated));
         setCustomList(updated);
-        alert(`Successfully imported: "${newTutorial.title}"! 🎉`);
+        alert(`Successfully imported: "${newTutorial.title}"!`);
       } catch {
         alert("Failed to parse JSON file. Ensure it is a valid tutorial export.");
       }

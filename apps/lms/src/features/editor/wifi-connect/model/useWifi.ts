@@ -43,7 +43,7 @@ export function useWifi({ connectWifi, setConnectionMode, addLog }: UseWifiOptio
 
   const handleWifiConnect = useCallback(async () => {
     setIsConfiguringWifi(true);
-    addLog("🔍 Searching for ESP32 on network...");
+    addLog("Searching for ESP32 on network...");
     const userInput = wifiSubnet.trim();
 
     const tryConnect = (ip: string): Promise<boolean> =>
@@ -62,9 +62,9 @@ export function useWifi({ connectWifi, setConnectionMode, addLog }: UseWifiOptio
     if (userInput) {
       const parts = userInput.split(".");
       if (parts.length === 4 && parts.every((p) => !isNaN(Number(p)))) {
-        addLog(`📡 Trying ${userInput}...`);
+        addLog(`Trying ${userInput}...`);
         if (await tryConnect(userInput)) {
-          addLog(`✅ Found ESP32 at ${userInput}`);
+          addLog(`Found ESP32 at ${userInput}`);
           await connectWifi(userInput, "Kokoon");
           setConnectionMode("wifi");
           setIsConfiguringWifi(false);
@@ -73,16 +73,16 @@ export function useWifi({ connectWifi, setConnectionMode, addLog }: UseWifiOptio
       }
     }
 
-    addLog("📡 Trying Kokoon.local...");
+    addLog("Trying Kokoon.local...");
     if (await tryConnect("Kokoon.local")) {
-      addLog("✅ Found ESP32 at Kokoon.local");
+      addLog("Found ESP32 at Kokoon.local");
       await connectWifi("Kokoon.local", "Kokoon");
       setConnectionMode("wifi");
       setIsConfiguringWifi(false);
       return;
     }
 
-    addLog("❌ ESP32 not found. Make sure it's powered and on the network.");
+    addLog("ESP32 not found. Make sure it's powered and on the network.");
     setIsConfiguringWifi(false);
   }, [wifiSubnet, connectWifi, setConnectionMode, addLog]);
 

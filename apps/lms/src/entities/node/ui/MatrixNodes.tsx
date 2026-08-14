@@ -93,7 +93,7 @@ export function MAX7219Node() {
         /* Empty state — invite the user to open the designer */
         <div className="mx-3 mb-2 flex flex-col items-center gap-2 py-3 rounded-xl border border-dashed border-[var(--k-border)] bg-[var(--k-base-100)]">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-            <span className="text-xl">💡</span>
+            <span className="text-xl"></span>
           </div>
           <p className="text-[9px] text-[var(--k-muted)] text-center px-3 leading-relaxed">
             No pattern yet.<br />Design one in the Matrix Designer.
@@ -103,7 +103,7 @@ export function MAX7219Node() {
               onClick={onOpenDesigner}
               className="nodrag px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-[9px] font-bold text-blue-400 hover:bg-blue-500/25 transition-all"
             >
-              ✏️ Open Matrix Designer
+              Open Matrix Designer
             </button>
           )}
         </div>
@@ -148,7 +148,7 @@ export function MAX7219Node() {
         <div className="px-3 pb-2">
           <button onClick={onOpenDesigner}
             className="nodrag w-full py-1.5 rounded-lg border border-[var(--k-border)] text-[9px] font-bold text-[var(--k-muted)] hover:text-blue-400 hover:border-blue-500/30 transition-all">
-            ✏️ Edit in Designer
+            Edit in Designer
           </button>
         </div>
       )}

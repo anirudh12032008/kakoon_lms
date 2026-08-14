@@ -1172,7 +1172,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
       case "l298n_motor":
         // Deprecated — generates a warning comment but still basic code
         imports.add("from machine import Pin");
-        chunkLines.push(`${indent}# ⚠️ L298N deprecated — use Multi-Motor Controller for DRV8833`);
+        chunkLines.push(`${indent}# L298N deprecated — use Multi-Motor Controller for DRV8833`);
         break;
 
       // ─── New Sensor Nodes ──────────────────────────────────────────────────

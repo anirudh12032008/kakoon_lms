@@ -104,7 +104,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center">
-                  🔐
+                 
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Admin Access Required</p>
@@ -144,7 +144,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
           ) : saved ? (
             /* ── Success ── */
             <div className="p-8 text-center">
-              <div className="text-4xl mb-3">🎉</div>
+              <div className="text-4xl mb-3"></div>
               <p className="text-white font-bold text-lg">Tutorial Saved!</p>
               <p className="text-[var(--k-muted)] text-sm mt-1">"{title}" is now in your tutorial catalog.</p>
             </div>
@@ -153,7 +153,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
             <div className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center">
-                  📚
+                 
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white">Save as Tutorial</p>
@@ -165,7 +165,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
 
               {nodeCount === 0 && (
                 <div className="mb-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-400">
-                  ⚠ Canvas is empty. Add blocks before saving.
+                  Canvas is empty. Add blocks before saving.
                 </div>
               )}
 

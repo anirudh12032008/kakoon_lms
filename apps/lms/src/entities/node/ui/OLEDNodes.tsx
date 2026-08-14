@@ -69,7 +69,7 @@ export function OLEDDisplayNode() {
                   ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
                   : "text-[var(--k-muted)] border-[var(--k-border)] hover:text-[var(--k-text)]"
               }`}>
-              📝 Text
+              Text
             </button>
             <button onClick={() => setMode("anim")}
               className={`nodrag flex-1 py-1 rounded-lg text-[10px] font-bold border transition-all ${
@@ -77,7 +77,7 @@ export function OLEDDisplayNode() {
                   ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
                   : "text-[var(--k-muted)] border-[var(--k-border)] hover:text-[var(--k-text)]"
               }`}>
-              🎬 Animation
+              Animation
             </button>
           </div>
         </NodeField>
@@ -93,7 +93,7 @@ export function OLEDDisplayNode() {
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="🔍 Search animations..."
+              placeholder="Search animations..."
               className="nodrag w-full text-[10px] bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1.5 text-[var(--k-text)] placeholder:text-[var(--k-dim)] outline-none focus:border-purple-500/50 mb-1.5"
             />
 
@@ -132,7 +132,7 @@ export function OLEDDisplayNode() {
                       }}
                       className="nodrag p-1 rounded text-[var(--k-dim)] hover:text-red-400 transition-colors flex-shrink-0"
                       title="Remove from library and device"
-                    >✕</button>
+                    ></button>
                   </div>
                 ))}
               </div>

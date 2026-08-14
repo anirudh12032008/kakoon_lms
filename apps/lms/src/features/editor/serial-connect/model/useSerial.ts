@@ -42,7 +42,7 @@ export function useSerialConnection() {
   useEffect(() => {
     setIsSupported(isWebSerialSupported());
     if (!isWebSerialSupported()) {
-      addLog("⚠️ Web Serial API not supported. Use Chrome or Edge for USB.");
+      addLog("Web Serial API not supported. Use Chrome or Edge for USB.");
     }
     return () => {
       if (connectionRef.current.port && connectionTypeRef.current === "usb") {
@@ -69,7 +69,7 @@ export function useSerialConnection() {
 
           for (const line of lines) {
             if (line.trim()) {
-              addLog(`📥 ${line}`);
+              addLog(`${line}`);
               responseCallbackRef.current?.(line);
               tryParseSensorLine(line);
               // MicroPython REPL prompt means program finished
@@ -88,7 +88,7 @@ export function useSerialConnection() {
       setIsConnected(false);
       setIsRunning(false);
       useSensorStore.getState().clear();
-      addLog("🔌 Device disconnected");
+      addLog("Device disconnected");
     }
   }, [addLog]);
 
@@ -99,17 +99,17 @@ export function useSerialConnection() {
       connectionRef.current = conn;
       connectionTypeRef.current = "usb";
       setIsConnected(true);
-      addLog("✅ Connected via USB Serial");
+      addLog("Connected via USB Serial");
       startReading();
     } catch (err: unknown) {
-      addLog(`❌ Connection failed: ${err instanceof Error ? err.message : String(err)}`);
+      addLog(`Connection failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsConnecting(false);
     }
   }, [addLog, startReading]);
 
   const connectWifi = useCallback(async (ip: string, _password: string) => {
-    addLog(`📡 WiFi / WebREPL not yet implemented — cannot connect to ${ip}`);
+    addLog(`WiFi / WebREPL not yet implemented — cannot connect to ${ip}`);
   }, [addLog]);
 
   const disconnect = useCallback(async () => {
@@ -117,12 +117,12 @@ export function useSerialConnection() {
       await disconnectSerial(connectionRef.current);
     }
     setIsConnected(false);
-    addLog("🔌 Disconnected");
+    addLog("Disconnected");
   }, [addLog]);
 
   const sendCode = useCallback(async (code: string): Promise<boolean> => {
     if (!connectionRef.current.writer) {
-      addLog("❌ Not connected");
+      addLog("Not connected");
       return false;
     }
     try {
@@ -130,7 +130,7 @@ export function useSerialConnection() {
       setIsRunning(true);
       return true;
     } catch (err: unknown) {
-      addLog(`❌ Send failed: ${err instanceof Error ? err.message : String(err)}`);
+      addLog(`Send failed: ${err instanceof Error ? err.message : String(err)}`);
       // Write failed — device likely unplugged; don't leave UI stuck in "running"
       setIsRunning(false);
       setIsConnected(false);
@@ -147,22 +147,22 @@ export function useSerialConnection() {
       const encoder = new TextEncoder();
       await writer.write(encoder.encode("\x03\x03"));
       setIsRunning(false);
-      addLog("⛔ Stopped — sent Ctrl+C");
+      addLog("Stopped — sent Ctrl+C");
     } catch (err: unknown) {
-      addLog(`❌ Stop failed: ${err instanceof Error ? err.message : String(err)}`);
+      addLog(`Stop failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }, [addLog]);
 
   const uploadCode = useCallback(async (code: string): Promise<boolean> => {
     if (!connectionRef.current.writer) {
-      addLog("❌ Not connected");
+      addLog("Not connected");
       return false;
     }
     try {
       await uploadCodeToESP32(connectionRef.current.writer!, code);
       return true;
     } catch (err: unknown) {
-      addLog(`❌ Upload failed: ${err instanceof Error ? err.message : String(err)}`);
+      addLog(`Upload failed: ${err instanceof Error ? err.message : String(err)}`);
       return false;
     }
   }, [addLog]);

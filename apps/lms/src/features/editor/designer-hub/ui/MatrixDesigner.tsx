@@ -23,15 +23,15 @@ function textToMatrixFrames(text: string, modules: number): number[][] {
 }
 
 const MATRIX_ANIMS = [
-  { id: "flash",    name: "⚡ Flash" },
-  { id: "checker",  name: "🏁 Checkerboard" },
-  { id: "row_wipe", name: "↕️ Row Wipe" },
-  { id: "col_wipe", name: "↔️ Column Wipe" },
-  { id: "rain",     name: "🌧 Rain" },
-  { id: "spiral",   name: "🌀 Spiral" },
-  { id: "heart",    name: "💓 Heartbeat" },
-  { id: "bounce",   name: "🏀 Bouncing Ball" },
-  { id: "wave",     name: "🌊 Wave" },
+  { id: "flash",    name: "Flash" },
+  { id: "checker",  name: "Checkerboard" },
+  { id: "row_wipe", name: "↕Row Wipe" },
+  { id: "col_wipe", name: "↔Column Wipe" },
+  { id: "rain",     name: "Rain" },
+  { id: "spiral",   name: "Spiral" },
+  { id: "heart",    name: "Heartbeat" },
+  { id: "bounce",   name: "Bouncing Ball" },
+  { id: "wave",     name: "Wave" },
 ];
 
 /** 8×8 heart shape (small + large) for the heartbeat preset. */
@@ -289,7 +289,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
           {(["draw","anims","text"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)}
               className={`text-xs font-bold px-4 py-3 text-left transition-all ${tab===t ? "bg-violet-500/15 text-violet-400 border-l-[3px] border-violet-500" : "text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)] border-l-[3px] border-transparent"}`}>
-              {t === "draw" ? "✏️ Draw" : t === "anims" ? "🎬 Animations" : "📝 Scroll Text"}
+              {t === "draw" ? "Draw" : t === "anims" ? "Animations" : "Scroll Text"}
             </button>
           ))}
         </div>
@@ -488,7 +488,7 @@ export function MatrixDesigner({ onAddNode }: { onAddNode?: (type: string, data:
               }`}
             >
               <PlusCircle className="w-3.5 h-3.5" />
-              {addedToCanvas ? "Added to Canvas! ✓" : "Add to Canvas"}
+              {addedToCanvas ? "Added to Canvas!" : "Add to Canvas"}
             </button>
             <p className="text-[10px] text-[var(--k-dim)] text-center">
               {frames.length} frame{frames.length !== 1 ? "s" : ""} · {modules} module{modules !== 1 ? "s" : ""} · {fps} fps

@@ -119,11 +119,11 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
         }
         const result = captured.length > 0 ? captured : [px];
         setFrames(result);
-        setStatusMsg(`✅ ${result.length} frame${result.length !== 1 ? "s" : ""} captured`);
+        setStatusMsg(`${result.length} frame${result.length !== 1 ? "s" : ""} captured`);
         renderPreview(result[0]);
       } else {
         setFrames([px]);
-        setStatusMsg("✅ Image converted");
+        setStatusMsg("Image converted");
       }
     } else {
       const video = src as HTMLVideoElement;
@@ -158,7 +158,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
         document.body.removeChild(tempDiv);
       }
       setFrames(captured);
-      setStatusMsg(`✅ ${captured.length} frames extracted`);
+      setStatusMsg(`${captured.length} frames extracted`);
       if (captured.length > 0) renderPreview(captured[0]);
     }
     setStatus("done");
@@ -231,7 +231,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
         {fileName
           ? <p className="text-xs font-semibold text-[var(--k-text)]">{fileName}</p>
           : <>
-              <p className="text-2xl mb-1">📷</p>
+              <p className="text-2xl mb-1"></p>
               <p className="text-xs font-semibold text-[var(--k-text)]">Drop image, GIF, or video here</p>
               <p className="text-[10px] text-[var(--k-dim)] mt-0.5">PNG · JPG · GIF · MP4 · WebM</p>
             </>
@@ -379,7 +379,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
                 className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] text-[var(--k-text)] hover:text-[var(--k-text)] transition-colors"
                 title={playing ? "Pause" : "Play"}
               >
-                {playing ? "⏸" : "▶"}
+                {playing ? "" : "▶"}
               </button>
               <input
                 type="range" min={0} max={frameCount - 1} value={Math.min(playIdx, frameCount - 1)}

@@ -31,7 +31,7 @@ export function AuthShell({ title, subtitle, children, footer }: {
           transition={{ type: "spring", stiffness: 320, damping: 24 }}
           className="flex items-center justify-center gap-2.5 mb-6"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient text-xl">⚡</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient text-xl"></div>
           <span className="text-2xl font-black tracking-tight text-body">Kokoon</span>
         </motion.div>
 

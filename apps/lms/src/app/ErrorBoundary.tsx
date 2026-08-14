@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-page px-6 text-center">
         <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-subtle bg-raised text-3xl">
-          🔌
+         
         </div>
         <h1 className="text-xl font-black tracking-tight text-body">Oops — something short-circuited</h1>
         <p className="max-w-sm text-sm leading-relaxed text-sub">
