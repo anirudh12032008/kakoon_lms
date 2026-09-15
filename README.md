@@ -41,6 +41,12 @@ backend
 - helmet
 
 ## screenshots
+<img width="1710" height="1044" alt="Screenshot 2026-09-15 at 11 58 26 AM" src="https://github.com/user-attachments/assets/a7c36a7e-c0d0-4acd-bf6a-6607b3498b1c" />
+<img width="1710" height="1034" alt="Screenshot 2026-09-15 at 11 58 39 AM" src="https://github.com/user-attachments/assets/eaba2287-20f0-44fc-86fe-8086c75641d6" />
+<img width="1710" height="1112" alt="Screenshot 2026-09-15 at 11 58 57 AM" src="https://github.com/user-attachments/assets/51ad2ed2-f5f2-4520-b994-a908ddc0ee9e" />
+<img width="1710" height="1112" alt="Screenshot 2026-09-15 at 11 59 13 AM" src="https://github.com/user-attachments/assets/91d38080-e185-4cb0-8838-a43969590a74" />
+
+
 
 ## how it was made
 wanted to fix the never ending issue of asking claude/gpt to write code for my hardware and the annoying bugs and the very long runtime so i thought why not create something on my own and actually use it!!
