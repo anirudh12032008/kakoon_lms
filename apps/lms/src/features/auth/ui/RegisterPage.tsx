@@ -51,7 +51,7 @@ export function RegisterPage() {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="It's free - start building robots in minutes."
+      subtitle="It's free - start building IoT projects in minutes."
       footer={
         <>
           Already have an account?{" "}

@@ -44,7 +44,7 @@ export function LoginPage() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to continue building robots."
+      subtitle="Sign in to continue building your projects."
       footer={
         <>
           New to {APP_NAME}?{" "}

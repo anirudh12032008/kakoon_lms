@@ -212,7 +212,7 @@ export function CoursesPage() {
             )}
           </h1>
           <p className="mt-1.5 text-[15px] text-sub">
-            Pick a robot to build. Enroll for free and jump straight into the block editor.
+            Pick a project to build. Enroll for free and jump straight into the block editor.
           </p>
         </motion.div>
 

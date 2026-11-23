@@ -71,7 +71,8 @@ api.interceptors.response.use(
 
     // Surface every failed request as an error popup. The 401 that triggers a
     // successful silent refresh returns above, so it never reaches here.
-    reportError({ message: apiErrorMessage(error), code: apiErrorCode(error) });
+    // A failed session refresh just means "not signed in": no popup for that.
+    if (!url.includes("/auth/refresh")) reportError({ message: apiErrorMessage(error), code: apiErrorCode(error) });
     return Promise.reject(error);
   }
 );
