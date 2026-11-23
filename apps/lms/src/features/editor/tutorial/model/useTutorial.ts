@@ -33,6 +33,16 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on board change
   }, [boardId]);
 
+  // Open a built-in example chosen on the dashboard, once the saved draft has loaded.
+  useEffect(() => {
+    if (isLoadingDraft) return;
+    const id = sessionStorage.getItem("codelab-open-demo");
+    if (!id) return;
+    sessionStorage.removeItem("codelab-open-demo");
+    const demo = builtinTutorials(useBoardStore.getState().boardId).find((t) => t.id === id);
+    if (demo) canvasRef.current?.setWorkspace({ nodes: demo.nodes, edges: demo.edges });
+  }, [isLoadingDraft, canvasRef]);
+
   // Load tutorial state from localStorage on mount
   useEffect(() => {
     try {

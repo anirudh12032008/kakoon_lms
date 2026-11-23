@@ -161,6 +161,9 @@ function PlayerStatsStrip() {
   );
 }
 
+import { builtinTutorials } from "@/features/editor/tutorial/lib/tutorials";
+import { BOARDS, useBoardStore } from "@/entities/board";
+
 export function CoursesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -174,6 +177,14 @@ export function CoursesPage() {
     useProjectStore.getState().clearActiveProject();
     setLaunchContext(buildLaunchContext(preset));
     navigate("/editor");
+  };
+
+  // Built-in example projects for the selected board; opened straight in the editor.
+  const boardId = useBoardStore((s) => s.boardId);
+  const demos = builtinTutorials(boardId);
+  const openDemo = (id: string) => {
+    sessionStorage.setItem("codelab-open-demo", id); // picked up by the editor (useTutorial)
+    openFullWorkshop();
   };
 
   useEffect(() => {
@@ -219,6 +230,29 @@ export function CoursesPage() {
         <PlayerStatsStrip />
 
         <FullWorkshopBanner onOpen={openFullWorkshop} />
+
+        <section className="mb-8">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="text-lg font-black tracking-tight text-body">IoT Projects</h2>
+            <span className="text-xs font-semibold text-hint">Ready to open on {BOARDS[boardId].label}</span>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {demos.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => openDemo(t.id)}
+                className="group flex flex-col rounded-2xl border border-subtle bg-raised p-4 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+              >
+                <span className="mb-2 w-fit rounded-full bg-hover px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sub">
+                  {t.difficulty}
+                </span>
+                <span className="text-[15px] font-bold leading-snug text-body">{t.title}</span>
+                <span className="mt-1.5 text-xs leading-relaxed text-sub">{t.description}</span>
+                <span className="mt-3 text-xs font-bold text-primary-c">Open in editor</span>
+              </button>
+            ))}
+          </div>
+        </section>
 
         {error && (
           <div className="rounded-xl border border-error-tint bg-error-tint px-4 py-3 text-sm font-medium text-error-c">
