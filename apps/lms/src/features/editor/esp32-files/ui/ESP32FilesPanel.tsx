@@ -1,5 +1,5 @@
 /**
- * ESP32 File Explorer — draggable floating panel.
+ * ESP32 File Explorer - draggable floating panel.
  *
  * Starts at filesystem root `/` and navigates into folders by clicking.
  * Detects directories via os.stat mode bit 0x4000.
@@ -17,7 +17,7 @@ import { markOnDevice, loadAnimRegistry, saveAnimRegistry } from "@/shared/lib/a
 interface ESP32FilesPanelProps {
   isConnected: boolean;
   onClose: () => void;
-  /** The live logs array from useSerialConnection — used to parse scan output */
+  /** The live logs array from useSerialConnection - used to parse scan output */
   logs: string[];
   sendCode: (code: string) => Promise<boolean>;
 }
@@ -60,7 +60,7 @@ function breadcrumbs(path: string): { label: string; path: string }[] {
 
 // ─── Python to send (multi-line for readability, safe try/except) ─────────────
 // Each line is sent individually through paste mode.
-// The output marker is "FS_LIST:" or "FS_ERR:" — parsed from the logs array.
+// The output marker is "FS_LIST:" or "FS_ERR:" - parsed from the logs array.
 function buildScanPython(path: string): string {
   const p = path.replace(/'/g, "\\'");
   // Build a full path string: for root use just '/' + f, else '/dir/' + f
@@ -139,7 +139,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
     prevLogLen.current = logs.length; // snapshot before any new lines arrive
 
     // Set timeout BEFORE awaiting sendCode so the useEffect success path
-    // can always clear it — even if FS_LIST arrives while sendCode is still awaited.
+    // can always clear it - even if FS_LIST arrives while sendCode is still awaited.
     if (scanTimeout.current) clearTimeout(scanTimeout.current);
     scanTimeout.current = setTimeout(() => {
       setScanning(false);
@@ -150,7 +150,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
     if (!ok) {
       clearTimeout(scanTimeout.current!);
       setScanning(false);
-      setStatus("Failed to send — not connected?");
+      setStatus("Failed to send - not connected?");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConnected, logs.length, sendCode]);

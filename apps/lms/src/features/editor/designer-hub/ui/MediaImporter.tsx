@@ -64,7 +64,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
 
   // The preview canvas mounts only once there's content, so drawing must happen
   // in an effect (drawing imperatively inside processSource hits a canvas that
-  // isn't in the DOM yet — that was the "blank until you change a slider" bug).
+  // isn't in the DOM yet - that was the "blank until you change a slider" bug).
   useEffect(() => {
     if (status === "processing") return;
     const active = frameCount > 0 ? frames[Math.min(playIdx, frameCount - 1)] : preview;
@@ -343,7 +343,7 @@ export function MediaImporter({ onApply, onClose }: MediaImporterProps) {
         </div>
 
         <div className="flex-1 flex flex-col gap-2 min-w-0 items-center">
-          <p className={OPT_LABEL + " self-start"}>Preview — 128×64 OLED</p>
+          <p className={OPT_LABEL + " self-start"}>Preview - 128×64 OLED</p>
 
           {/* Display-sized preview: locked to the real 2:1 OLED ratio, capped width */}
           <div

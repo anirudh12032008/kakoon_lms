@@ -188,22 +188,22 @@ const forkliftNodes: Node[] = [
     cmdMap: BT_CMD_MAP, enableTx: false, txVarName: "ble_tx",
   }},
 
-  // ── Forward: 'F' — all 4 motors fwd 80%, sleep 0.75 s, then brake ────────
+  // ── Forward: 'F' - all 4 motors fwd 80%, sleep 0.75 s, then brake ────────
   { id: "fk_n3",  type: "multi_motor_controller", position: { x: 700,  y: 140  }, data: { syncMode: true, l1speed: 80, l1dir: "Forward" } },
   { id: "fk_n4",  type: "sleep",                  position: { x: 980,  y: 140  }, data: { seconds: 0.75 } },
   { id: "fk_n5",  type: "multi_motor_controller", position: { x: 1260, y: 140  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
-  // ── Backward: 'B' — all 4 motors rev 80%, sleep 0.75 s, then brake ───────
+  // ── Backward: 'B' - all 4 motors rev 80%, sleep 0.75 s, then brake ───────
   { id: "fk_n6",  type: "multi_motor_controller", position: { x: 700,  y: 340  }, data: { syncMode: true, l1speed: 80, l1dir: "Reverse" } },
   { id: "fk_n7",  type: "sleep",                  position: { x: 980,  y: 340  }, data: { seconds: 0.75 } },
   { id: "fk_n8",  type: "multi_motor_controller", position: { x: 1260, y: 340  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
-  // ── Right turn: 'R' — left fwd + right rev 70%, sleep 0.5 s, then brake ──
+  // ── Right turn: 'R' - left fwd + right rev 70%, sleep 0.5 s, then brake ──
   { id: "fk_n9",  type: "multi_motor_controller", position: { x: 700,  y: 540  }, data: { pairMode: true, leftSpeed: 70, leftDir: "Forward", rightSpeed: 70, rightDir: "Reverse" } },
   { id: "fk_n10", type: "sleep",                  position: { x: 980,  y: 540  }, data: { seconds: 0.5 } },
   { id: "fk_n9b", type: "multi_motor_controller", position: { x: 1260, y: 540  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
 
-  // ── Left turn: 'L' — left rev + right fwd 70%, sleep 0.5 s, then brake ───
+  // ── Left turn: 'L' - left rev + right fwd 70%, sleep 0.5 s, then brake ───
   { id: "fk_n11",  type: "multi_motor_controller", position: { x: 700,  y: 720  }, data: { pairMode: true, leftSpeed: 70, leftDir: "Reverse", rightSpeed: 70, rightDir: "Forward" } },
   { id: "fk_n12",  type: "sleep",                  position: { x: 980,  y: 720  }, data: { seconds: 0.5 } },
   { id: "fk_n12b", type: "multi_motor_controller", position: { x: 1260, y: 720  }, data: { syncMode: true, l1speed: 0, l1dir: "Brake" } },
@@ -212,16 +212,16 @@ const forkliftNodes: Node[] = [
   { id: "fk_n13", type: "variable",               position: { x: 700, y: 920  }, data: { name: "speed", value: 100 } },
   { id: "fk_n14", type: "variable",               position: { x: 700, y: 1080 }, data: { name: "speed", value: 40  } },
 
-  // ── NeoPixel LED strip: 'N' — 8 LEDs, cyan ───────────────────────────────
+  // ── NeoPixel LED strip: 'N' - 8 LEDs, cyan ───────────────────────────────
   { id: "fk_n15", type: "neopixel_led",            position: { x: 700, y: 1260 }, data: { numLeds: 8, brightness: 80, color: "#00c8ff" } },
 
   // ── OLED status display: 'O' ──────────────────────────────────────────────
   { id: "fk_n16", type: "oled_display",            position: { x: 700, y: 1460 }, data: { mode: "text", line1: "Forklift OK", line2: "BT Ready", driver: false } },
 
-  // ── Fork servo up: 'U' — S1 (pin 21) to 0° ───────────────────────────────
+  // ── Fork servo up: 'U' - S1 (pin 21) to 0° ───────────────────────────────
   { id: "fk_n17", type: "servo_motor",             position: { x: 700, y: 1660 }, data: { servoPort: "S1", angle: 0  } },
 
-  // ── Fork servo down: 'D' — S1 (pin 21) to 90° ────────────────────────────
+  // ── Fork servo down: 'D' - S1 (pin 21) to 90° ────────────────────────────
   { id: "fk_n18", type: "servo_motor",             position: { x: 700, y: 1840 }, data: { servoPort: "S1", angle: 90 } },
 ];
 
@@ -332,7 +332,7 @@ export function generateStepsFromFlow(nodes: Node[], edges: Edge[]): TutorialSte
       for (const key of Object.keys(node.data)) {
         const targetVal = node.data[key];
         const defaultVal = defaultsForType[key];
-        // Skip complex objects (cmdMap arrays, etc.) — only simple primitives
+        // Skip complex objects (cmdMap arrays, etc.) - only simple primitives
         if (typeof targetVal === "object" && targetVal !== null) continue;
         if (defaultVal !== undefined && String(targetVal) !== String(defaultVal)) {
           const fieldLabel = FIELD_LABELS[key] || key;
@@ -413,7 +413,7 @@ export const BUILTIN_TUTORIALS: Tutorial[] = [
   makeTutorial(
     "builtin_tank",
     "Tank / Tracked Robot",
-    "Control a tank-style robot with independent left and right tread motors. Use push buttons to steer — hold left to pivot left, hold right to pivot right.",
+    "Control a tank-style robot with independent left and right tread motors. Use push buttons to steer - hold left to pivot left, hold right to pivot right.",
     "Medium",
     ["push_button", "multi_motor_controller", "forever_loop"],
     tankNodes,

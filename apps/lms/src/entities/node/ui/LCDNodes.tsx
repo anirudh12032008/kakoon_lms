@@ -107,7 +107,7 @@ function CharEditor({ pixels, onChange }: { pixels: LCDCharPixels; onChange: (p:
   );
 }
 
-// Split a line into display "units" — each token ({v}, {name}, {c0}..{c7})
+// Split a line into display "units" - each token ({v}, {name}, {c0}..{c7})
 // counts as a single LCD column; every other character is its own column.
 const LCD_TOKEN_RE = /^(\{c[0-7]\}|\{[A-Za-z_]\w*\})/;
 function tokenizeLcdLine(line: string): string[] {
@@ -144,7 +144,7 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Character Grid — click any cell to type</span>
+      <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Character Grid - click any cell to type</span>
       <div className="inline-flex flex-col gap-px rounded-lg overflow-hidden border border-[var(--k-border)] bg-[#0a1a0a]">
         {[0, 1].map(row => (
           <div key={row} className="flex gap-px">
@@ -305,7 +305,7 @@ export function LCD16x2Node() {
       )}
 
       {showCharEditor && (
-        <Modal title="Custom Character Editor — 8 Slots (5×8 pixels each)" onClose={() => setShowCharEditor(false)} wide>
+        <Modal title="Custom Character Editor - 8 Slots (5×8 pixels each)" onClose={() => setShowCharEditor(false)} wide>
           <div className="flex gap-6">
             <div className="flex flex-col gap-2 w-28 flex-shrink-0">
               <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Slots</span>

@@ -111,7 +111,7 @@ export async function disconnectSerial(
       await connection.port.close();
     }
   } catch (error) {
-    // port may already be closed — safe to ignore
+    // port may already be closed - safe to ignore
     void error;
   }
 }
@@ -231,7 +231,7 @@ export async function uploadCodeToESP32(
     await new Promise((r) => setTimeout(r, 30));
   }
   
-  // Ctrl+D — execute the accumulated file-writing script in raw REPL
+  // Ctrl+D - execute the accumulated file-writing script in raw REPL
   await writer.write(encoder.encode("\x04"));
 
   // Wait long enough for the file-writing script to finish.
@@ -239,7 +239,7 @@ export async function uploadCodeToESP32(
   const waitMs = Math.max(1500, Math.ceil(code.length / 1000) * 200);
   await new Promise((r) => setTimeout(r, waitMs));
 
-  // Ctrl+B — exit raw REPL and return to friendly REPL.
+  // Ctrl+B - exit raw REPL and return to friendly REPL.
   // Send it twice with a gap so it isn't missed.
   await writer.write(encoder.encode("\x02"));
   await new Promise((r) => setTimeout(r, 200));

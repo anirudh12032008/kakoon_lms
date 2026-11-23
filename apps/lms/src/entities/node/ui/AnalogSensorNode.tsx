@@ -117,9 +117,9 @@ export function AnalogSensorNode() {
         </div>
         {/* Min / Max / Avg */}
         <div className="px-3 py-1 flex gap-1.5">
-          <StatChip label="Min" value={stats ? String(stats.min) : "—"} color="#60a5fa" />
-          <StatChip label="Max" value={stats ? String(stats.max) : "—"} color="#f87171" />
-          <StatChip label="Avg" value={stats ? String(Math.round(stats.sum / stats.count)) : "—"} color="#34d399" />
+          <StatChip label="Min" value={stats ? String(stats.min) : "-"} color="#60a5fa" />
+          <StatChip label="Max" value={stats ? String(stats.max) : "-"} color="#f87171" />
+          <StatChip label="Avg" value={stats ? String(Math.round(stats.sum / stats.count)) : "-"} color="#34d399" />
         </div>
         {/* Threshold */}
         <NodeField label="Threshold"><NumberInput value={threshold} onChange={setThreshold} /></NodeField>

@@ -13,7 +13,7 @@ async function start() {
   });
 
   const shutdown = async (signal: string) => {
-    logger.info(`${signal} received — shutting down gracefully`);
+    logger.info(`${signal} received - shutting down gracefully`);
     server.close(async () => {
       await disconnectDB();
       process.exit(0);

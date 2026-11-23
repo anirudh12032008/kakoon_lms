@@ -1,4 +1,4 @@
-# Kokoon — Setup & Architecture
+# Kokoon - Setup & Architecture
 
 Kokoon is the LMS + block-based robotics editor. This repo is a **pnpm workspace**:
 
@@ -8,7 +8,7 @@ backend/api     # Express + MongoDB API (auth, courses, enrollment)
 ```
 
 > The repo's package manager is **pnpm** (see `packageManager` in the root
-> `package.json`). Use `pnpm`, not `npm`, to install — mixing the two reshuffles
+> `package.json`). Use `pnpm`, not `npm`, to install - mixing the two reshuffles
 > `node_modules` and can break the dev server.
 
 ---
@@ -17,7 +17,7 @@ backend/api     # Express + MongoDB API (auth, courses, enrollment)
 
 - Node 20+
 - pnpm 9+  (`npm i -g pnpm`)
-- MongoDB 7+ running locally — easiest via Docker:
+- MongoDB 7+ running locally - easiest via Docker:
 
 ```bash
 docker compose -f backend/docker-compose.yml up -d   # starts mongo (+redis)
@@ -58,10 +58,10 @@ Creates the four robot courses: **forklift, tank, turret, robotic-arm**.
 ## 5. Run
 
 ```bash
-# terminal 1 — API on :4000
+# terminal 1 - API on :4000
 pnpm dev:api
 
-# terminal 2 — frontend on :5173
+# terminal 2 - frontend on :5173
 pnpm dev
 ```
 
@@ -75,17 +75,17 @@ block editor pre-configured with that robot's blocks.
 
 | Method | Route                          | Auth | Purpose                            |
 | ------ | ------------------------------ | ---- | ---------------------------------- |
-| POST   | `/api/auth/register`           | —    | Create account                     |
-| POST   | `/api/auth/login`              | —    | Sign in                            |
+| POST   | `/api/auth/register`           | -    | Create account                     |
+| POST   | `/api/auth/login`              | -    | Sign in                            |
 | POST   | `/api/auth/refresh`            | cookie | Rotate access token              |
-| POST   | `/api/auth/logout`             | —    | Clear refresh cookie               |
+| POST   | `/api/auth/logout`             | -    | Clear refresh cookie               |
 | GET    | `/api/auth/me`                 | ✓    | Current user                       |
 | GET    | `/api/courses`                 | opt  | List published courses             |
 | GET    | `/api/courses/:slug`           | opt  | Course detail                      |
 | GET    | `/api/enrollments`             | ✓    | My enrollments                     |
 | POST   | `/api/enrollments/:slug`       | ✓    | Enroll (free, idempotent)          |
 | POST   | `/api/enrollments/:slug/open`  | ✓    | Mark opened + return launch config |
-| GET    | `/api/health`                  | —    | Health check                       |
+| GET    | `/api/health`                  | -    | Health check                       |
 
 ### Auth model
 - **Access token**: short-lived JWT (15m), kept in memory on the client, sent as

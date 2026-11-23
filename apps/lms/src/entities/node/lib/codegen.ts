@@ -5,7 +5,7 @@ import {
   PIR_SENSOR, MATRIX,
 } from "@/entities/board";
 
-// All possible fields across every node type — each node only uses a subset.
+// All possible fields across every node type - each node only uses a subset.
 interface NodeData {
   // General
   disabled?: boolean;
@@ -44,7 +44,7 @@ interface NodeData {
   steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
   sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
   bounce?: boolean; loop?: boolean;
-  // Speed variable bindings — when set, codegen emits the variable name instead
+  // Speed variable bindings - when set, codegen emits the variable name instead
   // of the literal so the speed can be changed dynamically at runtime.
   speedVar?: string; contSpeedVar?: string;
   l1speedVar?: string; l2speedVar?: string; r1speedVar?: string; r2speedVar?: string;
@@ -64,13 +64,13 @@ interface NodeData {
   r1PwmPin?: number; r1DirPin?: number; r2PwmPin?: number; r2DirPin?: number;
   flPwmPin?: number; flDirPin?: number; frPwmPin?: number; frDirPin?: number;
   rlPwmPin?: number; rlDirPin?: number; rrPwmPin?: number; rrDirPin?: number;
-  // Motor placement — which board port (L1/L2/R1/R2) is physically wired to each wheel position
+  // Motor placement - which board port (L1/L2/R1/R2) is physically wired to each wheel position
   flPort?: string; frPort?: string; rlPort?: string; rrPort?: string;
   // Multi-servo sequencer
   s1port?: string; s2port?: string; s3port?: string;
   keyframes?: Array<{ angles?: number[] }>;
   keyframeDelay?: number;
-  // Shadow arm (pots on GPIO ADC pins) / Main arm (servos) — master-slave puppet rig
+  // Shadow arm (pots on GPIO ADC pins) / Main arm (servos) - master-slave puppet rig
   potMin?: number[]; potMax?: number[]; shadowAlpha?: number; varPrefix?: string;
   potPins?: number[]; channelMap?: number[]; shadowInv?: boolean[]; oversample?: number; deadband?: number;
   calBtnPin?: number;
@@ -171,11 +171,11 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
   const nodeMap = new Map<string, Node>();
   for (const n of nodes) nodeMap.set(n.id, n);
 
-  // Use edges exactly as drawn — no flipping/normalization.
+  // Use edges exactly as drawn - no flipping/normalization.
   // Users connect nodes in execution order; the direction is correct by design.
 
   // Root nodes = nodes that have no incoming flow edges
-  // (ignore incoming "true"/"false"/"body" handle edges — those are branch entries, not sequential flow)
+  // (ignore incoming "true"/"false"/"body" handle edges - those are branch entries, not sequential flow)
   const hasIncomingFlow = new Set<string>();
   for (const e of edges) {
     // An edge pointing INTO a node counts as "has incoming flow" only if it's
@@ -288,7 +288,7 @@ class DRV8833:
 
 def _mp(pin):
     p = PWM(Pin(pin, Pin.OUT), freq=1000)
-    p.duty_u16(0)  # force 0% — a fresh PWM defaults to a non-zero duty on ESP32
+    p.duty_u16(0)  # force 0% - a fresh PWM defaults to a non-zero duty on ESP32
     return p
 def _dp(pin):
     p = Pin(pin, Pin.OUT)
@@ -300,12 +300,12 @@ rear  = DRV8833(_mp(${MOTORS.rearRight.pwm}),  _dp(${MOTORS.rearRight.dir}),  _m
 front.stop_all(); rear.stop_all()  # guarantee a stopped state at boot, before any command runs
 `;
 
-  // --- Custom-pin motor driver — for users who re-target a motor's PWM/DIR
+  // --- Custom-pin motor driver - for users who re-target a motor's PWM/DIR
   // lines to GPIOs other than the board's stock DRV8833 wiring (Advanced mode).
   const CUSTOM_MOTOR_HELPER = `# --- Custom-pin motor driver (PWM + DIR on user-chosen GPIOs) ---
 def _cm_pwm(pin):
     p = PWM(Pin(pin, Pin.OUT), freq=40000)
-    p.duty_u16(0)  # force 0% — a fresh PWM defaults to a non-zero duty on ESP32
+    p.duty_u16(0)  # force 0% - a fresh PWM defaults to a non-zero duty on ESP32
     return p
 def _cm_dir(pin):
     p = Pin(pin, Pin.OUT)
@@ -327,7 +327,7 @@ def _cm_stop(pwm, d):
   };
 
   // Shared servo-output for the Arm Live / Record / Play nodes. Defines _arm,
-  // drive_arm(), the recording file path, and the file player — all once.
+  // drive_arm(), the recording file path, and the file player - all once.
   // Returns the variable prefix and frame delay for the calling node.
   const buildArmOutputOnce = (dd: NodeData): { pre: string; fm: number } => {
     const PORT_TO_SV: Record<string, string> = { S1: "s1", S2: "s2", S3: "s3", S4: "s4" };
@@ -388,7 +388,7 @@ def drive_arm(angles):
    * Strategy (in order):
    * 1. If one or more "body" handle edges exist, follow each chain in Y order.
    * 2. Otherwise, collect EVERY directly-connected node below the loop (by Y),
-   *    sort them by Y, and generate each one's chain independently — so you can
+   *    sort them by Y, and generate each one's chain independently - so you can
    *    wire multiple nodes into a loop and they all appear in the body.
    */
   function getLoopBodyLines(loopId: string, indentLevel: number): string[] {
@@ -505,7 +505,7 @@ def drive_arm(angles):
         imports.add("from machine import SoftI2C, Pin");
         imports.add("from lsm6ds3 import LSM6DS3");
         imports.add("import time, math");
-        emitOnce("imu_setup", `# LSM6DS3 onboard IMU — SCL=${ONBOARD_IMU.scl} SDA=${ONBOARD_IMU.sda}
+        emitOnce("imu_setup", `# LSM6DS3 onboard IMU - SCL=${ONBOARD_IMU.scl} SDA=${ONBOARD_IMU.sda}
 _i2c_imu = SoftI2C(scl=Pin(${ONBOARD_IMU.scl}), sda=Pin(${ONBOARD_IMU.sda}))
 _imu = LSM6DS3(_i2c_imu)
 time.sleep(0.1)`);
@@ -532,7 +532,7 @@ time.sleep(0.1)`);
         imports.add("from machine import Pin");
         imports.add("import time");
         emitOnce(`pir_setup_${pinNum}`,
-          `# PIR motion sensor — GPIO ${pinNum}\n` +
+          `# PIR motion sensor - GPIO ${pinNum}\n` +
           `_pir_${pinNum} = Pin(${pinNum}, Pin.IN, ${pullup})`
         );
         chunkLines.push(`${indent}${vn} = _pir_${pinNum}.value()`);
@@ -708,7 +708,7 @@ time.sleep(0.1)`);
         const distVar = d.varName ?? "distance";
         imports.add("from machine import Pin, time_pulse_us");
         imports.add("import time");
-        chunkLines.push(`${indent}# Ultrasonic port ${uPort} — TRIG:${trig} ECHO:${echo}`);
+        chunkLines.push(`${indent}# Ultrasonic port ${uPort} - TRIG:${trig} ECHO:${echo}`);
         chunkLines.push(`${indent}trig = Pin(${trig}, Pin.OUT)`);
         chunkLines.push(`${indent}echo = Pin(${echo}, Pin.IN)`);
         chunkLines.push(`${indent}# Send a 10us trigger pulse`);
@@ -768,10 +768,10 @@ time.sleep(0.1)`);
         const vn = d.varName ?? "ir_cmd";
         imports.add("from machine import Pin");
         emitOnce(`ir_recv_setup_${d.pin ?? 6}`,
-          `# IR Receiver (NEC) — GPIO ${d.pin ?? 6}\n` +
+          `# IR Receiver (NEC) - GPIO ${d.pin ?? 6}\n` +
           `_ir_recv_${d.pin ?? 6} = Pin(${d.pin ?? 6}, Pin.IN)`
         );
-        // Basic NEC pulse-counting stub — real decode needs irq + timing
+        // Basic NEC pulse-counting stub - real decode needs irq + timing
         chunkLines.push(`${indent}${vn} = _ir_recv_${d.pin ?? 6}.value()  # raw pulse; use irq for full NEC decode`);
         if (d.sendToViz !== false) {
           chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
@@ -783,7 +783,7 @@ time.sleep(0.1)`);
         imports.add("from machine import Pin");
         imports.add("import time");
         emitOnce(`ir_sensor_setup_${d.pin ?? 6}`,
-          `# IR obstacle sensor — GPIO ${d.pin ?? 6}\n` +
+          `# IR obstacle sensor - GPIO ${d.pin ?? 6}\n` +
           `_ir_${d.pin ?? 6} = Pin(${d.pin ?? 6}, Pin.IN)`
         );
         chunkLines.push(`${indent}${vn} = _ir_${d.pin ?? 6}.value()`);
@@ -820,7 +820,7 @@ time.sleep(0.1)`);
         setupLines.push(`i2c = SoftI2C(scl=Pin(${d.sck ?? OLED.scl}), sda=Pin(${d.sda ?? OLED.sda}))`);
         setupLines.push(`oled = ${dLib}.${dClass}(${oledW}, ${oledH}, i2c)`);
 
-        // Animation file stored on device — generate file-reading code
+        // Animation file stored on device - generate file-reading code
         if (d.mode !== "text" && d.animFile) {
           imports.add(`import ${dLib}, framebuf, time`);
           emitOnce("oled_anim_player",
@@ -1031,7 +1031,7 @@ def read_shadow():
         }
         break;
       }
-      // ─── Robo Arm: one node — Live default, 2-button record/capture, OLED ──
+      // ─── Robo Arm: one node - Live default, 2-button record/capture, OLED ──
       case "main_arm": {
         const { pre, fm } = buildArmOutputOnce(d);
         imports.add("from machine import SoftI2C, Pin");
@@ -1082,7 +1082,7 @@ def _play_sequence():
         _cur = list(_tgt)
     _oled_msg("Done"); time.sleep_ms(600)`);
 
-        chunkLines.push(`${indent}# Robo arm — Live default | BTN1 tap: rec/save | BTN2: capture point | BTN1 hold >3s: play`);
+        chunkLines.push(`${indent}# Robo arm - Live default | BTN1 tap: rec/save | BTN2: capture point | BTN1 hold >3s: play`);
         chunkLines.push(`${indent}_btn1 = Pin(${b1}, Pin.IN, Pin.PULL_UP)`);
         chunkLines.push(`${indent}_btn2 = Pin(${b2}, Pin.IN, Pin.PULL_UP)`);
         chunkLines.push(`${indent}_mode = 0          # 0 = live, 1 = recording`);
@@ -1170,9 +1170,9 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
       }
 
       case "l298n_motor":
-        // Deprecated — generates a warning comment but still basic code
+        // Deprecated - generates a warning comment but still basic code
         imports.add("from machine import Pin");
-        chunkLines.push(`${indent}# L298N deprecated — use Multi-Motor Controller for DRV8833`);
+        chunkLines.push(`${indent}# L298N deprecated - use Multi-Motor Controller for DRV8833`);
         break;
 
       // ─── New Sensor Nodes ──────────────────────────────────────────────────
@@ -1209,7 +1209,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         //   {c0}..{c7} → custom character slots via chr(n)
         const renderLcdLine = (text: string): string => {
           // Collect up to 16 display "units" without splitting a token across
-          // the column cap — each token occupies a single LCD column.
+          // the column cap - each token occupies a single LCD column.
           const units: string[] = [];
           let i = 0;
           while (i < text.length && units.length < 16) {
@@ -1286,9 +1286,9 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         const rdVar = speedVarName(d.speedVar);
         const t    = rdVar ? `(${rdVar} / 100)` : ((asFiniteNumber(d.speed) ?? 75) / 100).toFixed(2);  // throttle 0.0–1.0
         const ti   = rdVar ? `(${rdVar} * 0.3 / 100)` : (((asFiniteNumber(d.speed) ?? 75) * 0.3) / 100).toFixed(2);  // inner wheel for turns
-        chunkLines.push(`${indent}# Robot Drive — ${move}`);
+        chunkLines.push(`${indent}# Robot Drive - ${move}`);
 
-        // GPIO pins for each named motor port — must match MOTOR_PORTS in DCMotorNodes.tsx
+        // GPIO pins for each named motor port - must match MOTOR_PORTS in DCMotorNodes.tsx
         const PORT_GPIO: Record<string, { pwm: number; dir: number }> = {
           L1: { pwm: 17, dir: 18 }, L2: { pwm: 37, dir: 38 },
           R1: { pwm: 45, dir: 46 }, R2: { pwm: 15, dir: 16 },
@@ -1312,7 +1312,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         };
 
         if (d.useCustomPins) {
-          // Manual GPIO override — raw pins take full precedence over placement
+          // Manual GPIO override - raw pins take full precedence over placement
           const throttles = moveThrottles[move] ?? moveThrottles.forward;
           const WHEELS = [
             { name: "FL" as const, pwm: d.flPwmPin ?? PORT_GPIO[flPort].pwm, dir: d.flDirPin ?? PORT_GPIO[flPort].dir },
@@ -1327,7 +1327,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
             else chunkLines.push(`${indent}_cm_drive(${pwmVar}, ${dirVar}, ${thr})  # ${w.name}`);
           }
         } else if (hasCustomPlacement) {
-          // Non-default motor placement — resolve port → GPIO and drive each wheel directly
+          // Non-default motor placement - resolve port → GPIO and drive each wheel directly
           const throttles = moveThrottles[move] ?? moveThrottles.forward;
           const WHEELS = [
             { name: "FL" as const, port: flPort, ...PORT_GPIO[flPort] },
@@ -1450,7 +1450,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
           R2: { pwm: d.r2PwmPin ?? MOTORS.rearRight.pwm,  dir: d.r2DirPin ?? MOTORS.rearRight.dir  },
         };
         if (!d.useCustomPins) emitOnce("drv8833_class", DRV8833_HELPER);
-        // Per-port enable flags — a disabled motor is explicitly stopped, never driven
+        // Per-port enable flags - a disabled motor is explicitly stopped, never driven
         const portEnabled: Record<string, boolean> = {
           L1: d.l1en ?? true, L2: d.l2en ?? true, R1: d.r1en ?? true, R2: d.r2en ?? true,
         };
@@ -1537,7 +1537,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         imports.add("import bluetooth");
         imports.add("import struct");
 
-        // BLE setup — GATT server with NUS service
+        // BLE setup - GATT server with NUS service
         setupLines.push(`# ── BLE Peripheral (NUS) ───────────────────────────────`);
         setupLines.push(`_ble = bluetooth.BLE()`);
         setupLines.push(`_ble.active(True)`);
@@ -1579,7 +1579,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         setupLines.push(`    _ble.gap_advertise(100_000, adv)`);
         setupLines.push(`_ble_adv()`);
 
-        // Loop chunk — detect connect/disconnect transitions, run wired branches,
+        // Loop chunk - detect connect/disconnect transitions, run wired branches,
         // and print a status line to the terminal.
         const bleConnLines    = getBranchLines("connected",    indentLevel + 1);
         const bleDisconnLines = getBranchLines("disconnected", indentLevel + 1);
@@ -1593,7 +1593,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         chunkLines.push(...bleDisconnLines);
         chunkLines.push(`${indent}_ble_was_conn = _ble_now`);
 
-        // Loop chunk — process incoming data.
+        // Loop chunk - process incoming data.
         // Build the per-command body first so we only emit the wrapper when at
         // least one command actually does something (otherwise the block was
         // just an empty `if ble_data is not None:` followed by the clear line).
@@ -1601,7 +1601,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         const bleLog = d.logCmds ?? false;
         {
           const cmdBody: string[] = [];
-          // Log every received command first — only runs inside the
+          // Log every received command first - only runs inside the
           // `is not None` guard below, so it never spams "None".
           if (bleLog) {
             cmdBody.push(`${indent}    print("BLE RX:", ${bleRawVar})`);
@@ -1612,15 +1612,15 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
               if (!cmd.trigger) continue;
               const branchLines = getBranchLines(`cmd_${ci}`, indentLevel + 2);
               if (branchLines.length > 0) {
-                // Has wired nodes — run them when the command matches.
+                // Has wired nodes - run them when the command matches.
                 cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
                 cmdBody.push(...branchLines);
               } else if (cmd.varName) {
-                // No wired nodes but a target variable — assign it.
+                // No wired nodes but a target variable - assign it.
                 const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
                 cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": ${cmd.varName} = ${val}`);
               } else if (!bleLog) {
-                // Nothing wired and no variable — report it on the terminal so the
+                // Nothing wired and no variable - report it on the terminal so the
                 // command is observable (skipped when the log toggle already prints it).
                 cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}": print("BLE: received ${cmd.trigger}")`);
               }
@@ -1734,9 +1734,9 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         const mSck  = d.sck  ?? MATRIX.sck;
         const mMosi = d.mosi ?? MATRIX.mosi;
         const mCs   = d.cs   ?? MATRIX.cs;
-        // MAX7219 is write-only — no MISO line needed
+        // MAX7219 is write-only - no MISO line needed
         emitOnce("matrix_setup",
-          `# MAX7219 matrix — CLK=${mSck} DIN=${mMosi} CS=${mCs}\n` +
+          `# MAX7219 matrix - CLK=${mSck} DIN=${mMosi} CS=${mCs}\n` +
           `_mat_spi = SPI(1, baudrate=${MATRIX.baudrate}, polarity=0, phase=0, sck=Pin(${mSck}), mosi=Pin(${mMosi}))\n` +
           `_mat_cs  = Pin(${mCs}, Pin.OUT)\n` +
           `_mat     = max7219.Matrix8x8(_mat_spi, _mat_cs, ${mods})\n` +
@@ -1781,7 +1781,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
           chunkLines.push(`${indent}    _mat.show()`);
           chunkLines.push(`${indent}    time.sleep_ms(${Math.round(1000 / mFps)})`);
         } else {
-          // No design yet — blank display
+          // No design yet - blank display
           chunkLines.push(`${indent}_mat.fill(0)`);
           chunkLines.push(`${indent}_mat.show()`);
         }
@@ -1800,7 +1800,7 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
 
       // ─── Tool Nodes ────────────────────────────────────────────────────────
       case "servo_calibration":
-        chunkLines.push(`${indent}# Servo Calibration — compile-time utility only (no runtime code)`);
+        chunkLines.push(`${indent}# Servo Calibration - compile-time utility only (no runtime code)`);
         break;
       case "i2c_scanner":
         imports.add("from machine import I2C, Pin");

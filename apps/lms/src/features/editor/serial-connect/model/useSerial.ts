@@ -79,7 +79,7 @@ export function useSerialConnection() {
         }
       }
     } catch {
-      // Physical disconnect — serial port threw; clean up state so the UI
+      // Physical disconnect - serial port threw; clean up state so the UI
       // doesn't stay stuck in "running / connected" forever.
     } finally {
       // Whether we exited via done=true, the while condition, or an exception,
@@ -109,7 +109,7 @@ export function useSerialConnection() {
   }, [addLog, startReading]);
 
   const connectWifi = useCallback(async (ip: string, _password: string) => {
-    addLog(`WiFi / WebREPL not yet implemented — cannot connect to ${ip}`);
+    addLog(`WiFi / WebREPL not yet implemented - cannot connect to ${ip}`);
   }, [addLog]);
 
   const disconnect = useCallback(async () => {
@@ -131,7 +131,7 @@ export function useSerialConnection() {
       return true;
     } catch (err: unknown) {
       addLog(`Send failed: ${err instanceof Error ? err.message : String(err)}`);
-      // Write failed — device likely unplugged; don't leave UI stuck in "running"
+      // Write failed - device likely unplugged; don't leave UI stuck in "running"
       setIsRunning(false);
       setIsConnected(false);
       connectionRef.current.isConnected = false;
@@ -143,11 +143,11 @@ export function useSerialConnection() {
     const writer = connectionRef.current.writer;
     if (!writer) return;
     try {
-      // Ctrl+C twice — interrupts any running MicroPython script
+      // Ctrl+C twice - interrupts any running MicroPython script
       const encoder = new TextEncoder();
       await writer.write(encoder.encode("\x03\x03"));
       setIsRunning(false);
-      addLog("Stopped — sent Ctrl+C");
+      addLog("Stopped - sent Ctrl+C");
     } catch (err: unknown) {
       addLog(`Stop failed: ${err instanceof Error ? err.message : String(err)}`);
     }

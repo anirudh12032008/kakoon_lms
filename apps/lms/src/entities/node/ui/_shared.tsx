@@ -65,13 +65,13 @@ export const ROTATE_OPTIONS = [
   { value: "270", label: "270°" },
 ];
 
-// ─── PortPinBadge — used by Ultrasonic, Touch, SoilMoisture, ButtonDigitalInput ─
+// ─── PortPinBadge - used by Ultrasonic, Touch, SoilMoisture, ButtonDigitalInput ─
 export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultrasonic" }) {
   const p = SENSOR_PORT_PINS[port as keyof typeof SENSOR_PORT_PINS] ?? SENSOR_PORT_PINS["1"];
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Fixed GPIO — Port {port}</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Fixed GPIO - Port {port}</span>
         <span className="text-[9px] font-mono text-[var(--k-primary)]">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
@@ -91,7 +91,7 @@ export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultr
   );
 }
 
-// ─── AngleDial — used by ServoMotorNode, ServoMotorAdvanceNode, ServoControllerNode ─
+// ─── AngleDial - used by ServoMotorNode, ServoMotorAdvanceNode, ServoControllerNode ─
 export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.orange }: {
   angle: number; onChange: (v: number) => void; min?: number; max?: number; color?: string;
 }) {
@@ -161,7 +161,7 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
 
 // ─── SmoothSlider ─────────────────────────────────────────────────────────────
 // A range input that stays buttery while dragging: it tracks the value locally
-// and only commits to the (expensive) node store on release — instead of firing
+// and only commits to the (expensive) node store on release - instead of firing
 // a full-canvas re-render on every pixel of movement. `onLiveChange` reports the
 // in-progress value so callers can render a live label without committing.
 export function SmoothSlider({
@@ -209,7 +209,7 @@ export function SpeedVarInput({ value, onChange }: { value: string; onChange: (v
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="optional — bind to variable"
+        placeholder="optional - bind to variable"
         spellCheck={false}
         className={`nodrag flex-1 min-w-0 rounded px-1.5 py-0.5 text-[10px] font-mono bg-[var(--k-base-300)] border outline-none transition-colors ${
           active ? "border-cyan-700 text-cyan-400" : "border-[var(--k-border)] text-[var(--k-muted)] focus:border-cyan-800"

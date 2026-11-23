@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 
-// Safe formula evaluator — whitelist chars before using Function constructor.
+// Safe formula evaluator - whitelist chars before using Function constructor.
 // Allows: digits, x, basic operators, parentheses, decimal points, and safe
 // Math methods. Anything else throws so malicious strings never execute.
 const SAFE_FORMULA_RE = /^[0-9x\s+\-*/.()%,]+$|(Math\.(floor|ceil|abs|round|min|max|sqrt|pow|log|exp|sin|cos|tan)\b)/;
@@ -54,7 +54,7 @@ export function TimerIntervalNode() {
   const [varName, setVarName] = useNodeField<string>("varName", "elapsed");
 
   const ms = unit === "ms" ? interval : unit === "s" ? interval * 1000 : interval * 60000;
-  const hz = ms > 0 ? (1000 / ms).toFixed(2) : "—";
+  const hz = ms > 0 ? (1000 / ms).toFixed(2) : "-";
 
   return (
     <BaseNode title="Timer / Interval" color={COLORS.cyan} icon={<TimerIcon />} width="260px"

@@ -89,7 +89,7 @@ export function HTTPClientNode() {
         </NodeField>
       )}
 
-      {/* headers — advanced only */}
+      {/* headers - advanced only */}
       {isAdvanced && <div className="px-3 mt-0.5">
         <button onClick={() => setShowHeaders(!showHeaders)}
           className="nodrag w-full flex items-center justify-between py-1 text-[9px] text-[var(--k-muted)] hover:text-cyan-400 transition-colors">
@@ -120,7 +120,7 @@ export function HTTPClientNode() {
         )}
       </div>}
 
-      {/* JSON body builder for POST/PUT/PATCH — advanced only */}
+      {/* JSON body builder for POST/PUT/PATCH - advanced only */}
       {isAdvanced && isPost && (
         <div className="px-3 mt-0.5">
           <button onClick={() => setShowBody(!showBody)}
@@ -185,7 +185,7 @@ export function SerialMonitorNode() {
   const [rxVar, setRxVar] = useNodeField<string>("rxVar", "serial_rx");
   const [showLog, setShowLog] = useState(true);
   const [log, setLog] = useState<{ t: string; msg: string; dir: "rx" | "tx" }[]>([
-    { t: "00:00.001", msg: "ESP32 boot — ready", dir: "rx" },
+    { t: "00:00.001", msg: "ESP32 boot - ready", dir: "rx" },
     { t: "00:00.120", msg: "WiFi connecting…", dir: "rx" },
     { t: "00:01.300", msg: "Connected! IP: 192.168.1.42", dir: "rx" },
   ]);

@@ -5,7 +5,7 @@
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
 
-  /* Root font bump — scales all rem-based chrome/node text up ~6% for readability
+  /* Root font bump - scales all rem-based chrome/node text up ~6% for readability
      (px-bracket values like text-[9px] stay fixed, so node layouts don't reflow). */
   html {
     font-size: 17px;
@@ -74,7 +74,7 @@ body { transition: background-color 0.25s ease; }
 }
 .anim-quest-pulse { animation: questPulse 1.8s ease-out infinite; }
 
-/* Mouse-tracking spotlight on cards — driven by --mx/--my set in JS */
+/* Mouse-tracking spotlight on cards - driven by --mx/--my set in JS */
 .card-spotlight::before {
   content: "";
   position: absolute;
@@ -113,7 +113,7 @@ body { transition: background-color 0.25s ease; }
 
 /* Bring connecting wires in front of node bodies (both canvases).
    Edges normally paint beneath nodes; elevating the edges layer keeps wires
-   visible on top — especially the hardware view where they hid behind the board. */
+   visible on top - especially the hardware view where they hid behind the board. */
 .react-flow__edges { z-index: 1000 !important; }
 /* Handles must still sit above the elevated wires so they stay grabbable. */
 .react-flow__handle { z-index: 1001 !important; }

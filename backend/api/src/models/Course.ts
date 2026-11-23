@@ -55,7 +55,7 @@ const levelSchema = new Schema(
   { _id: false }
 );
 
-/** An optional challenge — an add-on or modification done after the build. */
+/** An optional challenge - an add-on or modification done after the build. */
 const challengeSchema = new Schema(
   {
     key: { type: String, required: true }, // "c1", ...
@@ -81,7 +81,7 @@ const courseSchema = new Schema(
     estimatedHours: { type: Number, default: 2 },
     accent: { type: String, default: "from-violet-500 to-fuchsia-500" },
     coverEmoji: { type: String, default: "🤖" },
-    // What the learner will build / learn — shown on the course page.
+    // What the learner will build / learn - shown on the course page.
     learningGoals: { type: [String], default: [] },
     components: { type: [String], default: [] },
     order: { type: Number, default: 0 },

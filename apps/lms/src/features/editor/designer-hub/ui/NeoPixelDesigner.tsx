@@ -139,7 +139,7 @@ function buildEffectFrames(id: string, count: number, color: RGB = [255, 0, 0]):
         }));
     }
     case "gradient":
-      // Static fade of the picked color across the strip — great as a base frame.
+      // Static fade of the picked color across the strip - great as a base frame.
       return [Array.from({ length: count }, (_, i) => {
         const t = count === 1 ? 1 : 1 - (i / (count - 1)) * 0.9;
         return [Math.round(color[0] * t), Math.round(color[1] * t), Math.round(color[2] * t)] as RGB;
@@ -150,7 +150,7 @@ function buildEffectFrames(id: string, count: number, color: RGB = [255, 0, 0]):
 
 function generateNeoPixelCode(ledCount: number, dataPin: number, frames: RGB[][], fps: number, name: string): string {
   const safeName = name.toLowerCase().replace(/\W+/g, "_");
-  const header = `# NeoPixel — ${name}
+  const header = `# NeoPixel - ${name}
 from machine import Pin
 import neopixel
 _np_${safeName} = neopixel.NeoPixel(Pin(${dataPin}), ${ledCount})`;
@@ -259,7 +259,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
   };
 
   const loadEffect = (id: string) => {
-    // Police is authored for an 8-LED strip — switch to that so it looks right.
+    // Police is authored for an 8-LED strip - switch to that so it looks right.
     if (id === "police" && mode === "strip" && ledCount !== 8) setLedCount(8);
     const ef = buildEffectFrames(id, id === "police" && mode === "strip" ? 8 : effectiveLedCount, selectedColor);
     setFrames(ef);
@@ -471,7 +471,7 @@ export function NeoPixelDesigner({ onAddNode }: { onAddNode?: (type: string, dat
             <div className="flex flex-wrap gap-2 max-w-[600px] justify-center">
               {displayFrame.map((c, i) => (
                 <button key={i} onClick={() => setLED(i, selectedColor)} onContextMenu={(e) => { e.preventDefault(); setLED(i, [0,0,0]); }}
-                  title={`LED ${i} — right-click to turn off`}
+                  title={`LED ${i} - right-click to turn off`}
                   className="w-10 h-10 rounded-full border-2 border-white/10 transition-all hover:scale-110 relative"
                   style={{ background: `rgb(${c.join(",")})`, boxShadow: c.some(v=>v>30) ? `0 0 12px rgb(${c.join(",")})` : "none" }}>
                   <span className="absolute inset-0 flex items-center justify-center text-[10px] text-white/30 font-mono">{i}</span>

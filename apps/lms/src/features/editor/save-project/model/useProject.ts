@@ -59,7 +59,7 @@ export function useProject({
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
 
   const [syncState, setSyncState] = useState<SyncState>("idle");
-  // The project id we have already loaded (or just created) this session — keeps
+  // The project id we have already loaded (or just created) this session - keeps
   // the load effect from re-fetching and clobbering work right after a save.
   const loadedIdRef = useRef<string | null>(null);
 
@@ -81,7 +81,7 @@ export function useProject({
 
         const ws = project.workspace;
         if (ws && ((ws.nodes?.length ?? 0) > 0 || (ws.edges?.length ?? 0) > 0)) {
-          // setTimeout, not rAF — rAF never fires in background tabs.
+          // setTimeout, not rAF - rAF never fires in background tabs.
           const apply = (attempt: number) => {
             if (cancelled) return;
             if (canvasRef.current) canvasRef.current.setWorkspace(ws as never);
@@ -91,7 +91,7 @@ export function useProject({
         }
         setActiveProject(project.id, project.name, project.slug ?? null);
       })
-      .catch(() => { /* missing / offline — start from an empty canvas */ })
+      .catch(() => { /* missing / offline - start from an empty canvas */ })
       .finally(() => {
         if (cancelled) return;
         loadedIdRef.current = activeProjectId;

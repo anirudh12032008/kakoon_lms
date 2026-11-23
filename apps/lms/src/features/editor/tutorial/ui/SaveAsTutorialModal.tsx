@@ -56,7 +56,7 @@ export function SaveAsTutorialModal({ onClose, getWorkspace }: Props) {
     if (!title.trim()) { setSaveError("Title is required."); return; }
 
     const { nodes, edges } = getWorkspace();
-    if (nodes.length === 0) { setSaveError("Canvas is empty — add some blocks first."); return; }
+    if (nodes.length === 0) { setSaveError("Canvas is empty - add some blocks first."); return; }
 
     const steps = generateStepsFromFlow(nodes, edges);
     const tutorial: Tutorial = {

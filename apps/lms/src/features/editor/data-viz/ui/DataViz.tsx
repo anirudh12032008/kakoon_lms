@@ -1,5 +1,5 @@
 /**
- * DataViz — floating real-time data visualisation panels
+ * DataViz - floating real-time data visualisation panels
  *
  * Parses ESP32 serial output lines (from the logs[] array) looking for:
  *   IMU:      "IMU,ax,ay,az,gx,gy,gz,pitch,roll"
@@ -430,7 +430,7 @@ export function IMUVisualizerPanel({ logs, onClose }: { logs: string[]; onClose:
   const gyroTotal = Math.sqrt(data.gx**2 + data.gy**2 + data.gz**2);
 
   return (
-    <PanelShell title="IMU — LSM6DS3 Onboard" icon={<Activity className="w-4 h-4" />}
+    <PanelShell title="IMU - LSM6DS3 Onboard" icon={<Activity className="w-4 h-4" />}
       color="#8b5cf6" onClose={onClose} initialPos={{ x: 24, y: 80 }} width={400}>
 
       {/* Toolbar: live badge + tabs + refresh */}
@@ -748,7 +748,7 @@ function IRBeamCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
 }
 
 function IRRemoteCard({ ch, live }: { ch: SensorChannel; live: boolean }) {
-  const hex    = live ? `0x${ch.latest.toString(16).toUpperCase().padStart(4, "0")}` : "——";
+  const hex    = live ? `0x${ch.latest.toString(16).toUpperCase().padStart(4, "0")}` : "--";
   const recent = [...new Set(ch.values.slice(-10))].slice(0, 6);
   return (
     <div className="rounded-2xl border border-[var(--k-base-400)] bg-[var(--k-base-100)] p-3">
@@ -944,7 +944,7 @@ export function RadarPanel({ logs, onClose }: { logs: string[]; onClose: () => v
   };
   const sweepRad = ((sweepAngle - 90) * Math.PI) / 180;
 
-  const zone = !latest ? "—"
+  const zone = !latest ? "-"
     : latest.distance < 50 ? "CLOSE"
     : latest.distance < 150 ? "MID"
     : latest.distance < RADAR_MAX_CM ? "FAR"
@@ -994,11 +994,11 @@ export function RadarPanel({ logs, onClose }: { logs: string[]; onClose: () => v
         <div className="flex items-center gap-3 mt-1">
           <div className="flex-1 px-2.5 py-2 rounded-xl bg-[var(--k-base-100)] border border-[var(--k-base-400)]">
             <div className="text-[9px] text-[var(--k-dim)] mb-0.5">Angle</div>
-            <div className="text-sm font-mono font-bold text-cyan-400">{latest ? `${latest.angle.toFixed(0)}°` : "—"}</div>
+            <div className="text-sm font-mono font-bold text-cyan-400">{latest ? `${latest.angle.toFixed(0)}°` : "-"}</div>
           </div>
           <div className="flex-1 px-2.5 py-2 rounded-xl bg-[var(--k-base-100)] border border-[var(--k-base-400)]">
             <div className="text-[9px] text-[var(--k-dim)] mb-0.5">Distance</div>
-            <div className="text-sm font-mono font-bold text-cyan-400">{latest ? `${latest.distance.toFixed(0)} cm` : "—"}</div>
+            <div className="text-sm font-mono font-bold text-cyan-400">{latest ? `${latest.distance.toFixed(0)} cm` : "-"}</div>
           </div>
           <div className="flex-1 px-2.5 py-2 rounded-xl bg-[var(--k-base-100)] border border-[var(--k-base-400)] text-center">
             <div className="text-[9px] text-[var(--k-dim)] mb-0.5">Zone</div>

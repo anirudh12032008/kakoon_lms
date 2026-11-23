@@ -48,7 +48,7 @@ function Toast({ toast }: { toast: ErrorToast }) {
   );
 }
 
-/** Fixed error stack — mount once in App so API/runtime errors surface anywhere. */
+/** Fixed error stack - mount once in App so API/runtime errors surface anywhere. */
 export function ErrorToastHost() {
   const toasts = useErrorToasts((s) => s.toasts);
   return (

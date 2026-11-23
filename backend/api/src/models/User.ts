@@ -63,7 +63,7 @@ userSchema.methods.setPassword = async function (plain: string) {
 };
 
 userSchema.methods.verifyPassword = function (plain: string): Promise<boolean> {
-  // Google-only accounts have no password — password login always fails for them.
+  // Google-only accounts have no password - password login always fails for them.
   if (!this.passwordHash) return Promise.resolve(false);
   return bcrypt.compare(plain, this.passwordHash);
 };

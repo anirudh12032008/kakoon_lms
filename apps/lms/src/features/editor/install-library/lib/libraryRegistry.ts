@@ -74,7 +74,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   {
     id: "lsm6ds3",
     name: "lsm6ds3.py",
-    description: "LSM6DS3 onboard 6-axis IMU — Kokoon ESP32-S3 (SCL=42, SDA=41)",
+    description: "LSM6DS3 onboard 6-axis IMU - Kokoon ESP32-S3 (SCL=42, SDA=41)",
     trigger: "lsm6ds3",
     path: "/libs/lsm6ds3.py",
     category: "Sensor",
@@ -83,7 +83,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   {
     id: "mpu6050",
     name: "mpu6050.py",
-    description: "MPU6050 6-axis IMU (accelerometer + gyroscope) — I2C",
+    description: "MPU6050 6-axis IMU (accelerometer + gyroscope) - I2C",
     trigger: "mpu6050",
     path: "/libs/mpu6050.py",
     category: "Sensor",
@@ -101,7 +101,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   {
     id: "vl53l0x",
     name: "vl53l0x.py",
-    description: "VL53L0X Time-of-Flight distance sensor — I2C",
+    description: "VL53L0X Time-of-Flight distance sensor - I2C",
     trigger: "vl53l0x",
     path: "/libs/vl53l0x.py",
     category: "Sensor",

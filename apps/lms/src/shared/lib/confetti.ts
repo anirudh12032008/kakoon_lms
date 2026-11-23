@@ -92,7 +92,7 @@ export function burstConfetti(xRatio = 0.5, yRatio = 0.4, count = 90) {
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
-        // squash on Y as it tumbles — reads as a fluttering paper strip
+        // squash on Y as it tumbles - reads as a fluttering paper strip
         ctx.fillRect(-p.size / 2, (-p.size / 2) * Math.abs(Math.sin(p.rot)), p.size, p.size * Math.abs(Math.sin(p.rot)) + 1);
         ctx.restore();
       }

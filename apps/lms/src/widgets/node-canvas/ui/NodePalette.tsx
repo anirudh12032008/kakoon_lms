@@ -7,7 +7,7 @@ import { useModal } from "@/shared/context/ModalContext";
 import { GlobalAdvancedToggle } from "@/shared/context/NodeModeContext";
 import { useTutorialFocus } from "@/features/editor/tutorial/model/tutorialFocus";
 
-// Color accent per category id — purely visual, easy to change
+// Color accent per category id - purely visual, easy to change
 const CAT_COLORS: Record<string, { dot: string; text: string; bg: string }> = {
   general:   { dot: "#a78bfa", text: "text-violet-400",  bg: "bg-violet-500/10"  },
   loop:      { dot: "#34d399", text: "text-emerald-400", bg: "bg-emerald-500/10" },

@@ -72,7 +72,7 @@ export function MAX7219Node() {
   return (
     <BaseNode title="MAX7219 8×8 Matrix" color={COLORS.blue} icon={<DisplayIcon />} width="240px">
 
-      {/* SPI pins — editable, using MAX7219 silk-screen names */}
+      {/* SPI pins - editable, using MAX7219 silk-screen names */}
       <NodeField label="CLK Pin"><NumberInput value={sck}  onChange={setSck}  /></NodeField>
       <NodeField label="DIN Pin"><NumberInput value={mosi} onChange={setMosi} /></NodeField>
       <NodeField label="CS Pin"><NumberInput  value={cs}   onChange={setCs}   /></NodeField>
@@ -90,7 +90,7 @@ export function MAX7219Node() {
           <MatrixMiniPreview frames={matrixFrames} fps={fps} modules={modules} />
         </>
       ) : (
-        /* Empty state — invite the user to open the designer */
+        /* Empty state - invite the user to open the designer */
         <div className="mx-3 mb-2 flex flex-col items-center gap-2 py-3 rounded-xl border border-dashed border-[var(--k-border)] bg-[var(--k-base-100)]">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <span className="text-xl"></span>

@@ -153,14 +153,14 @@ function transformFrame(f: number[], W: number, op: "invert" | "clear" | "fill" 
 function generateMatrixCode(frames: number[][], modules: number, fps: number, name: string): string {
   const W = modules * 8;
   const lines = [
-    `# MAX7219 Matrix — ${name} (${modules} module${modules > 1 ? "s" : ""}, ${W}×8, ${fps} fps)`,
+    `# MAX7219 Matrix - ${name} (${modules} module${modules > 1 ? "s" : ""}, ${W}×8, ${fps} fps)`,
     `from machine import SPI, Pin`,
     `import max7219, time`,
     `_spi = SPI(1, baudrate=10_000_000, polarity=0, phase=0, sck=Pin(11), mosi=Pin(10))`,
     `_cs  = Pin(13, Pin.OUT)`,
     `_mat = max7219.Matrix8x8(_spi, _cs, ${modules})`,
     `_mat.brightness(8)`,
-    `# Each frame: ${modules * 8} bytes — layout [row0_mod0, row0_mod1, ..., row7_mod${modules - 1}]`,
+    `# Each frame: ${modules * 8} bytes - layout [row0_mod0, row0_mod1, ..., row7_mod${modules - 1}]`,
     `_frames = [`,
   ];
   // Encode: byte[row * modules + mod] = 8 pixels (always 0-255)

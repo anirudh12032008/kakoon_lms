@@ -38,7 +38,7 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
     >
       {/* Radar arc SVG */}
       <svg width="56" height="44" viewBox="0 0 56 44" style={{ flexShrink: 0 }}>
-        {/* Arcs — brighten when detected */}
+        {/* Arcs - brighten when detected */}
         {[18, 26, 34].map((r, i) => (
           <path
             key={r}
@@ -51,7 +51,7 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
           />
         ))}
 
-        {/* Motion detection "burst" rings — only visible when detected */}
+        {/* Motion detection "burst" rings - only visible when detected */}
         {detected && [10, 20].map((r, i) => (
           <circle key={r} cx="28" cy="38" r={r}
             fill="none" stroke="#22c55e" strokeWidth="0.8"
@@ -101,7 +101,7 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
   );
 }
 
-// ─── Onboard IMU — SCL=42, SDA=41 ────────────────────────────────────────────
+// ─── Onboard IMU - SCL=42, SDA=41 ────────────────────────────────────────────
 export function IMUSensorNode() {
   const [varName, setVarName] = useNodeField<string>("varName", "imu");
   const [outputMode, setOutputMode] = useNodeField<string>("outputMode", "print");
@@ -113,7 +113,7 @@ export function IMUSensorNode() {
         {/* Fixed I2C pin info */}
         <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Onboard SoftI2C — fixed GPIO</span>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Onboard SoftI2C - fixed GPIO</span>
             <span className="text-[9px] font-mono text-purple-400">locked</span>
           </div>
           <div className="flex gap-4 mt-0.5">
@@ -161,7 +161,7 @@ export function PIRSensorNode() {
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
   const [debounce, setDebounce]   = useNodeField<number>("debounce", 50);
 
-  // Live data from the serial store — keyed by the variable name the node outputs
+  // Live data from the serial store - keyed by the variable name the node outputs
   const reading  = useSensorStore(s => s.readings[varName]);
   const live     = !!reading && (Date.now() - reading.ts) < STALE_MS;
   const detected = live && reading.value === 1;

@@ -36,7 +36,7 @@ import { generatePythonFromFlow } from "@/entities/node/lib/codegen";
 import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/entities/custom-node/model/customNodes";
 import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
-// ─── Glow edge — selected edges get a colored halo via Framer Motion ──────────
+// ─── Glow edge - selected edges get a colored halo via Framer Motion ──────────
 
 function GlowEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, selected, style, markerEnd }: EdgeProps) {
   const [edgePath] = getBezierPath({ sourceX, sourceY, sourcePosition, targetX, targetY, targetPosition });
@@ -102,7 +102,7 @@ interface NodeCanvasProps {
 
 const getId = () => `node_${crypto.randomUUID().slice(0, 8)}`;
 
-/** True when the user is typing somewhere — copy/paste must not hijack inputs. */
+/** True when the user is typing somewhere - copy/paste must not hijack inputs. */
 function isTypingTarget(el: EventTarget | null): boolean {
   if (!(el instanceof HTMLElement)) return false;
   return (
@@ -161,7 +161,7 @@ function NodeCanvasInner({
   }, []);
 
   // Debounced: capture the pre-change state at the start of a burst, then commit
-  // it once the burst settles — collapsing a drag or a run of keystrokes into a
+  // it once the burst settles - collapsing a drag or a run of keystrokes into a
   // single undo step.
   const scheduleHistory = useCallback(() => {
     if (restoringRef.current) return;
@@ -219,7 +219,7 @@ function NodeCanvasInner({
     setHistoryVersion((v) => v + 1);
   }, []);
 
-  // A change batch is worth recording only if it mutates the graph — plain
+  // A change batch is worth recording only if it mutates the graph - plain
   // selection/dimension/measurement changes are noise.
   const isHistoryWorthy = (changes: Array<{ type: string }>) =>
     changes.some((c) => c.type === "position" || c.type === "remove" || c.type === "add" || c.type === "replace");
@@ -369,12 +369,12 @@ function NodeCanvasInner({
   useImperativeHandle(canvasRef, () => ({
     getCode: () => generatePythonFromFlow(nodes, edges),
     getWorkspace: () => ({ nodes, edges }),
-    // Drop persisted selection state — restoring `selected: true` edges would
+    // Drop persisted selection state - restoring `selected: true` edges would
     // light up their glow halos on load.
     setWorkspace: (ws) => {
       setNodes((ws.nodes || []).map((n) => ({ ...n, selected: false })));
       setEdges((ws.edges || []).map((e) => ({ ...e, selected: false })));
-      // A freshly loaded workspace is the new baseline — discard prior history.
+      // A freshly loaded workspace is the new baseline - discard prior history.
       resetHistory();
     },
     addNode: (type: string, data: Record<string, unknown> = {}) => {
@@ -426,7 +426,7 @@ function NodeCanvasInner({
       onDrop={readOnly ? undefined : onDrop}
       onDragOver={readOnly ? undefined : onDragOver}
     >
-      {/* Empty-state guide — fades out the moment the first block lands */}
+      {/* Empty-state guide - fades out the moment the first block lands */}
       <AnimatePresence>
         {nodes.length === 0 && (
           <motion.div
@@ -443,7 +443,7 @@ function NodeCanvasInner({
             </div>
             <p className="text-[15px] font-bold text-sub">Let's build something!</p>
             <p className="max-w-[260px] text-center text-[13px] leading-relaxed text-hint">
-              Drag a block from the left panel onto the canvas — wire blocks together and
+              Drag a block from the left panel onto the canvas - wire blocks together and
               hit <span className="font-bold text-primary-c">Run</span> to see your robot move.
             </p>
           </motion.div>

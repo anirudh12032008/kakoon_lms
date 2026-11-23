@@ -1,6 +1,6 @@
 /**
  * Seed definitions for the four robot-build courses. The `launch` block mirrors
- * the frontend EditorLaunchContext — categories/node types here control exactly
+ * the frontend EditorLaunchContext - categories/node types here control exactly
  * which blocks appear in the editor when a learner opens the course.
  *
  * Node type + category ids must match those defined in the frontend node model.
@@ -296,7 +296,7 @@ const CHALLENGES: Record<string, ChallengeSeed[]> = {
   turret: [
     ch("c1", "Add a Russian-roulette firing system", 0, { anyOf: ["ir_sensor", "ir_receiver"], allOf: ["if_else"] }),
     ch("c2", "Shoot in different modes while in IR mode", 1, { anyOf: ["ir_sensor", "ir_receiver"], allOf: ["if_else"] }),
-    ch("c3", "Shoot 3 darts at once — make it dynamic", 2, { anyOf: ["multi_motor_controller", "dc_motor_single"] }),
+    ch("c3", "Shoot 3 darts at once - make it dynamic", 2, { anyOf: ["multi_motor_controller", "dc_motor_single"] }),
     ch("c4", "Shoot at different distances", 3, { allOf: ["ultrasonic"] }),
     ch("c5", "Add an ultrasonic sensor", 4, { allOf: ["ultrasonic"] }),
     ch("c6", "Build an ammo counter", 5, { anyOf: ["oled_display", "seven_seg"] }),
@@ -304,7 +304,7 @@ const CHALLENGES: Record<string, ChallengeSeed[]> = {
   "robotic-arm": [
     ch("c1", "Record one motion and make it loop continuously", 0, { allOf: ["multi_servo_sequencer"] }),
     ch("c2", "Make a motion manually, without the shadow arm", 1, { anyOf: ["servo_motor", "servo_controller"] }),
-    ch("c3", "Test the max payload it can lift", 2), // physical — manual only
+    ch("c3", "Test the max payload it can lift", 2), // physical - manual only
     ch("c4", "Save 3 moves and play them back: pick, wave, and dance", 3, { allOf: ["multi_servo_sequencer"] }),
   ],
 };

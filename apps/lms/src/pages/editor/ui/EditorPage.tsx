@@ -40,7 +40,7 @@ export type ViewMode = "blocks" | "split" | "code" | "hardware";
 interface EditorPageProps {
   launchContext?: EditorLaunchContext;
   onBackToDashboard?: () => void;
-  /** View-only shared session — no palette, no editing, no persistence. */
+  /** View-only shared session - no palette, no editing, no persistence. */
   readOnly?: boolean;
   /** Author label shown in read-only mode ("Created by …"). */
   sharedAuthorName?: string;
@@ -352,7 +352,7 @@ export default function EditorPage({
         await sendCode(`import os\ntry: os.remove('/anim/${safeName}.bin')\nexcept: pass\nprint('ANIM_DEL:${safeName}')\n`);
         addLog(`Deleted /anim/${safeName}.bin from ESP32`);
       } catch {
-        addLog(`Could not delete from device — file may still be there`);
+        addLog(`Could not delete from device - file may still be there`);
       }
     }
   }, [isConnected, addLog, sendCode]);
@@ -436,7 +436,7 @@ export default function EditorPage({
           } catch { /* corrupted flow data */ }
         }
       } catch {
-        addLog("Failed to import project — invalid JSON file.");
+        addLog("Failed to import project - invalid JSON file.");
       }
     };
     reader.readAsText(file);
@@ -517,7 +517,7 @@ export default function EditorPage({
           )}
         </AnimatePresence>
 
-        {/* Node canvas — always mounted so canvasRef stays valid */}
+        {/* Node canvas - always mounted so canvasRef stays valid */}
         <div
           className={`overflow-hidden transition-all duration-300 ${
             viewMode === "code" || viewMode === "hardware" ? "w-0" : "flex-1"
@@ -558,7 +558,7 @@ export default function EditorPage({
           )}
         </AnimatePresence>
 
-        {/* Course missions — auto-tracked levels & challenges */}
+        {/* Course missions - auto-tracked levels & challenges */}
         {courseSlug && missions.enabled && <MissionsPanel missions={missions} />}
       </div>
 

@@ -5,7 +5,7 @@ import { z } from "zod";
  *
  * In development we fall back to safe-ish defaults so the server boots with zero
  * setup (besides a running MongoDB). In production every secret is REQUIRED and
- * the process refuses to start if any are missing — fail fast, never ship
+ * the process refuses to start if any are missing - fail fast, never ship
  * default secrets.
  */
 
@@ -20,13 +20,13 @@ const envSchema = z.object({
 
   MONGO_URI: z
     .string()
-    .min(1, "MONGO_URI is required — paste your MongoDB Atlas connection string into backend/api/.env")
+    .min(1, "MONGO_URI is required - paste your MongoDB Atlas connection string into backend/api/.env")
     .refine(
       (v) => v.startsWith("mongodb://") || v.startsWith("mongodb+srv://"),
       "MONGO_URI must start with mongodb:// or mongodb+srv://"
     ),
 
-  // Redis is optional — only needed for future background jobs (BullMQ).
+  // Redis is optional - only needed for future background jobs (BullMQ).
   REDIS_URL: z.string().optional(),
 
   JWT_ACCESS_SECRET: z
@@ -45,7 +45,7 @@ const envSchema = z.object({
   COOKIE_DOMAIN: z.string().optional(),
   BCRYPT_ROUNDS: z.string().default("12"),
 
-  // Google OAuth — optional; "Sign in with Google" is disabled if unset.
+  // Google OAuth - optional; "Sign in with Google" is disabled if unset.
   GOOGLE_CLIENT_ID: z.string().optional(),
 });
 

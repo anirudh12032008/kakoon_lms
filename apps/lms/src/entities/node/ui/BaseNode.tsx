@@ -7,7 +7,7 @@ import { saveCustomSubflowFromSelection } from "@/entities/custom-node/model/cus
 import { useNodeMode } from "@/shared/context/NodeModeContext";
 import { NODE_HINTS } from "../model/hints";
 
-/** Node title — hovering the name reveals a one-line explanation of the block. */
+/** Node title - hovering the name reveals a one-line explanation of the block. */
 export function NodeTitle({ title, dark = true }: { title: string; dark?: boolean }) {
   const nodeId = useNodeId();
   const { getNode } = useReactFlow();
@@ -77,7 +77,7 @@ function SelectionToolbar() {
   const { getNode, getNodes, getEdges, setNodes, setEdges } = useReactFlow();
   const { prompt } = useModal();
 
-  // Subscribe to *this node's* selected flag only — useNodes() would re-render
+  // Subscribe to *this node's* selected flag only - useNodes() would re-render
   // every toolbar on every node change (incl. drag position updates).
   const isSelected = useStore((s) =>
     nodeId ? (s.nodes.find((n) => n.id === nodeId)?.selected ?? false) : false
@@ -229,7 +229,7 @@ export function NodeAdvancedFooter() {
  * React Flow measures each handle's on-screen position once at mount and only
  * re-measures when a ResizeObserver reports a border-box change. The node
  * wrappers below animate in with a Framer Motion `scale`/`y` transform, so the
- * mount-time measurement is captured while the node is still scaled down — and
+ * mount-time measurement is captured while the node is still scaled down - and
  * since a CSS transform never changes the border-box, the ResizeObserver never
  * fires to correct it. The result is wires that point at a shifted spot instead
  * of the connector. Calling `updateNodeInternals` once the entrance transform
@@ -272,7 +272,7 @@ export function TextInput({
   className?: string; green?: boolean; wide?: boolean; style?: React.CSSProperties;
 }) {
   const [isFocused, setIsFocused] = useState(false);
-  // Snapshot nodes only while focused — subscribing via useNodes() would
+  // Snapshot nodes only while focused - subscribing via useNodes() would
   // re-render every input on the canvas during node drags.
   const { getNodes } = useReactFlow();
 
@@ -557,5 +557,5 @@ export function IfElseNodeWrapper({ children }: { children?: ReactNode }) {
   );
 }
 
-// Suppress unused import warning — AnimatePresence reserved for future node exit animations
+// Suppress unused import warning - AnimatePresence reserved for future node exit animations
 void AnimatePresence;

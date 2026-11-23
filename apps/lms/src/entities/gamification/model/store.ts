@@ -76,7 +76,7 @@ interface GamificationStore {
   setUser: (userId: string | null) => void;
   dismissToast: (id: number) => void;
 
-  /** Generic XP event — bumps streak, evaluates achievements, queues toasts. */
+  /** Generic XP event - bumps streak, evaluates achievements, queues toasts. */
   award: (event: XpEvent, label?: string) => void;
   /** Mirrors a level/challenge being toggled on the course page. */
   recordProgressToggle: (kind: "level" | "challenge", done: boolean) => void;
@@ -109,7 +109,7 @@ export const useGamification = create<GamificationStore>()(
             id: ++toastId,
             kind: "level-up",
             icon: "",
-            title: `Level ${nextLevel.level} — ${nextLevel.title}!`,
+            title: `Level ${nextLevel.level} - ${nextLevel.title}!`,
             subtitle: "Keep building to reach the next rank",
           });
         }
@@ -238,7 +238,7 @@ export const useGamification = create<GamificationStore>()(
   )
 );
 
-/** Convenience selector — the active user's profile (or a blank one). */
+/** Convenience selector - the active user's profile (or a blank one). */
 export function usePlayerProfile(): PlayerProfile {
   return useGamification((s) => (s.userId ? s.profiles[s.userId] : undefined)) ?? EMPTY_PROFILE;
 }

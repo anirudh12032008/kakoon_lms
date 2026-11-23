@@ -8,7 +8,7 @@ import {
 
 export const projectsRouter = Router();
 
-// Public, read-only share link — registered BEFORE requireAuth so anyone can
+// Public, read-only share link - registered BEFORE requireAuth so anyone can
 // open it. optionalAuth still lets the author be recognized for edit access.
 projectsRouter.get("/shared/:slug", optionalAuth, getSharedProject);
 

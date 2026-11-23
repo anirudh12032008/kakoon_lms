@@ -23,7 +23,7 @@ export function ProtectedRoute() {
   return <Outlet />;
 }
 
-/** Gate for guest-only routes (login/register) — redirects authed users away. */
+/** Gate for guest-only routes (login/register) - redirects authed users away. */
 export function GuestOnlyRoute() {
   const { status } = useAuth();
   if (status === "loading") return <FullScreenLoader />;

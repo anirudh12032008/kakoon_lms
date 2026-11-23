@@ -43,7 +43,7 @@ export function optionalAuth(req: Request, _res: Response, next: NextFunction) {
     try {
       req.user = verifyAccessToken(header.slice(7));
     } catch {
-      /* ignore invalid/expired token — treat as anonymous */
+      /* ignore invalid/expired token - treat as anonymous */
     }
   }
   next();

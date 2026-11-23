@@ -5,7 +5,7 @@
 
 /**
  * Pixel radius around a handle within which a dragged connection will snap and
- * attach. ReactFlow's default is 20px — too tight for younger users dragging
+ * attach. ReactFlow's default is 20px - too tight for younger users dragging
  * wires. Bumped up so connections are forgiving and easy to make.
  *
  * Increase this value to make wiring even easier; decrease for more precision.

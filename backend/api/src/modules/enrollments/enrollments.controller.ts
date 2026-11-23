@@ -70,7 +70,7 @@ export const updateProgress = asyncHandler(async (req: Request, res: Response) =
   });
 });
 
-/** Mark a course as opened — updates lastOpenedAt and returns the launch config. */
+/** Mark a course as opened - updates lastOpenedAt and returns the launch config. */
 export const openCourseEditor = asyncHandler(async (req: Request, res: Response) => {
   const { slug } = req.params;
   const course = await Course.findOne({ slug, published: true });

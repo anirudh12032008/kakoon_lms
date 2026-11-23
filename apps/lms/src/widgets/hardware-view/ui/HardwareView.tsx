@@ -277,7 +277,7 @@ interface BoardPort {
 }
 
 const BOARD_PORTS: BoardPort[] = [
-  // Centers from rendered 579×579 image scan — these ARE the exact CSS percentages
+  // Centers from rendered 579×579 image scan - these ARE the exact CSS percentages
   { id:"gpio",     label:"GPIO PINS", side:Position.Top,    x:57,  y:8,  color:"#22c55e" },
   { id:"motor_fl", label:"ML1",       side:Position.Left,   x:7,  y:21,  color:"#ef4444" },
   { id:"motor_rl", label:"ML2",       side:Position.Left,   x:7,  y:32,  color:"#ef4444" },
@@ -294,7 +294,7 @@ const BOARD_PORTS: BoardPort[] = [
   { id:"sensor2",  label:"Sensor 2",  side:Position.Bottom, x:75,  y:92,  color:"#14b8a6" },
 ];
 
-// ─── Board node — uses real Kokoon Labs PCB image ─────────────────────────────
+// ─── Board node - uses real Kokoon Labs PCB image ─────────────────────────────
 
 function BoardNode() {
   return (
@@ -334,7 +334,7 @@ function BoardNode() {
   );
 }
 
-// ─── Component node — bare floating image, no card wrapper ───────────────────
+// ─── Component node - bare floating image, no card wrapper ───────────────────
 
 function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; color: string; enabled?: boolean } }) {
   const Icon = data.hwComp.icon;
@@ -389,7 +389,7 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
       transition={{ type: "spring", stiffness: 340, damping: 22, mass: 0.7 }}
       style={{ width: 120 }}
     >
-      {/* Bare component image — glow via drop-shadow filter */}
+      {/* Bare component image - glow via drop-shadow filter */}
       <div
         style={{
           width: 120, height: 80,
@@ -407,7 +407,7 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
         {data.hwComp.label}
       </div>
 
-      {/* Enable/disable toggle pill — shown when wired */}
+      {/* Enable/disable toggle pill - shown when wired */}
       <AnimatePresence>
         {isWired && (
           <motion.div
@@ -453,7 +453,7 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
         )}
       </AnimatePresence>
 
-      {/* Connection handle — anchored to the image's vertical center (image is 80px
+      {/* Connection handle - anchored to the image's vertical center (image is 80px
           tall), so it lines up with the component art regardless of label height. */}
       <Handle
         type="source"
@@ -570,7 +570,7 @@ let _usedPorts: Set<string> = new Set();
 // logic node IDs to skip in the next onFlowChange diff (prevent circular sync)
 let _suppressSyncIds: Set<string> = new Set();
 
-// Live setters — registered by HardwareCanvas when mounted
+// Live setters - registered by HardwareCanvas when mounted
 let _setNodesRef: ((fn: (ns: Node[]) => Node[]) => void) | null = null;
 let _setEdgesRef: ((fn: (es: Edge[]) => Edge[]) => void) | null = null;
 // Global canvas ref so ComponentNode toggle can call addNode/removeNode
@@ -652,7 +652,7 @@ export function syncRemoveHwNode(logicId: string): void {
 
 /**
  * Full reconcile: called every time the user switches to the hardware view.
- * Ensures the hw canvas exactly mirrors the current blocks canvas state —
+ * Ensures the hw canvas exactly mirrors the current blocks canvas state -
  * handles any drift that accumulated while the hardware canvas was unmounted.
  */
 export function resyncHwFromBlocks(logicNodes: Node[]): void {

@@ -97,7 +97,7 @@ export interface SharedProject {
   canEdit: boolean;
 }
 
-/** Fetch a shared project by its slug (public — works for guests too). */
+/** Fetch a shared project by its slug (public - works for guests too). */
 export async function getSharedProject(slug: string): Promise<SharedProject> {
   const { data } = await api.get<SharedProject>(`/projects/shared/${slug}`);
   return data;

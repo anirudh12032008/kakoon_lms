@@ -54,7 +54,7 @@ function Toast({ toast }: { toast: GamificationToast }) {
   );
 }
 
-/** Fixed celebration stack — mount once in App so XP pops everywhere. */
+/** Fixed celebration stack - mount once in App so XP pops everywhere. */
 export function XpToastHost() {
   const toasts = useGamification((s) => s.toasts);
   return (

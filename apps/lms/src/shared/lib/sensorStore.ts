@@ -3,9 +3,9 @@
  * serial stream. Written by useSerial's read loop, read by node components.
  *
  * Format parsed: "SENSOR,<type>,<label>,<value>"
- *   type  — "digital" | "analog" | "angle" | "raw"
- *   label — matches the variable name used in the node (e.g. "motion")
- *   value — numeric
+ *   type  - "digital" | "analog" | "angle" | "raw"
+ *   label - matches the variable name used in the node (e.g. "motion")
+ *   value - numeric
  */
 
 import { create } from "zustand";
@@ -13,7 +13,7 @@ import { create } from "zustand";
 export interface SensorReading {
   value: number;
   type: string;
-  ts: number; // Date.now() — used to detect stale data
+  ts: number; // Date.now() - used to detect stale data
 }
 
 interface SensorStore {

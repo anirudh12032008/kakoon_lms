@@ -14,7 +14,7 @@ export interface ErrorInfo {
 
 export const ERROR_CATALOG: Record<string, ErrorInfo> = {
   "KKN-1001": { hint: "Check the highlighted fields and try again." },
-  "KKN-1002": { hint: "The request looked malformed — please retry." },
+  "KKN-1002": { hint: "The request looked malformed - please retry." },
   "KKN-1003": { hint: "Please sign in to continue." },
   "KKN-1004": { hint: "Double-check your email and password." },
   "KKN-1005": { hint: "Your session timed out. Sign in again to continue." },
@@ -22,7 +22,7 @@ export const ERROR_CATALOG: Record<string, ErrorInfo> = {
   "KKN-1007": { hint: "We couldn't find what you were looking for." },
   "KKN-1008": { hint: "That page or route doesn't exist." },
   "KKN-1009": { hint: "There was a conflict with existing data." },
-  "KKN-1010": { hint: "This already exists — try a different value." },
+  "KKN-1010": { hint: "This already exists - try a different value." },
   "KKN-1011": { hint: "You're going a bit fast. Wait a moment and retry." },
   "KKN-5000": { hint: "Something broke on our end. Please try again shortly." },
   "KKN-5001": { hint: "The service is temporarily down. Try again in a minute." },

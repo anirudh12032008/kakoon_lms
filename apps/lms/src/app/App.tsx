@@ -43,13 +43,13 @@ function GamificationBridge() {
 const DEFAULT_LAUNCH_PRESET =
   EDITOR_MODE_PRESETS.find((p) => p.id === "full-workshop") ?? EDITOR_MODE_PRESETS[0];
 
-// ── Editor route — reads the launch context from the store ────────────────────
+// ── Editor route - reads the launch context from the store ────────────────────
 function EditorRoute() {
   const navigate = useNavigate();
   const storedContext = useLaunchStore((s) => s.context);
   const setContext = useLaunchStore((s) => s.setContext);
 
-  // No entry page any more — fall straight into the default workspace.
+  // No entry page any more - fall straight into the default workspace.
   const context = storedContext ?? buildLaunchContext(DEFAULT_LAUNCH_PRESET);
 
   const courseSlug = context.courseSlug;
@@ -68,12 +68,12 @@ function EditorRoute() {
   );
 }
 
-// ── Launch route — the picker is gone; go straight to the editor ──────────────
+// ── Launch route - the picker is gone; go straight to the editor ──────────────
 function LaunchRoute() {
   const setContext = useLaunchStore((s) => s.setContext);
 
   useEffect(() => {
-    // A fresh launch is a new sandbox — unbind any open project.
+    // A fresh launch is a new sandbox - unbind any open project.
     useProjectStore.getState().clearActiveProject();
     setContext(buildLaunchContext(DEFAULT_LAUNCH_PRESET));
   }, [setContext]);
@@ -94,7 +94,7 @@ export default function App() {
         <XpToastHost />
         <ErrorToastHost />
         <Routes>
-          {/* Public — shared project view link (works for guests and authed users) */}
+          {/* Public - shared project view link (works for guests and authed users) */}
           <Route path="/p/:slug" element={<SharedProjectPage />} />
 
           {/* Guest-only */}

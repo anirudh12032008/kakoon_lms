@@ -1,5 +1,5 @@
 /**
- * Gamification config — XP rewards, the level curve, and achievement
+ * Gamification config - XP rewards, the level curve, and achievement
  * definitions. Tune the numbers here; the store and UI adapt automatically.
  */
 
@@ -14,7 +14,7 @@ export const XP_REWARDS = {
 
 export type XpEvent = keyof typeof XP_REWARDS;
 
-/** Hardware XP (run/upload) only counts this many times per day — no farming. */
+/** Hardware XP (run/upload) only counts this many times per day - no farming. */
 export const DAILY_HARDWARE_XP_CAP = 5;
 
 // ── Level curve ─────────────────────────────────────────────────────────────

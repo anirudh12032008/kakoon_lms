@@ -22,7 +22,7 @@ export function PlayerChip({ onClick, compact }: { onClick?: () => void; compact
   return (
     <button
       onClick={onClick}
-      title={`Level ${level.level} · ${level.title} — ${level.intoLevel}/${level.needed} XP to next level`}
+      title={`Level ${level.level} · ${level.title} - ${level.intoLevel}/${level.needed} XP to next level`}
       className="group flex items-center gap-2.5 rounded-full border border-subtle bg-raised px-2 py-1.5 pr-3 transition-colors hover:border-primary/40"
     >
       {/* Level badge */}

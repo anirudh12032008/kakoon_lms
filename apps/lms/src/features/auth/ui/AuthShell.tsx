@@ -10,7 +10,7 @@ export function AuthShell({ title, subtitle, children, footer }: {
 }) {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-page p-4 overflow-y-auto">
-      {/* Ambient brand glow — slow breathing keeps the page feeling alive */}
+      {/* Ambient brand glow - slow breathing keeps the page feeling alive */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <motion.div
           className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/20 blur-[120px]"

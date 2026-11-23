@@ -10,7 +10,7 @@ export type SyncState = "idle" | "loading" | "saving" | "saved" | "error";
 
 interface Options {
   canvasRef: RefObject<NodeCanvasRef | null>;
-  /** Course slug — when present the editor syncs to the learner's LMS account. */
+  /** Course slug - when present the editor syncs to the learner's LMS account. */
   courseSlug?: string;
   isLoadingDraft: boolean;
   setIsLoadingDraft: (v: boolean) => void;
@@ -62,7 +62,7 @@ export function useCourseSync({
         }
       })
       .catch(() => {
-        /* offline / not enrolled — fall back to an empty canvas */
+        /* offline / not enrolled - fall back to an empty canvas */
       })
       .finally(() => {
         if (cancelled) return;

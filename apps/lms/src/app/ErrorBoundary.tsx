@@ -11,7 +11,7 @@ interface State {
 /**
  * Top-level crash guard. Without it, one throwing component (e.g. a single
  * bad node on the canvas) white-screens the entire app and the student loses
- * their bearings. Work is safe — drafts/course sync persist outside React.
+ * their bearings. Work is safe - drafts/course sync persist outside React.
  */
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { error: null };
@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-subtle bg-raised text-3xl">
          
         </div>
-        <h1 className="text-xl font-black tracking-tight text-body">Oops — something short-circuited</h1>
+        <h1 className="text-xl font-black tracking-tight text-body">Oops - something short-circuited</h1>
         <p className="max-w-sm text-sm leading-relaxed text-sub">
           Don't worry, your work is saved. Reload the page to keep building.
         </p>

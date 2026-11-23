@@ -109,7 +109,7 @@ export function TutorialHelper({
   // On a *fresh* start (handleSelectTutorial clears the canvas first),
   // nodes.length hitting 0 confirms the clear landed. On a *resumed* tutorial
   // (e.g. page refresh mid-tutorial), the canvas is restored with nodes
-  // already present and length never touches 0 — so a timeout fallback is
+  // already present and length never touches 0 - so a timeout fallback is
   // required, or the completion-check effect below would stay gated forever
   // and no step could ever advance again.
   useEffect(() => {
@@ -161,7 +161,7 @@ export function TutorialHelper({
       }
     } else if (step.actionType === "connect") {
       // Resolve the exact occurrence this step means (e.g. "Push Button #2"),
-      // not just "any node of this type" — otherwise wiring the wrong pair of
+      // not just "any node of this type" - otherwise wiring the wrong pair of
       // same-type nodes can falsely complete this step (or never complete it).
       const srcNode = findLiveNodeByTutorialId(step.sourceId, step.sourceType, tutorial.nodes || [], nodes);
       const tgtNode = findLiveNodeByTutorialId(step.targetId, step.targetType, tutorial.nodes || [], nodes);

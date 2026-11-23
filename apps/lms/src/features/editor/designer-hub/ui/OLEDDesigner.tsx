@@ -67,7 +67,7 @@ function oledToBytearray(frame: number[]): string {
 
 function generateOLEDCode(design: OLEDDesign): string {
   const name = design.name.toLowerCase().replace(/\W+/g, "_");
-  const header = `# OLED — ${design.name}
+  const header = `# OLED - ${design.name}
 from machine import SoftI2C, Pin
 import ssd1306, framebuf
 i2c = SoftI2C(scl=Pin(36), sda=Pin(35))
@@ -319,7 +319,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             if (lit && inPixel) {
               buf[idx]   = 232; // R: #e8
               buf[idx+1] = 232; // G: #e8
-              buf[idx+2] = 240; // B: #f0 — slightly blue-white like real OLED
+              buf[idx+2] = 240; // B: #f0 - slightly blue-white like real OLED
               buf[idx+3] = 255;
             } else {
               // cell background
@@ -427,7 +427,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
   };
 
   // ── Library ───────────────────────────────────────────────────────────────
-  // ── Save to Library (always works — no device needed) ────────────────────
+  // ── Save to Library (always works - no device needed) ────────────────────
   const saveToLibrary = () => {
     const entry: AnimEntry = {
       name: toSafeName(designName) || "my_design",
@@ -497,7 +497,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
 
   return (
     <div className="flex h-full gap-0">
-      {/* Left panel — tools + presets + library */}
+      {/* Left panel - tools + presets + library */}
       <div className="w-[272px] flex-shrink-0 border-r border-[var(--k-border)] bg-[var(--k-base-200)] p-4 flex flex-col gap-5 overflow-y-auto">
         {/* Tools */}
         <div>
@@ -592,7 +592,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         <div className="flex-1">
           <div className="flex items-center gap-1.5 text-xs text-[var(--k-muted)] uppercase tracking-[0.14em] mb-2 font-bold before:content-[''] before:h-3 before:w-[3px] before:rounded-full before:bg-[var(--k-primary)]">Library</div>
 
-          {/* Save to Library — always works, no device needed */}
+          {/* Save to Library - always works, no device needed */}
           <button onClick={saveToLibrary}
             className="w-full mb-1.5 text-xs px-2 py-1 rounded-lg bg-[color-mix(in_srgb,var(--k-primary)_15%,transparent)] text-[var(--k-primary)] border border-[color-mix(in_srgb,var(--k-primary)_30%,transparent)] hover:bg-[color-mix(in_srgb,var(--k-primary)_25%,transparent)] transition-all font-bold">
             Save to Library
@@ -634,7 +634,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
         </div>
       </div>
 
-      {/* Center: canvas fills remaining width — min-h-0 lets flex children shrink */}
+      {/* Center: canvas fills remaining width - min-h-0 lets flex children shrink */}
       <div ref={containerRef} className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
         {/* Frames bar */}
         <div className="w-full flex items-center gap-2 px-3 py-2 border-b border-[var(--k-border)] bg-[var(--k-base-100)] flex-shrink-0 flex-wrap">
@@ -723,7 +723,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
           </div>
         )}
 
-        {/* OLED canvas — explicit CSS width/height locks the 2:1 OLED aspect ratio */}
+        {/* OLED canvas - explicit CSS width/height locks the 2:1 OLED aspect ratio */}
         <div className="flex-1 flex items-center justify-center p-4 overflow-auto min-h-0">
           {/* wrapper keeps canvas + SVG overlay perfectly aligned */}
           <div className="relative flex-shrink-0" style={{ width: `${OLED_W * scale}px`, height: `${OLED_H * scale}px` }}>
@@ -831,7 +831,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
               );
             })()}
 
-            {/* Coordinate readout — bottom right corner of canvas */}
+            {/* Coordinate readout - bottom right corner of canvas */}
             {dragPos && (
               <div className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/70 border border-[var(--k-border)] text-[11px] font-mono text-[var(--k-primary)] pointer-events-none">
                 {dragPos[0]}, {dragPos[1]}
@@ -884,7 +884,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
             <Copy className="w-3 h-3" />{copied ? "Copied!" : "Copy Code"}
           </button>
 
-          {/* Upload to Device — with live progress bar */}
+          {/* Upload to Device - with live progress bar */}
           {onSaveToDevice && (
             <div className="relative ml-auto">
               <button onClick={() => handleSaveToDevice()} disabled={saveDeviceState === "saving"}

@@ -49,7 +49,7 @@ export function NeoPixelLEDNode() {
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">On-board Ring — GPIO 48</span>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">On-board Ring - GPIO 48</span>
             <span className="text-[9px] font-mono text-cyan-400">fixed</span>
           </div>
         </div>
@@ -258,7 +258,7 @@ export function NeoPixelRGBNode() {
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">On-board Ring — GPIO 48</span>
+            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">On-board Ring - GPIO 48</span>
             <span className="text-[9px] font-mono text-violet-400">fixed</span>
           </div>
         </div>
@@ -332,7 +332,7 @@ export function NeoPixelDesignerNode() {
       )}
 
       <div className="px-3 pb-2 text-[9px] text-[var(--k-dim)] leading-relaxed">
-        Designed in Designer Hub — edit there to update
+        Designed in Designer Hub - edit there to update
       </div>
     </BaseNode>
   );

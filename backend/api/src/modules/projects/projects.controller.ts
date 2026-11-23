@@ -7,7 +7,7 @@ import { ApiError } from "../../utils/ApiError";
 import { asyncHandler } from "../../utils/asyncHandler";
 
 const saveSchema = z.object({
-  // ReactFlow workspace { nodes, edges } — kept loose, validated shallowly.
+  // ReactFlow workspace { nodes, edges } - kept loose, validated shallowly.
   workspace: z.object({
     nodes: z.array(z.any()).default([]),
     edges: z.array(z.any()).default([]),

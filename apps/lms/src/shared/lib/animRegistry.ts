@@ -1,5 +1,5 @@
 /**
- * Local animation registry — persists to localStorage.
+ * Local animation registry - persists to localStorage.
  *
  * Each entry stores the full frame data so animations can be
  * uploaded to the device at any time, even without re-opening the designer.

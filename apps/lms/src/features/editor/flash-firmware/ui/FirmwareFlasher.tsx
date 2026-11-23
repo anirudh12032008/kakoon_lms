@@ -1,5 +1,5 @@
 /**
- * FirmwareFlasher — flashes MicroPython v1.25.0 onto ESP32-S3 via WebSerial
+ * FirmwareFlasher - flashes MicroPython v1.25.0 onto ESP32-S3 via WebSerial
  * Firmware is bundled at /public/firmware/esp32s3-micropython.bin
  */
 
@@ -156,7 +156,7 @@ export function FirmwareFlasher({ onClose }: Props) {
           {noSerial && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
               <AlertTriangle className="w-4 h-4 shrink-0" />
-              Web Serial not supported — open in Chrome or Edge.
+              Web Serial not supported - open in Chrome or Edge.
             </div>
           )}
 
@@ -192,7 +192,7 @@ export function FirmwareFlasher({ onClose }: Props) {
             {[
               <>Hold <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">BOOT</kbd> button</>,
               <>Press &amp; release <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">RESET</kbd> (or replug USB)</>,
-              <>Release <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">BOOT</kbd> — then click Flash</>,
+              <>Release <kbd className="px-1 py-0.5 rounded bg-[var(--k-base-400)] border border-[var(--k-border)] font-mono text-[10px]">BOOT</kbd> - then click Flash</>,
             ].map((text, i) => (
               <div key={i} className="flex items-center gap-2 text-[11px] text-[var(--k-text)]">
                 <span className="flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] font-bold shrink-0">{i+1}</span>
@@ -236,7 +236,7 @@ export function FirmwareFlasher({ onClose }: Props) {
           {state === "done" ? (
             <button onClick={onClose}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-green-500/20 border border-green-500/40 text-green-400 text-sm font-bold hover:bg-green-500/30 transition-all">
-              <CheckCircle className="w-4 h-4" /> Close — Board is ready!
+              <CheckCircle className="w-4 h-4" /> Close - Board is ready!
             </button>
           ) : (
             <button onClick={handleFlash} disabled={noSerial || isBusy || !selectedPort}

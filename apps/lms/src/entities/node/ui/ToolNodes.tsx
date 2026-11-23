@@ -40,7 +40,7 @@ const KNOWN_DEVICES: Record<string, string> = {
   "0x1E": "HMC5883L Mag",
 };
 
-// Simulated scan result — shows the "what you'd see" demo set
+// Simulated scan result - shows the "what you'd see" demo set
 const DEMO_FOUND = ["0x3C", "0x68", "0x76"];
 
 interface FoundDevice {
@@ -90,7 +90,7 @@ export function I2CScannerNode() {
 
       {/* Demo notice */}
       <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-amber-500/20 bg-amber-500/5">
-        <span className="text-[9px] text-amber-400/80">Preview mode — shows demo devices. Connect ESP32 and run generated code to scan live.</span>
+        <span className="text-[9px] text-amber-400/80">Preview mode - shows demo devices. Connect ESP32 and run generated code to scan live.</span>
       </div>
 
       {/* Range label */}

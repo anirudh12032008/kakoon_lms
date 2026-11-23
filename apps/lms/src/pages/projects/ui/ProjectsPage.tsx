@@ -88,7 +88,7 @@ export function ProjectsPage() {
   };
 
   const handleShare = async (p: ProjectSummary) => {
-    if (!p.slug) { setError("This project has no share link yet — open and re-save it."); return; }
+    if (!p.slug) { setError("This project has no share link yet - open and re-save it."); return; }
     try { await navigator.clipboard.writeText(shareUrl(p.slug)); } catch { /* clipboard blocked */ }
     setSharedId(p.id);
     setTimeout(() => setSharedId((cur) => (cur === p.id ? null : cur)), 2000);
@@ -114,7 +114,7 @@ export function ProjectsPage() {
           <div>
             <h1 className="text-3xl font-black tracking-tight text-body">My Projects</h1>
             <p className="mt-1.5 text-[15px] text-sub">
-              Your saved workspaces. Open one to keep building — changes save automatically.
+              Your saved workspaces. Open one to keep building - changes save automatically.
             </p>
           </div>
           <button onClick={newProject} className="btn btn-primary gap-2 shrink-0">

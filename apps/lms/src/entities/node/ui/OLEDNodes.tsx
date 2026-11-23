@@ -164,7 +164,7 @@ export function PlayAnimationNode() {
   return (
     <BaseNode title="Play Animation" color={COLORS.purple} icon={<DisplayIcon />} width="230px">
       <AdvancedSection>
-        {/* Uses dedicated OLED port — pins fixed */}
+        {/* Uses dedicated OLED port - pins fixed */}
         <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">OLED Dedicated Port</span>
           <div className="flex gap-3 mt-0.5">

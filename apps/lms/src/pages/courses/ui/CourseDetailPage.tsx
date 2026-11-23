@@ -255,7 +255,7 @@ export function CourseDetailPage() {
             <Hammer className="h-5 w-5 text-primary-c" /> Build Levels
           </h2>
           <p className="mb-4 text-sm text-sub">
-            Follow these in order — each level pairs a hands-on build step with what you'll code in the editor.
+            Follow these in order - each level pairs a hands-on build step with what you'll code in the editor.
           </p>
           <div className="flex flex-col">
             {course.levels.map((lv, idx) => {

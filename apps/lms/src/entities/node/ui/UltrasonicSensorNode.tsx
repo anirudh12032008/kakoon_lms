@@ -47,7 +47,7 @@ function EchoPulseDisplay({ live, distanceCm }: { live: boolean; distanceCm: num
       <div className="relative h-9">
         {/* sensor (left) */}
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-5 rounded-sm bg-purple-500/80" />
-        {/* object — positioned by measured distance */}
+        {/* object - positioned by measured distance */}
         <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-1.5 h-6 rounded-sm bg-[var(--k-base-400)] border border-[var(--k-border)] transition-all duration-300"
           style={{ left: live ? objLeft : "86%" }} />
         {/* dashed path */}
@@ -147,12 +147,12 @@ export function UltrasonicSensorNode() {
       <div className="px-3 py-1 flex items-center gap-2 bg-[var(--k-base-300)] mx-3 rounded-lg border border-[var(--k-border)]">
         <div className="flex-1 text-center">
           <div className="text-[9px] text-[var(--k-muted)] uppercase">cm</div>
-          <div className="text-sm font-mono font-bold text-purple-400">{distanceCm != null ? distanceCm.toFixed(1) : "—.-"}</div>
+          <div className="text-sm font-mono font-bold text-purple-400">{distanceCm != null ? distanceCm.toFixed(1) : "-.-"}</div>
         </div>
         <div className="w-px h-6 bg-[var(--k-border)]" />
         <div className="flex-1 text-center">
           <div className="text-[9px] text-[var(--k-muted)] uppercase">in</div>
-          <div className="text-sm font-mono font-bold text-cyan-400">{distanceIn != null ? distanceIn.toFixed(1) : "—.-"}</div>
+          <div className="text-sm font-mono font-bold text-cyan-400">{distanceIn != null ? distanceIn.toFixed(1) : "-.-"}</div>
         </div>
       </div>
 

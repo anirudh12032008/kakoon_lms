@@ -19,7 +19,7 @@ interface EditorHeaderProps {
   launchContext?: EditorLaunchContext;
   isCourse?: boolean;
   syncState?: SyncState;
-  /** Set for a saved-project session — drives the "Saved/Saving" project chip. */
+  /** Set for a saved-project session - drives the "Saved/Saving" project chip. */
   projectSyncState?: SyncState;
   /** Name of the active saved project, if any. */
   projectName?: string | null;
@@ -31,7 +31,7 @@ interface EditorHeaderProps {
   onShareProject?: () => void;
   /** Transient "Copied!" feedback for the share button. */
   shareCopied?: boolean;
-  /** View-only shared session — hides editing actions, shows author label. */
+  /** View-only shared session - hides editing actions, shows author label. */
   readOnly?: boolean;
   sharedAuthorName?: string;
   showTutorialsCatalog: boolean;
@@ -81,7 +81,7 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
   { mode: "hardware", icon: <Cpu className="h-3.5 w-3.5" />,                  label: "Hardware" },
 ];
 
-/** Overflow menu for secondary project actions — keeps the header calm. */
+/** Overflow menu for secondary project actions - keeps the header calm. */
 function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
   onImportProject?: () => void;
   onExportProject?: () => void;
@@ -207,7 +207,7 @@ export function EditorHeader({
         </div>
       </div>
 
-      {/* View mode switcher — Framer Motion layoutId for sliding active indicator */}
+      {/* View mode switcher - Framer Motion layoutId for sliding active indicator */}
       <div className="flex items-center shrink-0">
         <div className="flex rounded-full p-1 gap-0.5 bg-raised">
           {VIEW_TABS.map(({ mode, icon, label }) => (
@@ -217,7 +217,7 @@ export function EditorHeader({
               className="relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
               style={{ color: viewMode === mode ? "white" : undefined }}
             >
-              {/* Sliding background — shared layoutId makes it animate between tabs */}
+              {/* Sliding background - shared layoutId makes it animate between tabs */}
               {viewMode === mode && (
                 <motion.div
                   layoutId="view-tab-indicator"
@@ -236,7 +236,7 @@ export function EditorHeader({
         </div>
       </div>
 
-      {/* Right actions — only the essentials stay top-level */}
+      {/* Right actions - only the essentials stay top-level */}
       <div className="flex items-center gap-1 shrink-0">
         <PlayerChip compact onClick={() => setShowAchievements(true)} />
 

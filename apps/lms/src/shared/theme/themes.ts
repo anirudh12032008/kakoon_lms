@@ -41,7 +41,7 @@ export const NEUTRALS: Record<ThemeMode, Neutrals> = {
   },
 };
 
-/** Brand accent palette — what most "preset" choices change. */
+/** Brand accent palette - what most "preset" choices change. */
 export interface Accent {
   primary: string;
   secondary: string;
@@ -62,7 +62,7 @@ export const ACCENT_PRESETS: AccentPreset[] = [
   { id: "slate", label: "Slate", primary: "#475569", secondary: "#64748b", accent: "#38bdf8" },
 ];
 
-/** Semantic status colors — constant across themes (legible on light & dark). */
+/** Semantic status colors - constant across themes (legible on light & dark). */
 const SEMANTIC = {
   success: "#22c55e",
   warning: "#f59e0b",

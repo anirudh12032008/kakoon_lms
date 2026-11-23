@@ -53,7 +53,7 @@ export function useCourseMissions(courseSlug?: string) {
         });
       })
       .catch(() => {
-        /* offline / not enrolled — missions panel simply won't show */
+        /* offline / not enrolled - missions panel simply won't show */
       });
     return () => {
       cancelled = true;

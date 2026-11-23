@@ -1,5 +1,5 @@
 /**
- * Kokoon ESP32-S3 Board — Single source of truth for all GPIO pin assignments.
+ * Kokoon ESP32-S3 Board - Single source of truth for all GPIO pin assignments.
  *
  * Derived from the official board test script (board_test.py).
  * Every node, codegen case, and UI component must import from here.
@@ -23,14 +23,14 @@ export const NEOPIXEL = {
   count: 8,
 } as const;
 
-// ── Onboard IMU (LSM6DS3TR-C) — fixed I2C bus ────────────────────────────────
+// ── Onboard IMU (LSM6DS3TR-C) - fixed I2C bus ────────────────────────────────
 export const ONBOARD_IMU = {
   scl: 42,
   sda: 41,
   address: "0x6A",
 } as const;
 
-// ── Sensor Ports — I2C (SCL/SDA) and digital/ultrasonic (TRIG/ECHO) ──────────
+// ── Sensor Ports - I2C (SCL/SDA) and digital/ultrasonic (TRIG/ECHO) ──────────
 // Same GPIO pair serves as I2C bus for I2C modules and TRIG/ECHO for ultrasonic.
 export const SENSOR_PORTS = {
   "1": { scl: 4,  sda: 5,  trig: 4,  echo: 5 },
@@ -91,14 +91,14 @@ export const SERVO_MODEL_ORDER: ServoModelId[] = ["mg90s", "mg995"];
 export type ServoType = "180" | "360";
 
 // ── Motors (DRV8833 dual H-bridge, one chip per axle) ────────────────────────
-// Each motor: { pwm, dir } — PWM controls speed, DIR controls direction.
+// Each motor: { pwm, dir } - PWM controls speed, DIR controls direction.
 // front.a = front-right (FR), front.b = front-left (FL)
 // rear.a  = rear-right  (RR), rear.b  = rear-left  (RL)
 export const MOTORS = {
-  frontRight: { pwm: 45, dir: 46 },   // front DRV8833 — channel A
-  frontLeft:  { pwm: 15, dir: 16 },   // front DRV8833 — channel B
-  rearRight:  { pwm: 17, dir: 18 },   // rear  DRV8833 — channel A
-  rearLeft:   { pwm: 37, dir: 38 },   // rear  DRV8833 — channel B
+  frontRight: { pwm: 45, dir: 46 },   // front DRV8833 - channel A
+  frontLeft:  { pwm: 15, dir: 16 },   // front DRV8833 - channel B
+  rearRight:  { pwm: 17, dir: 18 },   // rear  DRV8833 - channel A
+  rearLeft:   { pwm: 37, dir: 38 },   // rear  DRV8833 - channel B
 } as const;
 
 export type MotorId = keyof typeof MOTORS;

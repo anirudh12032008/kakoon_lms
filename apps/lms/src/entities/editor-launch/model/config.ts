@@ -10,7 +10,7 @@ export interface EditorLaunchContext {
   mode: EditorWorkspaceMode;
   launchType: EditorLaunchType;
   kitId?: string;
-  /** Set when launched from an LMS course — enables backend workspace sync. */
+  /** Set when launched from an LMS course - enables backend workspace sync. */
   courseSlug?: string;
   accent?: string;
   allowedCategories?: string[];

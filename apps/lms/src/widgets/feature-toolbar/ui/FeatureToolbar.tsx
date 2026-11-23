@@ -55,14 +55,14 @@ function Sep() {
   return <div className="w-px h-4 bg-[var(--k-border)] mx-0.5 shrink-0" />;
 }
 
-/** Compact Workshop Mode switch — unlocks the advanced tools on this bar. */
+/** Compact Workshop Mode switch - unlocks the advanced tools on this bar. */
 function WorkshopToggle() {
   const { globalAdvanced, setGlobalAdvanced } = useNodeMode();
   return (
     <button
       onClick={() => setGlobalAdvanced(!globalAdvanced)}
       title={globalAdvanced
-        ? "Workshop Mode on — advanced tools & node fields unlocked"
+        ? "Workshop Mode on - advanced tools & node fields unlocked"
         : "Turn on Workshop Mode to unlock advanced tools & node fields"}
       className={`flex items-center gap-1.5 h-6 px-2.5 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all ${
         globalAdvanced
@@ -95,7 +95,7 @@ export function FeatureToolbar({
   return (
     <div className="flex h-9 shrink-0 items-center gap-1 px-3 overflow-x-auto bg-panel border-b border-subtle">
 
-      {/* — Everyday tools — */}
+      {/* - Everyday tools - */}
       <ToolBtn active={showDesignerHub} onClick={onOpenDesignerHub}
         icon={<Palette className="h-3.5 w-3.5" />} label="Designers"
         activeColor="fuchsia" title="OLED, NeoPixel & LED Matrix designers" />
@@ -105,7 +105,7 @@ export function FeatureToolbar({
         </svg>} label="Sensors"
         activeColor="emerald" title="Sensor gauges & timelines" />
 
-      {/* — Workshop-only tools: visualizers + device management — */}
+      {/* - Workshop-only tools: visualizers + device management - */}
       {globalAdvanced && (
         <>
           <Sep />

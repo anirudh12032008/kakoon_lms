@@ -1,5 +1,5 @@
 /**
- * DesignerHub — full-screen modal with tabs for:
+ * DesignerHub - full-screen modal with tabs for:
  *   1. OLED Designer (128×64 monochrome pixel canvas, multi-frame)
  *   2. NeoPixel Designer (RGB LED strip/grid, effects, custom frames)
  *   3. Matrix Designer (MAX7219 8×8 LED matrix, animations, scroll text)

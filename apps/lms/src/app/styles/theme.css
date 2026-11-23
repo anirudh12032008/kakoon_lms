@@ -1,6 +1,6 @@
 /*
  * ╔══════════════════════════════════════════════════════════════╗
- * ║          KOKOON COLOR CONFIG — edit this file to retheme     ║
+ * ║          KOKOON COLOR CONFIG - edit this file to retheme     ║
  * ║  Change the hex values in Section 1; everything else auto.   ║
  * ╚══════════════════════════════════════════════════════════════╝
  */
@@ -80,7 +80,7 @@
 }
 
 /* ── 4. SEMANTIC UTILITY CLASSES ──────────────────────────────
-   Use these in every component — never inline style= for colors.
+   Use these in every component - never inline style= for colors.
    Change the variables in Section 1; these update automatically. */
 @layer utilities {
   /* Surfaces */
@@ -98,7 +98,7 @@
   .text-sub   { color: var(--k-muted); }
   .text-hint  { color: var(--k-dim); }
 
-  /* Tinted surfaces — for active/selected state chips */
+  /* Tinted surfaces - for active/selected state chips */
   .bg-primary-tint   { background-color: color-mix(in srgb, var(--k-primary)   12%, transparent); }
   .bg-secondary-tint { background-color: color-mix(in srgb, var(--k-secondary) 12%, transparent); }
   .bg-accent-tint    { background-color: color-mix(in srgb, var(--k-accent)    12%, transparent); }
@@ -121,16 +121,16 @@
   .text-warning-c  { color: var(--k-warning); }
   .text-info-c     { color: var(--k-info); }
 
-  /* Brand background — flat */
+  /* Brand background - flat */
   .bg-brand-gradient { background: var(--k-primary); }
 
-  /* Hero heading text — flat */
+  /* Hero heading text - flat */
   .text-brand-gradient { color: var(--k-text); }
 
-  /* Light sweep — disabled */
+  /* Light sweep - disabled */
   .shine-sweep::after { content: none; }
 
-  /* Canvas vignette — disabled */
+  /* Canvas vignette - disabled */
   .canvas-vignette::before { content: none; }
 }
 
@@ -154,7 +154,7 @@
 
 /* ── 5. GLOBAL COMPONENT OVERRIDES ──────────────────────────── */
 
-/* btn — reset DaisyUI's default heavy shadow/border treatment */
+/* btn - reset DaisyUI's default heavy shadow/border treatment */
 .btn {
   font-weight: 600;
   letter-spacing: 0.01em;

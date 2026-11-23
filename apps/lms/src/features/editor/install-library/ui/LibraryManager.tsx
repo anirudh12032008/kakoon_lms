@@ -45,7 +45,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
   };
 
   // Installing a library also installs its dependencies (deps first), so e.g.
-  // installing i2c_lcd pulls in lcd_api — avoiding "no module named 'lcd_api'".
+  // installing i2c_lcd pulls in lcd_api - avoiding "no module named 'lcd_api'".
   const installLib = async (lib: LibraryEntry) => {
     if (!isConnected) return;
     for (const entry of withDependencies(lib)) {

@@ -95,7 +95,7 @@ function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Signal pin — fixed GPIO</span>
+        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Signal pin - fixed GPIO</span>
         <span className="text-[9px] font-mono text-[var(--k-warning)]">locked</span>
       </div>
       <div className="flex gap-2 mt-0.5">
@@ -259,7 +259,7 @@ export function ServoControllerNode() {
         <ServoModelFields model={servoModel} onModelChange={applyModel} servoType={servoType} onTypeChange={setServoType} />
       </AdvancedSection>
 
-      {/* 360° continuous servos are speed-controlled — mode selection only applies to 180° */}
+      {/* 360° continuous servos are speed-controlled - mode selection only applies to 180° */}
       {servoType === "180" && (
         <NodeField label="Mode">
           <SelectInput value={mode} onChange={setMode} compact
@@ -554,7 +554,7 @@ export function ShadowArmNode() {
   return (
     <BaseNode title="Shadow Arm (Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">4 pots wired straight to GPIO ADC pins → defines <span className="font-mono text-cyan-400">read_shadow()</span> for the <span className="text-orange-400">Main Arm</span>. Just drop both on the canvas — no loop needed.</p>
+        <p className="text-[9px] text-[var(--k-muted)]">4 pots wired straight to GPIO ADC pins → defines <span className="font-mono text-cyan-400">read_shadow()</span> for the <span className="text-orange-400">Main Arm</span>. Just drop both on the canvas - no loop needed.</p>
       </div>
       <NodeField label="Variable prefix">
         <TextInput value={prefix} onChange={setPrefix}  />
@@ -632,7 +632,7 @@ export function ArmCalibrationNode() {
   return (
     <BaseNode title="Arm Calibration" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
-        <p className="text-[9px] text-[var(--k-muted)]">Run this <span className="text-cyan-400 font-bold">once, alone</span>. Sweep each joint fully both ways, then tap BTN{calBtnPin} to lock. Saves <span className="font-mono text-cyan-400">/shadow_calib.json</span> — the Shadow Arm loads it automatically. Watch values on the <span className="text-cyan-400">dashboard</span>.</p>
+        <p className="text-[9px] text-[var(--k-muted)]">Run this <span className="text-cyan-400 font-bold">once, alone</span>. Sweep each joint fully both ways, then tap BTN{calBtnPin} to lock. Saves <span className="font-mono text-cyan-400">/shadow_calib.json</span> - the Shadow Arm loads it automatically. Watch values on the <span className="text-cyan-400">dashboard</span>.</p>
       </div>
       <NodeField label="Variable prefix">
         <TextInput value={prefix} onChange={setPrefix} />
@@ -656,9 +656,9 @@ export function ArmCalibrationNode() {
 }
 
 // A control that can be driven by a variable, a physical switch (active-low
-// GPIO), or both — used for the Main Arm's Mode and Record controls.
+// GPIO), or both - used for the Main Arm's Mode and Record controls.
 // Shared servo-output config (ports / limits / invert / slew / frame rate).
-// Self-contained — reads its own node fields.
+// Self-contained - reads its own node fields.
 function ArmServoConfig({ pre }: { pre: string }) {
   const [servoPorts, setServoPorts] = useNodeField<string[]>("servoPorts", ["S1", "S2", "S3", "S4"]);
   const [slew, setSlew]       = useNodeField<number>("slew", 0);
@@ -705,8 +705,8 @@ function ArmServoConfig({ pre }: { pre: string }) {
   );
 }
 
-// ─── Arm — Live (continuous shadow → servos) ────────────────────────────────────
-// ─── Main Arm — single controller: Live + 2-button record/capture + OLED ───────
+// ─── Arm - Live (continuous shadow → servos) ────────────────────────────────────
+// ─── Main Arm - single controller: Live + 2-button record/capture + OLED ───────
 export function MainArmNode() {
   const [prefix, setPrefix]   = useNodeField<string>("varPrefix", "j");
   const [jointSource, setJointSource] = useNodeField<string>("jointSource", "shadow");
@@ -745,7 +745,7 @@ export function MainArmNode() {
         </NodeField>
         <NodeField label="OLED address"><TextInput value={oledAddress} onChange={setOledAddress} /></NodeField>
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] text-[var(--k-muted)]">OLED bus — SCL <span className="font-mono text-[var(--k-text)]">{OLED.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{OLED.sda}</span> (shared with ADS)</span>
+          <span className="text-[9px] text-[var(--k-muted)]">OLED bus - SCL <span className="font-mono text-[var(--k-text)]">{OLED.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{OLED.sda}</span> (shared with ADS)</span>
         </div>
         <ArmServoConfig pre={pre} />
       </AdvancedSection>
@@ -854,7 +854,7 @@ export function ServoCalibrationNode() {
           backgroundColor: "color-mix(in srgb, var(--k-warning) 5%, transparent)",
         }}>
         <p className="text-[9px]" style={{ color: "color-mix(in srgb, var(--k-warning) 80%, var(--k-text) 20%)" }}>
-          Compile-time utility only — does not generate runtime code.
+          Compile-time utility only - does not generate runtime code.
         </p>
       </div>
     </BaseNode>

@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
  * `VITE_AUTH_BYPASS=true` is set, so it can never ship in a production bundle.
  * Lets us reach protected routes (e.g. the editor / interactive tutorials)
  * without a running auth backend. Note: real API calls that need a token
- * (course sync, saved projects) will still fail — this only clears the gate.
+ * (course sync, saved projects) will still fail - this only clears the gate.
  */
 const AUTH_BYPASS = import.meta.env.DEV && import.meta.env.VITE_AUTH_BYPASS === "true";
 

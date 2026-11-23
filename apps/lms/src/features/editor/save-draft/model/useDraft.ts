@@ -42,7 +42,7 @@ export function useDraft({
         if (draft.flowData) {
           try {
             const workspace = JSON.parse(draft.flowData);
-            // setTimeout, not rAF — rAF never fires in hidden/background
+            // setTimeout, not rAF - rAF never fires in hidden/background
             // tabs, which would skip the restore and let the draft autosave
             // overwrite it with an empty canvas.
             const apply = (attempt: number) => {
@@ -54,7 +54,7 @@ export function useDraft({
         }
       }
     } catch {
-      // corrupted draft — ignore
+      // corrupted draft - ignore
     } finally {
       setIsLoadingDraft(false);
     }

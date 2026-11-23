@@ -120,7 +120,7 @@ export function IRSensorNode() {
 
 // ─── IR Code Display ──────────────────────────────────────────────────────────
 function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
-  const hex = code !== null ? `0x${code.toString(16).toUpperCase().padStart(4, "0")}` : "——";
+  const hex = code !== null ? `0x${code.toString(16).toUpperCase().padStart(4, "0")}` : "--";
   return (
     <div className="mx-3 mb-1 px-3 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
       {/* Code display */}

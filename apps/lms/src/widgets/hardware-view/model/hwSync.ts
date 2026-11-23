@@ -11,7 +11,7 @@ import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 export type HwSyncSetNodes = (fn: (ns: Node[]) => Node[]) => void;
 export type HwSyncSetEdges = (fn: (es: Edge[]) => Edge[]) => void;
 
-/** Live setters — registered by HardwareCanvas when mounted */
+/** Live setters - registered by HardwareCanvas when mounted */
 export let setNodesRef: HwSyncSetNodes | null = null;
 export let setEdgesRef: HwSyncSetEdges | null = null;
 /** Global canvas ref so ComponentNode toggle can call addNode/removeNode */
