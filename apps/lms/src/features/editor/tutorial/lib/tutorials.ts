@@ -1,4 +1,6 @@
 import type { Node, Edge } from "@xyflow/react";
+import type { BoardId } from "@/entities/board";
+import { collegeDemos } from "./collegeDemos";
 
 export interface TutorialStep {
   id: string;
@@ -26,7 +28,7 @@ export interface Tutorial {
   title: string;
   description: string;
   difficulty: "Easy" | "Medium" | "Hard";
-  board: "Atom S3" | "Molecule S3" | "Quark C3";
+  board: string;
   components: string[];
   nodes: Node[];
   edges: Edge[];
@@ -93,21 +95,22 @@ const FIELD_LABELS: Record<string, string> = {
 
 // ─── Built-in Tutorial Definitions ───────────────────────────────────────────
 
-function makeTutorial(
+export function makeTutorial(
   id: string,
   title: string,
   description: string,
   difficulty: Tutorial["difficulty"],
   components: string[],
   nodes: Node[],
-  edges: Edge[]
+  edges: Edge[],
+  board = "Kokoon Board"
 ): Tutorial {
   return {
     id,
     title,
     description,
     difficulty,
-    board: "Quark C3",
+    board,
     components,
     nodes,
     edges,
@@ -399,8 +402,9 @@ export function generateStepsFromFlow(nodes: Node[], edges: Edge[]): TutorialSte
   return steps;
 }
 
-// ─── Exported Built-in Tutorial List ─────────────────────────────────────────
-export const BUILTIN_TUTORIALS: Tutorial[] = [
+// ─── Built-in examples for the Kokoon board (the original default set) ───────
+// Kept as-is so switching the board back to Kokoon restores them.
+export const KOKOON_TUTORIALS: Tutorial[] = [
   makeTutorial(
     "builtin_rc_car",
     "RC Car Control",
@@ -438,3 +442,8 @@ export const BUILTIN_TUTORIALS: Tutorial[] = [
     turretEdges
   ),
 ];
+
+/** Built-in examples for a board: college demos, or the Kokoon robot set. */
+export function builtinTutorials(boardId: BoardId): Tutorial[] {
+  return boardId === "kokoon" ? KOKOON_TUTORIALS : collegeDemos(boardId);
+}

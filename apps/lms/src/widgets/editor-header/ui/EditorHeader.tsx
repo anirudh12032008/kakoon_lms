@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { useEffect, useRef, useState } from "react";
 import {
   Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles,
@@ -10,6 +11,7 @@ import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 import type { SyncState } from "@/features/editor/save-draft/model/useCourseSync";
 import { useAnimations } from "@/shared/context/AnimationContext";
 import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
+import { BOARDS, BOARD_ORDER, useBoardStore, type BoardId } from "@/entities/board";
 import { PlayerChip, AchievementsModal } from "@/entities/gamification";
 
 interface EditorHeaderProps {
@@ -55,7 +57,7 @@ function SyncIndicator({ state }: { state: SyncState }) {
   return (
     <div
       className={`flex items-center gap-1.5 rounded-full border border-subtle bg-raised px-2.5 py-1 text-[11px] font-semibold ${s.cls}`}
-      title="Your work is saved to your Kokoon account"
+      title={`Your work is saved to your ${APP_NAME} account`}
     >
       {s.icon}
       <span className="hidden sm:inline">{s.label}</span>
@@ -155,6 +157,8 @@ export function EditorHeader({
   const title      = launchContext?.title      ?? "Full Workshop";
   const launchType = isCourse ? "course" : (launchContext?.launchType ?? "mode");
   const [showAchievements, setShowAchievements] = useState(false);
+  const boardId = useBoardStore((s) => s.boardId);
+  const setBoard = useBoardStore((s) => s.setBoard);
 
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 bg-panel border-b border-subtle">
@@ -164,7 +168,7 @@ export function EditorHeader({
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
             <Blocks className="h-4 w-4 text-white" />
           </div>
-          <span className="text-sm font-bold text-body hidden lg:inline">Kokoon</span>
+          <span className="text-sm font-bold text-body hidden lg:inline">{APP_NAME}</span>
         </div>
         {onBackToDashboard && (
           <button
@@ -270,6 +274,20 @@ export function EditorHeader({
           <BookOpen className="h-4 w-4" />
           <span className="hidden lg:inline text-xs">Tutorials</span>
         </button>
+
+        <label className="flex items-center gap-1.5 text-sub" title="Board you are programming">
+          <Cpu className="h-4 w-4 shrink-0" />
+          <select
+            aria-label="Board"
+            value={boardId}
+            onChange={(e) => setBoard(e.target.value as BoardId)}
+            className="select select-sm h-8 min-h-0 w-auto bg-raised border-subtle text-xs font-semibold text-body"
+          >
+            {BOARD_ORDER.map((id) => (
+              <option key={id} value={id}>{BOARDS[id].label}</option>
+            ))}
+          </select>
+        </label>
 
         <ThemeSwitcher compact />
 

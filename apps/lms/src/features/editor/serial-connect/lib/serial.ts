@@ -28,6 +28,7 @@ declare global {
     readable: ReadableStream<Uint8Array> | null;
     writable: WritableStream<Uint8Array> | null;
     getInfo(): SerialPortInfo;
+    setSignals(signals: { dataTerminalReady?: boolean; requestToSend?: boolean }): Promise<void>;
     ondisconnect: ((this: SerialPort, ev: Event) => void) | null;
     addEventListener(type: "disconnect", listener: (this: SerialPort, ev: Event) => void): void;
     removeEventListener(type: "disconnect", listener: (this: SerialPort, ev: Event) => void): void;

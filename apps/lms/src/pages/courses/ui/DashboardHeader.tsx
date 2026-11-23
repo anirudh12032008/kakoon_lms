@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FolderOpen, GraduationCap, LogOut } from "lucide-react";
@@ -21,7 +22,7 @@ export function DashboardHeader() {
       <div className="flex items-center gap-2">
         <button onClick={() => navigate("/courses")} className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-gradient text-lg"></div>
-          <span className="text-xl font-black tracking-tight text-body">Kokoon</span>
+          <span className="text-xl font-black tracking-tight text-body">{APP_NAME}</span>
         </button>
         <nav className="ml-3 hidden items-center gap-1 sm:flex">
           <button onClick={() => navigate("/courses")} className={navItem(pathname.startsWith("/courses"))}>

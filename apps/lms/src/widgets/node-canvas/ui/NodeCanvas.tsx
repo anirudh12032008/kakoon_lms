@@ -32,7 +32,8 @@ import "@xyflow/react/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { Undo2, Redo2 } from "lucide-react";
 import { NODE_TYPES } from "@/entities/node/model";
-import { generatePythonFromFlow } from "@/entities/node/lib/codegen";
+import { generateCode } from "@/entities/node/lib/codegen";
+import { useBoardStore } from "@/entities/board";
 import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/entities/custom-node/model/customNodes";
 import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
@@ -252,11 +253,12 @@ function NodeCanvasInner({
   const canRedo = futureRef.current.length > 0;
   void historyVersion; // re-render trigger for the canUndo/canRedo flags above
 
+  const boardId = useBoardStore((st) => st.boardId); // switching board regenerates the code
   useEffect(() => {
-    const code = generatePythonFromFlow(nodes, edges);
+    const code = generateCode(nodes, edges);
     onCodeChange?.(code);
     onFlowChange?.(nodes, edges);
-  }, [nodes, edges, onCodeChange, onFlowChange]);
+  }, [nodes, edges, onCodeChange, onFlowChange, boardId]);
 
   // ── Copy / paste / duplicate (Ctrl/Cmd + C, V, D) ──────────────────────────
   // Clipboard lives in a ref: per-canvas, survives re-renders, never persisted.
@@ -367,7 +369,7 @@ function NodeCanvasInner({
   }, [allowedNodeTypes, screenToFlowPosition, recordHistory]);
 
   useImperativeHandle(canvasRef, () => ({
-    getCode: () => generatePythonFromFlow(nodes, edges),
+    getCode: () => generateCode(nodes, edges),
     getWorkspace: () => ({ nodes, edges }),
     // Drop persisted selection state - restoring `selected: true` edges would
     // light up their glow halos on load.
@@ -400,7 +402,7 @@ function NodeCanvasInner({
       setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
     },
     getRequiredLibraries: () => {
-      const code = generatePythonFromFlow(nodes, edges);
+      const code = generateCode(nodes, edges);
       // Scan import statements for known third-party MicroPython libraries
       const THIRD_PARTY = ["ssd1306", "mpu6050", "ds18x20", "onewire", "umqtt", "neopixel", "bme280", "vl53l0x", "ads1x15"];
       const found = new Set<string>();
@@ -444,7 +446,7 @@ function NodeCanvasInner({
             <p className="text-[15px] font-bold text-sub">Let's build something!</p>
             <p className="max-w-[260px] text-center text-[13px] leading-relaxed text-hint">
               Drag a block from the left panel onto the canvas - wire blocks together and
-              hit <span className="font-bold text-primary-c">Run</span> to see your robot move.
+              hit <span className="font-bold text-primary-c">Run</span> to see it run on your board.
             </p>
           </motion.div>
         )}

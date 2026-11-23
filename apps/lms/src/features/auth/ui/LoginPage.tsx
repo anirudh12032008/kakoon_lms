@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -46,7 +47,7 @@ export function LoginPage() {
       subtitle="Sign in to continue building robots."
       footer={
         <>
-          New to Kokoon?{" "}
+          New to {APP_NAME}?{" "}
           <Link to="/register" className="font-semibold text-primary-c hover:underline">
             Create an account
           </Link>

@@ -1,3 +1,4 @@
+import { useBoard } from "@/entities/board";
 import { Package, Palette, Activity, Zap, HardDrive, Wrench } from "lucide-react";
 import { useNodeMode } from "@/shared/context/NodeModeContext";
 
@@ -90,6 +91,7 @@ export function FeatureToolbar({
   onOpenDesignerHub, onToggleIMUViz, onToggleSensorViz, onToggleRadarViz,
   onOpenLibraryManager, onOpenFirmwareFlasher, onToggleESP32Files,
 }: FeatureToolbarProps) {
+  const isMicroPython = useBoard().runtime === "micropython";
   const { globalAdvanced } = useNodeMode();
 
   return (
@@ -118,6 +120,7 @@ export function FeatureToolbar({
             </svg>} label="Radar"
             activeColor="cyan" title="Ultrasonic radar polar plot" />
 
+          {isMicroPython && <>
           <Sep />
           <ToolBtn active={showLibraryManager} onClick={onOpenLibraryManager}
             icon={<Package className="h-3.5 w-3.5" />} label="Libraries"
@@ -128,6 +131,7 @@ export function FeatureToolbar({
           <ToolBtn active={showFirmwareFlasher} onClick={onOpenFirmwareFlasher}
             icon={<Zap className="h-3.5 w-3.5" />} label="Flash"
             activeColor="blue" title="Flash MicroPython firmware" />
+          </>}
         </>
       )}
 

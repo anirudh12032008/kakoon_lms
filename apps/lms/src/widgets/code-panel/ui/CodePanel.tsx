@@ -1,6 +1,7 @@
 import { Code2, Lock, Pencil } from "lucide-react";
 import CodeMirror from "@uiw/react-codemirror";
 import { python } from "@codemirror/lang-python";
+import { useBoard } from "@/entities/board";
 import { EditorView } from "@codemirror/view";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags as t } from "@lezer/highlight";
@@ -129,6 +130,7 @@ export function CodePanel({
   generatedCode, editableCode, hasManualEdits,
   onEditableCodeChange, onSetEditableCode,
 }: CodePanelProps) {
+  const fileName = useBoard().runtime === "arduino" ? "sketch.ino" : "main.py";
   return (
     <div className={`flex flex-col transition-all duration-300 bg-panel border-l border-subtle ${
       viewMode === "code" ? "flex-1" : "hidden md:flex w-[320px] lg:w-[420px]"
@@ -138,7 +140,7 @@ export function CodePanel({
         <div className="flex items-center gap-2">
           <Code2 className="h-4 w-4 text-hint" />
           <span className="text-xs font-semibold text-body">
-            {isEditing ? "main.py (edited)" : "main.py"}
+            {fileName}{isEditing ? " (edited)" : ""}
           </span>
           {hasManualEdits && !isEditing && (
             <span className="badge badge-warning badge-sm text-[10px]">edits</span>

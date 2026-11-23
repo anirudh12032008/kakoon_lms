@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./styles/App.css";
@@ -23,7 +24,7 @@ const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
 function PageLoader() {
   return (
     <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
-      <span className="text-lg font-semibold text-body">Kokoon</span>
+      <span className="text-lg font-semibold text-body">{APP_NAME}</span>
       <span className="loading loading-spinner loading-md text-primary-c" />
     </div>
   );

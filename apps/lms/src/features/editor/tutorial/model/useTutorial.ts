@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { Node, Edge } from "@xyflow/react";
-import type { Tutorial } from "@/features/editor/tutorial/lib/tutorials";
+import { builtinTutorials, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
+import { useBoardStore } from "@/entities/board";
 import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import type { RefObject } from "react";
 
@@ -17,6 +18,20 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
   const [completedTutorialIds, setCompletedTutorialIds] = useState<string[]>([]);
   const [activeFlowNodes, setActiveFlowNodes] = useState<Node[]>([]);
   const [activeFlowEdges, setActiveFlowEdges] = useState<Edge[]>([]);
+
+  // A previewed built-in example carries board-specific pins. When the board is
+  // switched and the example is still untouched, swap in that board's version.
+  const boardId = useBoardStore((s) => s.boardId);
+  useEffect(() => {
+    const ws = canvasRef.current?.getWorkspace();
+    if (!ws || ws.nodes.length === 0) return;
+    const ids = ws.nodes.map((n) => n.id).sort().join();
+    const all = (["esp32", "arduino_uno"] as const).flatMap((b) => builtinTutorials(b));
+    const loaded = all.find((t) => t.nodes.map((n) => n.id).sort().join() === ids);
+    const next = loaded && builtinTutorials(boardId).find((t) => t.id === loaded.id);
+    if (next) canvasRef.current?.setWorkspace({ nodes: next.nodes, edges: next.edges });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on board change
+  }, [boardId]);
 
   // Load tutorial state from localStorage on mount
   useEffect(() => {

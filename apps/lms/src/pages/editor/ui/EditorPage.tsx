@@ -24,6 +24,8 @@ import { useDraft } from "@/features/editor/save-draft/model/useDraft";
 import { useCourseSync } from "@/features/editor/save-draft/model/useCourseSync";
 import { useProject } from "@/features/editor/save-project/model/useProject";
 import { useProjectStore } from "@/shared/launch/projectStore";
+import { useBoard } from "@/entities/board";
+import { uploadSketch } from "@/features/editor/arduino-upload/lib/arduinoUpload";
 import { useCourseMissions } from "@/features/editor/missions/model/useCourseMissions";
 import { MissionsPanel } from "@/features/editor/missions/ui/MissionsPanel";
 import { useTutorial } from "@/features/editor/tutorial/model/useTutorial";
@@ -363,15 +365,35 @@ export default function EditorPage({
     [isEditing, editableCode, generatedCode]
   );
 
+  const board = useBoard();
+
+  // Arduino has no REPL: "run" means compile on the server, then flash over USB.
+  const runOnArduino = useCallback(async (code: string) => {
+    if (!board.arduino) return;
+    try {
+      if (isConnected) await disconnect(); // the uploader needs the port to itself
+      const granted = await navigator.serial.getPorts();
+      const port = granted.length === 1 ? granted[0] : await navigator.serial.requestPort();
+      setIsSending(true);
+      const ok = await uploadSketch(code, board.arduino, port, addLog);
+      if (ok) addLog(`Sketch is running on the ${board.label}. Click Connect to see its serial output.`);
+    } catch (err) {
+      addLog(`Upload cancelled: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsSending(false);
+    }
+  }, [board, isConnected, disconnect, addLog]);
+
   const handleRun = useCallback(async () => {
     const code = getCurrentCode();
     if (!code.trim()) { addLog("No code to run. Add some blocks first!"); return; }
+    if (board.runtime === "arduino") return runOnArduino(code);
     if (!isConnected) { addLog("Not connected to ESP32. Click Connect first."); return; }
     setIsSending(true);
     const success = await sendCode(code);
     setIsSending(false);
     if (success) addLog("Code sent to ESP32!");
-  }, [getCurrentCode, isConnected, sendCode, addLog]);
+  }, [getCurrentCode, isConnected, sendCode, addLog, board, runOnArduino]);
 
   const handleStop = useCallback(async () => {
     await stopCode();
@@ -380,12 +402,13 @@ export default function EditorPage({
   const handleUpload = useCallback(async () => {
     const code = getCurrentCode();
     if (!code.trim()) { addLog("No code to upload."); return; }
+    if (board.runtime === "arduino") return runOnArduino(code);
     if (!isConnected) { addLog("Not connected to ESP32."); return; }
     setIsUploading(true);
     const success = await uploadCode(code);
     setIsUploading(false);
     if (success) addLog("Code saved to ESP32! It will run on boot.");
-  }, [getCurrentCode, isConnected, uploadCode, addLog]);
+  }, [getCurrentCode, isConnected, uploadCode, addLog, board, runOnArduino]);
 
   // ── Export / Import ───────────────────────────────────────────────────────────
   const importInputRef = useRef<HTMLInputElement>(null);

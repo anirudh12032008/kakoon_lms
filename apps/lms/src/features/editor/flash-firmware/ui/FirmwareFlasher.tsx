@@ -7,12 +7,15 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Cpu, AlertTriangle, CheckCircle, Loader2, Zap, Plus, Usb } from "lucide-react";
 import { ESPLoader, Transport } from "esptool-js";
+import { useBoard } from "@/entities/board";
 
 type FlashState = "idle" | "connecting" | "erasing" | "flashing" | "done" | "error";
 
 interface Props { onClose: () => void; }
 
 export function FirmwareFlasher({ onClose }: Props) {
+  const board = useBoard();
+  const fw = board.firmware;
   const [state,        setState]        = useState<FlashState>("idle");
   const [progress,     setProgress]     = useState(0);
   const [log,          setLog]          = useState<string[]>([]);
@@ -44,14 +47,14 @@ export function FirmwareFlasher({ onClose }: Props) {
   };
 
   const handleFlash = async () => {
-    if (!selectedPort) return;
+    if (!selectedPort || !fw) return;
     setState("connecting");
     setProgress(0);
     setLog([]);
     let transport: InstanceType<typeof Transport> | null = null;
 
     try {
-      push("Connecting to ESP32-S3 bootloader…");
+      push(`Connecting to ${board.chip} bootloader…`);
       transport = new Transport(selectedPort, false);
 
       const loader = new ESPLoader({
@@ -75,16 +78,18 @@ export function FirmwareFlasher({ onClose }: Props) {
       push("Erased");
 
       setState("flashing");
-      push(" Loading MicroPython v1.25.0…");
-      const res = await fetch("/firmware/esp32s3-micropython.bin");
-      if (!res.ok) throw new Error(`Firmware fetch failed (${res.status})`);
+      push(` Loading MicroPython ${fw.version}…`);
+      const res = await fetch(fw.url);
+      // A missing file is served as index.html by the dev server, so check the type too.
+      if (!res.ok || res.headers.get("content-type")?.includes("text/html"))
+        throw new Error(`Firmware for ${board.label} is not bundled yet (${fw.url})`);
       const data = new Uint8Array(await res.arrayBuffer());
       if (data[0] !== 0xE9) throw new Error(`Invalid firmware header (0x${data[0].toString(16)})`);
       push(`${(data.length / 1024).toFixed(0)} KB ready`);
       push("Writing…");
 
       await loader.writeFlash({
-        fileArray: [{ data, address: 0x0 }],
+        fileArray: [{ data, address: fw.address }],
         flashMode: "keep", flashFreq: "keep", flashSize: "keep",
         eraseAll: false, compress: true,
         reportProgress: (_i, written, total) =>
@@ -93,7 +98,7 @@ export function FirmwareFlasher({ onClose }: Props) {
 
       setProgress(100);
       push("Done!");
-      push("ESP32-S3 is running MicroPython v1.25.0. Connect now.");
+      push(`${board.label} is running MicroPython ${fw.version}. Connect now.`);
       await loader.after();
       setState("done");
 
@@ -141,7 +146,7 @@ export function FirmwareFlasher({ onClose }: Props) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Flash Firmware</h2>
-              <p className="text-[10px] text-[var(--k-muted)]">ESP32-S3 · MicroPython v1.25.0</p>
+              <p className="text-[10px] text-[var(--k-muted)]">{board.label} · {board.chip} · MicroPython {fw?.version}</p>
             </div>
           </div>
           {!isBusy && (

@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Search, ChevronDown, Check, ArrowLeft, Eye, Play, Upload, Loader2, X } from "lucide-react";
-import { type Tutorial, BUILTIN_TUTORIALS } from "@/features/editor/tutorial/lib/tutorials";
+import { type Tutorial, builtinTutorials } from "@/features/editor/tutorial/lib/tutorials";
+import { useBoardStore } from "@/entities/board";
 
 interface TutorialsDashboardProps {
   onBack: () => void;
@@ -34,6 +35,7 @@ export function TutorialsDashboard({
       .catch(() => setLoading(false));
   }, []);
 
+  const boardId = useBoardStore((s) => s.boardId);
   const tutorials = useMemo(() => {
     let custom: Tutorial[] = [];
     try {
@@ -42,9 +44,9 @@ export function TutorialsDashboard({
     } catch { }
     // Builtins are always present; DB tutorials override by id if they share one
     const dbIds = new Set(dbTutorials.map((t) => t.id));
-    const filteredBuiltins = BUILTIN_TUTORIALS.filter((t) => !dbIds.has(t.id));
+    const filteredBuiltins = builtinTutorials(boardId).filter((t) => !dbIds.has(t.id));
     return [...filteredBuiltins, ...dbTutorials, ...custom, ...customList];
-  }, [dbTutorials, customList]);
+  }, [dbTutorials, customList, boardId]);
 
   const handleImportTutorial = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -55,7 +57,7 @@ export function TutorialsDashboard({
       try {
         const json = JSON.parse(e.target?.result as string);
         if (!json.title || !json.nodes || !json.edges) {
-          alert("Invalid Kokoon Tutorial file format. Missing title, nodes, or edges.");
+          alert("Invalid tutorial file format. Missing title, nodes, or edges.");
           return;
         }
 
@@ -64,7 +66,7 @@ export function TutorialsDashboard({
           title: json.title,
           description: json.description || "Custom imported robotics tutorial.",
           difficulty: json.difficulty || "Easy",
-          board: json.board || "Quark C3",
+          board: json.board || "Custom",
           components: json.components || ["Custom"],
           nodes: json.nodes,
           edges: json.edges,
@@ -146,9 +148,9 @@ export function TutorialsDashboard({
           </svg>
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Robotics & AI Examples</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Project Examples</h1>
           <p className="text-[var(--k-muted)] text-xs mt-1">
-            Browse and load prepackaged and custom robotics and AI block programs.
+            Browse and load ready-made example projects, or import your own.
           </p>
         </div>
       </div>

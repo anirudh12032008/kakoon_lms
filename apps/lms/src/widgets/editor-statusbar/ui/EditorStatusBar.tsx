@@ -3,6 +3,7 @@ import {
   Loader2, Upload, HardDrive, Play, Square,
 } from "lucide-react";
 import { useGamification } from "@/entities/gamification";
+import { useBoard } from "@/entities/board";
 
 interface EditorStatusBarProps {
   showTerminal: boolean;
@@ -43,10 +44,14 @@ export function EditorStatusBar({
   isUploading, isSending, isRunning, onUpload, onRun, onStop, onOpenFileManager,
 }: EditorStatusBarProps) {
   const award = useGamification((s) => s.award);
+  const board = useBoard();
+  // Arduino sketches are compiled and flashed in one step, so Run works unconnected.
+  const isArduino = board.runtime === "arduino";
+  const canRun = (isConnected || isArduino) && !isSending;
 
   // XP rewards ride along with the real actions (daily-capped in the store).
-  const handleRun = () => { award("runCode", "Code sent to your robot"); onRun(); };
-  const handleUpload = () => { award("uploadCode", "Program saved to ESP32"); onUpload(); };
+  const handleRun = () => { award("runCode", "Code sent to your board"); onRun(); };
+  const handleUpload = () => { award("uploadCode", `Program saved to ${board.label}`); onUpload(); };
 
   return (
     <footer className="flex h-12 shrink-0 items-center justify-between gap-2 px-3 bg-panel border-t border-subtle">
@@ -70,7 +75,7 @@ export function EditorStatusBar({
           isConnected ? "bg-success-tint text-success-c" : "bg-hover text-sub"
         }`}>
           <Circle className="h-2 w-2" fill="currentColor" />
-          {isConnected ? "Robot connected" : "Not connected"}
+          {isConnected ? "Board connected" : "Not connected"}
         </div>
 
         {/* Connection mode picker */}
@@ -143,9 +148,10 @@ export function EditorStatusBar({
           )}
         </button>
 
+        {!isArduino && <>
         <button onClick={handleUpload} disabled={!isConnected || isUploading}
           className="btn btn-ghost btn-xs gap-1.5 text-sub border border-subtle"
-          title="Save code to ESP32">
+          title={`Save code to ${board.label} so it runs on boot`}>
           {isUploading
             ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Uploading…</span></>
             : <><Upload className="h-3.5 w-3.5" /><span className="hidden sm:inline">Upload</span></>
@@ -154,10 +160,11 @@ export function EditorStatusBar({
 
         <button onClick={onOpenFileManager} disabled={!isConnected}
           className="btn btn-ghost btn-xs gap-1.5 text-sub border border-subtle hidden sm:flex disabled:opacity-40"
-          title={isConnected ? "Browse files on your robot" : "Connect your robot to browse its files"}>
+          title={isConnected ? "Browse files on your board" : "Connect your board to browse its files"}>
           <HardDrive className="h-3.5 w-3.5" />
           Files
         </button>
+        </>}
 
         {isRunning && (
           <button onClick={onStop}
@@ -168,13 +175,14 @@ export function EditorStatusBar({
           </button>
         )}
 
-        <button onClick={handleRun} disabled={!isConnected || isSending}
+        <button onClick={handleRun} disabled={!canRun}
+          title={isArduino ? `Compile and upload to ${board.label}` : "Run on the board"}
           className={`btn btn-sm gap-1.5 font-bold text-white bg-brand-gradient border-0 hover:opacity-90 transition-shadow ${
-            isConnected && !isSending ? "shadow-[0_0_18px_color-mix(in_srgb,var(--k-primary)_55%,transparent)]" : ""
+            canRun ? "shadow-[0_0_18px_color-mix(in_srgb,var(--k-primary)_55%,transparent)]" : ""
           }`}>
           {isSending
-            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Running…</span></>
-            : <><Play className="h-3.5 w-3.5" fill="white" /><span className="hidden sm:inline">Run</span></>
+            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">{isArduino ? "Uploading…" : "Running…"}</span></>
+            : <><Play className="h-3.5 w-3.5" fill="white" /><span className="hidden sm:inline">{isArduino ? "Upload" : "Run"}</span></>
           }
         </button>
       </div>

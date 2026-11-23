@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
@@ -6,7 +7,7 @@ function FullScreenLoader() {
     <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
       <div className="flex items-center gap-3">
         <span className="text-2xl"></span>
-        <span className="text-lg font-bold text-primary-c">Kokoon</span>
+        <span className="text-lg font-bold text-primary-c">{APP_NAME}</span>
       </div>
       <span className="loading loading-spinner loading-md text-primary-c" />
     </div>

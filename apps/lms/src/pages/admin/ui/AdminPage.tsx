@@ -1,3 +1,4 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { useState, useMemo } from "react";
 import { generateStepsFromFlow, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
 import type { Node, Edge } from "@xyflow/react";
@@ -72,7 +73,7 @@ function LoginScreen({ onAuth }: { onAuth: () => void }) {
           <div className="w-9 h-9 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-lg"></div>
           <div>
             <p className="text-sm font-bold text-white">Admin Access</p>
-            <p className="text-xs text-[var(--k-muted)]">Kokoon Tutorial Builder</p>
+            <p className="text-xs text-[var(--k-muted)]">{APP_NAME} Tutorial Builder</p>
           </div>
         </div>
 
@@ -202,7 +203,7 @@ function TutorialBuilder({ onBack }: { onBack: () => void }) {
     const tutorial: Tutorial = {
       id: `custom_${Date.now()}`,
       title: title.trim(),
-      description: desc.trim() || "Custom Kokoon tutorial.",
+      description: desc.trim() || `Custom ${APP_NAME} tutorial.`,
       difficulty,
       board: "Quark C3",
       components: components.split(",").map((s) => s.trim()).filter(Boolean),

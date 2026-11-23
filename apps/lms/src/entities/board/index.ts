@@ -23,3 +23,6 @@ export type {
   ServoType,
   MotorId,
 } from "./model/hardwareConfig";
+
+export { BOARDS, BOARD_ORDER, DEFAULT_BOARD, useBoardStore, useBoard, getBoard } from "./model/boards";
+export type { BoardId, BoardProfile, BoardRuntime } from "./model/boards";

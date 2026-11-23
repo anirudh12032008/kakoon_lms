@@ -8,6 +8,7 @@ import { config } from "./config/config";
 import { authRouter } from "./modules/auth/auth.routes";
 import { coursesRouter } from "./modules/courses/courses.routes";
 import { enrollmentsRouter } from "./modules/enrollments/enrollments.routes";
+import { arduinoRouter } from "./modules/arduino/arduino.routes";
 import { projectsRouter } from "./modules/projects/projects.routes";
 import { notFound, errorHandler } from "./middleware/error";
 
@@ -44,6 +45,7 @@ export function createApp() {
   app.use("/api/courses", coursesRouter);
   app.use("/api/enrollments", enrollmentsRouter);
   app.use("/api/projects", projectsRouter);
+  app.use("/api/arduino", arduinoRouter);
 
   app.use(notFound);
   app.use(errorHandler);

@@ -11,6 +11,7 @@ import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import {
   NEOPIXEL, SERVO_PORTS, MOTORS, SENSOR_PORTS, OLED, ONBOARD_IMU,
 } from "@/entities/board/model/hardwareConfig";
+import { useBoard } from "@/entities/board";
 import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
 // ─── Wokwi-quality component illustrations ────────────────────────────────────
@@ -296,20 +297,47 @@ const BOARD_PORTS: BoardPort[] = [
 
 // ─── Board node - uses real Kokoon Labs PCB image ─────────────────────────────
 
+// Ports that only exist on the Kokoon PCB (onboard motor drivers + LED ring).
+const KOKOON_ONLY_PORTS = /^(motor_|neopixel)/;
+
 function BoardNode() {
+  const board = useBoard();
+  const isKokoon = board.id === "kokoon";
   return (
     <div className="relative select-none" style={{width:480,height:480}}>
-      <img
-        src="/assets/kokoon-board.png"
-        alt="Kokoon Labs Board"
-        draggable={false}
-        style={{
-          width:"100%", height:"100%",
-          objectFit:"contain",
-          userSelect:"none", pointerEvents:"none",
-          filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.7))",
-        }}
-      />
+      {isKokoon ? (
+        <img
+          src="/assets/kokoon-board.png"
+          alt="Kokoon Labs Board"
+          draggable={false}
+          style={{
+            width:"100%", height:"100%",
+            objectFit:"contain",
+            userSelect:"none", pointerEvents:"none",
+            filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.7))",
+          }}
+        />
+      ) : (
+        // Generic boards: a plain labelled board, ports named instead of drawn.
+        <div className="absolute inset-[4%] rounded-3xl border-2 flex flex-col items-center justify-center gap-1"
+          style={{
+            background: board.runtime === "arduino" ? "#0f766e" : "#1e293b",
+            borderColor: "rgba(255,255,255,0.18)",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
+          }}>
+          <span className="text-2xl font-black tracking-tight text-white">{board.label}</span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-white/60">{board.chip}</span>
+          {BOARD_PORTS.filter((p) => !KOKOON_ONLY_PORTS.test(p.id)).map((p) => (
+            <span key={p.id} className="absolute text-[10px] font-bold text-white/80 whitespace-nowrap"
+              style={{
+                left: `${p.x}%`, top: `${p.y + (p.side === Position.Top ? 6 : -7)}%`,
+                transform: "translate(-50%, -50%)",
+              }}>
+              {p.id.startsWith("servo_") ? p.label.slice(6) : p.label}
+            </span>
+          ))}
+        </div>
+      )}
 
       {BOARD_PORTS.map((port)=>(
         <Handle
@@ -326,6 +354,7 @@ function BoardNode() {
             border:`3px solid ${port.color}70`,
             boxShadow:`0 0 10px ${port.color}90, 0 0 20px ${port.color}30`,
             zIndex:10,
+            opacity: !isKokoon && KOKOON_ONLY_PORTS.test(port.id) ? 0 : 1,
           }}
           title={port.label}
         />
