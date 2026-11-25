@@ -22,7 +22,7 @@ export interface TerminalErrorDef {
 
 export const TERMINAL_ERRORS: TerminalErrorDef[] = [
   // ── DEV-1xxx - connection / host ────────────────────────────────────────
-  { code: "DEV-1001", match: /not connected/i, title: "Device not connected", hint: "Connect your ESP32 over USB before running code." },
+  { code: "DEV-1001", match: /not connected/i, title: "Device not connected", hint: "Connect your board over USB before running code." },
   { code: "DEV-1002", match: /connection failed/i, title: "Couldn't connect to the device", hint: "Replug the board, pick the right port, and try again." },
   { code: "DEV-1003", match: /(send|upload|stop) failed/i, title: "Lost connection to the device", hint: "The board may have been unplugged - reconnect and retry." },
   { code: "DEV-1004", match: /web serial api not supported/i, title: "Browser can't access USB", hint: "Use Chrome or Edge on desktop for USB serial." },
@@ -63,7 +63,7 @@ export function classifyTerminalError(line: string): TerminalError | null {
       return { code: def.code, title: def.title, hint: def.hint, detail: cleanLine(line) };
     }
   }
-  const looksLikeError = /|traceback|exception|\bfail(?:ed)?\b|\berror\b|\w+Error:/i.test(line);
+  const looksLikeError = /exception|\bfail(?:ed)?\b|\berror\b|\w+Error:/i.test(line);
   if (looksLikeError) {
     return { code: GENERIC_CODE, title: "Terminal error", detail: cleanLine(line) };
   }

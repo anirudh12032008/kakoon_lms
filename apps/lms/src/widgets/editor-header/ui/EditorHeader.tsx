@@ -1,7 +1,7 @@
 import { APP_NAME } from "@/shared/config/brand";
 import { useEffect, useRef, useState } from "react";
 import {
-  Blocks, SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles,
+  SplitSquareHorizontal, Code2, BookOpen, ChevronLeft, Cpu, Sparkles,
   GraduationCap, Download, Upload, Cloud, CloudOff, Check, Loader2, MoreHorizontal,
   Save, Pencil, Share2, Eye, User,
 } from "lucide-react";
@@ -13,6 +13,7 @@ import { useAnimations } from "@/shared/context/AnimationContext";
 import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
 import { BOARDS, BOARD_ORDER, useBoardStore, type BoardId } from "@/entities/board";
 import { PlayerChip, AchievementsModal } from "@/entities/gamification";
+import { BrandMark } from "@/shared/ui/BrandMark";
 
 interface EditorHeaderProps {
   viewMode: ViewMode;
@@ -47,8 +48,8 @@ interface EditorHeaderProps {
 /** Live "saved to your account" indicator for course sessions. */
 function SyncIndicator({ state }: { state: SyncState }) {
   const map: Record<SyncState, { icon: React.ReactNode; label: string; cls: string }> = {
-    idle: { icon: <Cloud className="h-3.5 w-3.5" />, label: "Synced", cls: "text-hint" },
-    loading: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Loading…", cls: "text-hint" },
+    idle: { icon: <Cloud className="h-3.5 w-3.5" />, label: "Synced", cls: "text-sub" },
+    loading: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Loading…", cls: "text-sub" },
     saving: { icon: <Loader2 className="h-3.5 w-3.5 animate-spin" />, label: "Saving…", cls: "text-info-c" },
     saved: { icon: <Check className="h-3.5 w-3.5" />, label: "Saved", cls: "text-success-c" },
     error: { icon: <CloudOff className="h-3.5 w-3.5" />, label: "Save failed", cls: "text-error-c" },
@@ -56,11 +57,12 @@ function SyncIndicator({ state }: { state: SyncState }) {
   const s = map[state];
   return (
     <div
-      className={`flex items-center gap-1.5 rounded-full border border-subtle bg-raised px-2.5 py-1 text-[11px] font-semibold ${s.cls}`}
+      role="status"
+      className={`flex shrink-0 items-center gap-1.5 text-xs font-semibold ${s.cls}`}
       title={`Your work is saved to your ${APP_NAME} account`}
     >
       {s.icon}
-      <span className="hidden sm:inline">{s.label}</span>
+      <span className="sr-only xl:not-sr-only">{s.label}</span>
     </div>
   );
 }
@@ -84,7 +86,9 @@ const VIEW_TABS: { mode: ViewMode; icon: React.ReactNode; label: string }[] = [
 ];
 
 /** Overflow menu for secondary project actions - keeps the header calm. */
-function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
+function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial, compactItems }: {
+  /** Header actions that fold into this menu below the `lg` breakpoint. */
+  compactItems: { label: string; icon: React.ReactNode; onClick: () => void }[];
   onImportProject?: () => void;
   onExportProject?: () => void;
   onSaveAsTutorial?: () => void;
@@ -98,25 +102,39 @@ function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
     const close = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     window.addEventListener("mousedown", close);
-    return () => window.removeEventListener("mousedown", close);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", onKey);
+    };
   }, [open]);
 
   const item =
-    "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-semibold text-sub transition-colors hover:bg-hover hover:text-body";
+    "flex min-h-9 w-full items-center gap-2.5 rounded-md px-3 text-left text-[13px] font-semibold text-sub transition-colors hover:bg-hover hover:text-body";
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((v) => !v)}
         title="More actions"
+        aria-label="More actions"
+        aria-haspopup="true"
+        aria-expanded={open}
         className={`btn btn-ghost btn-sm px-2 ${open ? "bg-hover text-body" : "text-sub"}`}
       >
-        <MoreHorizontal className="h-4 w-4" />
+        <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
       </button>
 
       {open && (
-        <div className="anim-pop-in absolute right-0 top-full z-[1200] mt-1.5 w-56 rounded-xl border border-subtle bg-panel p-1.5 shadow-2xl">
+        <div className="anim-pop-in absolute right-0 top-full z-[1200] mt-1.5 w-56 rounded-lg border border-subtle bg-panel p-1.5 shadow-xl">
+          {compactItems.map((it) => (
+            <button key={it.label} onClick={() => { it.onClick(); setOpen(false); }} className={`${item} lg:hidden`}>
+              {it.icon} {it.label}
+            </button>
+          ))}
+          {compactItems.length > 0 && <div className="my-1 border-t border-subtle lg:hidden" />}
           {onImportProject && (
             <button onClick={() => { onImportProject(); setOpen(false); }} className={item}>
               <Upload className="h-4 w-4" /> Import project…
@@ -133,10 +151,10 @@ function MoreMenu({ onImportProject, onExportProject, onSaveAsTutorial }: {
             </button>
           )}
           <div className="my-1 border-t border-subtle" />
-          <button onClick={toggleAnimations} className={item}>
-            <Sparkles className={`h-4 w-4 ${animationsEnabled ? "text-primary-c" : "opacity-40"}`} />
+          <button onClick={toggleAnimations} aria-pressed={animationsEnabled} className={item}>
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
             Animations
-            <span className={`ml-auto text-[10px] font-bold uppercase ${animationsEnabled ? "text-primary-c" : "text-hint"}`}>
+            <span className={`ml-auto text-xs font-semibold ${animationsEnabled ? "text-primary-c" : "text-sub"}`}>
               {animationsEnabled ? "On" : "Off"}
             </span>
           </button>
@@ -155,55 +173,67 @@ export function EditorHeader({
   onSaveAsTutorial, onExportProject, onImportProject,
 }: EditorHeaderProps) {
   const title      = launchContext?.title      ?? "Full Workshop";
-  const launchType = isCourse ? "course" : (launchContext?.launchType ?? "mode");
   const [showAchievements, setShowAchievements] = useState(false);
   const boardId = useBoardStore((s) => s.boardId);
   const setBoard = useBoardStore((s) => s.setBoard);
 
+  // Below `lg` these three live in the More menu so the header stays on one row.
+  const compactItems = [
+    ...(canSaveProject && onSaveProject
+      ? [{
+          label: projectName ? "Rename project" : "Save to my projects",
+          icon: projectName ? <Pencil className="h-4 w-4" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />,
+          onClick: onSaveProject,
+        }]
+      : []),
+    ...(onShareProject
+      ? [{ label: "Copy share link", icon: <Share2 className="h-4 w-4" aria-hidden="true" />, onClick: onShareProject }]
+      : []),
+    { label: "Tutorials", icon: <BookOpen className="h-4 w-4" aria-hidden="true" />, onClick: onToggleTutorials },
+  ];
+  const actionLabel = "hidden text-xs 2xl:inline";
+
   return (
     <header className="flex h-12 shrink-0 items-center justify-between gap-2 px-2 bg-panel border-b border-subtle">
+      <title>{`${projectName || title} · ${APP_NAME}`}</title>
+      <h1 className="sr-only">{projectName || title}</h1>
       {/* Logo + back */}
       <div className="flex items-center gap-1 shrink-0">
-        <div className="flex items-center gap-2 px-1">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-gradient">
-            <Blocks className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-sm font-bold text-body hidden lg:inline">{APP_NAME}</span>
+        <div className="hidden px-1 md:flex">
+          <BrandMark size="sm" nameClassName="hidden 2xl:inline" />
         </div>
         {onBackToDashboard && (
           <button
             onClick={onBackToDashboard}
             className="btn btn-ghost btn-sm gap-1 px-2 text-sub"
             title={isCourse ? "Back to course" : "Back to dashboard"}
+            aria-label={isCourse ? "Back to course" : "Back to dashboard"}
           >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="hidden md:inline text-xs">{isCourse ? "Course" : "Dashboard"}</span>
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden xl:inline text-xs">{isCourse ? "Course" : "Dashboard"}</span>
           </button>
         )}
       </div>
 
       {/* Centre breadcrumb */}
-      <div className="hidden flex-1 items-center justify-center px-2 md:flex min-w-0">
-        <div className="flex max-w-[42rem] items-center gap-2 rounded-full px-3 py-1.5 bg-raised border border-subtle">
-          {isCourse && <GraduationCap className="h-3.5 w-3.5 text-primary-c shrink-0" />}
+      <div className="hidden flex-1 items-center justify-center px-2 lg:flex min-w-0">
+        <div className="flex min-w-0 max-w-[42rem] items-center gap-2 rounded-md px-3 py-1.5 bg-raised border border-subtle">
+          {isCourse && <GraduationCap className="h-3.5 w-3.5 text-primary-c shrink-0" aria-hidden="true" />}
           {readOnly ? (
             <>
-              <span className="badge badge-ghost badge-sm gap-1 text-[10px] text-hint">
-                <Eye className="h-3 w-3" /> View only
+              <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-sub">
+                <Eye className="h-3.5 w-3.5" aria-hidden="true" /> View only
               </span>
-              <span className="text-xs font-semibold truncate text-body">{title}</span>
+              <span className="text-[13px] font-semibold truncate text-body">{title}</span>
               {sharedAuthorName && (
-                <span className="flex items-center gap-1 rounded-full border border-subtle bg-raised px-2.5 py-1 text-[11px] font-semibold text-sub">
-                  <User className="h-3 w-3" /> Created by {sharedAuthorName}
+                <span className="hidden shrink-0 items-center gap-1 text-xs font-semibold text-sub lg:flex">
+                  <User className="h-3.5 w-3.5" aria-hidden="true" /> By {sharedAuthorName}
                 </span>
               )}
             </>
           ) : (
             <>
-              <span className="badge badge-ghost badge-sm uppercase tracking-wider text-[10px] text-hint">
-                {projectName ? "project" : launchType}
-              </span>
-              <span className="text-xs font-semibold truncate text-body">{projectName || title}</span>
+              <span className="text-[13px] font-semibold truncate text-body">{projectName || title}</span>
               {isCourse && syncState && <SyncIndicator state={syncState} />}
               {!isCourse && projectName && projectSyncState && <SyncIndicator state={projectSyncState} />}
             </>
@@ -213,75 +243,85 @@ export function EditorHeader({
 
       {/* View mode switcher - Framer Motion layoutId for sliding active indicator */}
       <div className="flex items-center shrink-0">
-        <div className="flex rounded-full p-1 gap-0.5 bg-raised">
-          {VIEW_TABS.map(({ mode, icon, label }) => (
-            <button
-              key={mode}
-              onClick={() => { setViewMode(mode); if (mode !== "code") setIsEditing(false); }}
-              className="relative flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
-              style={{ color: viewMode === mode ? "white" : undefined }}
-            >
-              {/* Sliding background - shared layoutId makes it animate between tabs */}
-              {viewMode === mode && (
-                <motion.div
-                  layoutId="view-tab-indicator"
-                  className="absolute inset-0 rounded-full bg-brand-gradient shadow-sm"
-                  transition={{ type: "spring", stiffness: 420, damping: 32 }}
-                />
-              )}
-              <span className={`relative z-10 ${viewMode === mode ? "" : "text-sub hover:text-body"}`}>
-                {icon}
-              </span>
-              <span className={`relative z-10 hidden sm:inline ${viewMode === mode ? "" : "text-sub hover:text-body"}`}>
-                {label}
-              </span>
-            </button>
-          ))}
+        <div role="group" aria-label="View" className="flex rounded-lg border border-subtle bg-raised p-0.5 gap-0.5">
+          {VIEW_TABS.map(({ mode, icon, label }) => {
+            const active = viewMode === mode;
+            return (
+              <button
+                key={mode}
+                onClick={() => { setViewMode(mode); if (mode !== "code") setIsEditing(false); }}
+                aria-pressed={active}
+                aria-label={`${label} view`}
+                title={`${label} view`}
+                className={`relative flex min-h-7 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors sm:px-3 ${
+                  active ? "text-on-primary" : "text-sub hover:text-body"
+                }`}
+              >
+                {/* Sliding background - shared layoutId makes it animate between tabs */}
+                {active && (
+                  <motion.div
+                    layoutId="view-tab-indicator"
+                    className="absolute inset-0 rounded-md bg-brand-gradient"
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                  />
+                )}
+                <span className="relative z-10" aria-hidden="true">{icon}</span>
+                <span className="relative z-10 hidden xl:inline">{label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Right actions - only the essentials stay top-level */}
       <div className="flex items-center gap-1 shrink-0">
-        <PlayerChip compact onClick={() => setShowAchievements(true)} />
+        <div className="hidden md:block">
+          <PlayerChip compact onClick={() => setShowAchievements(true)} />
+        </div>
 
         {canSaveProject && onSaveProject && (
           <button
             onClick={onSaveProject}
-            className="btn btn-ghost btn-sm gap-1.5 text-sub"
+            className="btn btn-ghost btn-sm hidden gap-1.5 text-sub lg:inline-flex"
             title={projectName ? "Rename project" : "Save to my projects"}
+            aria-label={projectName ? "Rename project" : "Save to my projects"}
           >
-            {projectName ? <Pencil className="h-4 w-4" /> : <Save className="h-4 w-4" />}
-            <span className="hidden lg:inline text-xs">{projectName ? "Rename" : "Save"}</span>
+            {projectName ? <Pencil className="h-4 w-4" aria-hidden="true" /> : <Save className="h-4 w-4" aria-hidden="true" />}
+            <span className={actionLabel}>{projectName ? "Rename" : "Save"}</span>
           </button>
         )}
 
         {onShareProject && (
           <button
             onClick={onShareProject}
-            className={`btn btn-ghost btn-sm gap-1.5 ${shareCopied ? "text-success-c" : "text-sub"}`}
+            className={`btn btn-ghost btn-sm hidden gap-1.5 lg:inline-flex ${shareCopied ? "text-success-c" : "text-sub"}`}
             title="Copy a public share link"
+            aria-label="Copy a public share link"
           >
-            {shareCopied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-            <span className="hidden lg:inline text-xs">{shareCopied ? "Copied!" : "Share"}</span>
+            {shareCopied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Share2 className="h-4 w-4" aria-hidden="true" />}
+            <span className={actionLabel}>{shareCopied ? "Copied!" : "Share"}</span>
           </button>
         )}
+        <span role="status" className="sr-only">{shareCopied ? "Share link copied to clipboard" : ""}</span>
 
         <button
           onClick={onToggleTutorials}
-          className={`btn btn-ghost btn-sm gap-1.5 ${showTutorialsCatalog ? "text-secondary-c bg-secondary-tint" : "text-sub"}`}
+          aria-pressed={showTutorialsCatalog}
+          aria-label="Tutorials"
+          className={`btn btn-ghost btn-sm hidden gap-1.5 lg:inline-flex ${showTutorialsCatalog ? "text-primary-c bg-primary-tint" : "text-sub"}`}
           title="Tutorials"
         >
-          <BookOpen className="h-4 w-4" />
-          <span className="hidden lg:inline text-xs">Tutorials</span>
+          <BookOpen className="h-4 w-4" aria-hidden="true" />
+          <span className={actionLabel}>Tutorials</span>
         </button>
 
         <label className="flex items-center gap-1.5 text-sub" title="Board you are programming">
-          <Cpu className="h-4 w-4 shrink-0" />
+          <Cpu className="hidden h-4 w-4 shrink-0 sm:block" aria-hidden="true" />
           <select
             aria-label="Board"
             value={boardId}
             onChange={(e) => setBoard(e.target.value as BoardId)}
-            className="select select-sm h-8 min-h-0 w-auto bg-raised border-subtle text-xs font-semibold text-body"
+            className="select select-sm h-8 min-h-0 w-24 bg-raised text-xs font-semibold text-body sm:w-auto"
           >
             {BOARD_ORDER.map((id) => (
               <option key={id} value={id}>{BOARDS[id].label}</option>
@@ -289,9 +329,12 @@ export function EditorHeader({
           </select>
         </label>
 
-        <ThemeSwitcher compact />
+        <div className="hidden sm:block">
+          <ThemeSwitcher compact />
+        </div>
 
         <MoreMenu
+          compactItems={compactItems}
           onImportProject={onImportProject}
           onExportProject={onExportProject}
           onSaveAsTutorial={onSaveAsTutorial}

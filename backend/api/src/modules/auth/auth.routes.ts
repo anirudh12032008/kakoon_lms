@@ -11,6 +11,8 @@ const authLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  // Count failures only: a class signing in from one campus IP must not lock itself out.
+  skipSuccessfulRequests: true,
   message: { error: "Too many attempts, please try again later" },
 });
 

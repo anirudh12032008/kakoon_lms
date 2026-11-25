@@ -19,6 +19,20 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     });
   }
 
+  // Malformed id in the URL (e.g. /projects/not-an-id): a missing resource, not a crash.
+  if ((err as { name?: string })?.name === "CastError") {
+    return res.status(ERRORS.NOT_FOUND.status).json({ error: ERRORS.NOT_FOUND.message, code: ERRORS.NOT_FOUND.code });
+  }
+
+  // body-parser rejections (invalid JSON, payload too large) carry their own 4xx status.
+  const status = (err as { status?: number })?.status;
+  if (typeof status === "number" && status >= 400 && status < 500) {
+    return res.status(status).json({
+      error: status === 413 ? "This project is too large to save" : ERRORS.BAD_REQUEST.message,
+      code: ERRORS.BAD_REQUEST.code,
+    });
+  }
+
   // Mongo duplicate key
   if (typeof err === "object" && err && (err as { code?: number }).code === 11000) {
     return res.status(ERRORS.DUPLICATE_RESOURCE.status).json({

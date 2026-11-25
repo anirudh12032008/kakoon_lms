@@ -10,6 +10,7 @@ import {
 import { tryParseSensorLine, useSensorStore } from "@/shared/lib/sensorStore";
 import { reportError } from "@/shared/error/errorToastStore";
 import { classifyTerminalError } from "@/features/editor/serial-connect/lib/terminalErrors";
+import { getBoard } from "@/entities/board";
 
 type ConnectionType = "usb" | "wifi";
 
@@ -61,13 +62,18 @@ export function useSerialConnection() {
         const { value, done } = await conn.reader.read();
         if (done) break;
         if (value) {
-          const text = new TextDecoder().decode(value);
+          // Raw REPL ends a program's output with \x04 (no newline, no ">>>"):
+          // treat it as end-of-line and as "program finished".
+          const text = new TextDecoder().decode(value).split("\x04").join("\n");
+          if (value.includes(4)) setIsRunning(false);
           responseBufferRef.current += text;
 
           const lines = responseBufferRef.current.split(/\r?\n/);
           responseBufferRef.current = lines.pop() ?? "";
 
-          for (const line of lines) {
+          for (const raw of lines) {
+            // Raw REPL glues its prompt + "OK" ack onto the first output line.
+            const line = raw.replace(/^>OK/, "");
             if (line.trim()) {
               addLog(`${line}`);
               responseCallbackRef.current?.(line);
@@ -116,11 +122,20 @@ export function useSerialConnection() {
     if (connectionTypeRef.current === "usb") {
       await disconnectSerial(connectionRef.current);
     }
+    connectionRef.current = { port: null, writer: null, reader: null, isConnected: false };
     setIsConnected(false);
+    setIsRunning(false);
     addLog("Disconnected");
   }, [addLog]);
 
   const sendCode = useCallback(async (code: string): Promise<boolean> => {
+    // Everything that reaches here is MicroPython source for the REPL (Run,
+    // library install, file browser, designer uploads). An Arduino would just
+    // receive it as garbage on its serial input.
+    if (getBoard().runtime !== "micropython") {
+      addLog(`This needs a MicroPython board. ${getBoard().label} runs Arduino sketches: use Upload.`);
+      return false;
+    }
     if (!connectionRef.current.writer) {
       addLog("Not connected");
       return false;
@@ -141,7 +156,7 @@ export function useSerialConnection() {
 
   const stopCode = useCallback(async (): Promise<void> => {
     const writer = connectionRef.current.writer;
-    if (!writer) return;
+    if (!writer || getBoard().runtime !== "micropython") return; // Ctrl+C means nothing to an Arduino sketch
     try {
       // Ctrl+C twice - interrupts any running MicroPython script
       const encoder = new TextEncoder();
@@ -154,6 +169,7 @@ export function useSerialConnection() {
   }, [addLog]);
 
   const uploadCode = useCallback(async (code: string): Promise<boolean> => {
+    if (getBoard().runtime !== "micropython") return false;
     if (!connectionRef.current.writer) {
       addLog("Not connected");
       return false;

@@ -11,6 +11,7 @@ import { enrollmentsRouter } from "./modules/enrollments/enrollments.routes";
 import { arduinoRouter } from "./modules/arduino/arduino.routes";
 import { projectsRouter } from "./modules/projects/projects.routes";
 import { notFound, errorHandler } from "./middleware/error";
+import { verifyAccessToken } from "./utils/tokens";
 
 export function createApp() {
   const app = express();
@@ -34,6 +35,15 @@ export function createApp() {
       max: 120,
       standardHeaders: true,
       legacyHeaders: false,
+      // Per signed-in user, not per IP: a whole lab shares one campus address and
+      // would otherwise exhaust a single bucket with editor autosaves.
+      keyGenerator: (req) => {
+        try {
+          return verifyAccessToken((req.headers.authorization ?? "").slice(7)).sub;
+        } catch {
+          return req.ip ?? "anon";
+        }
+      },
     })
   );
 

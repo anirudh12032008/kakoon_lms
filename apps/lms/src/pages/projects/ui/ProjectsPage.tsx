@@ -1,7 +1,7 @@
+import { APP_NAME } from "@/shared/config/brand";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { FolderOpen, Pencil, Plus, Trash2, Clock, Loader2, Share2, Check } from "lucide-react";
+import { AlertCircle, ArrowRight, FolderOpen, Pencil, Plus, Trash2, Clock, Loader2, Share2, Check } from "lucide-react";
 import { apiErrorMessage } from "@/shared/api/client";
 import {
   listProjects, getProject, renameProject, deleteProject, shareUrl,
@@ -26,11 +26,9 @@ function timeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString();
 }
 
-const fadeUp = (order: number) => ({
-  initial: { opacity: 0, y: 12 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35, delay: order * 0.05 },
-});
+/** Labelled secondary action in a project card's footer row. */
+const rowAction =
+  "flex min-h-9 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-semibold transition-colors hover:bg-hover";
 
 export function ProjectsPage() {
   const navigate = useNavigate();
@@ -88,7 +86,7 @@ export function ProjectsPage() {
   };
 
   const handleShare = async (p: ProjectSummary) => {
-    if (!p.slug) { setError("This project has no share link yet - open and re-save it."); return; }
+    if (!p.slug) { setError("This project has no share link yet. Open it and save it again."); return; }
     try { await navigator.clipboard.writeText(shareUrl(p.slug)); } catch { /* clipboard blocked */ }
     setSharedId(p.id);
     setTimeout(() => setSharedId((cur) => (cur === p.id ? null : cur)), 2000);
@@ -106,97 +104,104 @@ export function ProjectsPage() {
   };
 
   return (
-    <div className="relative h-screen overflow-y-auto bg-page">
+    <div className="h-full overflow-y-auto bg-page">
+      <title>{`My projects · ${APP_NAME}`}</title>
       <DashboardHeader />
 
-      <main className="relative mx-auto max-w-6xl px-5 py-8">
-        <motion.div {...fadeUp(0)} className="mb-6 flex items-end justify-between gap-4">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 pb-20 pt-8 outline-none sm:px-6 sm:pt-12">
+        <div className="flex flex-col gap-5 border-b border-subtle pb-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-body">My Projects</h1>
-            <p className="mt-1.5 text-[15px] text-sub">
-              Your saved workspaces. Open one to keep building - changes save automatically.
+            <h1 className="font-display text-3xl font-semibold text-body sm:text-4xl">My projects</h1>
+            <p className="mt-2 max-w-2xl text-base leading-relaxed text-sub">
+              Your saved workspaces. Open one to keep building. Changes save automatically.
             </p>
           </div>
-          <button onClick={newProject} className="btn btn-primary gap-2 shrink-0">
-            <Plus className="h-4 w-4" /> New project
+          <button
+            onClick={newProject}
+            className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-brand-gradient px-5 text-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" /> New project
           </button>
-        </motion.div>
+        </div>
 
-        {error && (
-          <div className="mb-5 rounded-xl border border-error-tint bg-error-tint px-4 py-3 text-sm font-medium text-error-c">
-            {error}
-          </div>
-        )}
+        {/* Always mounted so errors and "link copied" are announced when they appear. */}
+        <div role="alert">
+          {error && (
+            <p className="mt-5 flex items-start gap-2 rounded-md border border-error-tint bg-error-tint px-4 py-3 text-sm font-medium text-error-c">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              {error}
+            </p>
+          )}
+        </div>
+        <p role="status" className="sr-only">{sharedId ? "Share link copied to clipboard" : ""}</p>
 
         {!projects && !error && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div role="status" className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <span className="sr-only">Loading your projects</span>
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-32 animate-pulse rounded-2xl border border-subtle bg-raised" />
+              <div key={i} aria-hidden="true" className="h-36 animate-pulse rounded-lg border border-subtle bg-panel" />
             ))}
           </div>
         )}
 
         {projects && projects.length === 0 && (
-          <motion.div {...fadeUp(1)} className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-subtle bg-raised px-6 py-16 text-center">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-gradient text-white">
-              <FolderOpen className="h-7 w-7" />
-            </div>
-            <h3 className="mt-4 text-lg font-bold text-body">No projects yet</h3>
-            <p className="mt-1 max-w-sm text-sm text-sub">
-              Open the editor, build something, and hit <span className="font-semibold text-body">Save</span> to keep it here.
+          <div className="mt-6 flex flex-col items-center justify-center rounded-lg border border-dashed border-strong px-6 py-16 text-center">
+            <FolderOpen className="h-8 w-8 text-sub" aria-hidden="true" />
+            <h2 className="mt-4 text-lg font-semibold text-body">No projects yet</h2>
+            <p className="mt-1 max-w-sm text-sm leading-relaxed text-sub">
+              Open the editor, build something, and choose <span className="font-semibold text-body">Save</span> to keep it here.
             </p>
-            <button onClick={newProject} className="btn btn-primary mt-5 gap-2">
-              <Plus className="h-4 w-4" /> Start a project
+            <button
+              onClick={newProject}
+              className="mt-5 flex min-h-11 items-center justify-center gap-2 rounded-md border border-strong px-5 text-sm font-semibold text-body transition-colors hover:bg-hover"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" /> Start a project
             </button>
-          </motion.div>
+          </div>
         )}
 
         {projects && projects.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {projects.map((p, i) => (
-              <motion.div
+          <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((p) => (
+              <li
                 key={p.id}
-                {...fadeUp(1 + i)}
-                className="group flex flex-col rounded-2xl border border-subtle bg-raised p-4 transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-black/10"
+                className="flex flex-col rounded-lg border border-subtle bg-panel transition-colors duration-150 hover:border-[var(--k-primary-text)]"
               >
-                <button onClick={() => openProject(p)} className="flex flex-1 flex-col items-start text-left">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary-c">
-                    <FolderOpen className="h-5 w-5" />
-                  </div>
-                  <h3 className="mt-3 line-clamp-2 text-[15px] font-bold text-body">{p.name}</h3>
-                  <div className="mt-1 flex items-center gap-1.5 text-[12px] text-hint">
-                    <Clock className="h-3.5 w-3.5" /> Saved {timeAgo(p.updatedAt)}
-                  </div>
+                <button
+                  onClick={() => openProject(p)}
+                  disabled={openingId === p.id}
+                  aria-label={`Open ${p.name}`}
+                  className="flex flex-1 flex-col items-start rounded-t-lg p-5 text-left"
+                >
+                  <h2 className="line-clamp-2 text-lg font-semibold leading-snug text-body">{p.name}</h2>
+                  <span className="mt-2 flex items-center gap-1.5 text-[13px] text-sub">
+                    <Clock className="h-3.5 w-3.5" aria-hidden="true" /> Saved {timeAgo(p.updatedAt)}
+                  </span>
+                  <span className="mt-auto flex items-center gap-1.5 pt-5 text-sm font-semibold text-primary-c">
+                    {openingId === p.id
+                      ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> Opening…</>
+                      : <>Open in editor <ArrowRight className="h-4 w-4" aria-hidden="true" /></>}
+                  </span>
                 </button>
 
-                <div className="mt-4 flex items-center gap-2 border-t border-subtle pt-3">
-                  <button
-                    onClick={() => openProject(p)}
-                    disabled={openingId === p.id}
-                    className="btn btn-primary btn-sm flex-1 gap-1.5"
-                  >
-                    {openingId === p.id
-                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      : <FolderOpen className="h-3.5 w-3.5" />}
-                    Open
+                <div className="flex flex-wrap items-center gap-1 border-t border-subtle px-3 py-2">
+                  <button onClick={() => handleShare(p)} className={`${rowAction} ${sharedId === p.id ? "text-success-c" : "text-sub"}`}>
+                    {sharedId === p.id ? <Check className="h-4 w-4" aria-hidden="true" /> : <Share2 className="h-4 w-4" aria-hidden="true" />}
+                    {sharedId === p.id ? "Copied" : "Share"}
+                    <span className="sr-only"> {p.name}</span>
                   </button>
-                  <button
-                    onClick={() => handleShare(p)}
-                    title="Copy share link"
-                    className={`btn btn-ghost btn-sm px-2 ${sharedId === p.id ? "text-success-c" : "text-sub"}`}
-                  >
-                    {sharedId === p.id ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                  <button onClick={() => handleRename(p)} className={`${rowAction} text-sub`}>
+                    <Pencil className="h-4 w-4" aria-hidden="true" /> Rename
+                    <span className="sr-only"> {p.name}</span>
                   </button>
-                  <button onClick={() => handleRename(p)} title="Rename" className="btn btn-ghost btn-sm px-2 text-sub">
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button onClick={() => handleDelete(p)} title="Delete" className="btn btn-ghost btn-sm px-2 text-error-c">
-                    <Trash2 className="h-4 w-4" />
+                  <button onClick={() => handleDelete(p)} className={`${rowAction} ml-auto text-error-c`}>
+                    <Trash2 className="h-4 w-4" aria-hidden="true" /> Delete
+                    <span className="sr-only"> {p.name}</span>
                   </button>
                 </div>
-              </motion.div>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </main>
     </div>

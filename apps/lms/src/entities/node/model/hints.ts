@@ -20,6 +20,8 @@ export const NODE_HINTS: Record<string, string> = {
 
   // GPIO
   gpio_pin: "Sets up one pin on the board as an input or output.",
+  led: "Turns an LED on a pin on or off.",
+  relay: "Switches a relay on or off to control lamps, fans and pumps.",
   pin_write: "Turns a pin on (HIGH) or off (LOW) - switch LEDs and relays.",
   pin_read: "Reads whether a pin is on or off right now.",
   pwm: "Sends a fast on/off signal to fade LEDs or control speed.",
@@ -43,6 +45,15 @@ export const NODE_HINTS: Record<string, string> = {
   four_channel_touch: "Four touch pads in one - each pad can trigger something different.",
   imu_sensor: "Reads the board's motion sensor - tilt, turn, and shake.",
   pir_sensor: "Detects movement of people or pets using body heat.",
+  dht11: "Measures air temperature and humidity.",
+  pir_motion: "Gives 1 when a PIR sensor sees someone move, 0 when all is still.",
+  gas_sensor: "Reads how much gas or smoke is in the air - higher number means more gas.",
+  rain_sensor: "Reads how wet the rain board is - the number drops when it rains.",
+  water_level: "Reads how high the water reaches on the sensor strip.",
+  ldr_sensor: "Reads how bright it is - for night lamps and light alarms.",
+  sound_sensor: "Hears claps and loud sounds - build a clap switch.",
+  rfid_reader: "Reads the ID of an RFID card or key tag - for door locks.",
+  rtc_time: "Reads the hour, minute and second from a real-time clock module.",
 
   // IoT
   wifi_connect: "Connects your robot to a WiFi network.",
@@ -74,6 +85,7 @@ export const NODE_HINTS: Record<string, string> = {
   mqtt_node: "Sends and receives messages through an MQTT broker - IoT style.",
   http_client: "Makes web requests (GET/POST) with full control.",
   serial_monitor: "Prints values over USB so you can watch them live.",
+  bluetooth_serial: "Receives letters from a phone app through an HC-05 Bluetooth module.",
 
   // Logic
   timer_interval: "Runs blocks on a repeating timer without blocking the program.",

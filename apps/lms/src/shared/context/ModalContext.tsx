@@ -92,7 +92,7 @@ export function ModalProvider({ children }: { children: ReactNode }) {
                 </button>
                 <button
                   onClick={handleConfirm}
-                  className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-violet-600 hover:bg-violet-500 text-white transition-all"
+                  className="px-4 py-1.5 rounded-lg text-sm font-semibold bg-primary hover:opacity-90 text-white transition-opacity"
                 >
                   {pending.type === "confirm" ? "Confirm" : "Save"}
                 </button>

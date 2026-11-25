@@ -29,31 +29,39 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
       <button
         onClick={() => setOpen((v) => !v)}
         title="Theme"
+        aria-label="Theme"
+        aria-haspopup="dialog"
+        aria-expanded={open}
         className={
           compact
             ? "btn btn-ghost btn-sm gap-1.5 text-sub"
-            : "flex items-center gap-1.5 rounded-lg border border-subtle px-3 py-2 text-sm font-semibold text-sub transition-colors hover:bg-hover hover:text-body"
+            : "flex min-h-10 min-w-10 items-center justify-center gap-1.5 rounded-md border border-subtle px-2.5 text-sm font-semibold text-sub transition-colors hover:bg-hover hover:text-body"
         }
       >
-        <Palette className="h-4 w-4" />
-        {!compact && <span className="hidden sm:inline">Theme</span>}
+        <Palette className="h-4 w-4" aria-hidden="true" />
+        {!compact && <span className="hidden xl:inline">Theme</span>}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[9999] mt-2 w-64 rounded-2xl border border-subtle bg-panel p-3 shadow-2xl">
+        <div
+          role="dialog"
+          aria-label="Theme settings"
+          className="anim-pop-in absolute right-0 top-full z-[9999] mt-2 w-64 rounded-lg border border-subtle bg-panel p-3 shadow-xl"
+        >
           {/* Mode toggle */}
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-hint">Appearance</p>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-sub">Appearance</p>
           <div className="mb-3 grid grid-cols-2 gap-1.5">
             {([
-              { id: "light", label: "Light", icon: <Sun className="h-4 w-4" /> },
-              { id: "dark", label: "Dark", icon: <Moon className="h-4 w-4" /> },
+              { id: "light", label: "Light", icon: <Sun className="h-4 w-4" aria-hidden="true" /> },
+              { id: "dark", label: "Dark", icon: <Moon className="h-4 w-4" aria-hidden="true" /> },
             ] as const).map((m) => (
               <button
                 key={m.id}
                 onClick={() => setMode(m.id)}
-                className={`flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+                aria-pressed={theme.mode === m.id}
+                className={`flex min-h-10 items-center justify-center gap-1.5 rounded-md border px-3 text-sm font-semibold transition-colors ${
                   theme.mode === m.id
-                    ? "border-primary/50 bg-primary-tint text-primary-c"
+                    ? "border-primary-tint bg-primary-tint text-primary-c"
                     : "border-subtle text-sub hover:bg-hover"
                 }`}
               >
@@ -64,7 +72,7 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
           </div>
 
           {/* Accent presets */}
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-hint">Accent</p>
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-sub">Accent</p>
           <div className="mb-3 grid grid-cols-3 gap-1.5">
             {ACCENT_PRESETS.map((p) => {
               const selected = theme.accentId === p.id;
@@ -73,45 +81,48 @@ export function ThemeSwitcher({ compact = false }: { compact?: boolean }) {
                   key={p.id}
                   onClick={() => setAccentPreset(p.id)}
                   title={p.label}
-                  className={`group relative flex h-11 items-center justify-center rounded-lg border transition-all ${
-                    selected ? "border-body" : "border-subtle hover:border-body/40"
+                  aria-label={`${p.label} accent`}
+                  aria-pressed={selected}
+                  className={`flex h-10 items-center justify-center rounded-md border border-subtle ${
+                    selected ? "ring-2 ring-[var(--k-text)] ring-offset-2 ring-offset-[var(--k-base-200)]" : ""
                   }`}
-                  style={{ background: `linear-gradient(135deg, ${p.primary}, ${p.secondary})` }}
+                  style={{ background: p.primary }}
                 >
-                  {selected && <Check className="h-4 w-4 text-white drop-shadow" />}
+                  {selected && <Check className="h-4 w-4 text-white" aria-hidden="true" />}
                 </button>
               );
             })}
           </div>
 
           {/* Custom */}
-          <p className="mb-1.5 text-[11px] font-bold uppercase tracking-widest text-hint">Custom</p>
-          <div className="flex items-center gap-2 rounded-lg border border-subtle p-2">
+          <p className="mb-1.5 text-xs font-semibold uppercase tracking-wider text-sub">Custom</p>
+          <div className="flex items-center gap-2 rounded-md border border-subtle p-2">
             <label className="flex flex-1 items-center gap-1.5">
-              <span className="text-[11px] text-sub">Primary</span>
+              <span className="text-xs text-sub">Primary</span>
               <input
                 type="color"
                 value={current.primary}
                 onChange={(e) =>
                   setCustomAccent({ ...current, primary: e.target.value })
                 }
-                className="h-6 w-8 cursor-pointer rounded border border-subtle bg-transparent"
+                className="h-7 w-9 cursor-pointer rounded border border-strong bg-transparent"
               />
             </label>
             <label className="flex flex-1 items-center gap-1.5">
-              <span className="text-[11px] text-sub">Second</span>
+              <span className="text-xs text-sub">Second</span>
               <input
                 type="color"
                 value={current.secondary}
                 onChange={(e) =>
                   setCustomAccent({ ...current, secondary: e.target.value })
                 }
-                className="h-6 w-8 cursor-pointer rounded border border-subtle bg-transparent"
+                className="h-7 w-9 cursor-pointer rounded border border-strong bg-transparent"
               />
             </label>
             {theme.accentId === "custom" && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-tint">
-                <Check className="h-3 w-3 text-primary-c" />
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary-tint" title="Custom accent in use">
+                <Check className="h-3 w-3 text-primary-c" aria-hidden="true" />
+                <span className="sr-only">Custom accent in use</span>
               </span>
             )}
           </div>

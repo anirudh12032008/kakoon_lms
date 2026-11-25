@@ -5,6 +5,7 @@ import {
   PIR_SENSOR, MATRIX, getBoard,
 } from "@/entities/board";
 import { generateArduinoFromFlow } from "./arduinoCodegen";
+import { pinDefaults, SIMPLE_SENSORS } from "./blockDefaults";
 
 // All possible fields across every node type - each node only uses a subset.
 interface NodeData {
@@ -99,6 +100,9 @@ interface NodeData {
   sleepEnabled?: boolean; sleepMs?: number;
   animationName?: string; imageName?: string;
   width?: number; height?: number; csPin?: number; mosi?: number; miso?: number;
+  // LED / relay / RFID / RTC
+  state?: boolean; activeLow?: boolean; ssPin?: number; rstPin?: number;
+  hourVar?: string; minVar?: string; secVar?: string;
 }
 
 // ─── OLED pixel → MONO_HLSB bytes ─────────────────────────────────────────────
@@ -200,6 +204,10 @@ export function generatePythonFromFlow(nodes: Node[], edges: Edge[]): string {
   // Pins come from the selected board profile (Kokoon PCB, generic ESP32, ...).
   const board = getBoard();
   const OLED = { ...KOKOON_OLED, ...board.i2c };
+  const P = pinDefaults(board.id); // default pin per block when the node has none set
+  // Kokoon blocks pick a sensor port; other boards use plain pins.
+  const portPins = (port: unknown) =>
+    board.id === "kokoon" ? SENSOR_PORTS[port as keyof typeof SENSOR_PORTS] ?? SENSOR_PORTS["1"] : undefined;
   const SERVO_PIN_MAP: Record<string, number> = board.servoPins;
   const usedServoPorts = new Set<string>();
   const markServoPort = (port: unknown) => {
@@ -480,6 +488,24 @@ def drive_arm(angles):
       return generateChain(getNextNodeId(), indentLevel);
     }
 
+    // Shared by every plain analog / digital input block.
+    const readAnalog = (fallbackVar: string, viz = d.sendToViz !== false) => {
+      const pin = d.pin ?? P.analog;
+      const vn = d.varName ?? fallbackVar;
+      imports.add("from machine import ADC, Pin");
+      setupLines.push(`adc_${pin} = ADC(Pin(${pin}), atten=ADC.ATTN_11DB)  # full 0-3.3V range`);
+      chunkLines.push(`${indent}${vn} = adc_${pin}.read_u16() >> 4  # 12-bit`);
+      if (viz) chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
+    };
+    const readDigital = (fallbackVar: string, defaultPin: number, viz = d.sendToViz !== false) => {
+      const pin = d.pin ?? defaultPin;
+      const vn = d.varName ?? fallbackVar;
+      imports.add("from machine import Pin");
+      emitOnce(`din_${pin}`, `_in_${pin} = Pin(${pin}, Pin.IN)`);
+      chunkLines.push(`${indent}${vn} = _in_${pin}.value()`);
+      if (viz) chunkLines.push(`${indent}print(f"SENSOR,digital,${vn},{${vn}}")`);
+    };
+
     switch (node.type) {
       // ─── General ──────────────────────────────────────────────────────────
       case "print":
@@ -496,12 +522,39 @@ def drive_arm(angles):
       // ─── GPIO Pin / Controls ───────────────────────────────────────────────
       case "gpio_pin":
         imports.add("from machine import Pin");
-        setupLines.push(`pin_${d.pin ?? 2} = Pin(${d.pin ?? 2}, Pin.${d.mode ?? "OUT"})`);
+        setupLines.push(`pin_${d.pin ?? P.gpio} = Pin(${d.pin ?? P.gpio}, Pin.${d.mode ?? "OUT"})`);
         break;
       case "pin_write":
         imports.add("from machine import Pin");
-        chunkLines.push(`${indent}pin_${d.pin ?? 4}.value(${d.value ? 1 : 0})`);
+        chunkLines.push(`${indent}pin_${d.pin ?? P.write}.value(${d.value ? 1 : 0})`);
         break;
+      case "pin_read":
+        readDigital("value", P.read, false);
+        break;
+      case "push_button": {
+        // Button wired between the pin and GND, using the internal pull-up.
+        const pin = d.pin ?? P.read;
+        imports.add("from machine import Pin");
+        emitOnce(`btn_${pin}`, `_btn_${pin} = Pin(${pin}, Pin.IN, Pin.PULL_UP)`);
+        chunkLines.push(`${indent}${d.varName ?? "value"} = 1 - _btn_${pin}.value()  # 1 = pressed`);
+        break;
+      }
+      case "pwm": {
+        const pin = d.pin ?? P.pwm;
+        imports.add("from machine import Pin, PWM");
+        emitOnce(`pwm_${pin}`, `pwm_${pin} = PWM(Pin(${pin}), freq=${d.freq ?? 1000})`);
+        chunkLines.push(`${indent}pwm_${pin}.duty(${d.duty ?? 512})  # 0-1023`);
+        break;
+      }
+      case "led":
+      case "relay": {
+        const pin = d.pin ?? P[node.type];
+        const on = d.state !== false;
+        imports.add("from machine import Pin");
+        emitOnce(`out_${pin}`, `_out_${pin} = Pin(${pin}, Pin.OUT)`);
+        chunkLines.push(`${indent}_out_${pin}.value(${on !== !!d.activeLow ? 1 : 0})  # ${node.type} ${on ? "on" : "off"}`);
+        break;
+      }
       case "imu_sensor":
       case "onboard_imu": {
         imports.add("from machine import SoftI2C, Pin");
@@ -550,7 +603,7 @@ time.sleep(0.1)`);
       case "buzzer_tone":
         imports.add("from machine import Pin, PWM");
         imports.add("import time");
-        setupLines.push(`buzzer = PWM(Pin(${d.pin ?? 46}))`);
+        setupLines.push(`buzzer = PWM(Pin(${d.pin ?? P.buzzer}))`);
         chunkLines.push(`${indent}buzzer.freq(${Number(d.tone ?? 1) * 440})`);
         chunkLines.push(`${indent}buzzer.duty(512)`);
         break;
@@ -702,15 +755,16 @@ time.sleep(0.1)`);
         break;
 
       // ─── Sensor ────────────────────────────────────────────────────────────
-      case "ultrasonic": {
-        const uPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
-        const uPins = SENSOR_PORTS[uPort] ?? SENSOR_PORTS["1"];
-        const trig  = d.trigPin ?? uPins.trig;
-        const echo  = d.echoPin ?? uPins.echo;
+      case "ultrasonic":
+      case "ultrasonic_sensor": {
+        const uPort = d.port ?? "1";
+        const uPins = portPins(uPort);
+        const trig  = d.trigPin ?? uPins?.trig ?? P.trig;
+        const echo  = d.echoPin ?? uPins?.echo ?? P.echo;
         const distVar = d.varName ?? "distance";
         imports.add("from machine import Pin, time_pulse_us");
         imports.add("import time");
-        chunkLines.push(`${indent}# Ultrasonic port ${uPort} - TRIG:${trig} ECHO:${echo}`);
+        chunkLines.push(`${indent}# Ultrasonic${uPins ? ` port ${uPort}` : ""} - TRIG:${trig} ECHO:${echo}`);
         chunkLines.push(`${indent}trig = Pin(${trig}, Pin.OUT)`);
         chunkLines.push(`${indent}echo = Pin(${echo}, Pin.IN)`);
         chunkLines.push(`${indent}# Send a 10us trigger pulse`);
@@ -729,7 +783,7 @@ time.sleep(0.1)`);
       case "dht11": {
         const tVar = d.tempVar ?? "temperature";
         const hVar = d.humVar ?? "humidity";
-        const dPin = d.pin ?? 4;
+        const dPin = d.pin ?? P.dht;
         imports.add("import dht");
         imports.add("from machine import Pin");
         emitOnce(`dht11_${dPin}`, `_dht11_${dPin} = dht.DHT11(Pin(${dPin}))`);
@@ -743,20 +797,16 @@ time.sleep(0.1)`);
         break;
       }
       case "touch_sensor": {
-        const tPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
-        const tPins = SENSOR_PORTS[tPort] ?? SENSOR_PORTS["1"];
         const vn = d.varName ?? "touch_value";
         imports.add("from machine import TouchPad, Pin");
-        chunkLines.push(`${indent}${vn} = TouchPad(Pin(${d.pin ?? tPins.sda})).read()`);
+        chunkLines.push(`${indent}${vn} = TouchPad(Pin(${d.pin ?? portPins(d.port)?.sda ?? P.touch})).read()`);
         if (d.sendToViz !== false) {
           chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
         }
         break;
       }
       case "soil_moisture": {
-        const sPort = (d.port ?? "1") as keyof typeof SENSOR_PORTS;
-        const sPins = SENSOR_PORTS[sPort] ?? SENSOR_PORTS["1"];
-        const smPin = d.pin ?? sPins.sda;
+        const smPin = d.pin ?? portPins(d.port)?.sda ?? P.soil;
         const vn = d.varName ?? "value";
         imports.add("from machine import ADC, Pin");
         setupLines.push(`soil_moisture_${smPin} = ADC(Pin(${smPin}), atten=ADC.ATTN_11DB)  # full 0-3.3V range`);
@@ -782,13 +832,14 @@ time.sleep(0.1)`);
       }
       case "ir_sensor": {
         const vn = d.varName ?? "ir_value";
+        const irPin = d.pin ?? P.ir;
         imports.add("from machine import Pin");
         imports.add("import time");
-        emitOnce(`ir_sensor_setup_${d.pin ?? 6}`,
-          `# IR obstacle sensor - GPIO ${d.pin ?? 6}\n` +
-          `_ir_${d.pin ?? 6} = Pin(${d.pin ?? 6}, Pin.IN)`
+        emitOnce(`ir_sensor_setup_${irPin}`,
+          `# IR obstacle sensor - GPIO ${irPin}\n` +
+          `_ir_${irPin} = Pin(${irPin}, Pin.IN)`
         );
-        chunkLines.push(`${indent}${vn} = _ir_${d.pin ?? 6}.value()`);
+        chunkLines.push(`${indent}${vn} = _ir_${irPin}.value()`);
         if (d.sendToViz !== false) {
           chunkLines.push(`${indent}print(f"SENSOR,digital,${vn},{${vn}}")`);
         }
@@ -1178,22 +1229,59 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         break;
 
       // ─── New Sensor Nodes ──────────────────────────────────────────────────
-      case "analog_sensor": {
-        const vn = d.varName ?? "analog_val";
-        imports.add("from machine import ADC, Pin");
-        setupLines.push(`adc_${d.pin ?? 34} = ADC(Pin(${d.pin ?? 34}), atten=ADC.ATTN_11DB)  # full 0-3.3V range`);
-        chunkLines.push(`${indent}${vn} = adc_${d.pin ?? 34}.read_u16() >> 4  # 12-bit`);
-        if (d.sendToViz !== false) {
-          chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
-        }
+      case "analog_sensor":
+        readAnalog("analog_val");
+        break;
+      case "adc":
+        readAnalog("value", false);
+        break;
+      case "gas_sensor":
+      case "rain_sensor":
+      case "water_level":
+      case "ldr_sensor":
+      case "sound_sensor":
+      case "pir_motion": {
+        const s = SIMPLE_SENSORS[node.type];
+        if (s.pin === "analog" || d.mode === "analog") readAnalog(s.varName);
+        else readDigital(s.varName, P[s.pin]);
         break;
       }
+      case "rfid_reader": {
+        const vn = d.varName ?? "card_uid";
+        imports.add("from mfrc522 import MFRC522");
+        emitOnce("rfid", `# RFID reader (MFRC522): install the "mfrc522" library from the Libraries panel first.
+# Wiring: SCK=${P.sck} MOSI=${P.mosi} MISO=${P.miso} SDA/SS=${d.ssPin ?? P.rfidSs} RST=${d.rstPin ?? P.rfidRst}
+_rfid = MFRC522(${P.sck}, ${P.mosi}, ${P.miso}, ${d.rstPin ?? P.rfidRst}, ${d.ssPin ?? P.rfidSs})
+def read_card_uid():
+    stat, _ = _rfid.request(_rfid.REQIDL)
+    if stat == _rfid.OK:
+        stat, uid = _rfid.anticoll()
+        if stat == _rfid.OK:
+            return "".join("{:02X}".format(b) for b in uid[:4])
+    return ""`);
+        chunkLines.push(`${indent}${vn} = read_card_uid()  # "" when no card`);
+        break;
+      }
+      case "rtc_time": {
+        imports.add("from machine import SoftI2C, Pin");
+        emitOnce("rtc", `# DS3231 clock on I2C - SCL=${board.i2c.scl} SDA=${board.i2c.sda}
+_rtc_i2c = SoftI2C(scl=Pin(${board.i2c.scl}), sda=Pin(${board.i2c.sda}))
+def read_rtc():
+    b = _rtc_i2c.readfrom_mem(0x68, 0, 3)  # seconds, minutes, hours in BCD
+    return [(v >> 4) * 10 + (v & 0x0F) for v in (b[2] & 0x3F, b[1] & 0x7F, b[0] & 0x7F)]`);
+        chunkLines.push(`${indent}${d.hourVar ?? "hour"}, ${d.minVar ?? "minute"}, ${d.secVar ?? "second"} = read_rtc()`);
+        break;
+      }
+      case "bluetooth_serial":
+        chunkLines.push(`${indent}# Bluetooth Serial (HC-05) is an Arduino block. ${board.label} has built-in Bluetooth: use the "BLE Mode" block instead.`);
+        chunkLines.push(`${indent}${d.varName ?? "bt_data"} = ""`);
+        break;
       case "button_digital_input":
         imports.add("from machine import Pin");
         {
           const pullMode = d.pullup ? "Pin.PULL_UP" : "Pin.PULL_DOWN";
-          setupLines.push(`btn_${d.pin ?? 0} = Pin(${d.pin ?? 0}, Pin.IN, ${pullMode})`);
-          chunkLines.push(`${indent}${d.varName ?? "btn"} = btn_${d.pin ?? 0}.value()`);
+          setupLines.push(`btn_${d.pin ?? P.button} = Pin(${d.pin ?? P.button}, Pin.IN, ${pullMode})`);
+          chunkLines.push(`${indent}${d.varName ?? "btn"} = btn_${d.pin ?? P.button}.value()`);
         }
         break;
 
@@ -1277,8 +1365,8 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
         break;
       case "pwm_output":
         imports.add("from machine import Pin, PWM");
-        setupLines.push(`pwm_out_${d.pin ?? 2} = PWM(Pin(${d.pin ?? 2}), freq=${d.freq ?? 1000})`);
-        chunkLines.push(`${indent}pwm_out_${d.pin ?? 2}.duty(${Math.round(((d.duty ?? 50) / 100) * 1023)})`);
+        setupLines.push(`pwm_out_${d.pin ?? P.pwm} = PWM(Pin(${d.pin ?? P.pwm}), freq=${d.freq ?? 1000})`);
+        chunkLines.push(`${indent}pwm_out_${d.pin ?? P.pwm}.duty(${Math.round(((d.duty ?? 50) / 100) * 1023)})`);
         break;
 
       // ─── Motor nodes ───────────────────────────────────────────────────────

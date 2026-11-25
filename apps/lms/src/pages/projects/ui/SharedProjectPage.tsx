@@ -1,4 +1,5 @@
 import { APP_NAME } from "@/shared/config/brand";
+import { BrandScreen } from "@/shared/ui/BrandMark";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Node, Edge } from "@xyflow/react";
@@ -10,18 +11,6 @@ import { useProjectStore } from "@/shared/launch/projectStore";
 import { buildLaunchContext, EDITOR_MODE_PRESETS, type EditorLaunchContext } from "@/entities/editor-launch/model/config";
 
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
-
-function CenterCard({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page text-center">
-      <div className="flex items-center gap-3">
-        <span className="text-2xl"></span>
-        <span className="text-lg font-bold text-primary-c">{APP_NAME}</span>
-      </div>
-      {children}
-    </div>
-  );
-}
 
 /** Public, read-only view of a shared project (the author gets edit mode). */
 export function SharedProjectPage() {
@@ -59,25 +48,26 @@ export function SharedProjectPage() {
 
   if (error) {
     return (
-      <CenterCard>
-        <p className="text-lg font-bold text-body">Project not available</p>
-        <p className="max-w-sm text-sm text-sub">{error}</p>
-        <button onClick={() => navigate(status === "authed" ? "/projects" : "/login")} className="btn btn-primary btn-sm">
+      <BrandScreen>
+        <title>{`Project not available · ${APP_NAME}`}</title>
+        <h1 className="font-display text-2xl font-semibold text-body">Project not available</h1>
+        <p role="alert" className="max-w-sm text-sm text-sub">{error}</p>
+        <button onClick={() => navigate(status === "authed" ? "/projects" : "/login")} className="btn btn-primary min-h-11">
           {status === "authed" ? "Go to my projects" : "Sign in"}
         </button>
-      </CenterCard>
+      </BrandScreen>
     );
   }
 
   if (!shared || shared.canEdit) {
-    return <CenterCard><span className="loading loading-spinner loading-md text-primary-c" /></CenterCard>;
+    return <BrandScreen />;
   }
 
   const ctx = (shared.project.meta?.launchContext as EditorLaunchContext | undefined)
     ?? buildLaunchContext(fullWorkshop);
 
   return (
-    <Suspense fallback={<CenterCard><span className="loading loading-spinner loading-md text-primary-c" /></CenterCard>}>
+    <Suspense fallback={<BrandScreen />}>
       <EditorPage
         readOnly
         sharedAuthorName={shared.authorName}

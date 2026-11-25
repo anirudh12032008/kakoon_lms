@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { Node, Edge } from "@xyflow/react";
 import { builtinTutorials, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
 import { useBoardStore } from "@/entities/board";
@@ -22,12 +22,21 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
   // A previewed built-in example carries board-specific pins. When the board is
   // switched and the example is still untouched, swap in that board's version.
   const boardId = useBoardStore((s) => s.boardId);
+  const prevBoardRef = useRef(boardId);
   useEffect(() => {
+    const prev = prevBoardRef.current;
+    prevBoardRef.current = boardId;
     const ws = canvasRef.current?.getWorkspace();
-    if (!ws || ws.nodes.length === 0) return;
-    const ids = ws.nodes.map((n) => n.id).sort().join();
-    const all = (["esp32", "arduino_uno"] as const).flatMap((b) => builtinTutorials(b));
-    const loaded = all.find((t) => t.nodes.map((n) => n.id).sort().join() === ids);
+    if (!ws || ws.nodes.length === 0 || prev === boardId) return;
+    // Untouched = same nodes with the previous board's values. Matching ids alone
+    // would overwrite an edited (or just loaded) project built from an example.
+    const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+    const loaded = builtinTutorials(prev).find((t) =>
+      t.nodes.length === ws.nodes.length && t.nodes.every((n) => {
+        const live = ws.nodes.find((l) => l.id === n.id);
+        return !!live && Object.entries(n.data ?? {}).every(([k, v]) => same(live.data?.[k], v));
+      })
+    );
     const next = loaded && builtinTutorials(boardId).find((t) => t.id === loaded.id);
     if (next) canvasRef.current?.setWorkspace({ nodes: next.nodes, edges: next.edges });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- only on board change
@@ -54,7 +63,7 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
       }
       const completed = localStorage.getItem("kokoon-completed-tutorials");
       if (completed) setCompletedTutorialIds(JSON.parse(completed));
-    } catch { }
+    } catch { /* corrupted saved tutorial state */ }
   }, []);
 
   // Persist active tutorial

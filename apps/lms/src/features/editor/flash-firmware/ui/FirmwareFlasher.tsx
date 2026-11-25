@@ -1,6 +1,6 @@
 /**
- * FirmwareFlasher - flashes MicroPython v1.25.0 onto ESP32-S3 via WebSerial
- * Firmware is bundled at /public/firmware/esp32s3-micropython.bin
+ * FirmwareFlasher - flashes the selected board's MicroPython image via WebSerial
+ * (image url + flash address come from board.firmware in entities/board)
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -146,7 +146,7 @@ export function FirmwareFlasher({ onClose }: Props) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Flash Firmware</h2>
-              <p className="text-[10px] text-[var(--k-muted)]">{board.label} · {board.chip} · MicroPython {fw?.version}</p>
+              <p className="text-[10px] text-[var(--k-muted)]">{board.label} · {board.chip} · {fw ? `MicroPython ${fw.version}` : "no MicroPython firmware"}</p>
             </div>
           </div>
           {!isBusy && (
@@ -157,6 +157,13 @@ export function FirmwareFlasher({ onClose }: Props) {
         </div>
 
         <div className="p-5 space-y-4">
+
+          {!fw && (
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              {board.label} does not run MicroPython, so there is no firmware to flash. Use Upload instead.
+            </div>
+          )}
 
           {noSerial && (
             <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs">
@@ -227,10 +234,8 @@ export function FirmwareFlasher({ onClose }: Props) {
                 ? <span className="text-[var(--k-dim)]">Log will appear here…</span>
                 : log.map((l, i) => (
                   <div key={i} className={
-                    l.includes("") ? "text-red-400" :
-                    l.includes("") || l.includes("") ? "text-green-400" :
-                    l.includes("") || l.includes("") ? "text-violet-400" :
-                    l.includes("") ? "text-orange-400" : "text-[var(--k-muted)]"
+                    state === "error" && i === log.length - 1 ? "text-red-400" :
+                    /^(Connected|Erased|Done!)/.test(l) ? "text-green-400" : "text-[var(--k-muted)]"
                   }>{l}</div>
                 ))
               }
@@ -244,7 +249,7 @@ export function FirmwareFlasher({ onClose }: Props) {
               <CheckCircle className="w-4 h-4" /> Close - Board is ready!
             </button>
           ) : (
-            <button onClick={handleFlash} disabled={noSerial || isBusy || !selectedPort}
+            <button onClick={handleFlash} disabled={noSerial || isBusy || !selectedPort || !fw}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-blue-500 text-white text-sm font-bold hover:from-violet-600 hover:to-blue-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
               {isBusy
                 ? <><Loader2 className="w-4 h-4 animate-spin" /> {stateLabel[state]}</>
@@ -254,7 +259,7 @@ export function FirmwareFlasher({ onClose }: Props) {
           )}
 
           <p className="text-[9px] text-[var(--k-dim)] text-center">
-            Erases the board and installs MicroPython v1.25.0. Save your project first!
+            Erases the board and installs MicroPython {fw?.version}. Save your project first!
           </p>
         </div>
       </div>

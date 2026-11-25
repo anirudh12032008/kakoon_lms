@@ -126,7 +126,7 @@ function CategorySection({ category, isOpen, onToggle, allowedNodeTypes }: {
       </button>
 
       {isOpen && (
-        <div className="anim-cat-in grid grid-cols-2 gap-1.5 px-2 pb-2 pt-0.5">
+        <div className="anim-cat-in grid grid-cols-1 gap-1 px-2 pb-2 pt-0.5">
           {visibleNodes.map((node) => <NodeItem key={node.type} node={node} />)}
         </div>
       )}

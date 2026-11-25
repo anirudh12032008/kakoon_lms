@@ -14,10 +14,14 @@ const run = promisify(execFile);
 // ponytail: text filter, not a sandbox. Run arduino-cli in a container or as an
 // unprivileged user with no access to the app directory before opening this up.
 function hasUnsafeInclude(code: string): boolean {
-  const src = code.replace(/\\\r?\n/g, ""); // undo line continuations
-  if (/%:|\?\?=|\.incbin|#\s*embed|__has_include/.test(src)) return true;
+  const src = code.replace(/\r/g, "").replace(/\\[ \t]*\n/g, ""); // CRLF, then undo line continuations
+  if (/\?\?[=/]|\.incbin|#\s*embed|__has_include/.test(src)) return true;
+  // A comment glued to the directive marker hides it from the per-line check below.
+  if (/\*\/[ \t]*(#|%:)|^[ \t]*(#|%:)[ \t]*\/\*/m.test(src)) return true;
   for (const line of src.split("\n")) {
-    const m = line.match(/^\s*#\s*(include|include_next|import)\b(.*)$/);
+    // "%:" is the digraph for "#"; only a directive at line start counts, so text
+    // like Serial.print("Humidity %: ") is fine.
+    const m = line.match(/^\s*(?:#|%:)\s*(include|include_next|import)\b(.*)$/);
     if (!m) continue;
     const target = m[2].trim().match(/^[<"]([\w.\-/]+)[>"]/);
     if (!target || target[1].startsWith("/") || target[1].includes("..")) return true;

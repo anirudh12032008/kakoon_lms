@@ -12,6 +12,7 @@ import {
   COLORS,
 } from "./BaseNode";
 import { ChipIcon } from "./_shared";
+import { usePinDefaults } from "../lib/blockDefaults";
 
 const PORT_OPTIONS = [
   { label: "Port 1", value: "1" },
@@ -24,7 +25,7 @@ const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "transl
 
 // ─── GPIO Pin ─────────────────────────────────────────────────────────────────
 export function GPIOPinNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 2);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().gpio);
   const [mode, setMode] = useNodeField<string>("mode", "OUT");
   return (
     <BaseNode title="GPIO Pin" color={COLORS.green} icon={<ChipIcon />} width="200px">
@@ -39,7 +40,7 @@ export function GPIOPinNode() {
 // ─── Pin Write ────────────────────────────────────────────────────────────────
 export function PinWriteNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 4);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().write);
   const [value, setValue] = useNodeField<boolean>("value", false);
   return (
     <BaseNode title="Pin Write" color={COLORS.orange} icon={<ChipIcon />} width="210px">
@@ -53,7 +54,7 @@ export function PinWriteNode() {
 // ─── Pin Read ─────────────────────────────────────────────────────────────────
 export function PinReadNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 4);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().read);
   const [varName, setVarName] = useNodeField<string>("varName", "value");
   return (
     <BaseNode title="Pin Read" color={COLORS.indigo} icon={<ChipIcon />} width="220px">
@@ -69,7 +70,7 @@ export function PinReadNode() {
 
 // ─── PWM ──────────────────────────────────────────────────────────────────────
 export function PWMNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 2);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().pwm);
   const [freq, setFreq] = useNodeField<number>("freq", 1000);
   const [duty, setDuty] = useNodeField<number>("duty", 512);
   return (
@@ -85,7 +86,7 @@ export function PWMNode() {
 
 // ─── ADC ──────────────────────────────────────────────────────────────────────
 export function ADCNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 34);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().analog);
   const [varName, setVarName] = useNodeField<string>("varName", "value");
   return (
     <BaseNode title="ADC" color={COLORS.green} icon={<ChipIcon />} width="220px">
@@ -101,7 +102,7 @@ export function ADCNode() {
 // ─── Push Button ──────────────────────────────────────────────────────────────
 export function PushButtonNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 4);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().read);
   const [varName, setVarName] = useNodeField<string>("varName", "value");
   return (
     <BaseNode title="Push Button" color={COLORS.pink} icon={<ChipIcon />} width="230px">
@@ -118,7 +119,7 @@ export function PushButtonNode() {
 // ─── Buzzer Tone ──────────────────────────────────────────────────────────────
 export function BuzzerToneNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 46);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().buzzer);
   const [tone, setTone] = useNodeField<string>("tone", "1");
   return (
     <BaseNode title="Buzzer Tone" color={COLORS.green} icon={<ChipIcon />} width="210px">
@@ -134,7 +135,7 @@ export function BuzzerToneNode() {
 
 // ─── PWM Output ───────────────────────────────────────────────────────────────
 export function PWMOutputNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 2);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().pwm);
   const [freq, setFreq] = useNodeField<number>("freq", 1000);
   const [duty, setDuty] = useNodeField<number>("duty", 50);
   const [sensorBind, setSensorBind] = useNodeField<string>("sensorBind", "");

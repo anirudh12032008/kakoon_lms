@@ -19,36 +19,35 @@ export function PlayerChip({ onClick, compact }: { onClick?: () => void; compact
   const level = usePlayerLevel();
   const streak = useDisplayStreak();
 
+  const summary = `Level ${level.level}, ${level.title}. ${streak}-day streak. ${level.intoLevel} of ${level.needed} XP to the next level.`;
+
   return (
     <button
       onClick={onClick}
-      title={`Level ${level.level} · ${level.title} - ${level.intoLevel}/${level.needed} XP to next level`}
-      className="group flex items-center gap-2.5 rounded-full border border-subtle bg-raised px-2 py-1.5 pr-3 transition-colors hover:border-primary/40"
+      title={summary}
+      aria-label={`${summary} Open achievements`}
+      className="flex min-h-9 items-center gap-2 rounded-md border border-subtle px-2 pr-2.5 transition-colors hover:bg-hover"
     >
       {/* Level badge */}
-      <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-brand-gradient px-1.5 text-[11px] font-black text-white">
+      <span className="flex h-6 min-w-6 items-center justify-center rounded bg-hover px-1.5 text-xs font-bold text-body">
         {level.level}
       </span>
 
       {!compact && (
         <span className="hidden flex-col items-start leading-none lg:flex">
-          <span className="text-[11px] font-bold text-body">{level.title}</span>
+          <span className="text-xs font-semibold text-body">{level.title}</span>
           <span className="mt-1 block h-1 w-16 overflow-hidden rounded-full bg-hover">
             <span
-              className="block h-full rounded-full bg-brand-gradient transition-all duration-500"
+              className="block h-full rounded-full bg-brand-gradient transition-[width] duration-200"
               style={{ width: `${Math.max(4, level.percent)}%` }}
             />
           </span>
         </span>
       )}
 
-      {/* Streak flame */}
-      <span
-        className={`flex items-center gap-0.5 text-[11px] font-black ${
-          streak > 0 ? "text-warning-c" : "text-hint"
-        }`}
-      >
-        <Flame className={`h-3.5 w-3.5 ${streak > 0 ? "anim-flame" : ""}`} fill={streak > 0 ? "currentColor" : "none"} />
+      {/* Streak */}
+      <span className="flex items-center gap-0.5 text-xs font-bold text-sub">
+        <Flame className="h-3.5 w-3.5" fill={streak > 0 ? "currentColor" : "none"} aria-hidden="true" />
         {streak}
       </span>
     </button>

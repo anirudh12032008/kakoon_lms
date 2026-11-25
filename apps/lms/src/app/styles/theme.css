@@ -7,23 +7,44 @@
 
 /* ── 1. RAW PALETTE  (the only values you ever need to change) ── */
 :root {
-  --k-primary:    #7c3aed;   /* violet  – main buttons, selected   */
-  --k-secondary:  #d946ef;   /* fuchsia – designer, creative tools */
-  --k-accent:     #06b6d4;   /* cyan    – terminal, IoT, online    */
-  --k-success:    #22c55e;   /* green   – connected, saved, ok     */
-  --k-warning:    #f59e0b;   /* amber   – manual edits, caution    */
-  --k-error:      #ef4444;   /* red     – errors, delete, stop     */
-  --k-info:       #3b82f6;   /* blue    – firmware, files          */
+  --k-primary:    #3157d5;   /* the one accent: buttons, selected  */
+  --k-secondary:  #5b6b8c;   /* quiet slate, supporting tools      */
+  --k-accent:     #0e7490;   /* teal: terminal, IoT, online        */
+  --k-success:    #16a34a;   /* connected, saved, ok               */
+  --k-warning:    #d97706;   /* manual edits, caution              */
+  --k-error:      #dc2626;   /* errors, delete, stop               */
+  --k-info:       #2563eb;   /* firmware, files                    */
 
-  --k-base-100:   #09090b;   /* page background                    */
-  --k-base-200:   #0e0e12;   /* panels / header / footer           */
-  --k-base-300:   #14141a;   /* sidebars, palette, raised cards    */
-  --k-base-400:   #1e1e26;   /* hover surfaces                     */
-  --k-border:     #25252e;   /* dividers, outlines                 */
+  --k-base-100:   #0f1115;   /* page background                    */
+  --k-base-200:   #14171c;   /* panels / header / footer           */
+  --k-base-300:   #1a1e24;   /* cards, raised surfaces             */
+  --k-base-400:   #242932;   /* hover surfaces                     */
+  --k-border:     #2e343e;   /* dividers, card outlines            */
+  --k-border-strong: #6b7280; /* input outlines (3:1 on surfaces)  */
 
-  --k-text:       #e8e8ed;   /* primary text                       */
-  --k-muted:      #9898a8;   /* body / secondary text              */
-  --k-dim:        #4a4a58;   /* placeholders, disabled             */
+  --k-text:       #e6e8ec;   /* primary text                       */
+  --k-muted:      #a9afba;   /* body / secondary text              */
+  --k-dim:        #8e95a1;   /* hints, placeholders (still 4.5:1)  */
+
+  /* Text on a solid primary surface. themes.ts picks white or ink. */
+  --k-on-primary: #ffffff;
+
+  /* Text-safe variants. The raw brand and status colours are tuned as
+     fills; mixed toward the text colour they hold 4.5:1 on every surface
+     in both modes, for any accent preset. */
+  --k-primary-text:   color-mix(in srgb, var(--k-primary)   55%, var(--k-text));
+  --k-secondary-text: color-mix(in srgb, var(--k-secondary) 50%, var(--k-text));
+  --k-accent-text:    color-mix(in srgb, var(--k-accent)    50%, var(--k-text));
+  --k-success-text:   color-mix(in srgb, var(--k-success)   50%, var(--k-text));
+  --k-warning-text:   color-mix(in srgb, var(--k-warning)   50%, var(--k-text));
+  --k-error-text:     color-mix(in srgb, var(--k-error)     50%, var(--k-text));
+  --k-info-text:      color-mix(in srgb, var(--k-info)      50%, var(--k-text));
+
+  /* Keyboard focus ring: readable against every surface in both modes. */
+  --k-focus: var(--k-primary-text);
+
+  --k-font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --k-font-display: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
 }
 
 /* ── 2. TAILWIND v4 THEME REGISTRATION ──────────────────────────
@@ -54,11 +75,11 @@
   color-scheme: dark;
 
   --color-primary:          var(--k-primary);
-  --color-primary-content:  #ffffff;
+  --color-primary-content:  var(--k-on-primary);
   --color-secondary:        var(--k-secondary);
   --color-secondary-content:#ffffff;
   --color-accent:           var(--k-accent);
-  --color-accent-content:   #021419;
+  --color-accent-content:   #ffffff;
   --color-neutral:          var(--k-base-400);
   --color-neutral-content:  var(--k-text);
   --color-base-100:         var(--k-base-100);
@@ -74,65 +95,66 @@
   --color-error:            var(--k-error);
   --color-error-content:    #ffffff;
 
-  --radius-box:   0.875rem;
-  --radius-btn:   0.5rem;
-  --radius-badge: 9999px;
+  --radius-box:      0.5rem;
+  --radius-field:    0.375rem;
+  --radius-selector: 0.375rem;
 }
 
 /* ── 4. SEMANTIC UTILITY CLASSES ──────────────────────────────
    Use these in every component - never inline style= for colors.
    Change the variables in Section 1; these update automatically. */
-@layer utilities {
-  /* Surfaces */
-  .bg-page    { background-color: var(--k-base-100); }
-  .bg-panel   { background-color: var(--k-base-200); }
-  .bg-raised  { background-color: var(--k-base-300); }
-  .bg-hover   { background-color: var(--k-base-400); }
+/* Registered with @utility (not plain classes) so Tailwind builds their
+   variants: hover:bg-hover, hover:text-body, placeholder:text-hint, sm:... */
+/* Surfaces */
+@utility bg-page { background-color: var(--k-base-100); }
+@utility bg-panel { background-color: var(--k-base-200); }
+@utility bg-raised { background-color: var(--k-base-300); }
+@utility bg-hover { background-color: var(--k-base-400); }
 
-  /* Borders / dividers */
-  .border-subtle { border-color: var(--k-border); }
-  .divide-subtle > * + * { border-color: var(--k-border); }
+/* Borders / dividers */
+@utility border-subtle { border-color: var(--k-border); }
+@utility divide-subtle { & > * + * { border-color: var(--k-border); } }
 
-  /* Text */
-  .text-body  { color: var(--k-text); }
-  .text-sub   { color: var(--k-muted); }
-  .text-hint  { color: var(--k-dim); }
+/* Text */
+@utility text-body { color: var(--k-text); }
+@utility text-sub { color: var(--k-muted); }
+@utility text-hint { color: var(--k-dim); }
 
-  /* Tinted surfaces - for active/selected state chips */
-  .bg-primary-tint   { background-color: color-mix(in srgb, var(--k-primary)   12%, transparent); }
-  .bg-secondary-tint { background-color: color-mix(in srgb, var(--k-secondary) 12%, transparent); }
-  .bg-accent-tint    { background-color: color-mix(in srgb, var(--k-accent)    12%, transparent); }
-  .bg-success-tint   { background-color: color-mix(in srgb, var(--k-success)   12%, transparent); }
-  .bg-error-tint     { background-color: color-mix(in srgb, var(--k-error)     12%, transparent); }
-  .bg-warning-tint   { background-color: color-mix(in srgb, var(--k-warning)   12%, transparent); }
-  .bg-info-tint      { background-color: color-mix(in srgb, var(--k-info)      12%, transparent); }
+/* Tinted surfaces - for active/selected state chips */
+@utility bg-primary-tint { background-color: color-mix(in srgb, var(--k-primary)   12%, transparent); }
+@utility bg-secondary-tint { background-color: color-mix(in srgb, var(--k-secondary) 12%, transparent); }
+@utility bg-accent-tint { background-color: color-mix(in srgb, var(--k-accent)    12%, transparent); }
+@utility bg-success-tint { background-color: color-mix(in srgb, var(--k-success)   12%, transparent); }
+@utility bg-error-tint { background-color: color-mix(in srgb, var(--k-error)     12%, transparent); }
+@utility bg-warning-tint { background-color: color-mix(in srgb, var(--k-warning)   12%, transparent); }
+@utility bg-info-tint { background-color: color-mix(in srgb, var(--k-info)      12%, transparent); }
 
-  /* Tinted borders */
-  .border-primary-tint   { border-color: color-mix(in srgb, var(--k-primary)   35%, transparent); }
-  .border-success-tint   { border-color: color-mix(in srgb, var(--k-success)   35%, transparent); }
-  .border-error-tint     { border-color: color-mix(in srgb, var(--k-error)     35%, transparent); }
+/* Tinted borders */
+@utility border-primary-tint { border-color: color-mix(in srgb, var(--k-primary)   35%, transparent); }
+@utility border-success-tint { border-color: color-mix(in srgb, var(--k-success)   35%, transparent); }
+@utility border-error-tint { border-color: color-mix(in srgb, var(--k-error)     35%, transparent); }
 
-  /* Tinted text */
-  .text-primary-c  { color: var(--k-primary); }
-  .text-secondary-c { color: var(--k-secondary); }
-  .text-accent-c   { color: var(--k-accent); }
-  .text-success-c  { color: var(--k-success); }
-  .text-error-c    { color: var(--k-error); }
-  .text-warning-c  { color: var(--k-warning); }
-  .text-info-c     { color: var(--k-info); }
+/* Tinted text */
+@utility text-primary-c { color: var(--k-primary-text); }
+@utility text-secondary-c { color: var(--k-secondary-text); }
+@utility text-accent-c { color: var(--k-accent-text); }
+@utility text-success-c { color: var(--k-success-text); }
+@utility text-error-c { color: var(--k-error-text); }
+@utility text-warning-c { color: var(--k-warning-text); }
+@utility text-info-c { color: var(--k-info-text); }
 
-  /* Brand background - flat */
-  .bg-brand-gradient { background: var(--k-primary); }
+/* Solid primary surface (the name is historical; it is flat) */
+@utility bg-brand-gradient { background: var(--k-primary); }
+@utility text-on-primary { color: var(--k-on-primary); }
+@utility border-strong { border-color: var(--k-border-strong); }
+@utility font-display { font-family: var(--k-font-display); letter-spacing: -0.01em; }
 
-  /* Hero heading text - flat */
-  .text-brand-gradient { color: var(--k-text); }
+/* Hero heading text - flat */
+@utility text-brand-gradient { color: var(--k-text); }
 
-  /* Light sweep - disabled */
-  .shine-sweep::after { content: none; }
-
-  /* Canvas vignette - disabled */
-  .canvas-vignette::before { content: none; }
-}
+/* Light sweep and canvas vignette - disabled */
+.shine-sweep::after { content: none; }
+.canvas-vignette::before { content: none; }
 
 /* ── TEMPORARY FLAT PASS ──────────────────────────────────────
    Neutralises every Tailwind gradient utility to a solid surface.
@@ -141,15 +163,6 @@
 [class*="bg-linear-to-"] {
   background-image: none !important;
   background-color: var(--k-base-300) !important;
-}
-
-@keyframes brandPan {
-  0%, 100% { background-position: 0% 50%; }
-  50%      { background-position: 100% 50%; }
-}
-@keyframes shineSweep {
-  0%, 55%  { background-position: 130% 0; }
-  85%, 100%{ background-position: -70% 0; }
 }
 
 /* ── 5. GLOBAL COMPONENT OVERRIDES ──────────────────────────── */
@@ -167,12 +180,12 @@
 /* inputs */
 .input, .textarea, .select {
   background-color: var(--k-base-300);
-  border-color: var(--k-border);
+  border-color: var(--k-border-strong);
   color: var(--k-text);
 }
 .input:focus, .textarea:focus, .select:focus {
-  outline-color: var(--k-primary);
-  border-color: var(--k-primary);
+  outline-color: var(--k-focus);
+  border-color: var(--k-focus);
 }
 .input::placeholder, .textarea::placeholder {
   color: var(--k-dim);

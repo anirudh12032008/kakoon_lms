@@ -618,7 +618,7 @@ export function OLEDDesigner({ onAddNode, onSaveToDevice }: OLEDDesignerProps) {
                   </button>
                   {onSaveToDevice && (
                     <button onClick={() => handleSaveToDevice(entry)}
-                      title="Upload to ESP32 device"
+                      title="Upload to the board"
                       className="text-[11px] text-emerald-400 border border-emerald-500/25 rounded px-1 py-0.5 hover:bg-emerald-500/10 transition-all">
                       <Upload className="w-2.5 h-2.5" />
                     </button>

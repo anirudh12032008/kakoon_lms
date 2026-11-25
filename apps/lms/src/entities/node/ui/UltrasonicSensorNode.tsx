@@ -3,6 +3,7 @@ import {
   BaseNode,
   NodeField,
   TextInput,
+  NumberInput,
   SelectInput,
   ToggleInput,
   useNodeField,
@@ -12,6 +13,8 @@ import {
 } from "./BaseNode";
 import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
 import { useSensorStore } from "@/shared/lib/sensorStore";
+import { useBoard } from "@/entities/board";
+import { usePinDefaults } from "../lib/blockDefaults";
 
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
 const STALE_MS = 3000;
@@ -108,7 +111,11 @@ function ZoneRow({ label, color, dist, setDist, nodeColor, onColorChange }: {
 
 // ─── Ultrasonic Sensor ────────────────────────────────────────────────────────
 export function UltrasonicSensorNode() {
+  const kokoon = useBoard().id === "kokoon"; // only the Kokoon PCB has sensor ports
+  const P = usePinDefaults();
   const [port, setPort] = useNodeField<string>("port", "1");
+  const [trigPin, setTrigPin] = useNodeField<number>("trigPin", P.trig);
+  const [echoPin, setEchoPin] = useNodeField<number>("echoPin", P.echo);
   const [varName, setVarName] = useNodeField<string>("varName", "distance");
   const [alertVar, setAlertVar] = useNodeField<string>("alertVar", "in_zone");
   const [nearDist, setNearDist] = useNodeField<number>("nearDist", 10);
@@ -127,16 +134,23 @@ export function UltrasonicSensorNode() {
 
   return (
     <BaseNode title="Ultrasonic Sensor" color={COLORS.purple} icon={<SensorIcon />} width="260px">
-      <NodeField label="Sensor Port">
-        <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
-      </NodeField>
+      {kokoon ? (
+        <NodeField label="Sensor Port">
+          <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
+        </NodeField>
+      ) : (
+        <>
+          <NodeField label="Trig Pin"><NumberInput value={trigPin} onChange={setTrigPin} /></NodeField>
+          <NodeField label="Echo Pin"><NumberInput value={echoPin} onChange={setEchoPin} /></NodeField>
+        </>
+      )}
 
       <NodeField label="Send to Viz">
         <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
       </NodeField>
 
       <AdvancedSection>
-        <PortPinBadge port={port} mode="ultrasonic" />
+        {kokoon && <PortPinBadge port={port} mode="ultrasonic" />}
         {/* Echo pulse visualiser */}
         <div className="px-3 pt-1 pb-0.5">
           <EchoPulseDisplay live={live} distanceCm={distanceCm} />

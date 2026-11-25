@@ -1,5 +1,6 @@
 import type { Node, Edge } from "@xyflow/react";
 import { getBoard } from "@/entities/board";
+import { pinDefaults, SIMPLE_SENSORS } from "./blockDefaults";
 
 /**
  * Arduino C++ generator. Same flow-walking rules as the MicroPython generator
@@ -33,6 +34,7 @@ function cppCondition(cond: unknown): string {
 
 export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
   const board = getBoard();
+  const P = pinDefaults(board.id); // default pin per block when the node has none set
   if (nodes.length === 0) return "// Add blocks to generate code\n";
 
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
@@ -104,6 +106,19 @@ export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
       out.push(`${ind}${head} {`, ...body, ...tail, `${ind}}`);
     };
     const loopSleep = d.sleepEnabled ? [`${ind}  delay(${d.sleepMs ?? 1000});`] : [];
+    // Shared by every plain analog / digital input block.
+    const readAnalog = (fallbackVar: string, viz = d.sendToViz !== false) => {
+      const v = declare(d.varName, fallbackVar, "int");
+      out.push(`${ind}${v} = analogRead(${d.pin ?? P.analog});  // 0-${board.adcMax}`);
+      if (viz) out.push(...sensorPrint(ind, v));
+    };
+    const readDigital = (fallbackVar: string, defaultPin: number, viz = d.sendToViz !== false) => {
+      const pin = d.pin ?? defaultPin;
+      const v = declare(d.varName, fallbackVar, "int");
+      setup(`mode_${pin}`, `pinMode(${pin}, INPUT);`);
+      out.push(`${ind}${v} = digitalRead(${pin});`);
+      if (viz) out.push(...sensorPrint(ind, v));
+    };
 
     if (!d.disabled) switch (node.type) {
       case "print":
@@ -117,24 +132,52 @@ export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
         break;
 
       case "gpio_pin":
-        setup(`mode_${d.pin ?? 13}`, `pinMode(${d.pin ?? 13}, ${d.mode === "IN" ? "INPUT" : "OUTPUT"});`);
+        setup(`mode_${d.pin ?? P.gpio}`, `pinMode(${d.pin ?? P.gpio}, ${d.mode === "IN" ? "INPUT" : "OUTPUT"});`);
         break;
       case "pin_write":
-        setup(`mode_${d.pin ?? 13}`, `pinMode(${d.pin ?? 13}, OUTPUT);`);
-        out.push(`${ind}digitalWrite(${d.pin ?? 13}, ${d.value ? "HIGH" : "LOW"});`);
+        setup(`mode_${d.pin ?? P.write}`, `pinMode(${d.pin ?? P.write}, OUTPUT);`);
+        out.push(`${ind}digitalWrite(${d.pin ?? P.write}, ${d.value ? "HIGH" : "LOW"});`);
+        break;
+      case "led":
+      case "relay": {
+        const pin = d.pin ?? P[node.type];
+        const on = d.state !== false;
+        setup(`mode_${pin}`, `pinMode(${pin}, OUTPUT);`);
+        out.push(`${ind}digitalWrite(${pin}, ${on !== !!d.activeLow ? "HIGH" : "LOW"});  // ${node.type} ${on ? "on" : "off"}`);
+        break;
+      }
+      case "pin_read":
+        readDigital("value", P.read, false);
+        break;
+      case "push_button": {
+        // Button wired between the pin and GND, using the internal pull-up.
+        const pin = d.pin ?? P.read;
+        setup(`mode_${pin}`, `pinMode(${pin}, INPUT_PULLUP);`);
+        out.push(`${ind}${declare(d.varName, "value", "int")} = !digitalRead(${pin});  // 1 = pressed`);
+        break;
+      }
+      case "touch_sensor":
+        readDigital("touch_value", P.touch); // digital touch module (TTP223)
+        break;
+      case "ir_sensor":
+        readDigital("ir_value", P.ir);
         break;
       case "button_digital_input": {
         const v = declare(d.varName, "btn", "int");
-        setup(`mode_${d.pin ?? 2}`, `pinMode(${d.pin ?? 2}, ${d.pullup ? "INPUT_PULLUP" : "INPUT"});`);
-        out.push(`${ind}${v} = digitalRead(${d.pin ?? 2});`);
+        setup(`mode_${d.pin ?? P.button}`, `pinMode(${d.pin ?? P.button}, ${d.pullup ? "INPUT_PULLUP" : "INPUT"});`);
+        out.push(`${ind}${v} = digitalRead(${d.pin ?? P.button});`);
         break;
       }
       case "pwm_output":
-        setup(`mode_${d.pin ?? 3}`, `pinMode(${d.pin ?? 3}, OUTPUT);`);
-        out.push(`${ind}analogWrite(${d.pin ?? 3}, ${Math.round(((d.duty ?? 50) / 100) * 255)});`);
+        setup(`mode_${d.pin ?? P.pwm}`, `pinMode(${d.pin ?? P.pwm}, OUTPUT);`);
+        out.push(`${ind}analogWrite(${d.pin ?? P.pwm}, ${Math.round(((d.duty ?? 50) / 100) * 255)});`);
+        break;
+      case "pwm": // duty is 0-1023 on this block
+        setup(`mode_${d.pin ?? P.pwm}`, `pinMode(${d.pin ?? P.pwm}, OUTPUT);`);
+        out.push(`${ind}analogWrite(${d.pin ?? P.pwm}, ${Math.round(((d.duty ?? 512) / 1023) * 255)});`);
         break;
       case "buzzer_tone":
-        out.push(`${ind}tone(${d.pin ?? 8}, ${Number(d.tone ?? 1) * 440});`);
+        out.push(`${ind}tone(${d.pin ?? P.buzzer}, ${Number(d.tone ?? 1) * 440});`);
         break;
 
       case "forever_loop": {
@@ -165,18 +208,80 @@ export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
         out.push(`${ind}}`);
         break;
 
+      // Uno analog pins: A0..A5 are also pins 14..19.
       case "analog_sensor":
-      case "soil_moisture": {
-        // Uno analog pins: A0..A5 are also pins 14..19.
-        const pin = d.pin ?? 14;
-        const v = declare(d.varName, node.type === "soil_moisture" ? "value" : "analog_val", "int");
-        out.push(`${ind}${v} = analogRead(${pin});  // 0-${board.adcMax}`);
-        if (d.sendToViz !== false) out.push(...sensorPrint(ind, v));
+        readAnalog("analog_val");
+        break;
+      case "soil_moisture":
+        readAnalog("value");
+        break;
+      case "adc":
+        readAnalog("value", false);
+        break;
+      case "gas_sensor":
+      case "rain_sensor":
+      case "water_level":
+      case "ldr_sensor":
+      case "sound_sensor":
+      case "pir_motion": {
+        const s = SIMPLE_SENSORS[node.type];
+        if (s.pin === "analog" || d.mode === "analog") readAnalog(s.varName);
+        else readDigital(s.varName, P[s.pin]);
         break;
       }
-      case "ultrasonic": {
-        const trig = d.trigPin ?? 7;
-        const echo = d.echoPin ?? 8;
+      case "rfid_reader": {
+        const v = declare(d.varName, "card_uid", "String", '""');
+        includes.add("#include <SPI.h>");
+        includes.add("#include <MFRC522.h>");
+        globals.set("__rfid", `MFRC522 rfid(${d.ssPin ?? P.rfidSs}, ${d.rstPin ?? P.rfidRst});  // SS, RST (SCK=13 MOSI=11 MISO=12)
+String readCardUid() {
+  String uid = "";
+  if (!rfid.PICC_IsNewCardPresent() || !rfid.PICC_ReadCardSerial()) return uid;  // no card
+  for (byte i = 0; i < rfid.uid.size; i++) {
+    if (rfid.uid.uidByte[i] < 0x10) uid += "0";
+    uid += String(rfid.uid.uidByte[i], HEX);
+  }
+  uid.toUpperCase();
+  rfid.PICC_HaltA();
+  return uid;
+}`);
+        setup("rfid", "SPI.begin(); rfid.PCD_Init();");
+        out.push(`${ind}${v} = readCardUid();  // "" when no card`);
+        break;
+      }
+      case "rtc_time": {
+        const h = declare(d.hourVar, "hour", "int");
+        const m = declare(d.minVar, "minute", "int");
+        const sec = declare(d.secVar, "second", "int");
+        includes.add("#include <Wire.h>");
+        globals.set("__rtc", `// DS3231 clock on I2C (SDA=A4 SCL=A5): registers 0-2 = seconds, minutes, hours in BCD (24 h mode).
+byte bcdToDec(byte v) { return (v >> 4) * 10 + (v & 0x0F); }
+void readRtc(int &h, int &m, int &s) {
+  Wire.beginTransmission(0x68);
+  Wire.write((byte)0);
+  Wire.endTransmission();
+  Wire.requestFrom(0x68, 3);
+  if (Wire.available() < 3) return;  // clock not connected: keep the old values
+  s = bcdToDec(Wire.read() & 0x7F);
+  m = bcdToDec(Wire.read() & 0x7F);
+  h = bcdToDec(Wire.read() & 0x3F);
+}`);
+        setup("wire", "Wire.begin();");
+        out.push(`${ind}readRtc(${h}, ${m}, ${sec});`);
+        break;
+      }
+      case "bluetooth_serial": {
+        const v = declare(d.varName, "bt_data", "String", '""');
+        includes.add("#include <SoftwareSerial.h>");
+        globals.set("__bt", `SoftwareSerial bt(${d.rxPin ?? P.btRx}, ${d.txPin ?? P.btTx});  // Arduino RX (to HC-05 TXD), Arduino TX (to HC-05 RXD)`);
+        setup("bt", "bt.begin(9600);");
+        out.push(`${ind}if (bt.available()) ${v} = String((char)bt.read());  // last received character`);
+        break;
+      }
+      case "ultrasonic":
+      case "ultrasonic_sensor": {
+        const trig = d.trigPin ?? P.trig;
+        const echo = d.echoPin ?? P.echo;
         const v = declare(d.varName, "distance");
         globals.set("__ultrasonic", `float readDistanceCm(int trig, int echo) {
   digitalWrite(trig, LOW); delayMicroseconds(2);
@@ -191,7 +296,7 @@ export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
         break;
       }
       case "dht11": {
-        const pin = d.pin ?? 2;
+        const pin = d.pin ?? P.dht;
         const t = declare(d.tempVar, "temperature");
         const h = declare(d.humVar, "humidity");
         includes.add("#include <DHT.h>");

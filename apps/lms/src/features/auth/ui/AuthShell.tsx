@@ -1,8 +1,11 @@
 import { APP_NAME } from "@/shared/config/brand";
-import type { ReactNode } from "react";
+import { useId, type InputHTMLAttributes, type ReactNode } from "react";
 import { motion } from "framer-motion";
+import { AlertCircle } from "lucide-react";
+import { BrandMark } from "@/shared/ui/BrandMark";
+import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
 
-/** Centered split-card shell used by the login & register screens. */
+/** Centered card shell used by the login & register screens. */
 export function AuthShell({ title, subtitle, children, footer }: {
   title: string;
   subtitle: string;
@@ -10,65 +13,91 @@ export function AuthShell({ title, subtitle, children, footer }: {
   footer: ReactNode;
 }) {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-page p-4 overflow-y-auto">
-      {/* Ambient brand glow - slow breathing keeps the page feeling alive */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <motion.div
-          className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/20 blur-[120px]"
-          animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-secondary/20 blur-[120px]"
-          animate={{ scale: [1.1, 1, 1.1], opacity: [1, 0.7, 1] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
+    // The document itself never scrolls (html/body are overflow:hidden), so this
+    // element is the scroller: a tall form stays reachable on short screens.
+    <div className="h-full w-full overflow-y-auto bg-page">
+      <title>{`${title} · ${APP_NAME}`}</title>
+      <a href="#main" className="skip-link">Skip to main content</a>
+      <div className="mx-auto flex min-h-full w-full max-w-md flex-col px-4 py-5 sm:py-8">
+        <header className="flex items-center justify-between">
+          <BrandMark />
+          <ThemeSwitcher compact />
+        </header>
 
-      <div className="relative w-full max-w-md">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: -8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 320, damping: 24 }}
-          className="flex items-center justify-center gap-2.5 mb-6"
-        >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-gradient text-xl"></div>
-          <span className="text-2xl font-black tracking-tight text-body">{APP_NAME}</span>
-        </motion.div>
+        <main id="main" tabIndex={-1} className="flex flex-1 flex-col justify-center py-8 outline-none">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="rounded-lg border border-subtle bg-panel p-6 sm:p-8"
+          >
+            <h1 className="font-display text-3xl font-semibold text-body">{title}</h1>
+            <p className="mt-2 text-[15px] leading-relaxed text-sub">{subtitle}</p>
+            <div className="mt-7">{children}</div>
+          </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 28, delay: 0.08 }}
-          className="rounded-2xl border border-subtle bg-raised/80 backdrop-blur-xl p-7 shadow-2xl"
-        >
-          <h1 className="text-2xl font-black text-body tracking-tight">{title}</h1>
-          <p className="mt-1 text-sm text-sub">{subtitle}</p>
-          <div className="mt-6">{children}</div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25, duration: 0.4 }}
-          className="mt-5 text-center text-sm text-sub"
-        >
-          {footer}
-        </motion.div>
+          <p className="mt-6 text-center text-sm text-sub">{footer}</p>
+        </main>
       </div>
     </div>
   );
 }
 
-export function AuthField({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+/** Label + input + hint + error, wired together for assistive tech. */
+export function AuthField({ label, error, hint, ...input }: {
+  label: string;
+  error?: string;
+  hint?: string;
+} & InputHTMLAttributes<HTMLInputElement>) {
+  const id = useId();
+  const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(" ") || undefined;
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-semibold text-sub">{label}</span>
-      {children}
-      {error && <span className="mt-1 block text-[13px] font-medium text-error-c">{error}</span>}
-    </label>
+    <div>
+      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-body">{label}</label>
+      <input
+        {...input}
+        id={id}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={describedBy}
+        className={`min-h-11 w-full rounded-md border bg-page px-3.5 py-2.5 text-base text-body transition-colors placeholder:text-hint ${
+          error ? "border-error" : "border-strong"
+        }`}
+      />
+      {hint && !error && <p id={`${id}-hint`} className="mt-1.5 text-[13px] text-sub">{hint}</p>}
+      {error && (
+        <p id={`${id}-error`} className="mt-1.5 flex items-center gap-1.5 text-[13px] font-medium text-error-c">
+          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {error}
+        </p>
+      )}
+    </div>
   );
 }
 
-export const authInputClass =
-  "w-full rounded-xl border border-subtle bg-page px-4 py-3 text-[15px] text-body outline-none transition-all placeholder:text-hint focus:border-primary focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--k-primary)_18%,transparent)]";
+/** Form-level error. Always mounted so screen readers announce it when it fills. */
+export function AuthFormError({ message }: { message?: string | null }) {
+  return (
+    <div role="alert">
+      {message && (
+        <p className="flex items-start gap-2 rounded-md border border-error-tint bg-error-tint px-3.5 py-2.5 text-sm font-medium text-error-c">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          {message}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export const authSubmitClass =
+  "mt-1 min-h-11 w-full rounded-md bg-brand-gradient px-4 text-base font-semibold text-on-primary transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60";
+
+/** "or" rule between the password form and Google sign-in. */
+export function AuthDivider() {
+  return (
+    <div className="my-5 flex items-center" role="separator" aria-label="or">
+      <div className="flex-1 border-t border-subtle" />
+      <span className="px-3 text-xs font-medium text-sub" aria-hidden="true">or</span>
+      <div className="flex-1 border-t border-subtle" />
+    </div>
+  );
+}

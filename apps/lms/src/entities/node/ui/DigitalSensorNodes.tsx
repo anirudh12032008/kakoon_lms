@@ -12,23 +12,31 @@ import {
   COLORS,
 } from "./BaseNode";
 import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
+import { useBoard } from "@/entities/board";
+import { usePinDefaults } from "../lib/blockDefaults";
 
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
 
 // ─── Touch Sensor ─────────────────────────────────────────────────────────────
 export function TouchSensorNode() {
+  const kokoon = useBoard().id === "kokoon"; // only the Kokoon PCB has sensor ports
   const [port, setPort] = useNodeField<string>("port", "1");
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().touch);
   const [varName, setVarName] = useNodeField<string>("varName", "touch_value");
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
   return (
     <BaseNode title="Touch Sensor" color={COLORS.red} icon={<SensorIcon />} width="240px">
-      <NodeField label="Sensor Port">
-        <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
-      </NodeField>
+      {kokoon ? (
+        <NodeField label="Sensor Port">
+          <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
+        </NodeField>
+      ) : (
+        <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
+      )}
       <NodeField label="Send to Viz">
         <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
       </NodeField>
-      <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>
+      {kokoon && <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>}
       <NodeField label="Touch Value">
         <TextInput value={varName} onChange={setVarName} green />
         <Handle type="source" position={Position.Right} id="touch" style={{ ...outHS, right: -6 }} />
@@ -39,7 +47,7 @@ export function TouchSensorNode() {
 
 // ─── DHT11 Temperature & Humidity Sensor ──────────────────────────────────────
 export function DHT11Node() {
-  const [pin, setPin] = useNodeField<number>("pin", 4);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().dht);
   const [tempVar, setTempVar] = useNodeField<string>("tempVar", "temperature");
   const [humVar, setHumVar] = useNodeField<string>("humVar", "humidity");
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
@@ -69,18 +77,24 @@ export function DHT11Node() {
 
 // ─── Soil Moisture Sensor ─────────────────────────────────────────────────────
 export function SoilMoistureSensorNode() {
+  const kokoon = useBoard().id === "kokoon"; // only the Kokoon PCB has sensor ports
   const [port, setPort] = useNodeField<string>("port", "1");
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().soil);
   const [varName, setVarName] = useNodeField<string>("varName", "value");
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
   return (
     <BaseNode title="Soil Moisture Sensor" color={COLORS.orange} icon={<SensorIcon />} width="240px">
-      <NodeField label="Sensor Port">
-        <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
-      </NodeField>
+      {kokoon ? (
+        <NodeField label="Sensor Port">
+          <SelectInput value={port} onChange={setPort} options={PORT_OPTIONS} compact />
+        </NodeField>
+      ) : (
+        <NodeField label="Pin"><NumberInput value={pin} onChange={setPin} /></NodeField>
+      )}
       <NodeField label="Send to Viz">
         <ToggleInput value={sendToViz} onChange={setSendToViz} leftLabel="Off" rightLabel="On" />
       </NodeField>
-      <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>
+      {kokoon && <AdvancedSection><PortPinBadge port={port} mode="i2c" /></AdvancedSection>}
       <NodeField label="Value">
         <TextInput value={varName} onChange={setVarName} green />
         <Handle type="source" position={Position.Right} id="value" style={{ ...outHS, right: -6 }} />
@@ -92,7 +106,7 @@ export function SoilMoistureSensorNode() {
 // ─── Button / Digital Input ───────────────────────────────────────────────────
 export function ButtonDigitalInputNode() {
   const [port, setPort] = useNodeField<string>("port", "1");
-  const [pin, setPin] = useNodeField<number>("pin", 0);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().button);
   const [pullup, setPullup] = useNodeField<boolean>("pullup", true);
   const [debounce, setDebounce] = useNodeField<number>("debounce", 50);
   const [holdDuration, setHoldDuration] = useNodeField<number>("holdDuration", 500);

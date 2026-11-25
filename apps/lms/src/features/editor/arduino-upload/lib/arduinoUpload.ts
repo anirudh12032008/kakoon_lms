@@ -22,8 +22,8 @@ function parseHex(hex: string): Uint8Array {
   for (const line of hex.split(/\r?\n/)) {
     if (!line.trim()) continue;
     if (line[0] !== ":") throw new Error("Invalid HEX file");
-    const b = line.slice(1).trim().match(/../g)!.map((h) => parseInt(h, 16));
-    if (b.some(Number.isNaN) || b.length !== b[0] + 5) throw new Error("Corrupt HEX record");
+    const b = (line.slice(1).trim().match(/../g) ?? []).map((h) => parseInt(h, 16));
+    if (b.length < 5 || b.some(Number.isNaN) || b.length !== b[0] + 5) throw new Error("Corrupt HEX record");
     if (b.reduce((a, v) => a + v, 0) & 0xff) throw new Error("HEX checksum mismatch");
     if (b[3] === 1) break;
     if (b[3] !== 0) continue; // ponytail: no extended addressing, AVR Uno/Nano flash is < 64 KB
@@ -43,7 +43,12 @@ export async function flashHex(
   onProgress?: (pct: number) => void
 ): Promise<void> {
   const image = parseHex(hex);
-  await port.open({ baudRate: baud });
+  try {
+    await port.open({ baudRate: baud });
+  } catch (e) {
+    // Typically "port is already open": the serial monitor, another tab or another app holds it.
+    throw new Error("Could not open the serial port. Close anything else using the board (another tab, the Arduino IDE) and try again.", { cause: e });
+  }
   const writer = port.writable!.getWriter();
   const reader = port.readable!.getReader();
   let buf: number[] = [];
@@ -71,11 +76,14 @@ export async function flashHex(
   };
 
   try {
-    // Pulse DTR to reset the board into its bootloader.
-    await port.setSignals({ dataTerminalReady: false });
-    await sleep(100);
-    await port.setSignals({ dataTerminalReady: true });
-    await sleep(200);
+    // Pulse DTR (and RTS: some CH340/FTDI clones wire reset to it, avrdude pulses
+    // both) to reset the board into its bootloader.
+    await port.setSignals({ dataTerminalReady: false, requestToSend: false });
+    await sleep(250);
+    await port.setSignals({ dataTerminalReady: true, requestToSend: true });
+    // Let the bootloader start and throw away whatever the old sketch was still
+    // printing, so stale bytes are not mistaken for bootloader replies.
+    await read(Infinity, 100).catch(() => {});
 
     let synced = false;
     for (let i = 0; i < 10 && !synced; i++) {
@@ -88,18 +96,23 @@ export async function flashHex(
     }
     if (!synced) throw new Error("Board did not respond. Check the selected board, cable and port.");
 
-    await cmd([0x50, 0x20]); // enter programming mode
-    for (let off = 0; off < image.length; off += PAGE) {
-      const word = off >> 1;
-      await cmd([0x55, word & 0xff, word >> 8, 0x20]);
-      await cmd([0x64, PAGE >> 8, PAGE & 0xff, 0x46, ...image.subarray(off, off + PAGE), 0x20], 2000);
-      onProgress?.(Math.round(((off + PAGE) / image.length) * 100));
+    try {
+      await cmd([0x50, 0x20]); // enter programming mode
+      for (let off = 0; off < image.length; off += PAGE) {
+        const word = off >> 1;
+        await cmd([0x55, word & 0xff, word >> 8, 0x20]);
+        await cmd([0x64, PAGE >> 8, PAGE & 0xff, 0x46, ...image.subarray(off, off + PAGE), 0x20], 2000);
+        onProgress?.(Math.round(((off + PAGE) / image.length) * 100));
+      }
+      await cmd([0x51, 0x20]); // leave programming mode (board runs the sketch)
+    } catch (e) {
+      throw new Error(`Upload stopped part-way (${e instanceof Error ? e.message : e}). Check the cable and press Upload again.`, { cause: e });
     }
-    await cmd([0x51, 0x20]); // leave programming mode (board runs the sketch)
   } finally {
-    writer.releaseLock();
+    // Never throw from here: it would replace the real error and skip port.close().
+    try { writer.releaseLock(); } catch { /* a write is still pending on a dead port */ }
     await reader.cancel().catch(() => {});
-    reader.releaseLock();
+    try { reader.releaseLock(); } catch { /* already released */ }
     await port.close().catch(() => {});
   }
 }

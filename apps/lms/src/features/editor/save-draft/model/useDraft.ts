@@ -1,6 +1,7 @@
 import { useEffect, type RefObject } from "react";
 import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import type { ViewMode } from "@/pages/editor/ui/EditorPage";
+import { useBoardStore } from "@/entities/board";
 
 interface UseDraftOptions {
   canvasRef: RefObject<NodeCanvasRef | null>;
@@ -27,6 +28,8 @@ export function useDraft({
   generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
   setGeneratedCode, setEditableCode, setHasManualEdits, setViewMode, setIsEditing,
 }: UseDraftOptions) {
+  const boardId = useBoardStore((s) => s.boardId); // a board switch is a change worth saving
+
   // Load draft on mount
   useEffect(() => {
     if (!enabled) return;
@@ -66,12 +69,14 @@ export function useDraft({
     if (!enabled || isLoadingDraft) return;
     const timeout = setTimeout(() => {
       const workspace = canvasRef.current?.getWorkspace();
-      localStorage.setItem("kokoon-draft", JSON.stringify({
-        flowData: workspace ? JSON.stringify(workspace) : "",
-        generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
-        timestamp: Date.now(),
-      }));
+      try {
+        localStorage.setItem("kokoon-draft", JSON.stringify({
+          flowData: workspace ? JSON.stringify(workspace) : "",
+          generatedCode, editableCode, hasManualEdits, viewMode, isEditing,
+          timestamp: Date.now(),
+        }));
+      } catch { /* storage full or blocked - keep editing, just no local draft */ }
     }, 1000);
     return () => clearTimeout(timeout);
-  }, [enabled, generatedCode, editableCode, hasManualEdits, viewMode, isEditing, isLoadingDraft, canvasRef]);
+  }, [enabled, generatedCode, editableCode, hasManualEdits, viewMode, isEditing, isLoadingDraft, canvasRef, boardId]);
 }

@@ -35,6 +35,7 @@ import { NodeActionsProvider } from "@/shared/context/NodeActionsContext";
 import { ESP32FilesPanel } from "@/features/editor/esp32-files/ui/ESP32FilesPanel";
 import { HardwareView, syncAddHwNode, syncRemoveHwNode, isFlowSyncSuppressed, resyncHwFromBlocks } from "@/widgets/hardware-view/ui/HardwareView";
 import { removeAnim, markOnDevice } from "@/shared/lib/animRegistry";
+import { reportError } from "@/shared/error/errorToastStore";
 
 export type LessonContext = EditorLaunchContext;
 export type ViewMode = "blocks" | "split" | "code" | "hardware";
@@ -253,7 +254,8 @@ export default function EditorPage({
 
       // Open file for writing
       const openCode = `${mkdirCode}import os\n_kf = open('${filename.replace(/'/g, "\\'")}', 'wb')\n`;
-      await sendCode(openCode);
+      // sendCode returns false (it does not throw) when the write was refused or failed.
+      if (!(await sendCode(openCode))) return false;
       onProgress(10);
 
       // Chunk the content as escaped bytes, 200 chars of source per chunk
@@ -263,15 +265,15 @@ export default function EditorPage({
         const slice = content.slice(i, i + CHUNK);
         // JSON.stringify gives us a safe escaped string literal including quotes
         const chunkCode = `_kf.write(${JSON.stringify(slice)})\n`;
-        await sendCode(chunkCode);
+        if (!(await sendCode(chunkCode))) { addLog(`Failed to install ${filename}`); return false; }
         onProgress(10 + Math.round((i / total) * 80));
       }
 
       // Close & confirm
       const closeCode = `_kf.close()\nprint('LIB_OK:${filename}')\n`;
-      await sendCode(closeCode);
+      if (!(await sendCode(closeCode))) { addLog(`Failed to install ${filename}`); return false; }
       onProgress(100);
-      addLog(`${filename} installed to ESP32`);
+      addLog(`${filename} installed on the board`);
       return true;
     } catch {
       addLog(`Failed to install ${filename}`);
@@ -284,10 +286,10 @@ export default function EditorPage({
     frames: number[][], fps: number, name: string,
     onProgress?: (pct: number) => void
   ): Promise<boolean> => {
-    if (!isConnected) { addLog("Not connected to ESP32"); return false; }
+    if (!isConnected) { addLog("Not connected to the board"); return false; }
     onProgress?.(0);
 
-    addLog(`Saving animation "${name}" to ESP32...`);
+    addLog(`Saving animation "${name}" to the board...`);
 
     const safeName = name.replace(/[^a-z0-9_]/gi, '_').toLowerCase();
     const numFrames = frames.length;
@@ -319,16 +321,16 @@ export default function EditorPage({
 
     try {
       const openCode = `import os, binascii\ntry: os.mkdir('/anim')\nexcept: pass\n_oaf = open('/anim/${safeName}.bin', 'wb')\n`;
-      await sendCode(openCode);
+      if (!(await sendCode(openCode))) return false;
 
       for (let i = 0; i < totalBytes; i += CHUNK_BYTES) {
         const chunk = payload.slice(i, i + CHUNK_BYTES);
         const hexStr = Array.from(chunk).map(b => b.toString(16).padStart(2, '0')).join('');
-        await sendCode(`_oaf.write(binascii.unhexlify('${hexStr}'))\n`);
+        if (!(await sendCode(`_oaf.write(binascii.unhexlify('${hexStr}'))\n`))) { addLog(`Failed to save animation "${name}"`); return false; }
         onProgress?.(Math.round((i / totalBytes) * 100));
       }
 
-      await sendCode(`_oaf.close()\nprint('ANIM_SAVED:${safeName}')\n`);
+      if (!(await sendCode(`_oaf.close()\nprint('ANIM_SAVED:${safeName}')\n`))) { addLog(`Failed to save animation "${name}"`); return false; }
       onProgress?.(100);
       addLog(`Animation "${name}" saved to /anim/${safeName}.bin`);
 
@@ -351,8 +353,8 @@ export default function EditorPage({
     // If connected, also delete from device
     if (isConnected) {
       try {
-        await sendCode(`import os\ntry: os.remove('/anim/${safeName}.bin')\nexcept: pass\nprint('ANIM_DEL:${safeName}')\n`);
-        addLog(`Deleted /anim/${safeName}.bin from ESP32`);
+        const ok = await sendCode(`import os\ntry: os.remove('/anim/${safeName}.bin')\nexcept: pass\nprint('ANIM_DEL:${safeName}')\n`);
+        addLog(ok ? `Deleted /anim/${safeName}.bin from the board` : "Could not delete from device - file may still be there");
       } catch {
         addLog(`Could not delete from device - file may still be there`);
       }
@@ -370,29 +372,34 @@ export default function EditorPage({
   // Arduino has no REPL: "run" means compile on the server, then flash over USB.
   const runOnArduino = useCallback(async (code: string) => {
     if (!board.arduino) return;
+    if (!isSupported) { addLog("Uploading needs Web Serial. Open CodeLab in Chrome or Edge on a computer."); return; }
     try {
       if (isConnected) await disconnect(); // the uploader needs the port to itself
       const granted = await navigator.serial.getPorts();
       const port = granted.length === 1 ? granted[0] : await navigator.serial.requestPort();
       setIsSending(true);
+      setShowTerminal(true); // compile errors and progress only show up there
       const ok = await uploadSketch(code, board.arduino, port, addLog);
       if (ok) addLog(`Sketch is running on the ${board.label}. Click Connect to see its serial output.`);
     } catch (err) {
-      addLog(`Upload cancelled: ${err instanceof Error ? err.message : String(err)}`);
+      // requestPort() rejects with NotFoundError when the picker is dismissed.
+      addLog(err instanceof DOMException && err.name === "NotFoundError"
+        ? "No port selected. Plug in the board and press Upload again."
+        : `Upload did not start: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsSending(false);
     }
-  }, [board, isConnected, disconnect, addLog]);
+  }, [board, isConnected, isSupported, disconnect, addLog]);
 
   const handleRun = useCallback(async () => {
     const code = getCurrentCode();
     if (!code.trim()) { addLog("No code to run. Add some blocks first!"); return; }
     if (board.runtime === "arduino") return runOnArduino(code);
-    if (!isConnected) { addLog("Not connected to ESP32. Click Connect first."); return; }
+    if (!isConnected) { addLog(`Not connected to the ${board.label}. Click Connect first.`); return; }
     setIsSending(true);
     const success = await sendCode(code);
     setIsSending(false);
-    if (success) addLog("Code sent to ESP32!");
+    if (success) addLog(`Code sent to the ${board.label}!`);
   }, [getCurrentCode, isConnected, sendCode, addLog, board, runOnArduino]);
 
   const handleStop = useCallback(async () => {
@@ -403,11 +410,11 @@ export default function EditorPage({
     const code = getCurrentCode();
     if (!code.trim()) { addLog("No code to upload."); return; }
     if (board.runtime === "arduino") return runOnArduino(code);
-    if (!isConnected) { addLog("Not connected to ESP32."); return; }
+    if (!isConnected) { addLog(`Not connected to the ${board.label}.`); return; }
     setIsUploading(true);
     const success = await uploadCode(code);
     setIsUploading(false);
-    if (success) addLog("Code saved to ESP32! It will run on boot.");
+    if (success) addLog(`Code saved to the ${board.label}! It will run on boot.`);
   }, [getCurrentCode, isConnected, uploadCode, addLog, board, runOnArduino]);
 
   // ── Export / Import ───────────────────────────────────────────────────────────
@@ -607,7 +614,11 @@ export default function EditorPage({
         onConnectWifi={wifi.handleWifiConnect}
         showWifiInput={wifi.showWifiInput}
         setShowWifiInput={wifi.setShowWifiInput}
-        setConnectionMode={setConnectionMode}
+        setConnectionMode={(mode) => {
+          // WiFi / WebREPL is not built yet: say so instead of switching to a mode that cannot connect.
+          if (mode === "wifi") { reportError({ message: "WiFi connection is not available yet", hint: "Connect your board with a USB cable." }); wifi.setShowWifiInput(false); }
+          else setConnectionMode(mode);
+        }}
         wifiSsid={wifi.wifiSsid}
         setWifiSsid={wifi.setWifiSsid}
         wifiPassword={wifi.wifiPassword}
@@ -616,7 +627,7 @@ export default function EditorPage({
         setWifiSubnet={wifi.setWifiSubnet}
         isUploading={isUploading}
         isSending={isSending}
-        isRunning={isRunning}
+        isRunning={isRunning && board.runtime === "micropython"}
         onUpload={handleUpload}
         onRun={handleRun}
         onStop={handleStop}
@@ -643,7 +654,11 @@ export default function EditorPage({
             <div className="flex-1 overflow-hidden">
               <TutorialsDashboard
                 onBack={() => tutorial.setShowTutorialsCatalog(false)}
-                onSelectTutorial={tutorial.handleSelectTutorial}
+                onSelectTutorial={async (t, mode) => {
+                  // Both modes replace the canvas (and undo history); ask before discarding work.
+                  if (canvasRef.current?.getWorkspace().nodes.length && !(await confirm("This replaces the blocks on your canvas. Continue?"))) return;
+                  tutorial.handleSelectTutorial(t, mode);
+                }}
                 completedTutorialIds={tutorial.completedTutorialIds}
               />
             </div>
@@ -673,7 +688,7 @@ export default function EditorPage({
       )}
 
       {/* Feature modals */}
-      {showLibraryManager && (
+      {showLibraryManager && board.runtime === "micropython" && (
         <LibraryManager
           code={isEditing ? editableCode : generatedCode}
           isConnected={isConnected}
@@ -691,11 +706,11 @@ export default function EditorPage({
         />
       )}
 
-      {showFirmwareFlasher && (
+      {showFirmwareFlasher && board.runtime === "micropython" && (
         <FirmwareFlasher onClose={() => setShowFirmwareFlasher(false)} />
       )}
 
-      {showESP32Files && (
+      {showESP32Files && board.runtime === "micropython" && (
         <ESP32FilesPanel
           isConnected={isConnected}
           onClose={() => setShowESP32Files(false)}

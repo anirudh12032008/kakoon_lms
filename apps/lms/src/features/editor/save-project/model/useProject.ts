@@ -4,6 +4,7 @@ import type { ViewMode } from "@/pages/editor/ui/EditorPage";
 import type { EditorLaunchContext } from "@/entities/editor-launch/model/config";
 import type { SyncState } from "@/features/editor/save-draft/model/useCourseSync";
 import { useProjectStore } from "@/shared/launch/projectStore";
+import { useBoardStore } from "@/entities/board";
 import {
   createProject, getProject, updateProject,
   type ProjectMeta, type ProjectWorkspace,
@@ -58,6 +59,7 @@ export function useProject({
   const activeProjectSlug = useProjectStore((s) => s.activeProjectSlug);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
 
+  const boardId = useBoardStore((s) => s.boardId); // a board switch is a change worth saving
   const [syncState, setSyncState] = useState<SyncState>("idle");
   // The project id we have already loaded (or just created) this session - keeps
   // the load effect from re-fetching and clobbering work right after a save.
@@ -90,14 +92,13 @@ export function useProject({
           apply(0);
         }
         setActiveProject(project.id, project.name, project.slug ?? null);
-      })
-      .catch(() => { /* missing / offline - start from an empty canvas */ })
-      .finally(() => {
-        if (cancelled) return;
+        // Only a successful load unlocks autosave: after a failed one the canvas
+        // is empty and autosaving it would wipe the saved project.
         loadedIdRef.current = activeProjectId;
-        setIsLoadingDraft(false);
         setSyncState("saved");
-      });
+      })
+      .catch(() => { if (!cancelled) setSyncState("error"); })
+      .finally(() => { if (!cancelled) setIsLoadingDraft(false); });
 
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,7 +131,7 @@ export function useProject({
 
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, isLoadingDraft, activeProjectId, generatedCode, editableCode, hasManualEdits, viewMode, isEditing]);
+  }, [enabled, isLoadingDraft, activeProjectId, generatedCode, editableCode, hasManualEdits, viewMode, isEditing, boardId]);
 
   const saveAsNew = useCallback(async (name: string) => {
     const workspace = (canvasRef.current?.getWorkspace() as ProjectWorkspace | undefined) ?? { nodes: [], edges: [] };

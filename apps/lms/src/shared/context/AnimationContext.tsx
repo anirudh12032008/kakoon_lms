@@ -32,7 +32,7 @@ export function AnimationProvider({ children }: { children: React.ReactNode }) {
   return (
     <AnimationContext.Provider value={{ animationsEnabled: enabled, toggle }}>
       {/* reducedMotion="always" instantly disables every Framer Motion animation site-wide */}
-      <MotionConfig reducedMotion={enabled ? "never" : "always"}>
+      <MotionConfig reducedMotion={enabled ? "user" : "always"}>
         {children}
       </MotionConfig>
     </AnimationContext.Provider>

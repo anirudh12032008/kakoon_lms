@@ -74,7 +74,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   {
     id: "lsm6ds3",
     name: "lsm6ds3.py",
-    description: "LSM6DS3 onboard 6-axis IMU - Kokoon ESP32-S3 (SCL=42, SDA=41)",
+    description: "LSM6DS3 onboard 6-axis IMU - Kokoon Board only (SCL=42, SDA=41)",
     trigger: "lsm6ds3",
     path: "/libs/lsm6ds3.py",
     category: "Sensor",
@@ -129,7 +129,7 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
   {
     id: "drv8833",
     name: "drv8833.py",
-    description: "DRV8833 dual H-bridge motor driver helper",
+    description: "DRV8833 dual H-bridge motor driver helper (onboard on the Kokoon Board)",
     trigger: "drv8833",
     path: "/libs/drv8833.py",
     category: "Motor",

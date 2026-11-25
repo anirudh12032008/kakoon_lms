@@ -35,7 +35,7 @@ export const EDITOR_MODE_PRESETS: LaunchPreset[] = [
     launchType: "mode",
     accent: "from-cyan-500 to-blue-500",
     allowedCategories: ["general", "loop", "condition", "gpio", "sensor"],
-    allowedNodeTypes: ["print", "variable", "sleep", "forever_loop", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "buzzer_tone", "ultrasonic", "touch_sensor", "button_digital_input"],
+    allowedNodeTypes: ["led", "relay", "ldr_sensor", "gas_sensor", "pir_motion", "rain_sensor", "water_level", "sound_sensor", "dht11", "print", "variable", "sleep", "forever_loop", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "buzzer_tone", "ultrasonic", "touch_sensor", "button_digital_input"],
     availableSensors: ["Push Button", "Ultrasonic Sensor", "Touch Sensor", "Digital Input"],
   },
   {
@@ -46,7 +46,7 @@ export const EDITOR_MODE_PRESETS: LaunchPreset[] = [
     launchType: "mode",
     accent: "from-amber-500 to-orange-500",
     allowedCategories: ["general", "loop", "condition", "gpio", "sensor", "motors"],
-    allowedNodeTypes: ["print", "variable", "sleep", "forever_loop", "for_loop", "while_loop", "repeat", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "buzzer_tone", "ultrasonic", "touch_sensor", "soil_moisture", "ir_sensor", "servo_motor", "dc_motor_single"],
+    allowedNodeTypes: ["led", "relay", "ldr_sensor", "gas_sensor", "pir_motion", "rain_sensor", "water_level", "sound_sensor", "dht11", "print", "variable", "sleep", "forever_loop", "for_loop", "while_loop", "repeat", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "buzzer_tone", "ultrasonic", "touch_sensor", "soil_moisture", "ir_sensor", "servo_motor", "dc_motor_single"],
     availableSensors: ["Ultrasonic Sensor", "Touch Sensor", "Soil Moisture Sensor", "IR Sensor", "Servo Motor", "DC Motor"],
   },
   {
@@ -81,7 +81,7 @@ export const EDITOR_KIT_PRESETS: LaunchPreset[] = [
     launchType: "kit",
     accent: "from-emerald-500 to-teal-500",
     allowedCategories: ["general", "loop", "condition", "gpio"],
-    allowedNodeTypes: ["print", "variable", "sleep", "forever_loop", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "buzzer_tone"],
+    allowedNodeTypes: ["led", "print", "variable", "sleep", "forever_loop", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "buzzer_tone"],
     availableSensors: ["Push Button", "GPIO Pin", "Buzzer"],
   },
   {
@@ -93,7 +93,7 @@ export const EDITOR_KIT_PRESETS: LaunchPreset[] = [
     launchType: "kit",
     accent: "from-cyan-500 to-sky-500",
     allowedCategories: ["general", "loop", "condition", "gpio", "sensor"],
-    allowedNodeTypes: ["print", "variable", "sleep", "forever_loop", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "ultrasonic", "touch_sensor", "soil_moisture", "ir_receiver", "ir_sensor", "analog_sensor", "button_digital_input", "four_channel_touch"],
+    allowedNodeTypes: ["led", "relay", "ldr_sensor", "gas_sensor", "pir_motion", "rain_sensor", "water_level", "sound_sensor", "dht11", "print", "variable", "sleep", "forever_loop", "if_else", "gpio_pin", "pin_write", "pin_read", "push_button", "ultrasonic", "touch_sensor", "soil_moisture", "ir_receiver", "ir_sensor", "analog_sensor", "button_digital_input", "four_channel_touch"],
     availableSensors: ["Ultrasonic Sensor", "Touch Sensor", "Soil Moisture Sensor", "IR Receiver", "Analog Sensor"],
   },
   {

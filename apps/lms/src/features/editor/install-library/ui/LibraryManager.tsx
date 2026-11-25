@@ -138,7 +138,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">Library Manager</h2>
-              <p className="text-[10px] text-[var(--k-muted)]">Install MicroPython libraries to your ESP32</p>
+              <p className="text-[10px] text-[var(--k-muted)]">Install MicroPython libraries to your board</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)] transition-all">
@@ -150,7 +150,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
         {!isConnected && (
           <div className="mx-4 mt-3 flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 text-xs">
             <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-            Connect to your ESP32 first to install libraries.
+            Connect to your board first to install libraries.
           </div>
         )}
 
@@ -239,7 +239,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
             >
               <div className="text-3xl mb-2"></div>
               <p className="text-xs font-semibold text-[var(--k-text)] mb-1">Drop a .py file here or click to browse</p>
-              <p className="text-[10px] text-[var(--k-dim)]">Upload any MicroPython library directly to your ESP32</p>
+              <p className="text-[10px] text-[var(--k-dim)]">Upload any MicroPython library directly to your board</p>
               <input ref={fileInputRef} type="file" accept=".py" className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
@@ -274,7 +274,7 @@ export function LibraryManager({ code, isConnected, onUploadFile, onClose }: Pro
             >
               {typeof customProgress === "number"
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Uploading {customProgress}%</>
-                : <><Upload className="w-3.5 h-3.5" /> Upload to ESP32</>
+                : <><Upload className="w-3.5 h-3.5" /> Upload to board</>
               }
             </button>
           </div>

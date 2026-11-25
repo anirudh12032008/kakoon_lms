@@ -11,7 +11,7 @@ import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import {
   NEOPIXEL, SERVO_PORTS, MOTORS, SENSOR_PORTS, OLED, ONBOARD_IMU,
 } from "@/entities/board/model/hardwareConfig";
-import { useBoard } from "@/entities/board";
+import { useBoard, getBoard } from "@/entities/board";
 import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
 // ─── Wokwi-quality component illustrations ────────────────────────────────────
@@ -339,7 +339,9 @@ function BoardNode() {
         </div>
       )}
 
-      {BOARD_PORTS.map((port)=>(
+      {/* Kokoon-only ports are not rendered on other boards: an invisible handle
+          would still accept wires that end in empty space. */}
+      {BOARD_PORTS.filter((p) => isKokoon || !KOKOON_ONLY_PORTS.test(p.id)).map((port)=>(
         <Handle
           key={port.id}
           type="target"
@@ -354,7 +356,6 @@ function BoardNode() {
             border:`3px solid ${port.color}70`,
             boxShadow:`0 0 10px ${port.color}90, 0 0 20px ${port.color}30`,
             zIndex:10,
-            opacity: !isKokoon && KOKOON_ONLY_PORTS.test(port.id) ? 0 : 1,
           }}
           title={port.label}
         />
@@ -513,10 +514,10 @@ const PORT_TO_NODE: Record<string, (c: HwComponent) => { type: string; data: Rec
   motor_fl:  ()  => ({ type: "dc_motor_single",    data: { motor: "frontLeft",  pwm: MOTORS.frontLeft.pwm,  dir: MOTORS.frontLeft.dir } }),
   motor_rr:  ()  => ({ type: "dc_motor_single",    data: { motor: "rearRight",  pwm: MOTORS.rearRight.pwm,  dir: MOTORS.rearRight.dir } }),
   motor_rl:  ()  => ({ type: "dc_motor_single",    data: { motor: "rearLeft",   pwm: MOTORS.rearLeft.pwm,   dir: MOTORS.rearLeft.dir } }),
-  servo_s1:  ()  => ({ type: "servo_motor",         data: { port: "S1", pin: SERVO_PORTS.S1.pin } }),
-  servo_s2:  ()  => ({ type: "servo_motor",         data: { port: "S2", pin: SERVO_PORTS.S2.pin } }),
-  servo_s3:  ()  => ({ type: "servo_motor",         data: { port: "S3", pin: SERVO_PORTS.S3.pin } }),
-  servo_s4:  ()  => ({ type: "servo_motor",         data: { port: "S4", pin: SERVO_PORTS.S4.pin } }),
+  servo_s1:  ()  => ({ type: "servo_motor",         data: { servoPort: "S1", pin: SERVO_PORTS.S1.pin } }),
+  servo_s2:  ()  => ({ type: "servo_motor",         data: { servoPort: "S2", pin: SERVO_PORTS.S2.pin } }),
+  servo_s3:  ()  => ({ type: "servo_motor",         data: { servoPort: "S3", pin: SERVO_PORTS.S3.pin } }),
+  servo_s4:  ()  => ({ type: "servo_motor",         data: { servoPort: "S4", pin: SERVO_PORTS.S4.pin } }),
   oled:      ()  => ({ type: "oled_display",        data: { scl: OLED.scl, sda: OLED.sda } }),
   i2c2:      (c) => ({ type: c.nodeType,            data: { scl: SENSOR_PORTS["2"].scl, sda: SENSOR_PORTS["2"].sda } }),
   sensor1:   (c) => ({ type: c.nodeType,            data: { port: "1", trig: SENSOR_PORTS["1"].trig, echo: SENSOR_PORTS["1"].echo } }),
@@ -628,6 +629,11 @@ export function syncAddHwNode(logicId: string, nodeType: string, data: Record<st
 
   const portId = _getBestPort(nodeType, data);
   if (!portId) return; // No available port
+  // The port must exist as a handle on the selected board (onboard parts such as
+  // the IMU have none; motors / LED ring exist only on the Kokoon PCB). Otherwise
+  // the component would be drawn with a wire to nowhere.
+  if (!BOARD_PORTS.some((p) => p.id === portId)) return;
+  if (getBoard().id !== "kokoon" && KOKOON_ONLY_PORTS.test(portId)) return;
 
   const hwId = `hw_${crypto.randomUUID().slice(0, 8)}`;
   const newNode: Node = {

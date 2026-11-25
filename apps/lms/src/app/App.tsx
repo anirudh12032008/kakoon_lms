@@ -1,4 +1,4 @@
-import { APP_NAME } from "@/shared/config/brand";
+import { BrandScreen } from "@/shared/ui/BrandMark";
 import { lazy, Suspense, useEffect } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import "./styles/App.css";
@@ -20,15 +20,6 @@ import { ProjectsPage } from "@/pages/projects/ui/ProjectsPage";
 import { SharedProjectPage } from "@/pages/projects/ui/SharedProjectPage";
 
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
-
-function PageLoader() {
-  return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-page">
-      <span className="text-lg font-semibold text-body">{APP_NAME}</span>
-      <span className="loading loading-spinner loading-md text-primary-c" />
-    </div>
-  );
-}
 
 /** Keeps the gamification store pointed at the signed-in user's profile. */
 function GamificationBridge() {
@@ -56,7 +47,7 @@ function EditorRoute() {
   const courseSlug = context.courseSlug;
 
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<BrandScreen />}>
       <EditorPage
         launchContext={context}
         onBackToDashboard={() => {

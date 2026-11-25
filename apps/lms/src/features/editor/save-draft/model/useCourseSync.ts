@@ -5,6 +5,7 @@ import {
   saveCourseWorkspace,
   type SavedWorkspace,
 } from "@/shared/api/courses";
+import { useBoardStore } from "@/entities/board";
 
 export type SyncState = "idle" | "loading" | "saving" | "saved" | "error";
 
@@ -32,6 +33,7 @@ export function useCourseSync({
   generatedCode,
   editableCode,
 }: Options): { syncState: SyncState; lastSavedAt: number | null } {
+  const boardId = useBoardStore((s) => s.boardId); // a board switch is a change worth saving
   const [syncState, setSyncState] = useState<SyncState>(courseSlug ? "loading" : "idle");
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const loadedRef = useRef(false);
@@ -48,7 +50,12 @@ export function useCourseSync({
 
     getCourseWorkspace(courseSlug)
       .then((ws) => {
-        if (cancelled || !ws) return;
+        if (cancelled) return;
+        // Only a successful load unlocks autosave, so a failed restore can never
+        // be followed by a save that replaces the server copy.
+        loadedRef.current = true;
+        setSyncState("saved");
+        if (!ws) return;
         if ((ws.nodes?.length ?? 0) > 0 || (ws.edges?.length ?? 0) > 0) {
           // Inject as soon as the canvas ref is live. setTimeout (not rAF):
           // rAF never fires in hidden/background tabs, which left the canvas
@@ -61,15 +68,8 @@ export function useCourseSync({
           apply(0);
         }
       })
-      .catch(() => {
-        /* offline / not enrolled - fall back to an empty canvas */
-      })
-      .finally(() => {
-        if (cancelled) return;
-        loadedRef.current = true;
-        setIsLoadingDraft(false);
-        setSyncState("saved");
-      });
+      .catch(() => { if (!cancelled) setSyncState("error"); })
+      .finally(() => { if (!cancelled) setIsLoadingDraft(false); });
 
     return () => {
       cancelled = true;
@@ -99,7 +99,7 @@ export function useCourseSync({
 
     return () => clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseSlug, isLoadingDraft, generatedCode, editableCode]);
+  }, [courseSlug, isLoadingDraft, generatedCode, editableCode, boardId]);
 
   return { syncState, lastSavedAt };
 }

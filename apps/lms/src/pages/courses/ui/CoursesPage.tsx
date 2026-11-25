@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion, animate, useReducedMotion } from "framer-motion";
-import { ArrowRight, Check, Clock, Flame, Medal, Sparkles, Wrench, Zap } from "lucide-react";
+import { APP_NAME } from "@/shared/config/brand";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Check, Clock, Cpu, Flame, Medal, SquarePen, TrendingUp, Zap } from "lucide-react";
 import { fetchCourses, type Course } from "@/shared/api/courses";
-import { apiErrorMessage } from "@/shared/api/client";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { useLaunchStore } from "@/shared/launch/launchStore";
 import { useProjectStore } from "@/shared/launch/projectStore";
@@ -11,165 +10,139 @@ import { buildLaunchContext, EDITOR_MODE_PRESETS } from "@/entities/editor-launc
 import {
   ACHIEVEMENTS, usePlayerLevel, usePlayerProfile, useDisplayStreak,
 } from "@/entities/gamification";
+import { builtinTutorials, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
+import { BOARDS, BOARD_ORDER, useBoardStore, type BoardId } from "@/entities/board";
 import { DashboardHeader, DifficultyBadge } from "./DashboardHeader";
 
-/** Shared fade-up entrance; `order` staggers siblings. */
-const fadeUp = (order: number) => ({
-  initial: { opacity: 0, y: 14 },
-  animate: { opacity: 1, y: 0 },
-  transition: { type: "spring" as const, stiffness: 320, damping: 28, delay: order * 0.06 },
-});
+const cardClass =
+  "group flex h-full w-full flex-col rounded-lg border border-subtle bg-panel p-5 text-left transition-colors duration-150 hover:border-[var(--k-primary-text)] hover:bg-raised";
 
-function CourseCard({ course, onOpen, order = 0 }: { course: Course; onOpen: () => void; order?: number }) {
+const sectionHead = "flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-subtle pb-4";
+
+const LEVELS: Record<Tutorial["difficulty"], number> = { Easy: 1, Medium: 2, Hard: 3 };
+
+/** Difficulty as a word plus a three-step meter, so it never relies on colour. */
+function DifficultyMeter({ difficulty }: { difficulty: Tutorial["difficulty"] }) {
   return (
-    <motion.button
-      {...fadeUp(order)}
-      onClick={onOpen}
-      onMouseMove={(e) => {
-        const r = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
-        e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
-      }}
-      className="card-spotlight group relative flex flex-col overflow-hidden rounded-2xl border border-subtle bg-raised text-left transition-[border-color,box-shadow,transform] duration-150 hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-black/30"
-    >
-      <div className={`relative bg-gradient-to-br ${course.accent} px-5 pt-5 pb-6`}>
-        <div className="flex items-start justify-between">
-          <span className="text-4xl drop-shadow transition-transform duration-300 group-hover:-translate-y-1 group-hover:scale-110 group-hover:rotate-[-4deg]">
-            {course.coverEmoji}
-          </span>
-          {course.enrolled && (
-            <span className="flex items-center gap-1 rounded-full bg-white/25 px-2.5 py-1 text-[11px] font-bold text-white">
-              <Check className="h-3 w-3" /> Enrolled
-            </span>
-          )}
-        </div>
-        <h3 className="mt-3 text-lg font-black leading-tight text-white">{course.title}</h3>
-      </div>
-
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <p className="text-[14px] leading-relaxed text-sub">{course.summary}</p>
-
-        {/* Progress (enrolled only) */}
-        {course.enrolled && (
-          <div>
-            <div className="mb-1 flex items-center justify-between text-[11px] font-bold">
-              <span className="text-hint">Progress</span>
-              <span className="text-primary-c">{course.progress ?? 0}%</span>
-            </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-hover">
-              <div
-                className="h-full rounded-full bg-brand-gradient transition-all duration-500"
-                style={{ width: `${course.progress ?? 0}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mt-auto flex items-center justify-between pt-2">
-          <div className="flex items-center gap-2">
-            <DifficultyBadge difficulty={course.difficulty} />
-            <span className="flex items-center gap-1 text-[12px] text-hint">
-              <Clock className="h-3.5 w-3.5" /> ~{course.estimatedHours}h
-            </span>
-          </div>
-          <span className="flex items-center gap-1 text-sm font-bold text-primary-c">
-            {course.enrolled ? "Open" : "View"}
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </span>
-        </div>
-      </div>
-    </motion.button>
-  );
-}
-
-/** Big call-to-action that opens the editor with every block unlocked. */
-function FullWorkshopBanner({ onOpen }: { onOpen: () => void }) {
-  return (
-    <motion.button
-      {...fadeUp(1)}
-      onClick={onOpen}
-      className="group shine-sweep relative mb-7 flex w-full items-center gap-5 overflow-hidden rounded-2xl border border-primary/30 bg-brand-gradient p-6 text-left transition-shadow hover:shadow-xl hover:shadow-primary/20"
-    >
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110">
-       
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-black text-white">Full Workshop</h2>
-          <span className="flex items-center gap-1 rounded-full bg-white/25 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
-            <Sparkles className="h-3 w-3" /> Everything unlocked
-          </span>
-        </div>
-        <p className="mt-1 text-sm text-white/85">
-          Open a free-build sandbox with every block, sensor, and tool available - no course, no limits.
-        </p>
-      </div>
-      <span className="flex shrink-0 items-center gap-1.5 rounded-xl bg-white/20 px-4 py-2.5 text-sm font-bold text-white transition-transform group-hover:translate-x-0.5">
-        <Wrench className="h-4 w-4" /> Open
-        <ArrowRight className="h-4 w-4" />
+    <span className="flex items-center gap-2 text-xs font-semibold text-sub">
+      <span className="flex items-end gap-0.5" aria-hidden="true">
+        {[1, 2, 3].map((n) => (
+          <span
+            key={n}
+            className={`w-1 rounded-sm ${n <= LEVELS[difficulty] ? "bg-[var(--k-muted)]" : "bg-[var(--k-border)]"}`}
+            style={{ height: 4 + n * 3 }}
+          />
+        ))}
       </span>
-    </motion.button>
+      {difficulty}
+    </span>
   );
 }
 
-/** Counts up to `value` on mount - makes the XP number feel earned. */
-function CountUp({ value }: { value: number }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const reduced = useReducedMotion();
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    if (reduced || value === 0) { el.textContent = String(value); return; }
-    const controls = animate(0, value, {
-      duration: Math.min(1.4, 0.5 + value / 600),
-      ease: "easeOut",
-      onUpdate: (v) => { el.textContent = String(Math.round(v)); },
-    });
-    return () => controls.stop();
-  }, [value, reduced]);
-
-  return <span ref={ref}>0</span>;
+/** One built-in IoT project. The whole card is the button. */
+function ProjectCard({ tutorial, index, onOpen }: { tutorial: Tutorial; index: number; onOpen: () => void }) {
+  return (
+    <button onClick={onOpen} className={cardClass}>
+      <span className="flex w-full items-center justify-between">
+        <span className="font-mono text-xs font-semibold text-sub" aria-hidden="true">
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <DifficultyMeter difficulty={tutorial.difficulty} />
+      </span>
+      <span className="mt-4 text-lg font-semibold leading-snug text-body">{tutorial.title}</span>
+      <span className="mt-2 text-sm leading-relaxed text-sub">{tutorial.description}</span>
+      {tutorial.components.length > 0 && (
+        <span className="mt-3 text-[13px] leading-relaxed text-sub">
+          <span className="font-semibold text-body">Parts: </span>
+          {tutorial.components
+            .filter((c) => c !== "if_else" && c !== "forever_loop")
+            .map((c) => c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()))
+            .join(", ")}
+        </span>
+      )}
+      <span className="mt-auto flex items-center gap-1.5 pt-5 text-sm font-semibold text-primary-c">
+        Open in editor
+        <ArrowRight className="h-4 w-4 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+      </span>
+    </button>
+  );
 }
 
-/** XP / streak / badges strip under the page heading. */
-function PlayerStatsStrip() {
+/** A DB-backed robot kit course. Secondary to the IoT projects, so it stays compact. */
+function CourseCard({ course }: { course: Course }) {
+  const progress = course.progress ?? 0;
+  return (
+    <Link to={`/courses/${course.slug}`} className={cardClass}>
+      <span className="flex w-full items-center justify-between gap-2">
+        <DifficultyBadge difficulty={course.difficulty} />
+        <span className="flex items-center gap-1 text-xs text-sub">
+          <Clock className="h-3.5 w-3.5" aria-hidden="true" /> About {course.estimatedHours} h
+        </span>
+      </span>
+      <span className="mt-3 text-base font-semibold leading-snug text-body">{course.title}</span>
+      <span className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-sub">{course.summary}</span>
+      <span className="mt-auto block w-full pt-4">
+        {course.enrolled ? (
+          <>
+            <span className="flex items-center justify-between text-xs font-semibold text-sub">
+              <span className="flex items-center gap-1">
+                <Check className="h-3.5 w-3.5" aria-hidden="true" /> Enrolled
+              </span>
+              <span>{progress}% complete</span>
+            </span>
+            <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-hover" aria-hidden="true">
+              <span className="block h-full rounded-full bg-brand-gradient" style={{ width: `${progress}%` }} />
+            </span>
+          </>
+        ) : (
+          <span className="flex items-center gap-1.5 text-sm font-semibold text-primary-c">
+            View course <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+}
+
+/** XP / level / streak / badges, as one quiet row of figures. */
+function ProgressSummary() {
   const profile = usePlayerProfile();
   const level = usePlayerLevel();
   const streak = useDisplayStreak();
   const badges = Object.keys(profile.unlocked).length;
 
   const stats = [
-    { icon: <Zap className="h-4 w-4 text-primary-c" fill="currentColor" />, value: <CountUp value={profile.xp} />, label: "XP earned" },
-    { icon: <span className="text-[15px] font-black text-secondary-c">{level.level}</span>, value: level.title, label: "Level" },
-    { icon: <Flame className={`h-4 w-4 ${streak > 0 ? "anim-flame text-warning-c" : "text-hint"}`} fill={streak > 0 ? "currentColor" : "none"} />, value: streak === 1 ? "1 day" : `${streak} days`, label: "Streak" },
-    { icon: <Medal className="h-4 w-4 text-accent-c" />, value: `${badges}/${ACHIEVEMENTS.length}`, label: "Badges" },
+    { icon: Zap, label: "XP earned", value: String(profile.xp) },
+    { icon: TrendingUp, label: "Level", value: `${level.level} · ${level.title}` },
+    { icon: Flame, label: "Streak", value: streak === 1 ? "1 day" : `${streak} days` },
+    { icon: Medal, label: "Badges", value: `${badges} of ${ACHIEVEMENTS.length}` },
   ];
 
   return (
-    <div className="mb-7 grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {stats.map((s, i) => (
-        <motion.div key={s.label} {...fadeUp(i * 0.7)} className="flex items-center gap-3 rounded-2xl border border-subtle bg-raised px-4 py-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-hover">{s.icon}</div>
-          <div className="min-w-0 leading-tight">
-            <div className="truncate text-[15px] font-black text-body">{s.value}</div>
-            <div className="text-[11px] font-semibold text-hint">{s.label}</div>
+    <section aria-labelledby="progress-heading" className="mt-12">
+      <h2 id="progress-heading" className="text-sm font-semibold uppercase tracking-wider text-sub">Your progress</h2>
+      {/* gap-px over a border-coloured ground draws the hairlines between cells */}
+      <dl className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-subtle bg-[var(--k-border)] sm:grid-cols-4">
+        {stats.map((s) => (
+          <div key={s.label} className="flex min-w-0 flex-col gap-1 bg-panel px-4 py-3.5">
+            <dt className="flex items-center gap-1.5 text-xs font-semibold text-sub">
+              <s.icon className="h-3.5 w-3.5" aria-hidden="true" /> {s.label}
+            </dt>
+            <dd className="truncate text-base font-semibold text-body">{s.value}</dd>
           </div>
-        </motion.div>
-      ))}
-    </div>
+        ))}
+      </dl>
+    </section>
   );
 }
-
-import { builtinTutorials } from "@/features/editor/tutorial/lib/tutorials";
-import { BOARDS, useBoardStore } from "@/entities/board";
 
 export function CoursesPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const setLaunchContext = useLaunchStore((s) => s.setContext);
   const [courses, setCourses] = useState<Course[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   const openFullWorkshop = () => {
     const preset = EDITOR_MODE_PRESETS.find((p) => p.id === "full-workshop") ?? EDITOR_MODE_PRESETS[0];
@@ -181,6 +154,7 @@ export function CoursesPage() {
 
   // Built-in example projects for the selected board; opened straight in the editor.
   const boardId = useBoardStore((s) => s.boardId);
+  const setBoard = useBoardStore((s) => s.setBoard);
   const demos = builtinTutorials(boardId);
   const openDemo = (id: string) => {
     sessionStorage.setItem("codelab-open-demo", id); // picked up by the editor (useTutorial)
@@ -191,94 +165,126 @@ export function CoursesPage() {
     let cancelled = false;
     fetchCourses()
       .then((c) => !cancelled && setCourses(c))
-      .catch((e) => !cancelled && setError(apiErrorMessage(e, "Could not load courses")));
+      .catch(() => !cancelled && setFailed(true));
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [attempt]);
+
+  const firstName = user?.name.trim().split(" ")[0];
+  // The robot kit courses are secondary: the section disappears when there are none.
+  const showCourses = failed || !courses || courses.length > 0;
 
   return (
-    <div className="relative h-screen overflow-y-auto bg-page">
-      {/* Ambient depth - faint brand glows + drifting machine parts */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-48 left-1/4 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-[140px]" />
-        <div className="absolute top-1/3 -right-40 h-96 w-96 rounded-full bg-secondary/10 blur-[140px]" />
-        <span className="anim-float absolute right-[12%] top-24 hidden text-4xl opacity-[0.08] lg:block"></span>
-        <span className="anim-float absolute left-[6%] top-1/2 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-2.4s" }}></span>
-        <span className="anim-float absolute right-[28%] bottom-24 hidden text-3xl opacity-[0.07] lg:block" style={{ animationDelay: "-4.8s" }}></span>
-        <span className="anim-float absolute left-[30%] top-32 hidden text-2xl opacity-[0.06] lg:block" style={{ animationDelay: "-1.2s" }}></span>
-      </div>
-
+    <div className="h-full overflow-y-auto bg-page">
+      <title>{`Learn · ${APP_NAME}`}</title>
       <DashboardHeader />
 
-      <main className="relative mx-auto max-w-6xl px-5 py-8">
-        <motion.div {...fadeUp(0)} className="mb-6">
-          <h1 className="text-3xl font-black tracking-tight">
-            {user ? (
-              <>
-                <span className="text-brand-gradient">Hey {user.name.split(" ")[0]}</span>
-              </>
-            ) : (
-              <span className="text-body">Robot Courses</span>
-            )}
-          </h1>
-          <p className="mt-1.5 text-[15px] text-sub">
-            Pick a project to build. Enroll for free and jump straight into the block editor.
-          </p>
-        </motion.div>
+      <main id="main" tabIndex={-1} className="mx-auto max-w-6xl px-4 pb-20 pt-8 outline-none sm:px-6 sm:pt-12">
+        <h1 className="font-display text-3xl font-semibold text-body sm:text-4xl">
+          {firstName ? `Hello, ${firstName}` : "Learn"}
+        </h1>
+        <p className="mt-2 max-w-2xl text-base leading-relaxed text-sub">
+          Choose a project for your board and open it in the block editor.
+        </p>
 
-        <PlayerStatsStrip />
-
-        <FullWorkshopBanner onOpen={openFullWorkshop} />
-
-        <section className="mb-8">
-          <div className="mb-3 flex items-baseline justify-between gap-3">
-            <h2 className="text-lg font-black tracking-tight text-body">IoT Projects</h2>
-            <span className="text-xs font-semibold text-hint">Ready to open on {BOARDS[boardId].label}</span>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {demos.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => openDemo(t.id)}
-                className="group flex flex-col rounded-2xl border border-subtle bg-raised p-4 text-left transition-colors hover:border-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
+        {/* ── IoT projects: the main thing on this page ── */}
+        <section aria-labelledby="iot-heading" className="mt-10">
+          <div className={sectionHead}>
+            <div>
+              <h2 id="iot-heading" className="text-2xl font-semibold text-body">IoT Projects</h2>
+              <p className="mt-1 text-sm text-sub" aria-live="polite">
+                {demos.length === 1 ? "1 project" : `${demos.length} projects`} ready to open on {BOARDS[boardId].label}
+              </p>
+            </div>
+            <label className="flex items-center gap-2 text-sm font-semibold text-body">
+              <Cpu className="h-4 w-4 text-sub" aria-hidden="true" />
+              Board
+              <select
+                value={boardId}
+                onChange={(e) => setBoard(e.target.value as BoardId)}
+                className="select w-auto min-w-40 text-sm font-semibold"
               >
-                <span className="mb-2 w-fit rounded-full bg-hover px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sub">
-                  {t.difficulty}
-                </span>
-                <span className="text-[15px] font-bold leading-snug text-body">{t.title}</span>
-                <span className="mt-1.5 text-xs leading-relaxed text-sub">{t.description}</span>
-                <span className="mt-3 text-xs font-bold text-primary-c">Open in editor</span>
-              </button>
-            ))}
+                {BOARD_ORDER.map((id) => (
+                  <option key={id} value={id}>{BOARDS[id].label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          {demos.length > 0 ? (
+            <ol className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {demos.map((t, i) => (
+                <li key={t.id}>
+                  <ProjectCard tutorial={t} index={i} onOpen={() => openDemo(t.id)} />
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-5 text-sm text-sub">
+              There are no ready-made projects for this board yet. You can still start from a blank workspace.
+            </p>
+          )}
+
+          <div className="mt-4 flex flex-col gap-4 rounded-lg border border-subtle bg-panel p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h3 className="text-base font-semibold text-body">Start from a blank workspace</h3>
+              <p className="mt-1 text-sm text-sub">
+                Every block, sensor and tool is available. Build your own idea from scratch.
+              </p>
+            </div>
+            <button
+              onClick={openFullWorkshop}
+              className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-md bg-brand-gradient px-5 text-sm font-semibold text-on-primary transition-opacity hover:opacity-90"
+            >
+              <SquarePen className="h-4 w-4" aria-hidden="true" /> Open blank workspace
+            </button>
           </div>
         </section>
 
-        {error && (
-          <div className="rounded-xl border border-error-tint bg-error-tint px-4 py-3 text-sm font-medium text-error-c">
-            {error} - is the API running on <code className="font-mono">localhost:4000</code>?
-          </div>
-        )}
+        <ProgressSummary />
 
-        {!courses && !error && (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-64 animate-pulse rounded-2xl border border-subtle bg-raised" />
-            ))}
-          </div>
-        )}
+        {/* ── Robot kit courses: older, DB-backed, secondary ── */}
+        {showCourses && (
+          <section aria-labelledby="courses-heading" className="mt-12">
+            <div className={sectionHead}>
+              <div>
+                <h2 id="courses-heading" className="text-lg font-semibold text-body">Robot kit courses</h2>
+                <p className="mt-1 text-sm text-sub">Guided builds for the robot kits, with levels and challenges.</p>
+              </div>
+            </div>
 
-        {courses && (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {courses.map((course, i) => (
-              <CourseCard
-                key={course._id}
-                course={course}
-                order={2 + i}
-                onOpen={() => navigate(`/courses/${course.slug}`)}
-              />
-            ))}
-          </div>
+            {failed && (
+              <p role="status" className="mt-5 text-sm text-sub">
+                The robot kit courses could not be loaded right now. The IoT projects above are not affected.{" "}
+                <button
+                  onClick={() => { setFailed(false); setAttempt((n) => n + 1); }}
+                  className="inline-flex min-h-6 items-center font-semibold text-primary-c underline underline-offset-2"
+                >
+                  Try again
+                </button>
+              </p>
+            )}
+
+            {!courses && !failed && (
+              <div role="status" className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <span className="sr-only">Loading courses</span>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} aria-hidden="true" className="h-36 animate-pulse rounded-lg border border-subtle bg-panel" />
+                ))}
+              </div>
+            )}
+
+            {courses && !failed && (
+              <ul className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {courses.map((course) => (
+                  <li key={course._id}>
+                    <CourseCard course={course} />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         )}
       </main>
     </div>

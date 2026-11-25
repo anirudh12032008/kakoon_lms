@@ -61,7 +61,7 @@ function breadcrumbs(path: string): { label: string; path: string }[] {
 // ─── Python to send (multi-line for readability, safe try/except) ─────────────
 // Each line is sent individually through paste mode.
 // The output marker is "FS_LIST:" or "FS_ERR:" - parsed from the logs array.
-function buildScanPython(path: string): string {
+function buildScanPython(path: string, tag: string): string {
   const p = path.replace(/'/g, "\\'");
   // Build a full path string: for root use just '/' + f, else '/dir/' + f
   const fp = p === "/" ? `'/'+ f` : `'${p}'.rstrip('/')+ '/'+ f`;
@@ -75,15 +75,10 @@ function buildScanPython(path: string): string {
     `      _l.append({'n': f, 'd': bool(_st[0] & 0x4000), 's': _st[6]})`,
     `    except:`,
     `      _l.append({'n': f, 'd': False, 's': 0})`,
-    `  print('FS_LIST:' + ujson.dumps(_l))`,
+    `  print('FS_LIST:${tag}:' + ujson.dumps(_l))`,
     `except Exception as e:`,
-    `  print('FS_ERR:' + str(e))`,
+    `  print('FS_ERR:${tag}:' + str(e))`,
   ].join("\n");
-}
-
-// ─── strip the "[HH:MM:SS] " prefix that addLog prepends ──────────────────
-function stripPrefix(line: string): string {
-  return line.replace(/^\[.*?\]\s*\s*/, "").trim();
 }
 
 // ─── component ────────────────────────────────────────────────────────────────
@@ -96,23 +91,28 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
   const [status, setStatus]     = useState("");
   const [deletingName, setDeletingName] = useState<string | null>(null);
 
-  // Track how many log lines existed before we started a scan
-  const prevLogLen = useRef(0);
+  // Unique tag printed by the current scan. (An index into `logs` does not work:
+  // the log keeps only the last 100 lines, so its length stops growing.)
+  const scanTag = useRef("");
   const scanTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ── parse logs for FS_LIST / FS_ERR after scan ────────────────────────────
   useEffect(() => {
     if (!scanning) return;
-    // Only look at lines that appeared AFTER we started this scan
-    const newLines = logs.slice(prevLogLen.current).map(stripPrefix);
-    const listLine = newLines.find(l => l.startsWith("FS_LIST:"));
-    const errLine  = newLines.find(l => l.startsWith("FS_ERR:"));
+    // Only this scan's output carries its tag
+    const tagged = (marker: string) => {
+      const key = `${marker}${scanTag.current}:`;
+      const line = logs.find(l => l.includes(key));
+      return line && line.slice(line.indexOf(key) + key.length).trim();
+    };
+    const listLine = tagged("FS_LIST:");
+    const errLine  = tagged("FS_ERR:");
 
     if (listLine) {
       if (scanTimeout.current) clearTimeout(scanTimeout.current);
       try {
         type Raw = { n: string; d: boolean; s: number };
-        const raw = JSON.parse(listLine.slice("FS_LIST:".length)) as Raw[];
+        const raw = JSON.parse(listLine) as Raw[];
         const parsed: DeviceEntry[] = raw
           .map(r => ({ name: r.n, isDir: r.d, size: r.s }))
           .sort((a, b) => (a.isDir === b.isDir ? a.name.localeCompare(b.name) : a.isDir ? -1 : 1));
@@ -124,7 +124,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       setScanning(false);
     } else if (errLine) {
       if (scanTimeout.current) clearTimeout(scanTimeout.current);
-      const msg = errLine.slice("FS_ERR:".length);
+      const msg = errLine;
       setStatus(msg.includes("ENOENT") || msg.includes("OSError") ? "Folder doesn't exist yet" : `${msg}`);
       setScanning(false);
     }
@@ -132,11 +132,11 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
 
   // ── start a scan ──────────────────────────────────────────────────────────
   const scan = useCallback(async (targetPath: string) => {
-    if (!isConnected) { setStatus("Connect to ESP32 first"); return; }
+    if (!isConnected) { setStatus("Connect your board first"); return; }
     setScanning(true);
     setStatus("Scanning…");
     setEntries([]);
-    prevLogLen.current = logs.length; // snapshot before any new lines arrive
+    scanTag.current = Date.now().toString(36);
 
     // Set timeout BEFORE awaiting sendCode so the useEffect success path
     // can always clear it - even if FS_LIST arrives while sendCode is still awaited.
@@ -146,14 +146,13 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       setStatus("No response from device (timeout)");
     }, 8000);
 
-    const ok = await sendCode(buildScanPython(targetPath));
+    const ok = await sendCode(buildScanPython(targetPath, scanTag.current));
     if (!ok) {
       clearTimeout(scanTimeout.current!);
       setScanning(false);
       setStatus("Failed to send - not connected?");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, logs.length, sendCode]);
+  }, [isConnected, sendCode]);
 
   // ── navigate into folder ──────────────────────────────────────────────────
   const navigate = (entry: DeviceEntry) => {
@@ -195,7 +194,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       >
         <div className="flex items-center gap-2">
           <HardDrive className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-bold text-white">ESP32 File Explorer</span>
+          <span className="text-xs font-bold text-white">Board File Explorer</span>
         </div>
         <button onClick={onClose} className="p-1 rounded-lg text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)] transition-all">
           <X className="w-3.5 h-3.5" />
@@ -231,7 +230,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
       {/* Not connected banner */}
       {!isConnected && (
         <div className="px-3 py-2 text-[10px] text-amber-400 bg-amber-500/10 border-b border-[var(--k-border)] flex-shrink-0">
-          Connect to ESP32 to browse files
+          Connect your board to browse files
         </div>
       )}
 
@@ -241,7 +240,7 @@ export function ESP32FilesPanel({ isConnected, onClose, logs, sendCode }: ESP32F
           <div className="text-center py-10 flex flex-col items-center gap-3">
             <HardDrive className="w-8 h-8 text-[var(--k-dim)]" />
             <p className="text-[11px] text-[var(--k-dim)] max-w-48 text-center leading-relaxed">
-              {status || (isConnected ? "Tap Scan to browse the ESP32 filesystem" : "Connect your ESP32 first")}
+              {status || (isConnected ? "Tap Scan to browse the files on your board" : "Connect your board first")}
             </p>
             {isConnected && (
               <button

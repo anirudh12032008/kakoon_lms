@@ -11,6 +11,7 @@ const saveSchema = z.object({
   workspace: z.object({
     nodes: z.array(z.any()).default([]),
     edges: z.array(z.any()).default([]),
+    boardId: z.string().max(40).optional(), // board the workspace was built for
   }),
   code: z.string().optional(),
   progress: z.number().min(0).max(100).optional(),
@@ -23,6 +24,7 @@ const saveSchema = z.object({
 const workspaceSchema = z.object({
   nodes: z.array(z.any()).default([]),
   edges: z.array(z.any()).default([]),
+  boardId: z.string().max(40).optional(), // board the workspace was built for
 });
 
 const createSchema = z.object({
@@ -162,6 +164,7 @@ export const saveCourseProject = asyncHandler(async (req: Request, res: Response
     {
       $set: {
         workspace: parsed.data.workspace,
+        ...(parsed.data.code !== undefined ? { code: parsed.data.code } : {}),
         name: course.title,
       },
       $setOnInsert: { user: req.user!.sub, course: course._id },

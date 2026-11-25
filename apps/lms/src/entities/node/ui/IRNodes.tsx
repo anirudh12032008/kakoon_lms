@@ -13,6 +13,7 @@ import {
 import { SensorIcon } from "./_shared";
 import { useSensorStore } from "@/shared/lib/sensorStore";
 import { IR_SENSOR } from "@/entities/board";
+import { usePinDefaults } from "../lib/blockDefaults";
 
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
 
@@ -84,7 +85,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
 }
 
 export function IRSensorNode() {
-  const [pin, setPin]             = useNodeField<number>("pin", IR_SENSOR.pin);
+  const [pin, setPin]             = useNodeField<number>("pin", usePinDefaults().ir);
   const [varName, setVarName]     = useNodeField<string>("varName", "ir_value");
   const [invert, setInvert]       = useNodeField<boolean>("invert", false);
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);

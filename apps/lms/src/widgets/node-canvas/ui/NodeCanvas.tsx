@@ -33,7 +33,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Undo2, Redo2 } from "lucide-react";
 import { NODE_TYPES } from "@/entities/node/model";
 import { generateCode } from "@/entities/node/lib/codegen";
-import { useBoardStore } from "@/entities/board";
+import { BOARDS, useBoardStore, type BoardId } from "@/entities/board";
 import { instantiateCustomNodeTemplate, isCustomNodeTemplateAllowed, type CustomNodeTemplate } from "@/entities/custom-node/model/customNodes";
 import { CONNECTION_RADIUS } from "@/shared/lib/canvasConfig";
 
@@ -84,8 +84,9 @@ const EDGE_TYPES: EdgeTypes = { default: GlowEdge };
 
 export interface NodeCanvasRef {
   getCode: () => string;
-  getWorkspace: () => { nodes: Node[]; edges: Edge[] };
-  setWorkspace: (workspace: { nodes: Node[]; edges: Edge[] }) => void;
+  /** boardId rides along so a saved/shared/exported workspace reopens on its board. */
+  getWorkspace: () => { nodes: Node[]; edges: Edge[]; boardId: BoardId };
+  setWorkspace: (workspace: { nodes: Node[]; edges: Edge[]; boardId?: string }) => void;
   addNode: (type: string, data?: Record<string, unknown>) => string;
   removeNode: (id: string) => void;
   getRequiredLibraries: () => string[];
@@ -370,10 +371,12 @@ function NodeCanvasInner({
 
   useImperativeHandle(canvasRef, () => ({
     getCode: () => generateCode(nodes, edges),
-    getWorkspace: () => ({ nodes, edges }),
+    getWorkspace: () => ({ nodes, edges, boardId }),
     // Drop persisted selection state - restoring `selected: true` edges would
     // light up their glow halos on load.
     setWorkspace: (ws) => {
+      // Restore the board the workspace was built for (absent in older saves).
+      if (ws.boardId && ws.boardId in BOARDS && ws.nodes?.length) useBoardStore.getState().setBoard(ws.boardId as BoardId);
       setNodes((ws.nodes || []).map((n) => ({ ...n, selected: false })));
       setEdges((ws.edges || []).map((e) => ({ ...e, selected: false })));
       // A freshly loaded workspace is the new baseline - discard prior history.

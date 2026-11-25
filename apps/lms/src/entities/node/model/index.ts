@@ -26,6 +26,7 @@ import { MQTTNode } from "../ui/MQTTNodes";
 import { HTTPClientNode, SerialMonitorNode } from "../ui/HTTPSerialNodes";
 import { TimerIntervalNode, VariableStateNode, MathTransformNode } from "../ui/LogicNodes";
 import { DeepSleepNode, OTAUpdateNode, SDCardNode } from "../ui/PowerNodes";
+import { SimpleSensorNode, SwitchNode, RFIDReaderNode, RTCTimeNode, BluetoothSerialNode } from "../ui/KitNodes";
 
 export const NODE_TYPES: NodeTypes = {
   print: PrintNode,
@@ -55,6 +56,7 @@ export const NODE_TYPES: NodeTypes = {
   esp_now_receiver: ESPNOWReceiverNode,
   time_online: TimeOnlineNode,
   ultrasonic: UltrasonicSensorNode,
+  ultrasonic_sensor: UltrasonicSensorNode, // old name, still used by saved projects
   touch_sensor: TouchSensorNode,
   soil_moisture: SoilMoistureSensorNode,
   dht11: DHT11Node,
@@ -98,6 +100,17 @@ export const NODE_TYPES: NodeTypes = {
   deep_sleep: DeepSleepNode,
   ota_update: OTAUpdateNode,
   sd_card: SDCardNode,
+  gas_sensor: SimpleSensorNode,
+  pir_motion: SimpleSensorNode,
+  rain_sensor: SimpleSensorNode,
+  water_level: SimpleSensorNode,
+  sound_sensor: SimpleSensorNode,
+  ldr_sensor: SimpleSensorNode,
+  led: SwitchNode,
+  relay: SwitchNode,
+  rfid_reader: RFIDReaderNode,
+  rtc_time: RTCTimeNode,
+  bluetooth_serial: BluetoothSerialNode,
 };
 
 export interface NodeDef {
@@ -150,6 +163,8 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "GPIO",
     icon: "",
     nodes: [
+      { type: "led", label: "LED", color: "#eab308", previewDot: "#eab308" },
+      { type: "relay", label: "Relay", color: "#f97316", previewDot: "#f97316" },
       { type: "gpio_pin", label: "GPIO Pin", color: "#22c55e", previewDot: "#22c55e" },
       { type: "pin_write", label: "Pin Write", color: "#f97316", previewDot: "#f97316" },
       { type: "pin_read", label: "Pin Read", color: "#6366f1", previewDot: "#6366f1" },
@@ -179,7 +194,15 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "ir_sensor", label: "IR Sensor", color: "#f97316", previewDot: "#f97316" },
       { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6" },
       { type: "imu_sensor",    label: "Onboard IMU (LSM6DS3)", color: "#8b5cf6", previewDot: "#8b5cf6" },
-      { type: "pir_sensor", label: "PIR Motion Sensor", color: "#22c55e", previewDot: "#22c55e" },
+      { type: "pir_sensor", label: "PIR Sensor (Kokoon port)", color: "#22c55e", previewDot: "#22c55e" },
+      { type: "pir_motion", label: "PIR Motion Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "gas_sensor", label: "Gas Sensor (MQ-2 / MQ-135)", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "rain_sensor", label: "Rain Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "water_level", label: "Water Level Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "ldr_sensor", label: "Light Sensor (LDR)", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "sound_sensor", label: "Sound Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "rfid_reader", label: "RFID Reader (MFRC522)", color: "#6366f1", previewDot: "#6366f1" },
+      { type: "rtc_time", label: "Clock (DS3231 RTC)", color: "#14b8a6", previewDot: "#14b8a6" },
     ],
   },
   {
@@ -234,6 +257,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "mqtt_node", label: "MQTT Node", color: "#f97316", previewDot: "#f97316" },
       { type: "http_client", label: "HTTP Client", color: "#14b8a6", previewDot: "#14b8a6" },
       { type: "serial_monitor", label: "Serial Monitor", color: "#22c55e", previewDot: "#22c55e" },
+      { type: "bluetooth_serial", label: "Bluetooth (HC-05)", color: "#3b82f6", previewDot: "#3b82f6" },
     ],
   },
   {

@@ -67,6 +67,8 @@ api.interceptors.response.use(
         original.headers.set("Authorization", `Bearer ${token}`);
         return api(original);
       }
+      // Session is gone for good: tell the auth provider so the app returns to login.
+      window.dispatchEvent(new Event("auth:expired"));
     }
 
     // Surface every failed request as an error popup. The 401 that triggers a
@@ -81,7 +83,10 @@ api.interceptors.response.use(
 export function apiErrorMessage(err: unknown, fallback = "Something went wrong"): string {
   if (axios.isAxiosError(err)) {
     const data = err.response?.data as { error?: string } | undefined;
-    return data?.error ?? err.message ?? fallback;
+    if (data?.error) return data.error;
+    // No response at all: server down, offline, or blocked by CORS.
+    if (!err.response) return "Can't reach the server. Check your internet connection and try again.";
+    return fallback;
   }
   return fallback;
 }

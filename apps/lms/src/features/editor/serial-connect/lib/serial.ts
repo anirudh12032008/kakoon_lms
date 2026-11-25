@@ -100,21 +100,21 @@ export async function connectSerial(): Promise<SerialConnection> {
 export async function disconnectSerial(
   connection: SerialConnection
 ): Promise<void> {
+  // Each step on its own: a failure in one (stream already errored, device
+  // unplugged) must not skip port.close(), or the port stays open and the next
+  // connect / Arduino upload fails with "port is already open".
   try {
-    if (connection.reader) {
-      await connection.reader.cancel();
-      connection.reader.releaseLock();
-    }
-    if (connection.writer) {
-      await connection.writer.close();
-    }
-    if (connection.port) {
-      await connection.port.close();
-    }
-  } catch (error) {
-    // port may already be closed - safe to ignore
-    void error;
+    await connection.reader?.cancel();
+    connection.reader?.releaseLock();
+  } catch { /* already released */ }
+  try {
+    await connection.writer?.close();
+  } catch {
+    try { connection.writer?.releaseLock(); } catch { /* already released */ }
   }
+  try {
+    await connection.port?.close();
+  } catch { /* already closed */ }
 }
 
 /**

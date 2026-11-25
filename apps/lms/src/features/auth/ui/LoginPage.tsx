@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { apiErrorMessage } from "@/shared/api/client";
-import { AuthShell, AuthField, authInputClass } from "./AuthShell";
+import { AuthShell, AuthField, AuthFormError, AuthDivider, authSubmitClass } from "./AuthShell";
 import { GoogleSignInButton, GOOGLE_ENABLED } from "./GoogleSignInButton";
 
 export function LoginPage() {
@@ -43,54 +43,37 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      title="Welcome back"
-      subtitle="Sign in to continue building your projects."
+      title="Sign in"
+      subtitle="Continue to your projects and coursework."
       footer={
         <>
           New to {APP_NAME}?{" "}
-          <Link to="/register" className="font-semibold text-primary-c hover:underline">
+          <Link to="/register" className="font-semibold text-primary-c underline underline-offset-2">
             Create an account
           </Link>
         </>
       }
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-4">
-        <AuthField label="Email">
-          <input
-            type="email" required autoComplete="email" placeholder="you@example.com"
-            value={email} onChange={(e) => setEmail(e.target.value)}
-            className={authInputClass}
-          />
-        </AuthField>
-        <AuthField label="Password">
-          <input
-            type="password" required autoComplete="current-password" placeholder="••••••••"
-            value={password} onChange={(e) => setPassword(e.target.value)}
-            className={authInputClass}
-          />
-        </AuthField>
+        <AuthField
+          label="Email" type="email" required autoComplete="email" placeholder="you@example.com"
+          value={email} onChange={(e) => setEmail(e.target.value)}
+        />
+        <AuthField
+          label="Password" type="password" required autoComplete="current-password"
+          value={password} onChange={(e) => setPassword(e.target.value)}
+        />
 
-        {error && (
-          <div className="rounded-xl border border-error-tint bg-error-tint px-4 py-2.5 text-sm font-medium text-error-c">
-            {error}
-          </div>
-        )}
+        <AuthFormError message={error} />
 
-        <button
-          type="submit" disabled={submitting}
-          className="mt-1 w-full rounded-xl bg-brand-gradient py-3 text-[15px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-        >
+        <button type="submit" disabled={submitting} className={authSubmitClass}>
           {submitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
 
       {GOOGLE_ENABLED && (
-        <div className="mt-2">
-          <div className="relative my-4 flex items-center">
-            <div className="flex-1 border-t border-subtle" />
-            <span className="px-3 text-[12px] font-medium text-hint">or</span>
-            <div className="flex-1 border-t border-subtle" />
-          </div>
+        <div>
+          <AuthDivider />
           <GoogleSignInButton onCredential={handleGoogle} onError={setError} />
         </div>
       )}

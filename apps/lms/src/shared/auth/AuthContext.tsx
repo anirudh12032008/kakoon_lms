@@ -68,6 +68,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // The API client fires this when a request is unauthorized and refresh fails.
+  useEffect(() => {
+    if (AUTH_BYPASS) return;
+    const onExpired = () => { setAccessToken(null); setUser(null); setStatus("guest"); };
+    window.addEventListener("auth:expired", onExpired);
+    return () => window.removeEventListener("auth:expired", onExpired);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await api.post("/auth/login", { email, password });
     setAccessToken(data.accessToken);
@@ -92,6 +100,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     try {
       await api.post("/auth/logout");
+    } catch {
+      /* offline: still sign out locally below */
     } finally {
       setAccessToken(null);
       setUser(null);

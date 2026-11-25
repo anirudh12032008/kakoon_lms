@@ -12,6 +12,7 @@ import {
   COLORS,
 } from "./BaseNode";
 import { SensorIcon } from "./_shared";
+import { usePinDefaults } from "../lib/blockDefaults";
 import { useSensorStore } from "@/shared/lib/sensorStore";
 
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
@@ -64,7 +65,7 @@ function StatChip({ label, value, color }: { label: string; value: string; color
 
 // ─── Analog Sensor ────────────────────────────────────────────────────────────
 export function AnalogSensorNode() {
-  const [pin, setPin] = useNodeField<number>("pin", 34);
+  const [pin, setPin] = useNodeField<number>("pin", usePinDefaults().analog);
   const [varName, setVarName] = useNodeField<string>("varName", "analog_val");
   const [sampleRate, setSampleRate] = useNodeField<number>("sampleRate", 100);
   const [threshold, setThreshold] = useNodeField<number>("threshold", 2048);
