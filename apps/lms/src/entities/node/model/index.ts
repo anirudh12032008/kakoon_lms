@@ -1,4 +1,5 @@
 import type { NodeTypes } from "@xyflow/react";
+import type { BoardId } from "@/entities/board";
 
 import { PrintNode, VariableNode, SleepNode } from "../ui/GeneralNodes";
 import { GPIOPinNode, PinWriteNode, PinReadNode, PWMNode, ADCNode, PushButtonNode, BuzzerToneNode, PWMOutputNode } from "../ui/GPIOBasicNodes";
@@ -118,6 +119,8 @@ export interface NodeDef {
   label: string;
   color: string;
   previewDot: string;
+  /** Boards that can run this block. Left out = every board. */
+  boards?: BoardId[];
 }
 
 export interface NodeCategory {
@@ -125,6 +128,21 @@ export interface NodeCategory {
   label: string;
   icon: string;
   nodes: NodeDef[];
+}
+
+// Board allowlists for the palette. A block is listed for a board only when the
+// generator emits working code for it there (scripts/check-codegen.ts checks this).
+const KOKOON: BoardId[] = ["kokoon"];                      // onboard Kokoon hardware (IMU, NeoPixel, DRV8833, robot arm, fixed ports)
+const UNO: BoardId[] = ["arduino_uno"];                    // ESP32 boards have Bluetooth built in (BLE Mode block)
+const ESP: BoardId[] = ["esp32", "kokoon"];                // needs WiFi / BLE / MicroPython drivers: no Arduino Uno
+const KOKOON_UNO: BoardId[] = ["kokoon", "arduino_uno"];   // has its own wiring on each of these, none for a bare ESP32
+const NOT_KOKOON: BoardId[] = ["esp32", "arduino_uno"];    // external driver module; Kokoon has it onboard
+
+/** Palette categories with the blocks the given board cannot run removed. */
+export function categoriesForBoard(boardId: BoardId): NodeCategory[] {
+  return NODE_CATEGORIES
+    .map((c) => ({ ...c, nodes: c.nodes.filter((n) => !n.boards || n.boards.includes(boardId)) }))
+    .filter((c) => c.nodes.length > 0);
 }
 
 export const NODE_CATEGORIES: NodeCategory[] = [
@@ -173,10 +191,10 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "adc", label: "ADC", color: "#22c55e", previewDot: "#22c55e" },
       { type: "push_button", label: "Push Button", color: "#ec4899", previewDot: "#ec4899" },
       { type: "buzzer_tone", label: "Buzzer Tone", color: "#22c55e", previewDot: "#22c55e" },
-      { type: "neopixel_led", label: "NeoPixel LED", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "neopixel_rgb", label: "NeoPixel RGB (Advanced)", color: "#7c3aed", previewDot: "#7c3aed" },
-      { type: "neopixel_designer", label: "NeoPixel Designer", color: "#7c3aed", previewDot: "#7c3aed" },
-      { type: "rgb_led_matrix", label: "RGB LED Matrix", color: "#14b8a6", previewDot: "#14b8a6" },
+      { type: "neopixel_led", label: "NeoPixel LED", color: "#14b8a6", previewDot: "#14b8a6", boards: KOKOON },
+      { type: "neopixel_rgb", label: "NeoPixel RGB (Advanced)", color: "#7c3aed", previewDot: "#7c3aed", boards: KOKOON },
+      { type: "neopixel_designer", label: "NeoPixel Designer", color: "#7c3aed", previewDot: "#7c3aed", boards: KOKOON },
+      { type: "rgb_led_matrix", label: "RGB LED Matrix", color: "#14b8a6", previewDot: "#14b8a6", boards: KOKOON },
     ],
   },
   {
@@ -192,9 +210,9 @@ export const NODE_CATEGORIES: NodeCategory[] = [
       { type: "dht11", label: "DHT11 Temp / Humidity", color: "#06b6d4", previewDot: "#06b6d4" },
       { type: "ir_receiver", label: "IR Receiver", color: "#f97316", previewDot: "#f97316" },
       { type: "ir_sensor", label: "IR Sensor", color: "#f97316", previewDot: "#f97316" },
-      { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "imu_sensor",    label: "Onboard IMU (LSM6DS3)", color: "#8b5cf6", previewDot: "#8b5cf6" },
-      { type: "pir_sensor", label: "PIR Sensor (Kokoon port)", color: "#22c55e", previewDot: "#22c55e" },
+      { type: "four_channel_touch", label: "4-Channel Touch Sensor", color: "#14b8a6", previewDot: "#14b8a6", boards: KOKOON },
+      { type: "imu_sensor",    label: "Onboard IMU (LSM6DS3)", color: "#8b5cf6", previewDot: "#8b5cf6", boards: KOKOON },
+      { type: "pir_sensor", label: "PIR Sensor (Kokoon port)", color: "#22c55e", previewDot: "#22c55e", boards: KOKOON },
       { type: "pir_motion", label: "PIR Motion Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
       { type: "gas_sensor", label: "Gas Sensor (MQ-2 / MQ-135)", color: "#8b5cf6", previewDot: "#8b5cf6" },
       { type: "rain_sensor", label: "Rain Sensor", color: "#8b5cf6", previewDot: "#8b5cf6" },
@@ -210,11 +228,11 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "IoT",
     icon: "",
     nodes: [
-      { type: "wifi_connect", label: "WiFi Connect", color: "#ef4444", previewDot: "#ef4444" },
-      { type: "http_get", label: "HTTP GET", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "esp_now_sender", label: "ESP NOW Sender", color: "#ef4444", previewDot: "#ef4444" },
-      { type: "esp_now_receiver", label: "ESP NOW Receiver", color: "#ef4444", previewDot: "#ef4444" },
-      { type: "time_online", label: "Time Online", color: "#14b8a6", previewDot: "#14b8a6" },
+      { type: "wifi_connect", label: "WiFi Connect", color: "#ef4444", previewDot: "#ef4444", boards: ESP },
+      { type: "http_get", label: "HTTP GET", color: "#14b8a6", previewDot: "#14b8a6", boards: ESP },
+      { type: "esp_now_sender", label: "ESP NOW Sender", color: "#ef4444", previewDot: "#ef4444", boards: ESP },
+      { type: "esp_now_receiver", label: "ESP NOW Receiver", color: "#ef4444", previewDot: "#ef4444", boards: ESP },
+      { type: "time_online", label: "Time Online", color: "#14b8a6", previewDot: "#14b8a6", boards: ESP },
     ],
   },
   {
@@ -222,12 +240,12 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "Display",
     icon: "",
     nodes: [
-      { type: "oled_display", label: "OLED Display 128×64", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "oled_display", label: "OLED Display 128×64", color: "#8b5cf6", previewDot: "#8b5cf6", boards: ESP },
       { type: "lcd_16x2", label: "16×2 LCD Node", color: "#3b82f6", previewDot: "#3b82f6" },
       { type: "seven_seg", label: "7-Seg Display TM1637", color: "#ef4444", previewDot: "#ef4444" },
-      { type: "max7219", label: "MAX7219 8×8 Matrix", color: "#3b82f6", previewDot: "#3b82f6" },
-      { type: "play_animation", label: "Play Animation", color: "#8b5cf6", previewDot: "#8b5cf6" },
-      { type: "show_image", label: "Show Image", color: "#8b5cf6", previewDot: "#8b5cf6" },
+      { type: "max7219", label: "MAX7219 8×8 Matrix", color: "#3b82f6", previewDot: "#3b82f6", boards: KOKOON },
+      { type: "play_animation", label: "Play Animation", color: "#8b5cf6", previewDot: "#8b5cf6", boards: ESP },
+      { type: "show_image", label: "Show Image", color: "#8b5cf6", previewDot: "#8b5cf6", boards: ESP },
     ],
   },
   {
@@ -235,16 +253,17 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "Motors",
     icon: "",
     nodes: [
-      { type: "robot_drive", label: "Robot Drive", color: "#f97316", previewDot: "#f97316" },
-      { type: "dc_motor_single", label: "DC Motor (Single)", color: "#f97316", previewDot: "#f97316" },
-      { type: "multi_motor_controller", label: "Multi-Motor Controller", color: "#ef4444", previewDot: "#ef4444" },
+      { type: "robot_drive", label: "Robot Drive", color: "#f97316", previewDot: "#f97316", boards: KOKOON },
+      { type: "l298n_motor", label: "DC Motor (L298N)", color: "#ef4444", previewDot: "#ef4444", boards: NOT_KOKOON },
+      { type: "dc_motor_single", label: "DC Motor (Single)", color: "#f97316", previewDot: "#f97316", boards: KOKOON_UNO },
+      { type: "multi_motor_controller", label: "Multi-Motor Controller", color: "#ef4444", previewDot: "#ef4444", boards: KOKOON },
       { type: "servo_motor", label: "Servo Motor", color: "#f97316", previewDot: "#f97316" },
-      { type: "servo_motor_advance", label: "Servo Sweep", color: "#f97316", previewDot: "#f97316" },
-      { type: "servo_controller", label: "Servo Controller", color: "#f97316", previewDot: "#f97316" },
-      { type: "multi_servo_sequencer", label: "Multi-Servo Sequencer", color: "#8b5cf6", previewDot: "#8b5cf6" },
-      { type: "shadow_arm", label: "Shadow Arm (Pots)", color: "#06b6d4", previewDot: "#06b6d4" },
-      { type: "main_arm", label: "Main Arm (Robo)", color: "#f97316", previewDot: "#f97316" },
-      { type: "arm_calibration", label: "Arm Calibration", color: "#06b6d4", previewDot: "#06b6d4" },
+      { type: "servo_motor_advance", label: "Servo Sweep", color: "#f97316", previewDot: "#f97316", boards: ESP },
+      { type: "servo_controller", label: "Servo Controller", color: "#f97316", previewDot: "#f97316", boards: ESP },
+      { type: "multi_servo_sequencer", label: "Multi-Servo Sequencer", color: "#8b5cf6", previewDot: "#8b5cf6", boards: ESP },
+      { type: "shadow_arm", label: "Shadow Arm (Pots)", color: "#06b6d4", previewDot: "#06b6d4", boards: KOKOON },
+      { type: "main_arm", label: "Main Arm (Robo)", color: "#f97316", previewDot: "#f97316", boards: KOKOON },
+      { type: "arm_calibration", label: "Arm Calibration", color: "#06b6d4", previewDot: "#06b6d4", boards: KOKOON },
     ],
   },
   {
@@ -252,12 +271,12 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "Comms",
     icon: "",
     nodes: [
-      { type: "ble_mode", label: "BLE Mode", color: "#3b82f6", previewDot: "#3b82f6" },
-      { type: "wifi_node", label: "WiFi Node", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "mqtt_node", label: "MQTT Node", color: "#f97316", previewDot: "#f97316" },
-      { type: "http_client", label: "HTTP Client", color: "#14b8a6", previewDot: "#14b8a6" },
+      { type: "ble_mode", label: "BLE Mode", color: "#3b82f6", previewDot: "#3b82f6", boards: ESP },
+      { type: "wifi_node", label: "WiFi Node", color: "#14b8a6", previewDot: "#14b8a6", boards: ESP },
+      { type: "mqtt_node", label: "MQTT Node", color: "#f97316", previewDot: "#f97316", boards: ESP },
+      { type: "http_client", label: "HTTP Client", color: "#14b8a6", previewDot: "#14b8a6", boards: ESP },
       { type: "serial_monitor", label: "Serial Monitor", color: "#22c55e", previewDot: "#22c55e" },
-      { type: "bluetooth_serial", label: "Bluetooth (HC-05)", color: "#3b82f6", previewDot: "#3b82f6" },
+      { type: "bluetooth_serial", label: "Bluetooth (HC-05)", color: "#3b82f6", previewDot: "#3b82f6", boards: UNO },
     ],
   },
   {
@@ -275,9 +294,9 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     label: "Power",
     icon: "",
     nodes: [
-      { type: "deep_sleep", label: "Deep Sleep / Power", color: "#ef4444", previewDot: "#ef4444" },
-      { type: "ota_update", label: "OTA Update", color: "#14b8a6", previewDot: "#14b8a6" },
-      { type: "sd_card", label: "SD Card", color: "#22c55e", previewDot: "#22c55e" },
+      { type: "deep_sleep", label: "Deep Sleep / Power", color: "#ef4444", previewDot: "#ef4444", boards: ESP },
+      { type: "ota_update", label: "OTA Update", color: "#14b8a6", previewDot: "#14b8a6", boards: ESP },
+      { type: "sd_card", label: "SD Card", color: "#22c55e", previewDot: "#22c55e", boards: ESP },
     ],
   },
   {
@@ -286,7 +305,7 @@ export const NODE_CATEGORIES: NodeCategory[] = [
     icon: "",
     nodes: [
       { type: "i2c_scanner", label: "I2C Scanner", color: "#3b82f6", previewDot: "#3b82f6" },
-      { type: "servo_calibration", label: "Servo Calibration", color: "#14b8a6", previewDot: "#14b8a6" },
+      { type: "servo_calibration", label: "Servo Calibration", color: "#14b8a6", previewDot: "#14b8a6", boards: ESP },
     ],
   },
   {

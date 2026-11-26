@@ -37,12 +37,13 @@ export function GlobalAdvancedToggle() {
     <div className="flex items-center gap-2.5 px-3 py-2.5 border-t border-subtle">
       <div className="flex-1">
         <div className={`text-[11px] font-bold ${globalAdvanced ? "text-primary-c" : "text-body"}`}>Workshop Mode</div>
-        <div className="text-[9px] text-hint leading-tight mt-0.5">
+        <div className="text-[11px] text-hint leading-tight mt-0.5">
           {globalAdvanced ? "Advanced tools & fields unlocked" : "Showing the basics only"}
         </div>
       </div>
       <button
         type="button"
+        role="switch" aria-checked={globalAdvanced} aria-label="Workshop Mode (advanced fields)"
         title={globalAdvanced ? "Switch to Basic Mode" : "Unlock Advanced Mode"}
         onClick={() => setGlobalAdvanced(!globalAdvanced)}
         className={`nodrag inline-flex h-5 w-9 items-center rounded-full border p-0.5 transition-colors flex-shrink-0 ${

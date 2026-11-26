@@ -18,7 +18,7 @@ import { usePinDefaults, SIMPLE_SENSORS } from "../lib/blockDefaults";
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)", right: -6 };
 
 const Note = ({ children }: { children: string }) => (
-  <p className="px-3 pb-2 text-[9px] text-[var(--k-dim)] leading-relaxed">{children}</p>
+  <p className="px-3 pb-2 text-[11px] text-[var(--k-dim)] leading-relaxed">{children}</p>
 );
 
 function VarField({ label, field, fallback }: { label: string; field: string; fallback: string }) {

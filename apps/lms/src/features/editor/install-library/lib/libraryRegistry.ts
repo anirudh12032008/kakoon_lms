@@ -125,6 +125,15 @@ export const LIBRARY_REGISTRY: LibraryEntry[] = [
     category: "Sensor",
     size: "2 KB",
   },
+  {
+    id: "mfrc522",
+    name: "mfrc522.py",
+    description: "MFRC522 RFID card reader (SPI) - reads the card UID",
+    trigger: "mfrc522",
+    path: "/libs/mfrc522.py",
+    category: "Sensor",
+    size: "5 KB",
+  },
   // ── Motor ────────────────────────────────────────────────────────────────────
   {
     id: "drv8833",

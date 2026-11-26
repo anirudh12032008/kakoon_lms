@@ -1,5 +1,6 @@
 import type { Node, Edge } from "@xyflow/react";
-import type { BoardId } from "@/entities/board";
+import { BOARDS, getBoard, type BoardId } from "@/entities/board";
+import { pinDefaults, SIMPLE_SENSORS } from "@/entities/node/lib/blockDefaults";
 import { collegeDemos } from "./collegeDemos";
 
 export interface TutorialStep {
@@ -35,33 +36,52 @@ export interface Tutorial {
   steps: TutorialStep[];
 }
 
-const DEFAULTS: Record<string, Record<string, any>> = {
-  forever_loop:        {},
-  gpio_pin:            { pin: 2, mode: "OUT" },
-  pin_write:           { port: "1", pin: 4, value: false },
-  pin_read:            { port: "1", pin: 4, varName: "value" },
-  pwm:                 { pin: 2, freq: 1000, duty: 512 },
-  adc:                 { pin: 34, varName: "value" },
-  push_button:         { port: "1", pin: 4, varName: "value" },
-  buzzer_tone:         { port: "1", pin: 46, tone: "1" },
-  neopixel_led:        { numLeds: 8, brightness: 50, color: "#ff0000" },
-  neopixel_rgb:        { pin: 45, brightness: 50, red: 255, green: 0, blue: 0 },
-  print:               { text: "'Hello world'" },
-  variable:            { name: "x", value: 0 },
-  sleep:               { seconds: 1 },
-  ultrasonic_sensor:   { port: "1", trigPin: 1, echoPin: 5, varName: "distance" },
-  touch_sensor:        { port: "1", pin: 4, varName: "touch_value" },
-  soil_moisture:       { port: "1", pin: 4, varName: "value" },
-  ir_receiver:         { port: "1", pin: 5, varName: "ir_cmd" },
-  ir_sensor:           { port: "1", pin: 4, varName: "ir_value" },
-  four_channel_touch:  { port: "1", pin1: 4, pin2: 5, pin3: 6, pin4: 7, t1: "touch1", t2: "touch2", t3: "touch3", t4: "touch4" },
-  if_else:             { left: "", op: "==", right: 0 },
-  map_range:           { value: "", fromMin: 0, fromMax: 4095, toMin: 0, toMax: 180, varName: "mapped_value" },
-  servo_motor:         { servoPort: "S1", angle: 90 },
-  dc_motor_single:     { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" },
-  oled_display:        { mode: "text", line1: "", line2: "", driver: false },
-  ble_mode:            { deviceName: "ESP32-BLE", rawVarName: "ble_data", enableCmdMap: true, enableTx: false, txVarName: "ble_tx" },
-};
+/**
+ * What a freshly dropped block has on a board, per block type. Guided mode asks
+ * for a field edit only where the example differs from these, so the pins come
+ * from the same per-board table the blocks themselves use (blockDefaults.ts).
+ */
+function blockDefaults(boardId: BoardId): Record<string, Record<string, unknown>> {
+  const P = pinDefaults(boardId);
+  const ultrasonic = { port: "1", trigPin: P.trig, echoPin: P.echo, varName: "distance", sendToViz: true };
+  const simpleSensors = Object.fromEntries(Object.entries(SIMPLE_SENSORS).map(
+    ([type, s]) => [type, { pin: P[s.pin], mode: "digital", varName: s.varName, sendToViz: true }]));
+  return {
+    ...simpleSensors,
+    forever_loop:        { sleepEnabled: false, sleepMs: 1000 },
+    gpio_pin:            { pin: P.gpio, mode: "OUT" },
+    pin_write:           { port: "1", pin: P.write, value: false },
+    pin_read:            { port: "1", pin: P.read, varName: "value" },
+    pwm:                 { pin: P.pwm, freq: 1000, duty: 512 },
+    adc:                 { pin: P.analog, varName: "value" },
+    push_button:         { port: "1", pin: P.read, varName: "value" },
+    buzzer_tone:         { port: "1", pin: P.buzzer, tone: "1" },
+    led:                 { pin: P.led, state: true },
+    relay:               { pin: P.relay, state: true, activeLow: false },
+    neopixel_led:        { numLeds: 8, brightness: 50, color: "#ff0000" },
+    neopixel_rgb:        { pin: 45, brightness: 50, red: 255, green: 0, blue: 0 },
+    print:               { text: "'Hello world'" },
+    variable:            { name: "x", value: 0 },
+    sleep:               { seconds: 1 },
+    ultrasonic,
+    ultrasonic_sensor:   ultrasonic, // old name of the same block
+    analog_sensor:       { pin: P.analog, varName: "analog_val", sendToViz: true },
+    touch_sensor:        { port: "1", pin: P.touch, varName: "touch_value" },
+    soil_moisture:       { port: "1", pin: P.soil, varName: "value", sendToViz: true },
+    dht11:               { pin: P.dht, tempVar: "temperature", humVar: "humidity", sendToViz: true },
+    rfid_reader:         { ssPin: P.rfidSs, rstPin: P.rfidRst, varName: "card_uid" },
+    ir_receiver:         { port: "1", pin: 5, varName: "ir_cmd" },
+    ir_sensor:           { port: "1", pin: P.ir, varName: "ir_value" },
+    four_channel_touch:  { port: "1", pin1: 4, pin2: 5, pin3: 6, pin4: 7, t1: "touch1", t2: "touch2", t3: "touch3", t4: "touch4" },
+    if_else:             { left: "", op: "==", right: 0 },
+    map_range:           { value: "", fromMin: 0, fromMax: 4095, toMin: 0, toMax: 180, varName: "mapped_value" },
+    servo_motor:         { servoPort: "S1", angle: 90 },
+    dc_motor_single:     { in1: 13, in2: 14, enPin: 12, speed: 80, direction: "Forward", driver: "L298N" },
+    oled_display:        { mode: "text", line1: "", line2: "", driver: false },
+    lcd_16x2:            { address: "0x27", line1: "Hello", line2: "World", backlight: true },
+    ble_mode:            { deviceName: "ESP32-BLE", rawVarName: "ble_data", enableCmdMap: true, enableTx: false, txVarName: "ble_tx" },
+  };
+}
 
 const FIELD_LABELS: Record<string, string> = {
   port:         "Port",
@@ -91,6 +111,20 @@ const FIELD_LABELS: Record<string, string> = {
   enPin:        "Enable Pin",
   servoPort:    "Servo Port",
   motorPort:    "Motor Port",
+  mode:         "Mode",
+  state:        "State",
+  activeLow:    "Active Low",
+  sleepEnabled: "Loop Delay",
+  sleepMs:      "Loop Delay (ms)",
+  text:         "Text",
+  trigPin:      "Trig Pin",
+  echoPin:      "Echo Pin",
+  ssPin:        "SS / SDA Pin",
+  rstPin:       "RST Pin",
+  tempVar:      "Temperature Variable",
+  humVar:       "Humidity Variable",
+  sendToViz:    "Send to Viz",
+  address:      "I2C Address",
 };
 
 // ─── Built-in Tutorial Definitions ───────────────────────────────────────────
@@ -103,18 +137,18 @@ export function makeTutorial(
   components: string[],
   nodes: Node[],
   edges: Edge[],
-  board = "Kokoon Board"
+  boardId: BoardId = "kokoon"
 ): Tutorial {
   return {
     id,
     title,
     description,
     difficulty,
-    board,
+    board: BOARDS[boardId].label,
     components,
     nodes,
     edges,
-    steps: generateStepsFromFlow(nodes, edges),
+    steps: generateStepsFromFlow(nodes, edges, boardId),
   };
 }
 
@@ -288,7 +322,9 @@ const turretEdges: Edge[] = [
   { id: "tur_e7", source: "tur_n7", target: "tur_n8" },
 ];
 
-export function generateStepsFromFlow(nodes: Node[], edges: Edge[]): TutorialStep[] {
+/** Guided steps for a flow. `boardId` picks the block defaults the flow is compared against. */
+export function generateStepsFromFlow(nodes: Node[], edges: Edge[], boardId: BoardId = getBoard().id): TutorialStep[] {
+  const DEFAULTS = blockDefaults(boardId);
   const steps: TutorialStep[] = [];
   let stepCounter = 1;
 
@@ -340,10 +376,12 @@ export function generateStepsFromFlow(nodes: Node[], edges: Edge[]): TutorialSte
         if (defaultVal !== undefined && String(targetVal) !== String(defaultVal)) {
           const fieldLabel = FIELD_LABELS[key] || key;
           const actionText = key === "port" || key === "direction" || key === "mode" ? "Select" : "Set";
+          // Toggles: Pin Write shows 0 / 1, every other switch reads Off / On.
+          const shown = typeof targetVal !== "boolean" ? targetVal : key === "value" ? Number(targetVal) : targetVal ? "On" : "Off";
           steps.push({
             id: `step_${stepCounter++}`,
-            title: `${actionText} ${fieldLabel} to "${targetVal}" in ${label}${suffix}`,
-            description: `Inside the ${label}${suffix} block, ${actionText.toLowerCase()} the "${fieldLabel}" field to "${targetVal}".`,
+            title: `${actionText} ${fieldLabel} to "${shown}" in ${label}${suffix}`,
+            description: `Inside the ${label}${suffix} block, ${actionText.toLowerCase()} the "${fieldLabel}" field to "${shown}".`,
             actionType: "edit_field",
             nodeType: node.type,
             nodeLabel: label,

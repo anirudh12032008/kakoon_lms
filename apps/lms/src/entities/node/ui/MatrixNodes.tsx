@@ -45,9 +45,9 @@ function MatrixMiniPreview({
         })}
       </div>
       <div className="flex items-center justify-between w-full mt-1.5 px-0.5">
-        <span className="text-[8px] text-amber-700 font-mono">{modules}×8×8</span>
+        <span className="text-[11px] text-amber-700 font-mono">{modules}×8×8</span>
         {frames.length > 1 && (
-          <span className="text-[8px] text-amber-600 font-mono">
+          <span className="text-[11px] text-amber-600 font-mono">
             {fi + 1}/{frames.length} · {fps}fps
           </span>
         )}
@@ -82,8 +82,8 @@ export function MAX7219Node() {
         <>
           {/* Design name badge */}
           <div className="mx-3 mb-1 flex items-center gap-2">
-            <span className="text-[9px] font-bold text-amber-400 truncate">{designName || "Custom Design"}</span>
-            <span className="text-[8px] px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-amber-500">
+            <span className="text-[11px] font-bold text-amber-400 truncate">{designName || "Custom Design"}</span>
+            <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/25 text-amber-500">
               {matrixFrames.length} frame{matrixFrames.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -95,13 +95,13 @@ export function MAX7219Node() {
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <span className="text-xl"></span>
           </div>
-          <p className="text-[9px] text-[var(--k-muted)] text-center px-3 leading-relaxed">
+          <p className="text-[11px] text-[var(--k-muted)] text-center px-3 leading-relaxed">
             No pattern yet.<br />Design one in the Matrix Designer.
           </p>
           {onOpenDesigner && (
             <button
               onClick={onOpenDesigner}
-              className="nodrag px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-[9px] font-bold text-blue-400 hover:bg-blue-500/25 transition-all"
+              className="nodrag px-3 py-1.5 rounded-lg bg-blue-500/15 border border-blue-500/30 text-[11px] font-bold text-blue-400 hover:bg-blue-500/25 transition-all"
             >
               Open Matrix Designer
             </button>
@@ -114,7 +114,7 @@ export function MAX7219Node() {
         <div className="flex gap-1">
           {[1, 2, 3, 4].map(n => (
             <button key={n} onClick={() => setModules(n)}
-              className={`nodrag flex-1 py-1 text-[9px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-[var(--k-muted)] border border-[var(--k-border)] hover:text-[var(--k-text)]"}`}>
+              className={`nodrag flex-1 py-1 text-[11px] font-bold rounded transition-all ${n === modules ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "text-[var(--k-muted)] border border-[var(--k-border)] hover:text-[var(--k-text)]"}`}>
               {n}
             </button>
           ))}
@@ -124,7 +124,7 @@ export function MAX7219Node() {
       <div className="px-3 py-1">
         <div className="flex items-center justify-between mb-1">
           <span className="text-xs text-[var(--k-muted)] font-medium">Brightness</span>
-          <span className="text-[10px] font-mono text-blue-400">{brightness}/15</span>
+          <span className="text-[11px] font-mono text-blue-400">{brightness}/15</span>
         </div>
         <input type="range" min={0} max={15} value={brightness}
           onChange={e => setBrightness(Number(e.target.value))}
@@ -135,7 +135,7 @@ export function MAX7219Node() {
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-            <span className="text-[10px] font-mono text-amber-400">{fps} fps</span>
+            <span className="text-[11px] font-mono text-amber-400">{fps} fps</span>
           </div>
           <input type="range" min={1} max={30} value={fps}
             onChange={e => setFps(Number(e.target.value))}
@@ -147,7 +147,7 @@ export function MAX7219Node() {
       {hasDesign && onOpenDesigner && (
         <div className="px-3 pb-2">
           <button onClick={onOpenDesigner}
-            className="nodrag w-full py-1.5 rounded-lg border border-[var(--k-border)] text-[9px] font-bold text-[var(--k-muted)] hover:text-blue-400 hover:border-blue-500/30 transition-all">
+            className="nodrag w-full py-1.5 rounded-lg border border-[var(--k-border)] text-[11px] font-bold text-[var(--k-muted)] hover:text-blue-400 hover:border-blue-500/30 transition-all">
             Edit in Designer
           </button>
         </div>

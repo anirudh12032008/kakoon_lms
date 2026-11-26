@@ -57,6 +57,7 @@ function ProjectCard({ tutorial, index, onOpen }: { tutorial: Tutorial; index: n
           {tutorial.components
             .filter((c) => c !== "if_else" && c !== "forever_loop")
             .map((c) => c.replace(/_/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()))
+            .map((c) => c.replace(/\b(Ldr|Led|Dht11|Lcd|Pir|Rfid|Rtc)\b/g, (m) => m.toUpperCase()))
             .join(", ")}
         </span>
       )}

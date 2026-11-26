@@ -29,34 +29,31 @@ export class ErrorBoundary extends Component<Props, State> {
     if (!this.state.error) return this.props.children;
 
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-page px-6 text-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-subtle bg-raised text-3xl">
-         
+      <div role="alert" className="flex min-h-screen items-center justify-center bg-page px-4">
+        <div className="w-full max-w-md rounded-lg border border-subtle bg-panel p-6">
+          <h1 className="text-lg font-semibold text-body">Something went wrong</h1>
+          <p className="mt-2 text-sm leading-relaxed text-sub">
+            This page hit an unexpected error. Your saved work is not affected. Reload to carry on.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--k-primary)]"
+            >
+              Reload
+            </button>
+            <a href="/courses" className="rounded-md border border-subtle px-4 py-2 text-sm font-medium text-sub transition-colors hover:bg-hover hover:text-body">
+              Back to dashboard
+            </a>
+          </div>
+          <details className="mt-5">
+            <summary className="cursor-pointer text-xs font-medium text-sub">Technical details</summary>
+            <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap rounded-md border border-subtle bg-page p-3 text-xs leading-relaxed text-sub">
+              {this.state.error.message}
+            </pre>
+          </details>
         </div>
-        <h1 className="text-xl font-black tracking-tight text-body">Oops - something short-circuited</h1>
-        <p className="max-w-sm text-sm leading-relaxed text-sub">
-          Don't worry, your work is saved. Reload the page to keep building.
-        </p>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => window.location.reload()}
-            className="rounded-xl bg-brand-gradient px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
-          >
-            Reload
-          </button>
-          <button
-            onClick={() => { window.location.href = "/courses"; }}
-            className="rounded-xl border border-subtle px-5 py-2.5 text-sm font-semibold text-sub transition-colors hover:bg-hover hover:text-body"
-          >
-            Back to courses
-          </button>
-        </div>
-        <details className="mt-2 max-w-md text-left">
-          <summary className="cursor-pointer text-[11px] font-semibold text-hint">Technical details</summary>
-          <pre className="mt-2 max-h-32 overflow-auto rounded-lg border border-subtle bg-raised p-3 text-[10px] leading-relaxed text-hint">
-            {this.state.error.message}
-          </pre>
-        </details>
       </div>
     );
   }

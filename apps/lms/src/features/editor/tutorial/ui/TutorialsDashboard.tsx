@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { Search, ChevronDown, Check, ArrowLeft, Eye, Play, Upload, Loader2, X } from "lucide-react";
+import { useState, useMemo, useRef } from "react";
+import { Search, ChevronDown, Check, ArrowLeft, Eye, Play, Upload, X } from "lucide-react";
 import { type Tutorial, builtinTutorials } from "@/features/editor/tutorial/lib/tutorials";
 import { useBoardStore } from "@/entities/board";
 
@@ -19,21 +19,9 @@ export function TutorialsDashboard({
   const [selectedComponent, setSelectedComponent] = useState<string>("All");
   const [activeModalTutorial, setActiveModalTutorial] = useState<Tutorial | null>(null);
 
-  const [dbTutorials, setDbTutorials] = useState<Tutorial[]>([]);
-  const [loading, setLoading] = useState(true);
   const [customList, setCustomList] = useState<Tutorial[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetch("/api/tutorials")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data)) setDbTutorials(data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
 
   const boardId = useBoardStore((s) => s.boardId);
   const tutorials = useMemo(() => {
@@ -41,12 +29,9 @@ export function TutorialsDashboard({
     try {
       const stored = localStorage.getItem("Kokoon-custom-tutorials");
       if (stored) custom = JSON.parse(stored) as Tutorial[];
-    } catch { }
-    // Builtins are always present; DB tutorials override by id if they share one
-    const dbIds = new Set(dbTutorials.map((t) => t.id));
-    const filteredBuiltins = builtinTutorials(boardId).filter((t) => !dbIds.has(t.id));
-    return [...filteredBuiltins, ...dbTutorials, ...custom, ...customList];
-  }, [dbTutorials, customList, boardId]);
+    } catch { /* corrupted saved examples: show the built-in ones */ }
+    return [...builtinTutorials(boardId), ...custom, ...customList];
+  }, [customList, boardId]);
 
   const handleImportTutorial = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -214,12 +199,7 @@ export function TutorialsDashboard({
       </div>
 
       {/* Grid */}
-      {loading ? (
-        <div className="text-center py-20 flex flex-col items-center justify-center gap-3">
-          <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
-          <p className="text-[var(--k-muted)] text-xs font-medium">Loading robotics examples...</p>
-        </div>
-      ) : filteredTutorials.length === 0 ? (
+      {filteredTutorials.length === 0 ? (
         <div className="text-center py-20 border border-dashed border-[var(--k-border)] rounded-2xl">
           <p className="text-[var(--k-muted)] text-sm">No examples matching your filters.</p>
         </div>

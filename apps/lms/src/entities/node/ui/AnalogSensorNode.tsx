@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 import { Handle, Position } from "@xyflow/react";
 import {
   BaseNode,
@@ -11,7 +11,7 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { SensorIcon } from "./_shared";
+import { useFresh, SensorIcon } from "./_shared";
 import { usePinDefaults } from "../lib/blockDefaults";
 import { useSensorStore } from "@/shared/lib/sensorStore";
 
@@ -37,7 +37,7 @@ function WaveformDisplay({ color = "#8b5cf6", live = false }: { color?: string; 
       <div className="absolute top-1 right-1.5 flex items-center gap-1">
         <span className="inline-block w-1.5 h-1.5 rounded-full"
           style={{ background: live ? "#4ade80" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-        <span className="text-[9px] text-[var(--k-muted)] font-mono">{live ? "LIVE" : "waiting…"}</span>
+        <span className="text-[11px] text-[var(--k-muted)] font-mono">{live ? "LIVE" : "waiting…"}</span>
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ function GaugeBar({ pct = 0, color = "#8b5cf6" }: { pct?: number; color?: string
 function StatChip({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="flex flex-col items-center flex-1 bg-[var(--k-base-200)] rounded-md py-1 border border-[var(--k-border)]">
-      <span className="text-[8px] uppercase tracking-wider font-bold" style={{ color }}>{label}</span>
+      <span className="text-[11px] uppercase tracking-wider font-bold" style={{ color }}>{label}</span>
       <span className="text-[11px] font-mono text-[var(--k-text)] mt-0.5">{value}</span>
     </div>
   );
@@ -73,24 +73,23 @@ export function AnalogSensorNode() {
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
 
   const reading = useSensorStore(s => s.readings[varName]);
-  const live = !!reading && (Date.now() - reading.ts) < ANALOG_STALE_MS;
+  const live = useFresh(reading?.ts, ANALOG_STALE_MS) && !!reading;
   const rawValue = live ? reading.value : null;
 
   // Track min / max / running avg across readings
-  const statsRef = useRef<{ min: number; max: number; sum: number; count: number } | null>(null);
-  if (rawValue !== null) {
-    if (!statsRef.current) {
-      statsRef.current = { min: rawValue, max: rawValue, sum: rawValue, count: 1 };
-    } else {
-      statsRef.current.min = Math.min(statsRef.current.min, rawValue);
-      statsRef.current.max = Math.max(statsRef.current.max, rawValue);
-      statsRef.current.sum += rawValue;
-      statsRef.current.count += 1;
-    }
+  // State derived from the reading: one sample per new reading (keyed on its timestamp),
+  // not one per render as the old ref version counted.
+  const [stats, setStats] = useState<{ ts: number; min: number; max: number; sum: number; count: number } | null>(null);
+  if (!live) {
+    if (stats) setStats(null);
+  } else if (!stats) {
+    setStats({ ts: reading.ts, min: reading.value, max: reading.value, sum: reading.value, count: 1 });
+  } else if (stats.ts !== reading.ts) {
+    setStats({
+      ts: reading.ts, min: Math.min(stats.min, reading.value), max: Math.max(stats.max, reading.value),
+      sum: stats.sum + reading.value, count: stats.count + 1,
+    });
   }
-  if (!live) statsRef.current = null;
-
-  const stats = statsRef.current;
   const pct = rawValue !== null ? (rawValue / 4095) * 100 : 0;
 
   return (
@@ -110,10 +109,10 @@ export function AnalogSensorNode() {
         <div className="px-3 pt-1 pb-0.5">
           <GaugeBar pct={pct} color={COLORS.purple} />
           <div className="flex justify-between mt-0.5">
-            <span className="text-[9px] text-[var(--k-dim)] font-mono">
+            <span className="text-[11px] text-[var(--k-dim)] font-mono">
               {rawValue !== null ? `${rawValue} raw` : "0 raw"}
             </span>
-            <span className="text-[9px] text-[var(--k-dim)] font-mono">4095 / 3.3V</span>
+            <span className="text-[11px] text-[var(--k-dim)] font-mono">4095 / 3.3V</span>
           </div>
         </div>
         {/* Min / Max / Avg */}

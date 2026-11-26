@@ -43,7 +43,7 @@ interface NodeData {
   // Servo
   servoPort?: string; servoModel?: string; servoType?: string;
   angle?: number | string; startAngle?: number; endAngle?: number;
-  steps?: number; speed?: number; pulseMin?: number; pulseMax?: number;
+  steps?: number; speed?: number; pulseMin?: number; in1Pin?: number; in2Pin?: number; enPin?: number; unit?: string; pulseMax?: number;
   sweepMin?: number; sweepMax?: number; sweepPeriod?: number; contSpeed?: number;
   bounce?: boolean; loop?: boolean;
   // Speed variable bindings - when set, codegen emits the variable name instead
@@ -389,6 +389,10 @@ def drive_arm(angles):
 
   const visited = new Set<string>();
 
+  // A Python block needs at least one statement: a body that is empty or only comments gets "pass".
+  const withPass = (body: string[], indent: string): string[] =>
+    body.some((l) => l.trim() && !l.trim().startsWith("#")) ? body : [...body, `${indent}pass`];
+
   // Loop types that use getLoopBodyLines for their body
   const LOOP_TYPES = ["forever_loop", "for_loop", "while_loop", "repeat"];
 
@@ -678,7 +682,7 @@ time.sleep(0.1)`);
         const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
         if (d.sleepEnabled) imports.add("import time");
         const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
-        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
+        chunkLines.push(...withPass([...bodyLines, ...sleepLine], `${indent}    `));
         break;
       }
       case "for_loop": {
@@ -686,7 +690,7 @@ time.sleep(0.1)`);
         const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
         if (d.sleepEnabled) imports.add("import time");
         const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
-        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
+        chunkLines.push(...withPass([...bodyLines, ...sleepLine], `${indent}    `));
         break;
       }
       case "while_loop": {
@@ -694,7 +698,7 @@ time.sleep(0.1)`);
         const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
         if (d.sleepEnabled) imports.add("import time");
         const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
-        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
+        chunkLines.push(...withPass([...bodyLines, ...sleepLine], `${indent}    `));
         break;
       }
       case "repeat": {
@@ -702,7 +706,7 @@ time.sleep(0.1)`);
         const bodyLines = getLoopBodyLines(nodeId, indentLevel + 1);
         if (d.sleepEnabled) imports.add("import time");
         const sleepLine = d.sleepEnabled ? [`${indent}    time.sleep_ms(${d.sleepMs ?? 1000})`] : [];
-        chunkLines.push(...(bodyLines.length > 0 ? [...bodyLines, ...sleepLine] : sleepLine.length > 0 ? sleepLine : [`${indent}    pass`]));
+        chunkLines.push(...withPass([...bodyLines, ...sleepLine], `${indent}    `));
         break;
       }
       case "break":
@@ -711,16 +715,13 @@ time.sleep(0.1)`);
 
       // ─── Conditional ───────────────────────────────────────────────────────
       case "if_else":
-        chunkLines.push(`${indent}if ${d.left ?? ""} ${d.op ?? "=="} ${d.right ?? 0}:`);
-        {
-          const trueLines = getBranchLines("true", indentLevel + 1);
-          chunkLines.push(...(trueLines.length > 0 ? trueLines : [`${indent}    pass`]));
-        }
+        // An If with nothing on the left side yet is never true (instead of a syntax error).
+        chunkLines.push(String(d.left ?? "").trim()
+          ? `${indent}if ${String(d.left).trim()} ${d.op ?? "=="} ${d.right ?? 0}:`
+          : `${indent}if False:  # fill in the left side of this If block`);
+        chunkLines.push(...withPass(getBranchLines("true", indentLevel + 1), `${indent}    `));
         chunkLines.push(`${indent}else:`);
-        {
-          const falseLines = getBranchLines("false", indentLevel + 1);
-          chunkLines.push(...(falseLines.length > 0 ? falseLines : [`${indent}    pass`]));
-        }
+        chunkLines.push(...withPass(getBranchLines("false", indentLevel + 1), `${indent}    `));
         break;
 
       // ─── IOT ───────────────────────────────────────────────────────────────
@@ -819,12 +820,12 @@ time.sleep(0.1)`);
       case "ir_receiver": {
         const vn = d.varName ?? "ir_cmd";
         imports.add("from machine import Pin");
-        emitOnce(`ir_recv_setup_${d.pin ?? 6}`,
-          `# IR Receiver (NEC) - GPIO ${d.pin ?? 6}\n` +
-          `_ir_recv_${d.pin ?? 6} = Pin(${d.pin ?? 6}, Pin.IN)`
+        emitOnce(`ir_recv_setup_${d.pin ?? P.ir}`,
+          `# IR Receiver (NEC) - GPIO ${d.pin ?? P.ir}\n` +
+          `_ir_recv_${d.pin ?? P.ir} = Pin(${d.pin ?? P.ir}, Pin.IN)`
         );
         // Basic NEC pulse-counting stub - real decode needs irq + timing
-        chunkLines.push(`${indent}${vn} = _ir_recv_${d.pin ?? 6}.value()  # raw pulse; use irq for full NEC decode`);
+        chunkLines.push(`${indent}${vn} = _ir_recv_${d.pin ?? P.ir}.value()  # raw pulse; use irq for full NEC decode`);
         if (d.sendToViz !== false) {
           chunkLines.push(`${indent}print(f"SENSOR,raw,${vn},{${vn}}")`);
         }
@@ -1225,7 +1226,24 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
       case "l298n_motor":
         // Deprecated - generates a warning comment but still basic code
         imports.add("from machine import Pin");
-        chunkLines.push(`${indent}# L298N deprecated - use Multi-Motor Controller for DRV8833`);
+        if (board.id === "kokoon") {
+          chunkLines.push(`${indent}# L298N deprecated - use Multi-Motor Controller for DRV8833`);
+          break;
+        }
+        {
+          // Plain L298N channel: IN1/IN2 set the direction, EN (PWM) sets the speed.
+          const in1 = d.in1Pin ?? P.motorIn1, in2 = d.in2Pin ?? P.motorIn2, en = d.enPin ?? P.motorEn;
+          const dir = d.direction ?? "Forward";
+          const fwd = dir === "Forward", back = dir === "Backward" || dir === "Reverse";
+          imports.add("from machine import Pin, PWM");
+          emitOnce(`l298n_${in1}_${in2}_${en}`, `# L298N motor - IN1=${in1} IN2=${in2} EN=${en}
+_m_in1_${in1} = Pin(${in1}, Pin.OUT)
+_m_in2_${in2} = Pin(${in2}, Pin.OUT)
+_m_en_${en} = PWM(Pin(${en}), freq=1000)
+_m_en_${en}.duty(0)`);
+          chunkLines.push(`${indent}_m_in1_${in1}.value(${fwd ? 1 : 0}); _m_in2_${in2}.value(${back ? 1 : 0})  # ${fwd || back ? dir : "Stop"}`);
+          chunkLines.push(`${indent}_m_en_${en}.duty(${fwd || back ? `int(${speedPyExpr(d.speed, d.speedVar, 50)} * 1023 / 100)` : 0})`);
+        }
         break;
 
       // ─── New Sensor Nodes ──────────────────────────────────────────────────
@@ -1253,11 +1271,12 @@ def _cal_tap():                        # debounced falling-edge, waits for relea
 # Wiring: SCK=${P.sck} MOSI=${P.mosi} MISO=${P.miso} SDA/SS=${d.ssPin ?? P.rfidSs} RST=${d.rstPin ?? P.rfidRst}
 _rfid = MFRC522(${P.sck}, ${P.mosi}, ${P.miso}, ${d.rstPin ?? P.rfidRst}, ${d.ssPin ?? P.rfidSs})
 def read_card_uid():
-    stat, _ = _rfid.request(_rfid.REQIDL)
-    if stat == _rfid.OK:
-        stat, uid = _rfid.anticoll()
+    for _try in range(2):  # a card left on the reader only answers every other request
+        stat, _bits = _rfid.request(_rfid.REQIDL)
         if stat == _rfid.OK:
-            return "".join("{:02X}".format(b) for b in uid[:4])
+            stat, uid = _rfid.anticoll()
+            if stat == _rfid.OK:
+                return "".join("{:02X}".format(b) for b in uid[:4])
     return ""`);
         chunkLines.push(`${indent}${vn} = read_card_uid()  # "" when no card`);
         break;
@@ -1279,7 +1298,7 @@ def read_rtc():
       case "button_digital_input":
         imports.add("from machine import Pin");
         {
-          const pullMode = d.pullup ? "Pin.PULL_UP" : "Pin.PULL_DOWN";
+          const pullMode = d.pullup === false ? "Pin.PULL_DOWN" : "Pin.PULL_UP";
           setupLines.push(`btn_${d.pin ?? P.button} = Pin(${d.pin ?? P.button}, Pin.IN, ${pullMode})`);
           chunkLines.push(`${indent}${d.varName ?? "btn"} = btn_${d.pin ?? P.button}.value()`);
         }
@@ -1704,7 +1723,7 @@ def read_rtc():
               if (branchLines.length > 0) {
                 // Has wired nodes - run them when the command matches.
                 cmdBody.push(`${indent}    if ${bleRawVar} == "${cmd.trigger}":`);
-                cmdBody.push(...branchLines);
+                cmdBody.push(...withPass(branchLines, `${indent}        `));
               } else if (cmd.varName) {
                 // No wired nodes but a target variable - assign it.
                 const val = isNaN(Number(cmd.value)) ? `"${cmd.value}"` : cmd.value;
@@ -1780,10 +1799,17 @@ def read_rtc():
 
       case "timer_interval":
         imports.add("import time");
-        chunkLines.push(`${indent}_last_tick = time.ticks_ms()`);
-        chunkLines.push(`${indent}if time.ticks_diff(time.ticks_ms(), _last_tick) >= ${d.interval ?? 1000}:`);
-        chunkLines.push(`${indent}    _last_tick = time.ticks_ms()`);
-        chunkLines.push(`${indent}    ${d.varName ?? "timer_fired"} = True`);
+        {
+          // The start time lives in setup; resetting it here on every pass meant the timer never fired.
+          const tick = `_last_tick_${nodeId.replace(/\W/g, "_")}`;
+          const ms = Math.max(1, Math.round(Number(d.interval ?? 1000) * (d.unit === "s" ? 1000 : d.unit === "min" ? 60000 : 1)) || 1000);
+          const fired = d.varName ?? "elapsed"; // the name the block shows
+          setupLines.push(`${tick} = time.ticks_ms()`);
+          chunkLines.push(`${indent}${fired} = False`);
+          chunkLines.push(`${indent}if time.ticks_diff(time.ticks_ms(), ${tick}) >= ${ms}:`);
+          chunkLines.push(`${indent}    ${tick} = time.ticks_ms()`);
+          chunkLines.push(`${indent}    ${fired} = True  # true for one pass every ${ms} ms`);
+        }
         break;
 
       case "variable_state":
@@ -1894,7 +1920,7 @@ def read_rtc():
         break;
       case "i2c_scanner":
         imports.add("from machine import I2C, Pin");
-        setupLines.push(`i2c_scan_bus = I2C(0, scl=Pin(${d.scl ?? 22}), sda=Pin(${d.sda ?? 21}))`);
+        setupLines.push(`i2c_scan_bus = I2C(0, scl=Pin(${d.scl ?? board.i2c.scl}), sda=Pin(${d.sda ?? board.i2c.sda}))`);
         chunkLines.push(`${indent}i2c_devices = i2c_scan_bus.scan()`);
         chunkLines.push(`${indent}print("I2C devices found:", [hex(x) for x in i2c_devices])`);
         break;

@@ -162,9 +162,12 @@ export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
       case "ir_sensor":
         readDigital("ir_value", P.ir);
         break;
+      case "ir_receiver": // raw level of the receiver's OUT pin (no NEC decoding), same as the MicroPython block
+        readDigital("ir_cmd", P.ir);
+        break;
       case "button_digital_input": {
         const v = declare(d.varName, "btn", "int");
-        setup(`mode_${d.pin ?? P.button}`, `pinMode(${d.pin ?? P.button}, ${d.pullup ? "INPUT_PULLUP" : "INPUT"});`);
+        setup(`mode_${d.pin ?? P.button}`, `pinMode(${d.pin ?? P.button}, ${d.pullup === false ? "INPUT" : "INPUT_PULLUP"});`);
         out.push(`${ind}${v} = digitalRead(${d.pin ?? P.button});`);
         break;
       }
@@ -201,7 +204,10 @@ export function generateArduinoFromFlow(nodes: Node[], edges: Edge[]): string {
         out.push(`${ind}break;`);
         break;
       case "if_else":
-        out.push(`${ind}if (${cppCondition(`${d.left || "0"} ${d.op ?? "=="} ${d.right ?? 0}`)}) {`);
+        // An If with nothing on the left side yet is never true.
+        out.push(String(d.left ?? "").trim()
+          ? `${ind}if (${cppCondition(`${String(d.left).trim()} ${d.op ?? "=="} ${d.right ?? 0}`)}) {`
+          : `${ind}if (false) {  // fill in the left side of this If block`);
         out.push(...bodyOf(id, level + 1, "true"));
         out.push(`${ind}} else {`);
         out.push(...bodyOf(id, level + 1, "false"));
@@ -334,11 +340,95 @@ void readRtc(int &h, int &m, int &s) {
         break;
       }
 
+      case "dc_motor_single":
+      case "l298n_motor": {
+        // One L298N channel: IN1/IN2 set the direction, EN (PWM pin) sets the speed.
+        const in1 = d.in1Pin ?? P.motorIn1, in2 = d.in2Pin ?? P.motorIn2, en = d.enPin ?? P.motorEn;
+        const dir = d.direction ?? "Forward";
+        const fwd = dir === "Forward", back = dir === "Backward" || dir === "Reverse";
+        const speedVar = typeof d.speedVar === "string" && d.speedVar.trim() ? declare(d.speedVar, "speed", "int") : null;
+        const pwm = speedVar ? `constrain(${speedVar}, 0, 100) * 255L / 100` : String(Math.round((Math.max(0, Math.min(100, Number(d.speed ?? 50))) / 100) * 255));
+        for (const pin of [in1, in2, en]) setup(`mode_${pin}`, `pinMode(${pin}, OUTPUT);`);
+        out.push(`${ind}digitalWrite(${in1}, ${fwd ? "HIGH" : "LOW"}); digitalWrite(${in2}, ${back ? "HIGH" : "LOW"});  // ${fwd || back ? dir : "Stop"}`);
+        out.push(`${ind}analogWrite(${en}, ${fwd || back ? pwm : 0});  // speed 0-255`);
+        break;
+      }
+      case "seven_seg": {
+        // TM1637 4-digit display, bit-banged (no library needed).
+        const clk = d.clk ?? 4, dio = d.dio ?? 5;
+        const bright = Math.max(0, Math.min(7, Number(d.brightness ?? 5)));
+        globals.set("__tm1637", `// TM1637 4-digit display: two-wire protocol, bits sent LSB first.
+const byte TM_SEG[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F};
+void tmStart(byte clk, byte dio) { digitalWrite(dio, LOW); delayMicroseconds(50); digitalWrite(clk, LOW); delayMicroseconds(50); }
+void tmStop(byte clk, byte dio) { digitalWrite(dio, LOW); delayMicroseconds(50); digitalWrite(clk, HIGH); delayMicroseconds(50); digitalWrite(dio, HIGH); delayMicroseconds(50); }
+void tmWrite(byte clk, byte dio, byte b) {
+  for (byte i = 0; i < 8; i++) {
+    digitalWrite(dio, (b >> i) & 1); delayMicroseconds(50);
+    digitalWrite(clk, HIGH); delayMicroseconds(50);
+    digitalWrite(clk, LOW); delayMicroseconds(50);
+  }
+  digitalWrite(dio, LOW); delayMicroseconds(50);  // 9th clock: the display acknowledges, we do not read it
+  digitalWrite(clk, HIGH); delayMicroseconds(50);
+  digitalWrite(clk, LOW); delayMicroseconds(50);
+}
+void tmShow(byte clk, byte dio, int n, bool colon, byte bright) {
+  n = constrain(n, 0, 9999);
+  byte seg[4] = {TM_SEG[n / 1000], TM_SEG[n / 100 % 10], TM_SEG[n / 10 % 10], TM_SEG[n % 10]};
+  if (colon) seg[1] |= 0x80;
+  tmStart(clk, dio); tmWrite(clk, dio, 0x40); tmStop(clk, dio);           // write data, auto address
+  tmStart(clk, dio); tmWrite(clk, dio, 0xC0);                             // start at digit 0
+  for (byte i = 0; i < 4; i++) tmWrite(clk, dio, seg[i]);
+  tmStop(clk, dio);
+  tmStart(clk, dio); tmWrite(clk, dio, 0x88 | bright); tmStop(clk, dio);  // display on + brightness
+}`);
+        setup(`tm_${clk}_${dio}`, `pinMode(${clk}, OUTPUT); pinMode(${dio}, OUTPUT); digitalWrite(${clk}, HIGH); digitalWrite(${dio}, HIGH);`);
+        out.push(`${ind}tmShow(${clk}, ${dio}, ${Math.round(Number(d.number ?? 1234)) || 0}, ${d.colon ? "true" : "false"}, ${bright});`);
+        break;
+      }
+      case "i2c_scanner":
+        includes.add("#include <Wire.h>");
+        globals.set("__i2cscan", `void scanI2C() {  // SDA=A4 SCL=A5
+  Serial.print("I2C devices found:");
+  for (byte a = 1; a < 127; a++) {
+    Wire.beginTransmission(a);
+    if (Wire.endTransmission() == 0) { Serial.print(" 0x"); Serial.print(a, HEX); }
+  }
+  Serial.println();
+}`);
+        setup("wire", "Wire.begin();");
+        out.push(`${ind}scanI2C();`);
+        break;
+      case "serial_monitor":
+        out.push(`${ind}Serial.println(${cppExpr(d.value, '"Serial monitor output"')});`);
+        break;
+      case "timer_interval": {
+        const tick = `_last_tick_${id.replace(/\W/g, "_")}`;
+        const ms = Math.max(1, Math.round(Number(d.interval ?? 1000) * (d.unit === "s" ? 1000 : d.unit === "min" ? 60000 : 1)) || 1000);
+        const fired = declare(d.varName, "elapsed", "bool", "false"); // "elapsed" = the name the block shows
+        globals.set(tick, `unsigned long ${tick} = 0;`);
+        out.push(`${ind}${fired} = false;`);
+        out.push(`${ind}if (millis() - ${tick} >= ${ms}UL) {`, `${ind}  ${tick} = millis();`, `${ind}  ${fired} = true;  // true for one pass every ${ms} ms`, `${ind}}`);
+        break;
+      }
+      case "variable_state": {
+        // The block stores Name / Type / Init value as label / type / initVal.
+        const type = ({ int: "int", float: "float", bool: "bool", string: "String" } as Record<string, string>)[d.type] ?? "int";
+        const raw = String(d.value ?? d.initVal ?? "0").trim();
+        const value = type === "String" ? (/^(['"]).*\1$/.test(raw) ? cppExpr(raw, '""') : JSON.stringify(raw))
+          : type === "bool" ? (/^(true|1)$/i.test(raw) ? "true" : "false")
+          : Number.isFinite(Number(raw)) && raw !== "" ? raw : "0";
+        out.push(`${ind}${declare(d.varName ?? d.label, "myVar", type, type === "String" ? '""' : "0")} = ${value};`);
+        break;
+      }
+      case "math_transform":
+        out.push(`${ind}${declare(d.varName, "result")} = ${cppExpr(d.expression, "0")};`);
+        break;
+
       case "map_range":
-        out.push(`${ind}${declare(d.varName, "mapped_value")} = map(${d.value || "value"}, ${d.fromMin ?? 0}, ${d.fromMax ?? board.adcMax}, ${d.toMin ?? 0}, ${d.toMax ?? 180});`);
+        out.push(`${ind}${declare(d.varName, "mapped_value")} = map(${d.value || "0"}, ${d.fromMin ?? 0}, ${d.fromMax ?? board.adcMax}, ${d.toMin ?? 0}, ${d.toMax ?? 180});`);
         break;
       case "clamp":
-        out.push(`${ind}${declare(d.varName, "clamped")} = constrain(${d.value || "value"}, ${d.minVal ?? 0}, ${d.maxVal ?? 100});`);
+        out.push(`${ind}${declare(d.varName, "clamped")} = constrain(${d.value || "0"}, ${d.minVal ?? 0}, ${d.maxVal ?? 100});`);
         break;
       case "random_number":
         out.push(`${ind}${declare(d.varName, "rand_val", "long")} = random(${d.from ?? 0}, ${Number(d.to ?? 100) + 1});`);

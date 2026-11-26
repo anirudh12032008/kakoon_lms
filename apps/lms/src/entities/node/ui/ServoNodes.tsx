@@ -76,15 +76,15 @@ function ContinuousSpeed({ speed, onChange, color, speedVar, onVarChange }: {
     <div className="px-3 py-1">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-        <span className="text-[10px] font-mono" style={{ color: usingVar ? "#22d3ee" : "var(--k-warning)" }}>
+        <span className="text-[11px] font-mono" style={{ color: usingVar ? "#22d3ee" : "var(--k-warning)" }}>
           {liveLabel}
         </span>
       </div>
       <SmoothSlider value={speed} onChange={onChange} onLiveChange={setDisp}
         min={-100} max={100} step={5} color={color} disabled={usingVar} />
       <div className="flex justify-between mt-0.5">
-        <span className="text-[8px] text-[var(--k-dim)]">← Reverse</span>
-        <span className="text-[8px] text-[var(--k-dim)]">Forward →</span>
+        <span className="text-[11px] text-[var(--k-dim)]">← Reverse</span>
+        <span className="text-[11px] text-[var(--k-dim)]">Forward →</span>
       </div>
       {onVarChange && <SpeedVarInput value={speedVar ?? ""} onChange={onVarChange} />}
     </div>
@@ -95,11 +95,11 @@ function ServoPinInfo({ servoKey }: { servoKey: ServoKey }) {
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Signal pin - fixed GPIO</span>
-        <span className="text-[9px] font-mono text-[var(--k-warning)]">locked</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Signal pin - fixed GPIO</span>
+        <span className="text-[11px] font-mono text-[var(--k-warning)]">locked</span>
       </div>
       <div className="flex gap-2 mt-0.5">
-        <span className="text-[10px] text-[var(--k-muted)]">GPIO <span className="text-[var(--k-text)] font-mono">{SERVO_PORTS[servoKey].pin}</span></span>
+        <span className="text-[11px] text-[var(--k-muted)]">GPIO <span className="text-[var(--k-text)] font-mono">{SERVO_PORTS[servoKey].pin}</span></span>
       </div>
     </div>
   );
@@ -171,7 +171,7 @@ export function ServoMotorAdvanceNode() {
           <ContinuousSpeed speed={contSpeed} onChange={setContSpeed} color={SERVO_PRIMARY} speedVar={contSpeedVar} onVarChange={setContSpeedVar} />
           <NodeField label="Period (ms)"><NumberInput value={sweepPeriod} onChange={setSweepPeriod} /></NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-            <p className="text-[9px] text-[var(--k-muted)]">Oscillates {Math.abs(contSpeed)}% forward then reverse, {sweepPeriod}ms each way.</p>
+            <p className="text-[11px] text-[var(--k-muted)]">Oscillates {Math.abs(contSpeed)}% forward then reverse, {sweepPeriod}ms each way.</p>
           </div>
         </>
       ) : (
@@ -179,11 +179,11 @@ export function ServoMotorAdvanceNode() {
           {/* Dual dial preview */}
           <div className="flex px-2 gap-2 pb-1">
             <div className="flex flex-col items-center flex-1">
-              <span className="text-[9px] text-[var(--k-muted)] mb-0.5">Start</span>
+              <span className="text-[11px] text-[var(--k-muted)] mb-0.5">Start</span>
               <AngleDial angle={startAngle} onChange={setStartAngle} max={endAngle} color={SERVO_SECONDARY} />
             </div>
             <div className="flex flex-col items-center flex-1">
-              <span className="text-[9px] text-[var(--k-muted)] mb-0.5">End</span>
+              <span className="text-[11px] text-[var(--k-muted)] mb-0.5">End</span>
               <AngleDial angle={endAngle} onChange={setEndAngle} min={startAngle} color={SERVO_PRIMARY} />
             </div>
           </div>
@@ -191,7 +191,7 @@ export function ServoMotorAdvanceNode() {
           <div className="px-3 pb-1">
             <div className="flex items-center justify-between mb-1">
               <span className="text-xs text-[var(--k-muted)] font-medium">Speed</span>
-              <span className="text-[10px] font-mono text-[var(--k-warning)]">{sweepSpeedDisp}%</span>
+              <span className="text-[11px] font-mono text-[var(--k-warning)]">{sweepSpeedDisp}%</span>
             </div>
             <SmoothSlider value={speed} onChange={setSpeed} onLiveChange={setSweepSpeedDisp}
               min={1} max={100} step={1} color={SERVO_PRIMARY} />
@@ -207,7 +207,7 @@ export function ServoMotorAdvanceNode() {
 
           {/* Pattern hint */}
           <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-            <p className="text-[9px] text-[var(--k-muted)] font-mono">
+            <p className="text-[11px] text-[var(--k-muted)] font-mono">
               {bounce
                 ? `${startAngle}° → ${endAngle}° → ${startAngle}°${loop ? " (repeating)" : ""}`
                 : `${startAngle}° → ${endAngle}°${loop ? " (repeating)" : ""}`}
@@ -277,8 +277,8 @@ export function ServoControllerNode() {
             <TextInput value={String(angle ?? "")} onChange={setAngle} />
           </NodeField>
           <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] flex items-center justify-between">
-            <span className="text-[9px] text-[var(--k-muted)]">Pulse @ {String(angle)}°</span>
-            <span className="text-[10px] font-mono text-[var(--k-warning)]">{pulseUs == null ? "auto" : `${pulseUs} µs`}</span>
+            <span className="text-[11px] text-[var(--k-muted)]">Pulse @ {String(angle)}°</span>
+            <span className="text-[11px] font-mono text-[var(--k-warning)]">{pulseUs == null ? "auto" : `${pulseUs} µs`}</span>
           </div>
         </>
       )}
@@ -292,11 +292,11 @@ export function ServoControllerNode() {
         <>
           <div className="px-3 pb-1 flex gap-4">
             <div className="flex flex-col items-center">
-              <span className="text-[9px] text-[var(--k-muted)] mb-0.5">Min</span>
+              <span className="text-[11px] text-[var(--k-muted)] mb-0.5">Min</span>
               <AngleDial angle={sweepMin} onChange={setSweepMin} max={sweepMax} color={SERVO_SECONDARY} />
             </div>
             <div className="flex flex-col items-center">
-              <span className="text-[9px] text-[var(--k-muted)] mb-0.5">Max</span>
+              <span className="text-[11px] text-[var(--k-muted)] mb-0.5">Max</span>
               <AngleDial angle={sweepMax} onChange={setSweepMax} min={sweepMin} color={SERVO_PRIMARY} />
             </div>
           </div>
@@ -306,16 +306,16 @@ export function ServoControllerNode() {
 
       <AdvancedSection>
         <div className="px-3 pt-1 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Pulse Width Fine-tune</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Pulse Width Fine-tune</span>
         </div>
         <NodeField label="Min (µs)"><NumberInput value={pulseMin} onChange={setPulseMin} /></NodeField>
         <NodeField label="Max (µs)"><NumberInput value={pulseMax} onChange={setPulseMax} /></NodeField>
         <div className="mx-3 mb-2 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-          <div className="flex justify-between text-[9px]">
+          <div className="flex justify-between text-[11px]">
             <span className="text-[var(--k-muted)]">{pulseMin} µs @ 0°</span>
             <span className="text-[var(--k-muted)]">{pulseMax} µs @ 180°</span>
           </div>
-          <p className="text-[9px] text-[var(--k-dim)] mt-0.5">Standard: 600–2400 µs · SG90: 500–2400 µs</p>
+          <p className="text-[11px] text-[var(--k-dim)] mt-0.5">Standard: 600–2400 µs · SG90: 500–2400 µs</p>
         </div>
       </AdvancedSection>
     </BaseNode>
@@ -401,7 +401,7 @@ export function MultiServoSequencerNode() {
 
       <AdvancedSection>
       <div className="px-3 pt-2 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Timeline ({keyframes.length} keyframes · {totalDuration}ms)</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Timeline ({keyframes.length} keyframes · {totalDuration}ms)</span>
       </div>
 
       <div className="px-3 pb-1">
@@ -441,19 +441,19 @@ export function MultiServoSequencerNode() {
               : undefined}
           >
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[9px] font-bold text-[var(--k-muted)]">KF {kfIdx + 1} @ {kf.time}ms</span>
+              <span className="text-[11px] font-bold text-[var(--k-muted)]">KF {kfIdx + 1} @ {kf.time}ms</span>
               <button onClick={() => removeKeyframe(kfIdx)}
-                className="nodrag text-[9px] text-[var(--k-dim)] transition-colors px-1 hover:text-[var(--k-error)]"></button>
+                className="nodrag text-[11px] text-[var(--k-dim)] transition-colors px-1 hover:text-[var(--k-error)]" title="Remove keyframe" aria-label="Remove keyframe">×</button>
             </div>
             <div className="flex gap-2">
               {kf.angles.map((a, sIdx) => (
                 <div key={sIdx} className="flex flex-col items-center gap-0.5 flex-1">
-                  <span className="text-[8px] font-bold" style={{ color: SERVO_COLORS[sIdx] }}>S{sIdx + 1}</span>
+                  <span className="text-[11px] font-bold" style={{ color: SERVO_COLORS[sIdx] }}>S{sIdx + 1}</span>
                   <input type="range" min={0} max={180} step={1} value={a}
                     onChange={e => updateAngle(kfIdx, sIdx, Number(e.target.value))}
                     className="nodrag w-full h-1 cursor-pointer"
                     style={{ accentColor: SERVO_COLORS[sIdx] }} />
-                  <span className="text-[9px] font-mono text-[var(--k-muted)]">{a}°</span>
+                  <span className="text-[11px] font-mono text-[var(--k-muted)]">{a}°</span>
                 </div>
               ))}
             </div>
@@ -464,9 +464,9 @@ export function MultiServoSequencerNode() {
       <div className="px-3 pb-1 pt-0.5">
         <div className="rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] p-2">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Preview</span>
+            <span className="text-[11px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Preview</span>
             <button onClick={playing ? stopPlay : startPlay}
-              className="nodrag px-2 py-0.5 rounded text-[9px] font-bold border transition-all"
+              className="nodrag px-2 py-0.5 rounded text-[11px] font-bold border transition-all"
               style={playing
                 ? {
                   borderColor: "color-mix(in srgb, var(--k-error) 40%, transparent)",
@@ -499,7 +499,7 @@ export function MultiServoSequencerNode() {
                     <circle cx={kx} cy={ky} r={3} fill={SERVO_COLORS[i]} />
                     <text x={cx} y={cy + 4} textAnchor="middle" fill="var(--k-text)" fontSize={9} fontFamily="monospace">{a}°</text>
                   </svg>
-                  <span className="text-[8px]" style={{ color: SERVO_COLORS[i] }}>S{i + 1}</span>
+                  <span className="text-[11px]" style={{ color: SERVO_COLORS[i] }}>S{i + 1}</span>
                 </div>
               );
             })}
@@ -509,7 +509,7 @@ export function MultiServoSequencerNode() {
 
       <div className="px-3 pb-2 flex gap-2">
         <button onClick={addKeyframe}
-          className="nodrag flex-1 py-1 rounded-lg border text-[10px] font-bold transition-all"
+          className="nodrag flex-1 py-1 rounded-lg border text-[11px] font-bold transition-all"
           style={{
             borderColor: "color-mix(in srgb, var(--k-primary) 40%, transparent)",
             color: "var(--k-primary)",
@@ -522,7 +522,7 @@ export function MultiServoSequencerNode() {
             const arr = keyframes.map(kf => `{t:${kf.time}, a:[${kf.angles.join(",")}]}`).join(", ");
             navigator.clipboard.writeText(`[${arr}]`).catch(() => {});
           }}
-          className="nodrag flex-1 py-1 rounded-lg border border-[var(--k-border)] text-[var(--k-muted)] text-[10px] font-bold hover:border-[var(--k-dim)] hover:text-[var(--k-text)] transition-all">
+          className="nodrag flex-1 py-1 rounded-lg border border-[var(--k-border)] text-[var(--k-muted)] text-[11px] font-bold hover:border-[var(--k-dim)] hover:text-[var(--k-text)] transition-all">
           Export
         </button>
       </div>
@@ -554,21 +554,21 @@ export function ShadowArmNode() {
   return (
     <BaseNode title="Shadow Arm (Pots)" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">4 pots wired straight to GPIO ADC pins → defines <span className="font-mono text-cyan-400">read_shadow()</span> for the <span className="text-orange-400">Main Arm</span>. Just drop both on the canvas - no loop needed.</p>
+        <p className="text-[11px] text-[var(--k-muted)]">4 pots wired straight to GPIO ADC pins → defines <span className="font-mono text-cyan-400">read_shadow()</span> for the <span className="text-orange-400">Main Arm</span>. Just drop both on the canvas - no loop needed.</p>
       </div>
       <NodeField label="Variable prefix">
         <TextInput value={prefix} onChange={setPrefix}  />
       </NodeField>
 
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → GPIO pin</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → GPIO pin</span>
       </div>
       {[0, 1, 2, 3].map(i => (
         <NodeField key={i} label={`${pre}${i + 1} · ${JOINT_NAMES[i]}`}>
           <div className="flex items-center gap-1.5">
             <NumberInput value={potPins[i]} onChange={v => setPin(i, Math.max(0, Math.round(v)))} />
             <button onClick={() => toggleInv(i)} title="Invert direction"
-              className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+              className={`nodrag px-1.5 py-0.5 rounded text-[11px] font-bold border transition-all ${
                 shadowInv[i] ? "border-cyan-500/50 text-cyan-400 bg-cyan-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
               }`}>⇄</button>
           </div>
@@ -577,30 +577,30 @@ export function ShadowArmNode() {
 
       <AdvancedSection>
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] text-[var(--k-muted)]">Pots read via <span className="font-mono text-[var(--k-text)]">read_u16()</span> (0–65535, 11 dB atten). Default pins 4/5/1/2 = the two sensor ports.</span>
+          <span className="text-[11px] text-[var(--k-muted)]">Pots read via <span className="font-mono text-[var(--k-text)]">read_u16()</span> (0–65535, 11 dB atten). Default pins 4/5/1/2 = the two sensor ports.</span>
         </div>
         <div className="px-3 pt-1 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Calibration (ADC min → max)</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Calibration (ADC min → max)</span>
         </div>
         {[0, 1, 2, 3].map(i => (
           <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
-            <span className="text-[9px] w-7 text-[var(--k-muted)] font-mono">{pre}{i + 1}</span>
+            <span className="text-[11px] w-7 text-[var(--k-muted)] font-mono">{pre}{i + 1}</span>
             <NumberInput value={potMin[i]} onChange={v => setMin(i, v)} />
-            <span className="text-[8px] text-[var(--k-dim)]">→</span>
+            <span className="text-[11px] text-[var(--k-dim)]">→</span>
             <NumberInput value={potMax[i]} onChange={v => setMax(i, v)} />
           </div>
         ))}
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-[var(--k-muted)] font-medium">Smoothing</span>
-            <span className="text-[10px] font-mono text-cyan-400">{alpha}%</span>
+            <span className="text-[11px] font-mono text-cyan-400">{alpha}%</span>
           </div>
           <input type="range" min={1} max={100} step={1} value={alpha}
             onChange={e => setAlpha(Number(e.target.value))}
             className="nodrag w-full h-1 cursor-pointer" style={{ accentColor: COLORS.cyan }} />
           <div className="flex justify-between mt-0.5">
-            <span className="text-[8px] text-[var(--k-dim)]">Smoother</span>
-            <span className="text-[8px] text-[var(--k-dim)]">Snappier</span>
+            <span className="text-[11px] text-[var(--k-dim)]">Smoother</span>
+            <span className="text-[11px] text-[var(--k-dim)]">Snappier</span>
           </div>
         </div>
         <NodeField label="Oversampling">
@@ -610,7 +610,7 @@ export function ShadowArmNode() {
           <NumberInput value={deadband} onChange={v => setDeadband(Math.max(0, Math.round(v)))} />
         </NodeField>
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-          <p className="text-[9px] text-[var(--k-muted)]">More oversampling = less noise but slower. Deadband stops servo buzz when holding still. ⇄ flips a joint's direction.</p>
+          <p className="text-[11px] text-[var(--k-muted)]">More oversampling = less noise but slower. Deadband stops servo buzz when holding still. ⇄ flips a joint's direction.</p>
         </div>
       </AdvancedSection>
     </BaseNode>
@@ -632,7 +632,7 @@ export function ArmCalibrationNode() {
   return (
     <BaseNode title="Arm Calibration" color={COLORS.cyan} icon={<MotorIcon />} width="260px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-cyan-500/30 bg-cyan-500/5">
-        <p className="text-[9px] text-[var(--k-muted)]">Run this <span className="text-cyan-400 font-bold">once, alone</span>. Sweep each joint fully both ways, then tap BTN{calBtnPin} to lock. Saves <span className="font-mono text-cyan-400">/shadow_calib.json</span> - the Shadow Arm loads it automatically. Watch values on the <span className="text-cyan-400">dashboard</span>.</p>
+        <p className="text-[11px] text-[var(--k-muted)]">Run this <span className="text-cyan-400 font-bold">once, alone</span>. Sweep each joint fully both ways, then tap BTN{calBtnPin} to lock. Saves <span className="font-mono text-cyan-400">/shadow_calib.json</span> - the Shadow Arm loads it automatically. Watch values on the <span className="text-cyan-400">dashboard</span>.</p>
       </div>
       <NodeField label="Variable prefix">
         <TextInput value={prefix} onChange={setPrefix} />
@@ -641,7 +641,7 @@ export function ArmCalibrationNode() {
         <NumberInput value={calBtnPin} onChange={v => setCalBtnPin(Math.max(0, Math.round(v)))} />
       </NodeField>
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → GPIO pin</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → GPIO pin</span>
       </div>
       {[0, 1, 2, 3].map(i => (
         <NodeField key={i} label={`${pre}${i + 1} · ${JOINT_NAMES[i]}`}>
@@ -649,7 +649,7 @@ export function ArmCalibrationNode() {
         </NodeField>
       ))}
       <div className="mx-3 my-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">Pins must match your Shadow Arm node. After the last joint locks, re-flash your normal program.</p>
+        <p className="text-[11px] text-[var(--k-muted)]">Pins must match your Shadow Arm node. After the last joint locks, re-flash your normal program.</p>
       </div>
     </BaseNode>
   );
@@ -677,7 +677,7 @@ function ArmServoConfig({ pre }: { pre: string }) {
   return (
     <>
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → servo port</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Joint → servo port</span>
       </div>
       {[0, 1, 2, 3].map(i => (
         <NodeField key={i} label={`${pre}${i + 1}`}>
@@ -687,16 +687,16 @@ function ArmServoConfig({ pre }: { pre: string }) {
       <NodeField label="Frame rate (ms)"><NumberInput value={frameMs} onChange={v => setFrameMs(Math.max(5, v))} /></NodeField>
       <NodeField label="Slew limit (°/frame)"><NumberInput value={slew} onChange={v => setSlew(Math.max(0, Math.round(v)))} /></NodeField>
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Servo limits (lo / hi / invert)</span>
       </div>
       {[0, 1, 2, 3].map(i => (
         <div key={i} className="px-3 pb-1 flex items-center gap-1.5">
-          <span className="text-[9px] w-12 text-[var(--k-muted)] font-mono">{pre}{i + 1}·{servoPorts[i]}</span>
+          <span className="text-[11px] w-12 text-[var(--k-muted)] font-mono">{pre}{i + 1}·{servoPorts[i]}</span>
           <NumberInput value={servoLo[i]} onChange={v => setLo(i, Math.max(0, Math.min(180, v)))} />
-          <span className="text-[8px] text-[var(--k-dim)]">→</span>
+          <span className="text-[11px] text-[var(--k-dim)]">→</span>
           <NumberInput value={servoHi[i]} onChange={v => setHi(i, Math.max(0, Math.min(180, v)))} />
           <button onClick={() => toggleInv(i)}
-            className={`nodrag px-1.5 py-0.5 rounded text-[9px] font-bold border transition-all ${
+            className={`nodrag px-1.5 py-0.5 rounded text-[11px] font-bold border transition-all ${
               servoInv[i] ? "border-orange-500/50 text-orange-400 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-dim)]"
             }`}>⇄</button>
         </div>
@@ -720,7 +720,7 @@ export function MainArmNode() {
   return (
     <BaseNode title="Main Arm" color={COLORS.orange} icon={<MotorIcon />} width="270px">
       <div className="mx-3 mb-1.5 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)]">One node: <b>Live</b> by default. BTN1 tap → record, BTN2 → capture a point, BTN1 tap → save, BTN1 hold &gt;3s → play. Status shows on the OLED.</p>
+        <p className="text-[11px] text-[var(--k-muted)]">One node: <b>Live</b> by default. BTN1 tap → record, BTN2 → capture a point, BTN1 tap → save, BTN1 hold &gt;3s → play. Status shows on the OLED.</p>
       </div>
 
       <NodeField label="Variable prefix"><TextInput value={prefix} onChange={setPrefix} /></NodeField>
@@ -732,20 +732,20 @@ export function MainArmNode() {
       <NodeField label="BTN2 (capture point)"><NumberInput value={btn2Pin} onChange={v => setBtn2Pin(Math.max(0, Math.round(v)))} /></NodeField>
 
       <div className="mx-3 my-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
-        <p className="text-[9px] text-[var(--k-muted)] leading-relaxed">Buttons are active-low (to GND). Each leg moves over <b>{(moveMs / 1000).toFixed(1)}s</b> with all servos arriving together.</p>
+        <p className="text-[11px] text-[var(--k-muted)] leading-relaxed">Buttons are active-low (to GND). Each leg moves over <b>{(moveMs / 1000).toFixed(1)}s</b> with all servos arriving together.</p>
       </div>
 
       <AdvancedSection>
         <NodeField label="Move time (ms / leg)"><NumberInput value={moveMs} onChange={v => setMoveMs(Math.max(100, Math.round(v)))} /></NodeField>
         <div className="px-3 pt-1 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">OLED display</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">OLED display</span>
         </div>
         <NodeField label="Driver">
           <ToggleInput value={oledDriver} onChange={setOledDriver} leftLabel="SH1106" rightLabel="SSD1306" />
         </NodeField>
         <NodeField label="OLED address"><TextInput value={oledAddress} onChange={setOledAddress} /></NodeField>
         <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] text-[var(--k-muted)]">OLED bus - SCL <span className="font-mono text-[var(--k-text)]">{OLED.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{OLED.sda}</span> (shared with ADS)</span>
+          <span className="text-[11px] text-[var(--k-muted)]">OLED bus - SCL <span className="font-mono text-[var(--k-text)]">{OLED.scl}</span> · SDA <span className="font-mono text-[var(--k-text)]">{OLED.sda}</span> (shared with ADS)</span>
         </div>
         <ArmServoConfig pre={pre} />
       </AdvancedSection>
@@ -793,11 +793,11 @@ export function ServoCalibrationNode() {
     } width="280px">
       <div className="mx-3 mb-2 px-2.5 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
         <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Canvas Servo Nodes</span>
-          <span className="text-[10px] font-mono text-[var(--k-accent)]">{servoNodes.length} found</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Canvas Servo Nodes</span>
+          <span className="text-[11px] font-mono text-[var(--k-accent)]">{servoNodes.length} found</span>
         </div>
         {servoNodes.length === 0 && (
-          <p className="text-[10px] text-[var(--k-dim)] mt-1">Add Servo Motor or Servo Controller nodes to the canvas.</p>
+          <p className="text-[11px] text-[var(--k-dim)] mt-1">Add Servo Motor or Servo Controller nodes to the canvas.</p>
         )}
       </div>
 
@@ -823,7 +823,7 @@ export function ServoCalibrationNode() {
       {servoNodes.length > 0 && (
         <>
           <div className="px-3 pb-0.5">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Individual Override</span>
+            <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Individual Override</span>
           </div>
           <div className="max-h-56 overflow-y-auto px-3 pb-2 flex flex-col gap-2">
             {servoNodes.map(n => {
@@ -832,10 +832,10 @@ export function ServoCalibrationNode() {
               return (
                 <div key={n.id} className="rounded-lg border border-[var(--k-border)] bg-[var(--k-base-300)] p-2">
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-[var(--k-text)]">{portLabel(n)}</span>
+                    <span className="text-[11px] font-bold text-[var(--k-text)]">{portLabel(n)}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[9px] font-mono text-[var(--k-accent)]">{pulse} µs</span>
-                      <span className="text-[10px] font-mono text-[var(--k-warning)]">{a}°</span>
+                      <span className="text-[11px] font-mono text-[var(--k-accent)]">{pulse} µs</span>
+                      <span className="text-[11px] font-mono text-[var(--k-warning)]">{a}°</span>
                     </div>
                   </div>
                   <input type="range" min={0} max={180} step={1} value={a}
@@ -853,7 +853,7 @@ export function ServoCalibrationNode() {
           borderColor: "color-mix(in srgb, var(--k-warning) 20%, transparent)",
           backgroundColor: "color-mix(in srgb, var(--k-warning) 5%, transparent)",
         }}>
-        <p className="text-[9px]" style={{ color: "color-mix(in srgb, var(--k-warning) 80%, var(--k-text) 20%)" }}>
+        <p className="text-[11px]" style={{ color: "color-mix(in srgb, var(--k-warning) 80%, var(--k-text) 20%)" }}>
           Compile-time utility only - does not generate runtime code.
         </p>
       </div>

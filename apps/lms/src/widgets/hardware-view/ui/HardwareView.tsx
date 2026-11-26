@@ -1,10 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ReactFlow, ReactFlowProvider, Background, BackgroundVariant, MiniMap,
-  useNodesState, useEdgesState, addEdge,
+  useNodesState, useEdgesState, addEdge, useEdges, useUpdateNodeInternals,
   type Node, type Edge, type Connection, type NodeTypes,
   Handle, Position, useReactFlow,
 } from "@xyflow/react";
+import { ArduinoUnoSvg, Esp32DevKitSvg } from "./BoardArt";
+import {
+  BOARD_LAYOUTS, PIN_WIRING, wiresFor, dataForPin, pinForGpio, pinTitle,
+  type BoardLayout, type PinSide, type Wire,
+} from "../model/boardPins";
 import "@xyflow/react/dist/style.css";
 import { motion, AnimatePresence } from "framer-motion";
 import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
@@ -247,25 +252,141 @@ function IMUImg() {
   );
 }
 
+function LedImg() {
+  return (
+    <svg viewBox="0 0 70 90" className="w-full h-full">
+      <path d="M29 58V88M41 58V80" stroke="#b0bec5" strokeWidth="3" strokeLinecap="round"/>
+      <path d="M17 58V30a18 18 0 0 1 36 0V58Z" fill="#e53935" stroke="#b71c1c" strokeWidth="1.5"/>
+      <rect x="13" y="56" width="44" height="7" rx="2" fill="#c62828"/>
+      <path d="M25 30a10 10 0 0 1 8-10" fill="none" stroke="#ffcdd2" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
+    </svg>
+  );
+}
+
+function RelayImg() {
+  return (
+    <svg viewBox="0 0 120 75" className="w-full h-full">
+      <rect x="2" y="4" width="116" height="62" rx="3" fill="#b71c1c" stroke="#7f0000" strokeWidth="1.5"/>
+      <rect x="34" y="10" width="56" height="50" rx="3" fill="#1565c0" stroke="#0d47a1" strokeWidth="1.5"/>
+      <text x="62" y="32" textAnchor="middle" fontSize="8" fill="white" fontFamily="Arial" fontWeight="bold">SRD-05VDC</text>
+      <text x="62" y="44" textAnchor="middle" fontSize="6" fill="#bbdefb" fontFamily="Arial">10A 250VAC</text>
+      <rect x="96" y="14" width="16" height="42" rx="2" fill="#1e88e5" stroke="#0d47a1" strokeWidth="1"/>
+      {[22,35,48].map(y=><circle key={y} cx="104" cy={y} r="4" fill="#cfd8dc" stroke="#78909c" strokeWidth="1"/>)}
+      {[20,35,50].map(y=><rect key={y} x="8" y={y-3} width="12" height="6" fill="#ffd700"/>)}
+      <circle cx="26" cy="14" r="3" fill="#00e676"/>
+    </svg>
+  );
+}
+
+function BuzzerImg() {
+  return (
+    <svg viewBox="0 0 80 80" className="w-full h-full">
+      <circle cx="40" cy="40" r="34" fill="#212121" stroke="#000" strokeWidth="2"/>
+      <circle cx="40" cy="40" r="27" fill="#2b2b2b"/>
+      <circle cx="40" cy="40" r="6" fill="#050505" stroke="#424242" strokeWidth="1.5"/>
+      <text x="22" y="24" fontSize="12" fill="#bdbdbd" fontFamily="Arial" fontWeight="bold">+</text>
+    </svg>
+  );
+}
+
+function DhtImg() {
+  return (
+    <svg viewBox="0 0 70 95" className="w-full h-full">
+      {[23,35,47].map(x=><rect key={x} x={x-1.5} y="64" width="3" height="28" fill="#b0bec5"/>)}
+      <rect x="10" y="4" width="50" height="62" rx="3" fill="#29b6f6" stroke="#0277bd" strokeWidth="1.5"/>
+      {[14,24,34].map(y=>[20,30,40,50].map(x=>(
+        <rect key={`${x}-${y}`} x={x-3.5} y={y} width="7" height="6" rx="1" fill="#01579b"/>
+      )))}
+      <text x="35" y="58" textAnchor="middle" fontSize="8" fill="white" fontFamily="Arial" fontWeight="bold">DHT11</text>
+    </svg>
+  );
+}
+
+function PirImg() {
+  return (
+    <svg viewBox="0 0 100 80" className="w-full h-full">
+      <rect x="6" y="6" width="88" height="66" rx="3" fill="#1b5e20" stroke="#0b3d0f" strokeWidth="1.5"/>
+      <rect x="22" y="12" width="56" height="54" rx="4" fill="#fafafa" stroke="#bdbdbd" strokeWidth="1"/>
+      <circle cx="50" cy="39" r="24" fill="#f5f5f5" stroke="#bdbdbd" strokeWidth="1.5"/>
+      <path d="M30 28Q50 18 70 28M27 39H73M30 50Q50 60 70 50M50 15V63M38 18Q32 39 38 60M62 18Q68 39 62 60" fill="none" stroke="#cfd8dc" strokeWidth="1"/>
+    </svg>
+  );
+}
+
+function LcdImg() {
+  return (
+    <svg viewBox="0 0 130 70" className="w-full h-full">
+      <rect x="2" y="4" width="126" height="58" rx="3" fill="#1b5e20" stroke="#0b3d0f" strokeWidth="1.5"/>
+      <rect x="10" y="12" width="110" height="42" rx="2" fill="#111" />
+      <rect x="14" y="16" width="102" height="34" rx="1" fill="#1e40af"/>
+      <text x="18" y="30" fontSize="9" fill="#e0f2fe" fontFamily="monospace">Hello</text>
+      <text x="18" y="44" fontSize="9" fill="#e0f2fe" fontFamily="monospace">World</text>
+      {[7,123].map(x=>[9,57].map(y=><circle key={`${x}-${y}`} cx={x} cy={y} r="2.5" fill="#cfd8dc"/>))}
+    </svg>
+  );
+}
+
+/** Generic breakout board for parts that have no drawing of their own. */
+function ModuleImg({ text }: { text: string }) {
+  return (
+    <svg viewBox="0 0 110 65" className="w-full h-full">
+      <rect x="2" y="3" width="106" height="52" rx="3" fill="#4a148c" stroke="#311b92" strokeWidth="1.5"/>
+      <rect x="30" y="12" width="50" height="26" rx="2" fill="#0d1117" stroke="#30363d" strokeWidth="0.8"/>
+      <text x="55" y="29" textAnchor="middle" fontSize="8" fill="#ce93d8" fontFamily="monospace" fontWeight="bold">{text}</text>
+      {[35,45,55,65,75].map(x=><rect key={x} x={x-2} y="44" width="4" height="8" fill="#ffd700"/>)}
+      <circle cx="12" cy="13" r="4" fill="#1a1a1a" stroke="#b39ddb" strokeWidth="1"/>
+      <circle cx="98" cy="13" r="4" fill="#00e676"/>
+    </svg>
+  );
+}
+const GasImg = () => <ModuleImg text="MQ-2" />;
+const RainImg = () => <ModuleImg text="RAIN" />;
+const WaterImg = () => <ModuleImg text="WATER" />;
+const SoundImg = () => <ModuleImg text="SOUND" />;
+const TouchImg = () => <ModuleImg text="TTP223" />;
+const RtcImg = () => <ModuleImg text="DS3231" />;
+
 // ─── Component catalogue ──────────────────────────────────────────────────────
 
 interface HwComponent {
   id: string; label: string; nodeType: string;
   icon: React.ComponentType; defaultData: Record<string, unknown>;
   portHint: string; color: string; compatiblePorts: string[];
+  /** Offered only on boards with per-pin anchors (Arduino Uno, ESP32). */
+  pinOnly?: boolean;
+  /** Other block types drawn as this part on those boards. */
+  also?: string[];
 }
 
 const HW_COMPONENTS: HwComponent[] = [
-  { id:"ultrasonic", label:"Ultrasonic",    nodeType:"ultrasonic",      icon:UltrasonicImg, defaultData:{port:"1"},                                  portHint:"Sensor 1 / 2",  color:"#7c3aed", compatiblePorts:["sensor1","sensor2"] },
+  { id:"ultrasonic", label:"Ultrasonic",    nodeType:"ultrasonic",      icon:UltrasonicImg, defaultData:{port:"1"},                                  portHint:"Sensor 1 / 2",  color:"#7c3aed", compatiblePorts:["sensor1","sensor2"], also:["ultrasonic_sensor"] },
   { id:"ir_sensor",  label:"IR Sensor",     nodeType:"ir_sensor",       icon:IRSensorImg,   defaultData:{},                                          portHint:"GPIO",          color:"#ea580c", compatiblePorts:["gpio"] },
-  { id:"button",     label:"Push Button",   nodeType:"push_button",     icon:ButtonImg,     defaultData:{},                                          portHint:"GPIO",          color:"#2563eb", compatiblePorts:["gpio"] },
+  { id:"button",     label:"Push Button",   nodeType:"push_button",     icon:ButtonImg,     defaultData:{},                                          portHint:"GPIO",          color:"#2563eb", compatiblePorts:["gpio"], also:["button_digital_input"] },
   { id:"soil",       label:"Soil Moisture", nodeType:"soil_moisture",   icon:SoilImg,       defaultData:{port:"1"},                                  portHint:"Sensor 1 / 2",  color:"#16a34a", compatiblePorts:["sensor1","sensor2"] },
-  { id:"analog",     label:"Analog Sensor", nodeType:"analog_sensor",   icon:AnalogImg,     defaultData:{port:"1"},                                  portHint:"Sensor 1 / 2",  color:"#0284c7", compatiblePorts:["sensor1","sensor2"] },
+  { id:"analog",     label:"Analog Sensor", nodeType:"analog_sensor",   icon:AnalogImg,     defaultData:{port:"1"},                                  portHint:"Sensor 1 / 2",  color:"#0284c7", compatiblePorts:["sensor1","sensor2"], also:["adc"] },
   { id:"imu",        label:"IMU Sensor",    nodeType:"imu_sensor",      icon:IMUImg,        defaultData:{scl:ONBOARD_IMU.scl,sda:ONBOARD_IMU.sda},  portHint:"IMU",           color:"#0891b2", compatiblePorts:["imu"] },
   { id:"oled",       label:"OLED 128×64",   nodeType:"oled_display",    icon:OLEDImg,       defaultData:{scl:OLED.scl,sda:OLED.sda},                portHint:"OLED / I2C",    color:"#4f46e5", compatiblePorts:["oled","i2c2"] },
   { id:"neopixel",   label:"NeoPixel",      nodeType:"neopixel_led",    icon:NeoPixelImg,   defaultData:{pin:NEOPIXEL.pin},                         portHint:"NeoPixel",      color:"#9333ea", compatiblePorts:["neopixel"] },
   { id:"dc_motor",   label:"DC Motor",      nodeType:"dc_motor_single", icon:MotorImg,      defaultData:{},                                          portHint:"Motor FR–RL",   color:"#dc2626", compatiblePorts:["motor_fr","motor_fl","motor_rr","motor_rl"] },
   { id:"servo",      label:"Servo Motor",   nodeType:"servo_motor",     icon:ServoImg,      defaultData:{},                                          portHint:"Servo S1–S4",   color:"#d97706", compatiblePorts:["servo_s1","servo_s2","servo_s3","servo_s4"] },
+  // Parts below are wired pin by pin, so they exist only on the Arduino Uno and ESP32.
+  ...([
+    ["led",    "LED",              "led",          LedImg,    "#dc2626"],
+    ["relay",  "Relay",            "relay",        RelayImg,  "#ea580c"],
+    ["buzzer", "Buzzer",           "buzzer_tone",  BuzzerImg, "#64748b"],
+    ["dht11",  "DHT11 Temp / Hum", "dht11",        DhtImg,    "#0ea5e9"],
+    ["ldr",    "Light Sensor LDR", "ldr_sensor",   AnalogImg, "#ca8a04"],
+    ["gas",    "Gas Sensor",       "gas_sensor",   GasImg,    "#9333ea"],
+    ["pir",    "PIR Motion",       "pir_motion",   PirImg,    "#16a34a"],
+    ["lcd",    "LCD 16x2 (I2C)",   "lcd_16x2",     LcdImg,    "#2563eb"],
+    ["rain",   "Rain Sensor",      "rain_sensor",  RainImg,   "#0284c7"],
+    ["water",  "Water Level",      "water_level",  WaterImg,  "#0891b2"],
+    ["sound",  "Sound Sensor",     "sound_sensor", SoundImg,  "#db2777"],
+    ["touch",  "Touch Sensor",     "touch_sensor", TouchImg,  "#7c3aed"],
+    ["rtc",    "Clock (DS3231)",   "rtc_time",     RtcImg,    "#0d9488"],
+  ] as const).map(([id, label, nodeType, icon, color]): HwComponent => ({
+    id, label, nodeType, icon, color, defaultData: {}, portHint: "", compatiblePorts: [], pinOnly: true,
+  })),
 ];
 
 // ─── Board port positions ─────────────────────────────────────────────────────
@@ -297,51 +418,80 @@ const BOARD_PORTS: BoardPort[] = [
 
 // ─── Board node - uses real Kokoon Labs PCB image ─────────────────────────────
 
-// Ports that only exist on the Kokoon PCB (onboard motor drivers + LED ring).
-const KOKOON_ONLY_PORTS = /^(motor_|neopixel)/;
+const BOARD_ART: Record<string, React.ComponentType> = { arduino_uno: ArduinoUnoSvg, esp32: Esp32DevKitSvg };
+const SIDE_POSITION: Record<PinSide, Position> = {
+  top: Position.Top, bottom: Position.Bottom, left: Position.Left, right: Position.Right,
+};
+
+/** What a wire carries, kept on the edge so the pin's tooltip can name it. */
+type WireInfo = { part: string; role: string };
+
+/** Arduino Uno / ESP32: the drawn board with one anchor on every usable pin. */
+function PinBoard({ layout, Art }: { layout: BoardLayout; Art: React.ComponentType }) {
+  const wired = new Map(useEdges().map((e) => [e.targetHandle, e]));
+  return (
+    <div
+      className="relative select-none"
+      style={{
+        width: layout.w * layout.scale, height: layout.h * layout.scale,
+        filter: "drop-shadow(0 8px 18px rgba(0,0,0,0.45))",
+      }}
+    >
+      <Art />
+      {layout.pins.filter((p) => p.gpio !== undefined).map((pin) => {
+        const edge = wired.get(pin.id);
+        const info = edge?.data as WireInfo | undefined;
+        const title = pinTitle(pin) + (info ? `: ${info.part}${info.role ? ` ${info.role}` : ""}` : "");
+        const color = (edge?.style?.stroke as string | undefined) ?? "#fbbf24";
+        return (
+          <Handle
+            key={pin.id}
+            type="target"
+            id={pin.id}
+            position={SIDE_POSITION[pin.side]}
+            title={title}
+            aria-label={title}
+            style={{
+              // Same numbers the SVG draws the pin hole from.
+              left: `${(pin.x / layout.w) * 100}%`,
+              top: `${(pin.y / layout.h) * 100}%`,
+              transform: "translate(-50%, -50%)",
+              width: 13, height: 13,
+              background: edge ? color : "rgba(251,191,36,0.18)",
+              border: `2px solid ${color}`,
+              boxShadow: edge ? `0 0 8px ${color}` : "none",
+              zIndex: 10,
+            }}
+          />
+        );
+      })}
+    </div>
+  );
+}
 
 function BoardNode() {
   const board = useBoard();
-  const isKokoon = board.id === "kokoon";
+  const layout = BOARD_LAYOUTS[board.id];
+  // The handles change with the board: React Flow must re-measure them.
+  const updateNodeInternals = useUpdateNodeInternals();
+  useEffect(() => { updateNodeInternals("board"); }, [board.id, updateNodeInternals]);
+
+  if (layout) return <PinBoard layout={layout} Art={BOARD_ART[board.id]} />;
   return (
     <div className="relative select-none" style={{width:480,height:480}}>
-      {isKokoon ? (
-        <img
-          src="/assets/kokoon-board.png"
-          alt="Kokoon Labs Board"
-          draggable={false}
-          style={{
-            width:"100%", height:"100%",
-            objectFit:"contain",
-            userSelect:"none", pointerEvents:"none",
-            filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.7))",
-          }}
-        />
-      ) : (
-        // Generic boards: a plain labelled board, ports named instead of drawn.
-        <div className="absolute inset-[4%] rounded-3xl border-2 flex flex-col items-center justify-center gap-1"
-          style={{
-            background: board.runtime === "arduino" ? "#0f766e" : "#1e293b",
-            borderColor: "rgba(255,255,255,0.18)",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.6)",
-          }}>
-          <span className="text-2xl font-black tracking-tight text-white">{board.label}</span>
-          <span className="text-xs font-semibold uppercase tracking-widest text-white/60">{board.chip}</span>
-          {BOARD_PORTS.filter((p) => !KOKOON_ONLY_PORTS.test(p.id)).map((p) => (
-            <span key={p.id} className="absolute text-[10px] font-bold text-white/80 whitespace-nowrap"
-              style={{
-                left: `${p.x}%`, top: `${p.y + (p.side === Position.Top ? 6 : -7)}%`,
-                transform: "translate(-50%, -50%)",
-              }}>
-              {p.id.startsWith("servo_") ? p.label.slice(6) : p.label}
-            </span>
-          ))}
-        </div>
-      )}
+      <img
+        src="/assets/kokoon-board.png"
+        alt="Kokoon Labs Board"
+        draggable={false}
+        style={{
+          width:"100%", height:"100%",
+          objectFit:"contain",
+          userSelect:"none", pointerEvents:"none",
+          filter:"drop-shadow(0 8px 24px rgba(0,0,0,0.7))",
+        }}
+      />
 
-      {/* Kokoon-only ports are not rendered on other boards: an invisible handle
-          would still accept wires that end in empty space. */}
-      {BOARD_PORTS.filter((p) => isKokoon || !KOKOON_ONLY_PORTS.test(p.id)).map((port)=>(
+      {BOARD_PORTS.map((port)=>(
         <Handle
           key={port.id}
           type="target"
@@ -366,7 +516,10 @@ function BoardNode() {
 
 // ─── Component node - bare floating image, no card wrapper ───────────────────
 
-function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; color: string; enabled?: boolean } }) {
+/** Pin boards only: the block a part stands for, so toggling it back on restores its pins. */
+type LogicRef = { type: string; data: Record<string, unknown> };
+
+function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; color: string; enabled?: boolean; logic?: LogicRef; side?: PinSide } }) {
   const Icon = data.hwComp.icon;
   const { setNodes, getEdges } = useReactFlow();
   const enabled = data.enabled !== false;
@@ -389,9 +542,9 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
       const portId = edge?.targetHandle ?? "";
       if (portId && _canvasRefGlobal?.current) {
         const factory = PORT_TO_NODE[portId];
-        const { type, data: nodeData } = factory
+        const { type, data: nodeData } = data.logic ?? (factory
           ? factory(data.hwComp)
-          : { type: data.hwComp.nodeType, data: data.hwComp.defaultData };
+          : { type: data.hwComp.nodeType, data: data.hwComp.defaultData });
         const logicId = _canvasRefGlobal.current.addNode(type, nodeData as Record<string, unknown>) ?? "";
         _hwToLogic[id] = logicId;
         _logicToHw[logicId] = id;
@@ -401,7 +554,7 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
     }
 
     setNodes(ns => ns.map(n => n.id === id ? { ...n, data: { ...n.data, enabled: newEnabled } } : n));
-  }, [id, enabled, data.hwComp, getEdges, setNodes]);
+  }, [id, enabled, data.hwComp, data.logic, getEdges, setNodes]);
 
   const isWired = getEdges().some(e => e.source === id);
 
@@ -487,7 +640,8 @@ function ComponentNode({ id, data }: { id: string; data: { hwComp: HwComponent; 
           tall), so it lines up with the component art regardless of label height. */}
       <Handle
         type="source"
-        position={Position.Right}
+        // Parts placed to the right of a pin board face it, so the wire does not cross the part.
+        position={data.side === "right" ? Position.Left : Position.Right}
         style={{
           background: data.color,
           width: 14, height: 14,
@@ -528,8 +682,13 @@ const PORT_TO_NODE: Record<string, (c: HwComponent) => { type: string; data: Rec
 // ─── nodeType → HwComponent lookup (for blocks→hardware sync) ─────────────────
 
 const _nodeTypeToHwComp: Record<string, HwComponent> = {};
+// Same lookup for boards with per-pin anchors: more parts, plus block aliases.
+const _pinComp: Record<string, HwComponent> = {};
 for (const comp of HW_COMPONENTS) {
-  _nodeTypeToHwComp[comp.nodeType] = comp;
+  if (!comp.pinOnly) _nodeTypeToHwComp[comp.nodeType] = comp;
+  for (const type of [comp.nodeType, ...(comp.also ?? [])]) {
+    if (PIN_WIRING[type]) _pinComp[type] = comp;
+  }
 }
 
 // ─── Port auto-assignment helpers ─────────────────────────────────────────────
@@ -617,23 +776,101 @@ export function isFlowSyncSuppressed(logicId: string): boolean {
   return false;
 }
 
+// ─── Boards with per-pin anchors (Arduino Uno, ESP32) ─────────────────────────
+
+// Board the hardware canvas was last built for. Handle ids differ per board.
+let _boardId: string | null = null;
+
+// Update the module copy at once (several parts can be added in one pass,
+// before React re-renders) and the mounted canvas if there is one.
+function _applyNodes(fn: (ns: Node[]) => Node[]) { _nodes = fn(_nodes); _setNodesRef?.(fn); }
+function _applyEdges(fn: (es: Edge[]) => Edge[]) { _edges = fn(_edges); _setEdgesRef?.(fn); }
+
+/** Board changed: wires point at handles that no longer exist. Drop every mirrored part; the caller re-adds them. */
+function _syncBoard() {
+  const id = getBoard().id;
+  if (_boardId === id) return;
+  const first = _boardId === null;
+  _boardId = id;
+  if (first) return;
+  const stale = new Set(Object.keys(_hwToLogic));
+  _hwToLogic = {};
+  _logicToHw = {};
+  _usedPorts = new Set();
+  _applyNodes(ns => ns.filter(n => !stale.has(n.id)));
+  _applyEdges(() => []);
+}
+
+/** One wire per pin the part uses. A pin the board does not have gets no wire. */
+function _pinEdges(hwId: string, comp: HwComponent, wires: Wire[], layout: BoardLayout): Edge[] {
+  const edges: Edge[] = [];
+  for (const w of wires) {
+    const pin = pinForGpio(layout, w.gpio);
+    if (!pin || edges.some(e => e.targetHandle === pin.id)) continue;
+    edges.push({
+      id: `e_${hwId}_${pin.id}`,
+      source: hwId, target: "board",
+      sourceHandle: null, targetHandle: pin.id,
+      animated: true,
+      style: { stroke: comp.color, strokeWidth: 2.5 },
+      data: { part: comp.label, role: w.label } satisfies WireInfo,
+    });
+  }
+  return edges;
+}
+
+/** Next free slot beside the edge of the board the part's first pin is on. */
+function _pinAutoPosition(side: PinSide, layout: BoardLayout): { x: number; y: number } {
+  const k = _nodes.filter(n => n.type === "hw_component" && n.data.side === side).length;
+  const { x, y } = BOARD_NODE.position;
+  const w = layout.w * layout.scale;
+  const h = layout.h * layout.scale;
+  switch (side) {
+    case "top":    return { x: x + k * 150, y: y - 180 };
+    case "bottom": return { x: x + k * 150, y: y + h + 70 };
+    case "left":   return { x: x - 230, y: y + k * 130 };
+    case "right":  return { x: x + w + 110, y: y + k * 130 };
+  }
+}
+
+function _addPinHwNode(logicId: string, nodeType: string, data: Record<string, unknown>, layout: BoardLayout): void {
+  const hwComp = _pinComp[nodeType];
+  if (!hwComp) return; // Not drawn on this board
+  const hwId = `hw_${crypto.randomUUID().slice(0, 8)}`;
+  const edges = _pinEdges(hwId, hwComp, wiresFor(nodeType, data, getBoard()), layout);
+  if (!edges.length) return; // No pin to attach to: no part rather than a dangling one
+  const side = layout.pins.find(p => p.id === edges[0].targetHandle)?.side ?? "right";
+  const newNode: Node = {
+    id: hwId, type: "hw_component",
+    position: _pinAutoPosition(side, layout),
+    data: { hwComp, label: hwComp.label, color: hwComp.color, enabled: true, side, logic: { type: nodeType, data } satisfies LogicRef },
+  };
+  _logicToHw[logicId] = hwId;
+  _hwToLogic[hwId] = logicId;
+  _applyNodes(ns => [...ns, newNode]);
+  _applyEdges(es => [...es, ...edges]);
+}
+
 /**
  * Called from EditorPage when a node is added to the blocks canvas by the user.
- * Creates the matching hw component node + edge to the best available board port.
+ * Creates the matching hw component node + edge to the best available board port
+ * (Kokoon) or to the pins the block uses (Arduino Uno, ESP32).
  */
 export function syncAddHwNode(logicId: string, nodeType: string, data: Record<string, unknown>): void {
+  _syncBoard();
   if (_logicToHw[logicId]) return; // Already synced
+
+  const layout = BOARD_LAYOUTS[getBoard().id];
+  if (layout) return _addPinHwNode(logicId, nodeType, data, layout);
 
   const hwComp = _nodeTypeToHwComp[nodeType];
   if (!hwComp) return; // Not a hw-mappable type
 
   const portId = _getBestPort(nodeType, data);
   if (!portId) return; // No available port
-  // The port must exist as a handle on the selected board (onboard parts such as
-  // the IMU have none; motors / LED ring exist only on the Kokoon PCB). Otherwise
-  // the component would be drawn with a wire to nowhere.
+  // The port must exist as a handle on the board (onboard parts such as the IMU
+  // have none). Otherwise the component would be drawn with a wire to nowhere.
   if (!BOARD_PORTS.some((p) => p.id === portId)) return;
-  if (getBoard().id !== "kokoon" && KOKOON_ONLY_PORTS.test(portId)) return;
 
   const hwId = `hw_${crypto.randomUUID().slice(0, 8)}`;
   const newNode: Node = {
@@ -691,6 +928,7 @@ export function syncRemoveHwNode(logicId: string): void {
  * handles any drift that accumulated while the hardware canvas was unmounted.
  */
 export function resyncHwFromBlocks(logicNodes: Node[]): void {
+  _syncBoard();
   const logicNodeMap = new Map(logicNodes.map(n => [n.id, n]));
 
   // Remove hw nodes whose logic counterpart no longer exists in blocks canvas
@@ -706,6 +944,23 @@ export function resyncHwFromBlocks(logicNodes: Node[]): void {
       syncAddHwNode(node.id, node.type ?? "", node.data as Record<string, unknown>);
     }
   }
+
+  // Pin boards: a pin edited on a block moves that part's wires to the new pin.
+  const layout = BOARD_LAYOUTS[getBoard().id];
+  if (!layout) return;
+  const fresh = new Map<string, { edges: Edge[]; logic: LogicRef }>();
+  for (const node of logicNodes) {
+    const hwId = _logicToHw[node.id];
+    const comp = _pinComp[node.type ?? ""];
+    if (!hwId || !comp) continue;
+    const data = node.data as Record<string, unknown>;
+    fresh.set(hwId, {
+      edges: _pinEdges(hwId, comp, wiresFor(node.type ?? "", data, getBoard()), layout),
+      logic: { type: node.type ?? "", data },
+    });
+  }
+  _applyEdges(es => [...es.filter(e => !fresh.has(e.source)), ...[...fresh.values()].flatMap(f => f.edges)]);
+  _applyNodes(ns => ns.map(n => fresh.has(n.id) ? { ...n, data: { ...n.data, logic: fresh.get(n.id)?.logic } } : n));
 }
 
 // ─── Inner hardware canvas ────────────────────────────────────────────────────
@@ -718,7 +973,16 @@ interface InnerProps {
 function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(_nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(_edges);
-  const { screenToFlowPosition } = useReactFlow();
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const board = useBoard();
+  const layout = BOARD_LAYOUTS[board.id];
+  // Why the last wire was refused (pin boards), shown in place of the help line.
+  const [hint, setHint] = useState<string | null>(null);
+  useEffect(() => {
+    if (!hint) return;
+    const t = setTimeout(() => setHint(null), 5000);
+    return () => clearTimeout(t);
+  }, [hint]);
 
   // Persist state to module-level so it survives unmount
   useEffect(() => { _nodes = nodes; }, [nodes]);
@@ -746,11 +1010,45 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
     };
   }, [setNodes, setEdges, canvasRef]);
 
+  // Board switched while this view is open: rebuild the parts for the new board's pins.
+  const shownBoard = useRef(board.id);
+  useEffect(() => {
+    const workspace = canvasRef.current?.getWorkspace();
+    if (workspace) resyncHwFromBlocks(workspace.nodes);
+    if (shownBoard.current !== board.id) {
+      shownBoard.current = board.id;
+      requestAnimationFrame(() => fitView({ padding: 0.12 }));
+    }
+  }, [board.id, canvasRef, fitView]);
+
   const onConnect = useCallback((connection: Connection) => {
     const src = nodes.find(n => n.id === connection.source);
     if (!src || src.type !== "hw_component") return;
     const hwComp = (src.data as { hwComp: HwComponent }).hwComp;
     const portId = connection.targetHandle ?? "";
+
+    if (layout) {
+      // Arduino Uno / ESP32: the wire lands on a real pin and that pin goes into the block.
+      const pin = layout.pins.find(p => p.id === portId);
+      if (!pin) return;
+      if (_hwToLogic[src.id]) { setHint(`${hwComp.label} is already wired. Delete its wire to move it.`); return; }
+      const usedGpios = new Set(edges.map(e => layout.pins.find(p => p.id === e.targetHandle)?.gpio ?? -1));
+      const data = dataForPin(hwComp.nodeType, pin, board, usedGpios);
+      if (typeof data === "string") { setHint(`${hwComp.label} ${data}.`); return; }
+      const wires = _pinEdges(src.id, hwComp, wiresFor(hwComp.nodeType, data, board), layout);
+      if (!wires.length) return;
+      setHint(null);
+      setEdges(es => [...es.filter(e => e.source !== src.id), ...wires]);
+      const logicId = canvasRef.current?.addNode(hwComp.nodeType, data) ?? "";
+      _hwToLogic[src.id] = logicId;
+      _logicToHw[logicId] = src.id;
+      _suppressSyncIds.add(logicId);
+      const logic: LogicRef = { type: hwComp.nodeType, data };
+      setNodes(ns => ns.map(n => n.id === src.id ? { ...n, data: { ...n.data, enabled: true, logic } } : n));
+      onWired(hwComp.label, hwComp.color);
+      return;
+    }
+
     if (hwComp.compatiblePorts.length && !hwComp.compatiblePorts.includes(portId)) return;
 
     setEdges(eds => addEdge({ ...connection, animated: true, style: { stroke: hwComp.color, strokeWidth: 2.5 } }, eds));
@@ -765,7 +1063,7 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
     _suppressSyncIds.add(logicId); // Prevent EditorPage from re-adding hw node
 
     onWired(hwComp.label, hwComp.color);
-  }, [nodes, canvasRef, onWired, setEdges]);
+  }, [nodes, edges, layout, board, canvasRef, onWired, setEdges, setNodes]);
 
   const onNodesDelete = useCallback((deleted: Node[]) => {
     deleted.forEach(n => {
@@ -793,7 +1091,12 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
         delete _hwToLogic[e.source];
       }
     });
-  }, [canvasRef]);
+    // Pin boards: a part can have two wires (TRIG/ECHO, SDA/SCL). Removing one removes both.
+    if (layout) {
+      const sources = new Set(deleted.map(e => e.source));
+      setEdges(es => es.filter(e => !sources.has(e.source)));
+    }
+  }, [canvasRef, layout, setEdges]);
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault(); e.dataTransfer.dropEffect = "move";
@@ -813,8 +1116,24 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
     }]);
   }, [screenToFlowPosition, setNodes]);
 
+  // The view can mount while its tab is hidden (zero size), which leaves React
+  // Flow's initial fit wrong. Fit again whenever the pane goes from hidden to shown.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    let wasHidden = true;
+    const ro = new ResizeObserver(([entry]) => {
+      const shown = entry.contentRect.width > 0 && entry.contentRect.height > 0;
+      if (shown && wasHidden) requestAnimationFrame(() => fitView({ padding: 0.12 }));
+      wasHidden = !shown;
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [fitView]);
+
   return (
-    <div className="flex-1 h-full" onDragOver={onDragOver} onDrop={onDrop}>
+    <div ref={wrapRef} className="flex-1 h-full" onDragOver={onDragOver} onDrop={onDrop}>
       <ReactFlow
         nodes={nodes} edges={edges}
         onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
@@ -833,8 +1152,10 @@ function HardwareCanvas({ canvasRef, onWired }: InnerProps) {
           maskColor="color-mix(in srgb, var(--k-base-100) 78%, transparent)"
           style={{ backgroundColor: "var(--k-base-300)", border: "1px solid var(--k-border)", borderRadius: "8px" }}
         />
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full px-5 py-2 text-[11px] text-hint border border-subtle bg-panel/90 shadow pointer-events-none backdrop-blur-sm">
-          Drag a component · wire handle to board port · toggle ON/OFF · Delete removes from both views
+        <div role="status" className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 rounded-full px-5 py-2 text-[11px] text-hint border border-subtle bg-panel/90 shadow pointer-events-none backdrop-blur-sm">
+          {hint
+            ? <span className="font-semibold text-[var(--k-text)]">{hint}</span>
+            : `Drag a component · wire handle to board ${layout ? "pin" : "port"} · toggle ON/OFF · Delete removes from both views`}
         </div>
       </ReactFlow>
     </div>
@@ -851,17 +1172,24 @@ export function HardwareView({ canvasRef }: HardwareViewProps) {
     setWired(prev => { const next = [...prev, { label, color }]; _wired = next; return next; });
   }, []);
 
+  // Pin boards list the parts that can be wired pin by pin, with the pins a fresh block uses.
+  const board = useBoard();
+  const layout = BOARD_LAYOUTS[board.id];
+  const parts = HW_COMPONENTS.filter(c => (layout ? !!PIN_WIRING[c.nodeType] : !c.pinOnly));
+  const hintFor = (comp: HwComponent) => !layout ? comp.portHint : wiresFor(comp.nodeType, {}, board)
+    .map(w => `${w.label || "Pin"} ${pinForGpio(layout, w.gpio)?.label ?? w.gpio}`).join(" · ");
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-[var(--k-base-100)]">
       {/* Palette */}
       <aside className="w-56 shrink-0 border-r border-[var(--k-border)] flex flex-col overflow-hidden" style={{ background: "var(--k-base-200)" }}>
         <div className="px-4 py-3 border-b border-[var(--k-border)]">
-          <p className="text-[11px] font-bold text-white/80 uppercase tracking-widest">Components</p>
-          <p className="text-[10px] text-white/30 mt-0.5">Drag · Drop · Wire · Toggle</p>
+          <p className="text-[11px] font-bold text-body uppercase tracking-widest">Components</p>
+          <p className="text-[11px] text-hint mt-0.5">Drag · Drop · Wire · Toggle</p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2.5 space-y-2">
-          {HW_COMPONENTS.map(comp => {
+          {parts.map(comp => {
             const Icon = comp.icon;
             return (
               <div
@@ -882,8 +1210,8 @@ export function HardwareView({ canvasRef }: HardwareViewProps) {
                   <Icon />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] font-bold leading-tight" style={{ color: comp.color }}>{comp.label}</div>
-                  <div className="text-[9px] text-white/30 leading-tight mt-0.5">{comp.portHint}</div>
+                  <div className="text-[11px] font-bold leading-tight" style={{ color: comp.color }}>{comp.label}</div>
+                  <div className="text-[11px] text-hint leading-tight mt-0.5">{hintFor(comp)}</div>
                 </div>
               </div>
             );
@@ -892,12 +1220,12 @@ export function HardwareView({ canvasRef }: HardwareViewProps) {
 
         {wired.length > 0 && (
           <div className="border-t border-[var(--k-border)] p-3">
-            <p className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-2">Connected</p>
+            <p className="text-[11px] font-bold text-hint uppercase tracking-widest mb-2">Connected</p>
             <div className="space-y-1 max-h-32 overflow-y-auto">
               {wired.slice().reverse().map((w, i) => (
-                <div key={i} className="flex items-center gap-2 text-[9px]">
+                <div key={i} className="flex items-center gap-2 text-[11px]">
                   <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: w.color }} />
-                  <span className="text-white/40 truncate">{w.label}</span>
+                  <span className="text-sub truncate">{w.label}</span>
                 </div>
               ))}
             </div>

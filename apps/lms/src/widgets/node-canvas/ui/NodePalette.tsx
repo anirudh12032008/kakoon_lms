@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
 import { PencilLine, Trash2, Search, X } from "lucide-react";
-import { NODE_CATEGORIES, type NodeCategory, type NodeDef } from "@/entities/node/model";
+import { categoriesForBoard, type NodeCategory, type NodeDef } from "@/entities/node/model";
+import { useBoard } from "@/entities/board";
 import { NODE_HINTS } from "@/entities/node/model/hints";
 import { useCustomNodes, type CustomNodeTemplate, isCustomNodeTemplateAllowed } from "@/entities/custom-node/model/customNodes";
 import { useModal } from "@/shared/context/ModalContext";
@@ -142,8 +143,11 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
   const [search, setSearch] = useState("");
   const { customNodes, updateCustomNodeLabel, removeCustomNode } = useCustomNodes();
   const { confirm, prompt } = useModal();
+  // Only blocks the selected board can run.
+  const boardId = useBoard().id;
+  const boardCategories = useMemo(() => categoriesForBoard(boardId), [boardId]);
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(() =>
-    NODE_CATEGORIES.find((c) => !allowedCategories || allowedCategories.includes(c.id))?.id ?? null
+    boardCategories.find((c) => !allowedCategories || allowedCategories.includes(c.id))?.id ?? null
   );
 
   // When an interactive tutorial points at a block in a collapsed section, open
@@ -166,10 +170,10 @@ export function NodePalette({ width = 272, allowedCategories, allowedNodeTypes }
   }, [customNodes, search, allowedNodeTypeSet]);
 
   const filtered = search.trim()
-    ? NODE_CATEGORIES
+    ? boardCategories
         .map((cat) => ({ ...cat, nodes: cat.nodes.filter((n) => n.label.toLowerCase().includes(search.toLowerCase())) }))
         .filter((cat) => cat.nodes.length > 0 && (!allowedCategorySet || allowedCategorySet.has(cat.id)))
-    : NODE_CATEGORIES.filter((cat) => !allowedCategorySet || allowedCategorySet.has(cat.id));
+    : boardCategories.filter((cat) => !allowedCategorySet || allowedCategorySet.has(cat.id));
 
   return (
     <div

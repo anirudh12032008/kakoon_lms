@@ -11,7 +11,7 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
+import { useFresh, SensorIcon, PORT_OPTIONS, PortPinBadge } from "./_shared";
 import { useSensorStore } from "@/shared/lib/sensorStore";
 import { useBoard } from "@/entities/board";
 import { usePinDefaults } from "../lib/blockDefaults";
@@ -40,9 +40,9 @@ function EchoPulseDisplay({ live, distanceCm }: { live: boolean; distanceCm: num
       <div className="flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full"
           style={{ background: live ? "#22d3ee" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-        <span className="text-[9px] text-[var(--k-muted)] font-mono">{live ? "LIVE" : "waiting…"}</span>
+        <span className="text-[11px] text-[var(--k-muted)] font-mono">{live ? "LIVE" : "waiting…"}</span>
         {live && distanceCm != null && (
-          <span className="text-[9px] text-cyan-400 font-mono ml-auto">{distanceCm.toFixed(1)} cm</span>
+          <span className="text-[11px] text-cyan-400 font-mono ml-auto">{distanceCm.toFixed(1)} cm</span>
         )}
       </div>
 
@@ -100,11 +100,11 @@ function ZoneRow({ label, color, dist, setDist, nodeColor, onColorChange }: {
         <input type="color" value={color} onChange={e => onColorChange(e.target.value)}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer nodrag" />
       </div>
-      <span className="text-[9px] font-bold uppercase tracking-wider flex-shrink-0" style={{ color: nodeColor, width: 22 }}>{label}</span>
-      <span className="text-[9px] text-[var(--k-dim)] flex-shrink-0">&lt;</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider flex-shrink-0" style={{ color: nodeColor, width: 22 }}>{label}</span>
+      <span className="text-[11px] text-[var(--k-dim)] flex-shrink-0">&lt;</span>
       <input type="number" value={dist} onChange={e => setDist(Number(e.target.value))}
-        className="nodrag w-11 rounded bg-[var(--k-base-300)] border border-[var(--k-border)] text-[10px] text-center text-[var(--k-text)] font-mono outline-none px-1 py-0.5" />
-      <span className="text-[9px] text-[var(--k-dim)]">cm</span>
+        className="nodrag w-11 rounded bg-[var(--k-base-300)] border border-[var(--k-border)] text-[11px] text-center text-[var(--k-text)] font-mono outline-none px-1 py-0.5" />
+      <span className="text-[11px] text-[var(--k-dim)]">cm</span>
     </div>
   );
 }
@@ -128,7 +128,7 @@ export function UltrasonicSensorNode() {
 
   // Live distance piped from the ESP32 serial stream (label == varName).
   const reading = useSensorStore(s => s.readings[varName]);
-  const live = !!reading && (Date.now() - reading.ts) < STALE_MS;
+  const live = useFresh(reading?.ts, STALE_MS) && !!reading;
   const distanceCm = live && reading.value >= 0 ? reading.value : null;
   const distanceIn = distanceCm != null ? distanceCm / 2.54 : null;
 
@@ -160,12 +160,12 @@ export function UltrasonicSensorNode() {
       {/* Distance display */}
       <div className="px-3 py-1 flex items-center gap-2 bg-[var(--k-base-300)] mx-3 rounded-lg border border-[var(--k-border)]">
         <div className="flex-1 text-center">
-          <div className="text-[9px] text-[var(--k-muted)] uppercase">cm</div>
+          <div className="text-[11px] text-[var(--k-muted)] uppercase">cm</div>
           <div className="text-sm font-mono font-bold text-purple-400">{distanceCm != null ? distanceCm.toFixed(1) : "-.-"}</div>
         </div>
         <div className="w-px h-6 bg-[var(--k-border)]" />
         <div className="flex-1 text-center">
-          <div className="text-[9px] text-[var(--k-muted)] uppercase">in</div>
+          <div className="text-[11px] text-[var(--k-muted)] uppercase">in</div>
           <div className="text-sm font-mono font-bold text-cyan-400">{distanceIn != null ? distanceIn.toFixed(1) : "-.-"}</div>
         </div>
       </div>
@@ -173,7 +173,7 @@ export function UltrasonicSensorNode() {
       <AdvancedSection>
         {/* Proximity zone designer */}
         <div className="px-3 pt-2 pb-0.5">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold px-0">Proximity Zones</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold px-0">Proximity Zones</span>
         </div>
         <ZoneRow label="Near" color={nearColor} dist={nearDist} setDist={setNearDist} nodeColor={nearColor} onColorChange={setNearColor} />
         <ZoneRow label="Mid" color={midColor} dist={midDist} setDist={setMidDist} nodeColor={midColor} onColorChange={setMidColor} />

@@ -59,7 +59,7 @@ export function BLEModeNode() {
       {/* Raw incoming data variable */}
       <div className="px-3 pb-1">
         <div className="flex items-center gap-2 bg-[var(--k-base-300)] border border-[var(--k-border)] rounded-lg px-2 py-1.5">
-          <span className="text-[9px] text-[var(--k-muted)] shrink-0">phone → </span>
+          <span className="text-[11px] text-[var(--k-muted)] shrink-0">phone → </span>
           <input value={rawVarName} onChange={(e) => setRawVarName(e.target.value)}
             className="nodrag flex-1 text-[11px] font-mono bg-transparent text-blue-300 outline-none min-w-0" />
           <Handle type="source" position={Position.Right} id="ble_raw"
@@ -72,9 +72,9 @@ export function BLEModeNode() {
       {/* Commands */}
       <div className="px-3 pb-1">
         <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[10px] font-semibold text-[var(--k-text)]">When phone sends…</span>
+          <span className="text-[11px] font-semibold text-[var(--k-text)]">When phone sends…</span>
           <button onClick={addCmd}
-            className="nodrag text-[9px] px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/25 text-blue-400 hover:bg-blue-500/25 transition-all font-semibold">
+            className="nodrag text-[11px] px-2 py-0.5 rounded-md bg-blue-500/15 border border-blue-500/25 text-blue-400 hover:bg-blue-500/25 transition-all font-semibold">
             + Add
           </button>
         </div>
@@ -94,17 +94,17 @@ export function BLEModeNode() {
             </div>
           ))}
           {cmdMap.length === 0 && (
-            <div className="text-[9px] text-[var(--k-dim)] text-center py-2">No commands yet</div>
+            <div className="text-[11px] text-[var(--k-dim)] text-center py-2">No commands yet</div>
           )}
         </div>
 
         {/* Log received commands to the serial terminal */}
         <div className="flex items-center justify-between mt-2">
-          <span className="text-[10px] font-semibold text-[var(--k-text)]">Log to terminal</span>
+          <span className="text-[11px] font-semibold text-[var(--k-text)]">Log to terminal</span>
           <ToggleInput value={logCmds} onChange={setLogCmds} leftLabel="Off" rightLabel="On" />
         </div>
         {logCmds && (
-          <p className="text-[9px] text-[var(--k-dim)] mt-1 leading-relaxed">
+          <p className="text-[11px] text-[var(--k-dim)] mt-1 leading-relaxed">
             Prints each command to the serial monitor only when one is received.
           </p>
         )}
@@ -115,7 +115,7 @@ export function BLEModeNode() {
       {/* Send back to phone */}
       <div className="px-3 pb-1">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-semibold text-[var(--k-text)]">Send to phone</span>
+          <span className="text-[11px] font-semibold text-[var(--k-text)]">Send to phone</span>
           <ToggleInput value={enableTx} onChange={setEnableTx} leftLabel="Off" rightLabel="On" />
         </div>
         {enableTx && (
@@ -123,7 +123,7 @@ export function BLEModeNode() {
             <Handle type="target" position={Position.Left} id="ble_tx"
               style={{ width: 12, height: 12, background: "var(--k-base-200)", border: "2.5px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, left: -14, top: "auto", transform: "none" }} />
             <input value={txVarName} onChange={(e) => setTxVarName(e.target.value)}
-              className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-300)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-green-300 outline-none" />
+              className="nodrag flex-1 text-[11px] font-mono bg-[var(--k-base-300)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-green-300 outline-none" />
           </div>
         )}
       </div>
@@ -140,10 +140,10 @@ export function BLEModeNode() {
             <div className="flex items-center gap-3 pt-1 px-1">
               <Handle type="source" position={Position.Right} id="connected"
                 style={{ width: 10, height: 10, background: "var(--k-base-200)", border: "2px solid #22c55e", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none" }} />
-              <span className="text-[8px] text-[var(--k-dim)]">on connect</span>
+              <span className="text-[11px] text-[var(--k-dim)]">on connect</span>
               <Handle type="source" position={Position.Right} id="disconnected"
                 style={{ width: 10, height: 10, background: "var(--k-base-200)", border: "2px solid #ef4444", borderRadius: "50%", position: "relative", display: "inline-block", zIndex: 10, right: -6, top: "auto", transform: "none", marginLeft: 4 }} />
-              <span className="text-[8px] text-[var(--k-dim)]">on disconnect</span>
+              <span className="text-[11px] text-[var(--k-dim)]">on disconnect</span>
             </div>
           </div>
         </div>

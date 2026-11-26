@@ -10,6 +10,8 @@ import {
 } from "./BaseNode";
 import { MotorIcon, SpeedControl, SmoothSlider, SpeedVarInput } from "./_shared";
 import { useState, useEffect } from "react";
+import { useBoard } from "@/entities/board";
+import { usePinDefaults } from "../lib/blockDefaults";
 
 // ─── Board hardware constants ──────────────────────────────────────────────────
 const MOTOR_PORTS = {
@@ -46,12 +48,12 @@ function MotorPinInfo({ motorKey }: { motorKey: MotorKey }) {
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">DRV8833 - fixed GPIO</span>
-        <span className="text-[9px] font-mono text-orange-400">locked</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">DRV8833 - fixed GPIO</span>
+        <span className="text-[11px] font-mono text-orange-400">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
-        <span className="text-[10px] text-[var(--k-muted)]">PWM <span className="text-[var(--k-text)] font-mono">{m.pwm}</span></span>
-        <span className="text-[10px] text-[var(--k-muted)]">DIR <span className="text-[var(--k-text)] font-mono">{m.dir}</span></span>
+        <span className="text-[11px] text-[var(--k-muted)]">PWM <span className="text-[var(--k-text)] font-mono">{m.pwm}</span></span>
+        <span className="text-[11px] text-[var(--k-muted)]">DIR <span className="text-[var(--k-text)] font-mono">{m.dir}</span></span>
       </div>
     </div>
   );
@@ -84,11 +86,11 @@ function MotorPlacementSection({
   return (
     <div className="px-3 pb-2">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] uppercase tracking-wider font-bold text-[var(--k-muted)]">Motor Placement</span>
+        <span className="text-[11px] uppercase tracking-wider font-bold text-[var(--k-muted)]">Motor Placement</span>
         {!isDefault && (
           <button
             type="button"
-            className="nodrag text-[9px] text-amber-400/80 hover:text-amber-300 font-semibold transition-colors"
+            className="nodrag text-[11px] text-amber-400/80 hover:text-amber-300 font-semibold transition-colors"
             onClick={() => { setFl("L1"); setFr("R1"); setRl("L2"); setRr("R2"); }}
           >
             Reset
@@ -99,7 +101,7 @@ function MotorPlacementSection({
       {/* Top-down robot diagram with port selectors at each wheel corner */}
       <div className="relative flex flex-col items-center gap-1.5">
         {/* FRONT label */}
-        <span className="text-[8px] font-bold uppercase tracking-widest text-[var(--k-dim)]">▲ Front</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--k-dim)]">▲ Front</span>
 
         {/* Front axle */}
         <div className="flex items-center gap-2 w-full justify-between">
@@ -112,7 +114,7 @@ function MotorPlacementSection({
           className="w-10 h-7 rounded border flex items-center justify-center"
           style={{ background: "var(--k-base-300)", borderColor: "var(--k-border)" }}
         >
-          <span className="text-[10px]" style={{ color: COLORS.orange }}></span>
+          <span className="text-[11px]" style={{ color: COLORS.orange }}></span>
         </div>
 
         {/* Rear axle */}
@@ -122,11 +124,11 @@ function MotorPlacementSection({
         </div>
 
         {/* REAR label */}
-        <span className="text-[8px] font-bold uppercase tracking-widest text-[var(--k-dim)]">▼ Rear</span>
+        <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--k-dim)]">▼ Rear</span>
       </div>
 
       {!isDefault && (
-        <p className="mt-1.5 text-[9px] text-amber-400/75 leading-relaxed">
+        <p className="mt-1.5 text-[11px] text-amber-400/75 leading-relaxed">
           Non-default wiring - make sure each port matches your physical motor connections.
         </p>
       )}
@@ -142,13 +144,13 @@ function WheelSlot({
   const isDefault = value === DEFAULT_PLACEMENT[label.toLowerCase() as "fl" | "fr" | "rl" | "rr"];
   return (
     <div className={`flex flex-col items-${align === "right" ? "end" : "start"} gap-0.5`}>
-      <span className="text-[8px] font-bold uppercase tracking-wider" style={{ color: isDefault ? "var(--k-dim)" : COLORS.orange }}>
+      <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: isDefault ? "var(--k-dim)" : COLORS.orange }}>
         {label}
       </span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as MotorKey)}
-        className="nodrag rounded px-1.5 py-0.5 text-[10px] font-mono font-bold outline-none"
+        className="nodrag rounded px-1.5 py-0.5 text-[11px] font-mono font-bold outline-none"
         style={{
           background: "var(--k-base-300)",
           border: `1.5px solid ${isDefault ? "var(--k-border)" : COLORS.orange + "99"}`,
@@ -180,11 +182,11 @@ function CustomPinRow({ label, pwmPin, setPwmPin, dirPin, setDirPin }: {
 }) {
   return (
     <div className="px-3 py-1">
-      <span className="block text-[10px] text-[var(--k-muted)] font-bold uppercase tracking-wider mb-1">{label}</span>
+      <span className="block text-[11px] text-[var(--k-muted)] font-bold uppercase tracking-wider mb-1">{label}</span>
       <div className="flex items-center gap-1.5">
-        <span className="text-[9px] text-[var(--k-muted)] uppercase">pwm</span>
+        <span className="text-[11px] text-[var(--k-muted)] uppercase">pwm</span>
         <NumberInput value={pwmPin} onChange={setPwmPin} className="w-[60px] flex-1" />
-        <span className="text-[9px] text-[var(--k-muted)] uppercase">dir</span>
+        <span className="text-[11px] text-[var(--k-muted)] uppercase">dir</span>
         <NumberInput value={dirPin} onChange={setDirPin} className="w-[60px] flex-1" />
       </div>
     </div>
@@ -216,11 +218,11 @@ function MotorSpeedRow({ label, speed, setSpeed, dir, setDir, enabled = true, se
               <span className={`h-2.5 w-2.5 rounded-full transition-colors ${enabled ? "bg-orange-400" : "bg-[var(--k-dim)]"}`} />
             </button>
           )}
-          <span className={`text-[9px] uppercase tracking-wider font-bold ${enabled ? "text-[var(--k-muted)]" : "text-[var(--k-dim)] line-through"}`}>{label}</span>
+          <span className={`text-[11px] uppercase tracking-wider font-bold ${enabled ? "text-[var(--k-muted)]" : "text-[var(--k-dim)] line-through"}`}>{label}</span>
         </div>
         {enabled
-          ? <span className="text-[10px] font-mono" style={{ color: usingVar ? "#22d3ee" : "#fb923c" }}>{usingVar ? varName.trim() : `${disp}%`}</span>
-          : <span className="text-[9px] font-bold text-[var(--k-dim)]">OFF</span>}
+          ? <span className="text-[11px] font-mono" style={{ color: usingVar ? "#22d3ee" : "#fb923c" }}>{usingVar ? varName.trim() : `${disp}%`}</span>
+          : <span className="text-[11px] font-bold text-[var(--k-dim)]">OFF</span>}
       </div>
       {enabled && (
         <>
@@ -230,7 +232,7 @@ function MotorSpeedRow({ label, speed, setSpeed, dir, setDir, enabled = true, se
           <div className="flex gap-1 mt-1">
             {DIR_OPTIONS.map(d => (
               <button key={d.value} onClick={() => setDir(d.value)}
-                className={`nodrag flex-1 py-0.5 rounded text-[9px] font-bold border transition-all ${
+                className={`nodrag flex-1 py-0.5 rounded text-[11px] font-bold border transition-all ${
                   dir === d.value ? "border-orange-500/60 text-orange-300 bg-orange-500/10" : "border-[var(--k-border)] text-[var(--k-muted)] hover:border-[var(--k-dim)] bg-[var(--k-base-200)]"
                 }`}
               >{d.value[0]}</button>
@@ -327,7 +329,7 @@ export function RobotDriveNode() {
     <BaseNode title="Robot Drive" color={COLORS.orange} icon={<MotorIcon />} width="260px">
       {/* Direction grid */}
       <div className="px-3 pb-1 pt-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Direction</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Direction</span>
         <div className="grid grid-cols-4 gap-1 mt-1.5">
           {ROBOT_MOVES.map(m => (
             <button key={m.value} onClick={() => setMove(m.value)}
@@ -347,7 +349,7 @@ export function RobotDriveNode() {
           ))}
         </div>
         <div className="text-center mt-1">
-          <span className="text-[10px] font-semibold text-[var(--k-muted)]">{current.label}</span>
+          <span className="text-[11px] font-semibold text-[var(--k-muted)]">{current.label}</span>
         </div>
       </div>
 
@@ -375,10 +377,10 @@ export function RobotDriveNode() {
 
         {/* Hardware info */}
         <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 - all 4 motors</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 - all 4 motors</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-[var(--k-muted)]">L1·L2 <span className="text-[var(--k-muted)] font-mono">left</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">R1·R2 <span className="text-[var(--k-muted)] font-mono">right</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">L1·L2 <span className="text-[var(--k-muted)] font-mono">left</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">R1·R2 <span className="text-[var(--k-muted)] font-mono">right</span></span>
           </div>
         </div>
 
@@ -386,7 +388,7 @@ export function RobotDriveNode() {
         <CustomPinToggle value={useCustomPins} onChange={setUseCustomPins} />
         {useCustomPins && (
           <div className="mb-1">
-            <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
+            <p className="px-3 pb-1 text-[11px] text-amber-400/80 leading-relaxed">
               Overrides the board's stock DRV8833 wiring - only use this if your motors are wired to these GPIOs.
             </p>
             <CustomPinRow label="Front-Left"  pwmPin={flPwmPin} setPwmPin={setFlPwmPin} dirPin={flDirPin} setDirPin={setFlDirPin} />
@@ -400,8 +402,24 @@ export function RobotDriveNode() {
   );
 }
 
+// ─── L298N wiring: IN1 / IN2 (direction) + EN (PWM speed) ─────────────────────
+function L298NPinFields() {
+  const P = usePinDefaults();
+  const [in1, setIn1] = useNodeField<number>("in1Pin", P.motorIn1);
+  const [in2, setIn2] = useNodeField<number>("in2Pin", P.motorIn2);
+  const [en, setEn]   = useNodeField<number>("enPin", P.motorEn);
+  return (
+    <>
+      <NodeField label="IN1 Pin"><NumberInput value={in1} onChange={setIn1} /></NodeField>
+      <NodeField label="IN2 Pin"><NumberInput value={in2} onChange={setIn2} /></NodeField>
+      <NodeField label="EN (PWM)"><NumberInput value={en} onChange={setEn} /></NodeField>
+    </>
+  );
+}
+
 // ─── DC Motor (Single port) ───────────────────────────────────────────────────
 export function DCMotorSingleNode() {
+  const arduino = useBoard().runtime === "arduino"; // Uno: one L298N channel instead of a Kokoon motor port
   const [motorPort, setMotorPort] = useNodeField<MotorKey>("motorPort", "L1");
   const [speed, setSpeed]         = useNodeField<number>("speed", 50);
   const [speedVar, setSpeedVar]   = useNodeField<string>("speedVar", "");
@@ -414,31 +432,35 @@ export function DCMotorSingleNode() {
 
   return (
     <BaseNode title="DC Motor" color={COLORS.orange} icon={<MotorIcon />} width="260px">
+      {arduino ? <L298NPinFields /> : (
       <NodeField label="Motor Port">
         <SelectInput value={motorPort} onChange={v => setMotorPort(v as MotorKey)} compact options={MOTOR_OPTIONS} />
       </NodeField>
+      )}
       <AdvancedSection>
+        {!arduino && <>
         <MotorPinInfo motorKey={motorPort} />
         <CustomPinToggle value={useCustomPins} onChange={setUseCustomPins} />
         {useCustomPins && (
           <div className="mb-1">
-            <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
+            <p className="px-3 pb-1 text-[11px] text-amber-400/80 leading-relaxed">
               Drives this motor on custom GPIOs instead of port {motorPort}'s stock wiring.
             </p>
             <CustomPinRow label="Motor" pwmPin={customPwmPin} setPwmPin={setCustomPwmPin} dirPin={customDirPin} setDirPin={setCustomDirPin} />
           </div>
         )}
+        </>}
       </AdvancedSection>
 
       <SpeedControl value={speed} onChange={setSpeed} varName={speedVar} onVarChange={setSpeedVar}
         color={COLORS.orange} />
 
       <div className="px-3 pb-2 pt-1">
-        <span className="text-[9px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Direction</span>
+        <span className="text-[11px] text-[var(--k-muted)] uppercase tracking-wider font-bold">Direction</span>
         <div className="grid grid-cols-4 gap-1 mt-1">
           {DIR_OPTIONS.map(d => (
             <button key={d.value} onClick={() => setDirection(d.value)}
-              className={`nodrag py-1 rounded-lg border text-[9px] font-bold transition-all ${
+              className={`nodrag py-1 rounded-lg border text-[11px] font-bold transition-all ${
                 direction === d.value
                   ? "border-orange-500/60 bg-orange-500/15 text-orange-300"
                   : "border-[var(--k-border)] bg-[var(--k-base-200)] text-[var(--k-muted)] hover:border-[var(--k-dim)]"
@@ -447,7 +469,7 @@ export function DCMotorSingleNode() {
           ))}
         </div>
         <div className="text-center mt-1">
-          <span className="text-[10px] text-[var(--k-muted)] font-semibold">{direction}</span>
+          <span className="text-[11px] text-[var(--k-muted)] font-semibold">{direction}</span>
         </div>
       </div>
     </BaseNode>
@@ -523,12 +545,12 @@ export function MultiMotorControllerNode() {
 
       <AdvancedSection>
         <div className="mx-3 mt-2 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
-          <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 - shared driver</span>
+          <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">2× DRV8833 - shared driver</span>
           <div className="flex gap-3 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-[var(--k-muted)]">L1 <span className="font-mono text-[var(--k-muted)]">17/18</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">L2 <span className="font-mono text-[var(--k-muted)]">37/38</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">R1 <span className="font-mono text-[var(--k-muted)]">45/46</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">R2 <span className="font-mono text-[var(--k-muted)]">15/16</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">L1 <span className="font-mono text-[var(--k-muted)]">17/18</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">L2 <span className="font-mono text-[var(--k-muted)]">37/38</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">R1 <span className="font-mono text-[var(--k-muted)]">45/46</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">R2 <span className="font-mono text-[var(--k-muted)]">15/16</span></span>
           </div>
         </div>
 
@@ -536,7 +558,7 @@ export function MultiMotorControllerNode() {
         <CustomPinToggle value={useCustomPins} onChange={setUseCustomPins} />
         {useCustomPins && (
           <div className="mb-1">
-            <p className="px-3 pb-1 text-[9px] text-amber-400/80 leading-relaxed">
+            <p className="px-3 pb-1 text-[11px] text-amber-400/80 leading-relaxed">
               Overrides the board's stock DRV8833 wiring - only use this if your motors are wired to these GPIOs.
             </p>
             <CustomPinRow label="L1" pwmPin={l1PwmPin} setPwmPin={setL1PwmPin} dirPin={l1DirPin} setDirPin={setL1DirPin} />
@@ -553,10 +575,22 @@ export function MultiMotorControllerNode() {
 // ─── L298N Motor Driver (deprecated - kept for backward compat) ───────────────
 export function L298NMotorDriverNode() {
   const [direction, setDirection] = useNodeField<string>("direction", "Forward");
+  const [speed, setSpeed] = useNodeField<number>("speed", 50);
+  // Other boards: a real block for one L298N channel. Kokoon keeps the old notice.
+  if (useBoard().id !== "kokoon") return (
+    <BaseNode title="DC Motor (L298N)" color={COLORS.red} icon={<MotorIcon />} width="220px">
+      <L298NPinFields />
+      <NodeField label="Speed %"><NumberInput value={speed} onChange={setSpeed} /></NodeField>
+      <NodeField label="Direction">
+        <SelectInput value={direction} onChange={setDirection} compact
+          options={["Forward","Backward","Stop"].map(v => ({ label: v, value: v }))} />
+      </NodeField>
+    </BaseNode>
+  );
   return (
     <BaseNode title="L298N Motor Driver" color={COLORS.red} icon={<MotorIcon />} width="220px">
       <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-amber-500/20 bg-amber-500/5">
-        <p className="text-[10px] text-amber-400">Deprecated - use Multi-Motor Controller (DRV8833) instead.</p>
+        <p className="text-[11px] text-amber-400">Deprecated - use Multi-Motor Controller (DRV8833) instead.</p>
       </div>
       <NodeField label="Direction">
         <SelectInput value={direction} onChange={setDirection} compact

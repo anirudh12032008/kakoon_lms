@@ -12,6 +12,7 @@ const PINS = {
     read: 15, button: 15, dht: 4, pir: 33, ir: 27, sound: 14, touch: 32,
     analog: 34, soil: 35, trig: 16, echo: 17,
     rfidSs: 5, rfidRst: 4, sck: 18, mosi: 23, miso: 19, btRx: 16, btTx: 17,
+    motorIn1: 18, motorIn2: 19, motorEn: 23, // only shared with the RFID / SD card SPI pins
   },
   // Uno: A0-A5 are pins 14-19, 13 = onboard LED, PWM needs 3/5/6/9/10/11, 10-13 = SPI (RFID).
   arduino_uno: {
@@ -19,6 +20,7 @@ const PINS = {
     read: 2, button: 2, dht: 4, pir: 2, ir: 2, sound: 2, touch: 2,
     analog: 14, soil: 14, trig: 5, echo: 6,
     rfidSs: 10, rfidRst: 9, sck: 13, mosi: 11, miso: 12, btRx: 10, btTx: 11,
+    motorIn1: 15, motorIn2: 16, motorEn: 3, // A1, A2 + PWM pin 3 (Servo.h takes PWM off 9/10, 5/6 are the ultrasonic defaults; tone() stops PWM on 3, so move EN to 5 or 6 when a buzzer is used)
   },
   // Kokoon PCB: the values these blocks always used (sensor port 1 = GPIO 4/5, port 2 = GPIO 1/2).
   kokoon: {
@@ -26,6 +28,7 @@ const PINS = {
     read: 4, button: 0, dht: 4, pir: PIR_SENSOR.pin, ir: IR_SENSOR.pin, sound: 1, touch: SENSOR_PORTS["1"].sda,
     analog: 34, soil: SENSOR_PORTS["1"].sda, trig: SENSOR_PORTS["1"].trig, echo: SENSOR_PORTS["1"].echo,
     rfidSs: RFID.cs, rfidRst: RFID.rst, sck: RFID.sck, mosi: RFID.mosi, miso: RFID.miso, btRx: 1, btTx: 2,
+    motorIn1: 4, motorIn2: 5, motorEn: 1, // unused: Kokoon drives motors through the onboard DRV8833
   },
 } satisfies Record<BoardId, Record<string, number>>;
 

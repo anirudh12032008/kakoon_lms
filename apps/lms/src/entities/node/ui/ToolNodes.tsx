@@ -7,6 +7,7 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
+import { useBoard } from "@/entities/board";
 
 function ToolIcon() {
   return (
@@ -50,8 +51,9 @@ interface FoundDevice {
 
 // ─── I2C Scanner ──────────────────────────────────────────────────────────────
 export function I2CScannerNode() {
-  const [sda, setSda] = useNodeField<number>("sda", 21);
-  const [scl, setScl] = useNodeField<number>("scl", 22);
+  const { i2c } = useBoard();
+  const [sda, setSda] = useNodeField<number>("sda", i2c.sda);
+  const [scl, setScl] = useNodeField<number>("scl", i2c.scl);
 
   const [scanning, setScanning] = useState(false);
   const [found, setFound] = useState<FoundDevice[]>([]);
@@ -90,13 +92,13 @@ export function I2CScannerNode() {
 
       {/* Demo notice */}
       <div className="mx-3 mb-1 px-2.5 py-1 rounded-lg border border-amber-500/20 bg-amber-500/5">
-        <span className="text-[9px] text-amber-400/80">Preview mode - shows demo devices. Connect ESP32 and run generated code to scan live.</span>
+        <span className="text-[11px] text-amber-400/80">Preview mode - shows demo devices. Connect ESP32 and run generated code to scan live.</span>
       </div>
 
       {/* Range label */}
       <div className="px-3 py-0.5 flex items-center justify-between">
-        <span className="text-[9px] text-[var(--k-muted)] font-mono">Range: 0x00 – 0x7F</span>
-        <span className="text-[9px] text-[var(--k-dim)]">(128 addresses)</span>
+        <span className="text-[11px] text-[var(--k-muted)] font-mono">Range: 0x00 – 0x7F</span>
+        <span className="text-[11px] text-[var(--k-dim)]">(128 addresses)</span>
       </div>
 
       {/* Scan button */}
@@ -140,12 +142,12 @@ export function I2CScannerNode() {
           <div className="rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)] overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--k-base-300)]">
-              <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Found Devices</span>
-              <span className="text-[9px] font-mono text-blue-400 font-bold">{found.length} found</span>
+              <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Found Devices</span>
+              <span className="text-[11px] font-mono text-blue-400 font-bold">{found.length} found</span>
             </div>
 
             {found.length === 0 ? (
-              <div className="px-3 py-3 text-center text-[10px] text-[var(--k-dim)]">No devices found</div>
+              <div className="px-3 py-3 text-center text-[11px] text-[var(--k-dim)]">No devices found</div>
             ) : (
               <div className="flex flex-col">
                 {found.map((dev) => (
@@ -158,13 +160,13 @@ export function I2CScannerNode() {
                         {dev.addr}
                       </span>
                       {/* Device label */}
-                      <span className="text-[10px] text-[var(--k-muted)] font-medium">{dev.label}</span>
+                      <span className="text-[11px] text-[var(--k-muted)] font-medium">{dev.label}</span>
                     </div>
 
                     {/* One-click copy button */}
                     <button
                       onClick={() => handleCopy(dev.addr)}
-                      className="nodrag opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)]/50 border border-transparent hover:border-[var(--k-dim)]"
+                      className="nodrag opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold text-[var(--k-muted)] hover:text-[var(--k-text)] hover:bg-[var(--k-base-400)]/50 border border-transparent hover:border-[var(--k-dim)]"
                       title="Copy address"
                     >
                       {copiedAddr === dev.addr ? (
@@ -184,7 +186,7 @@ export function I2CScannerNode() {
           </div>
 
           {/* Known address legend hint */}
-          <p className="text-[8px] text-[var(--k-dim)] mt-1.5 leading-tight">
+          <p className="text-[11px] text-[var(--k-dim)] mt-1.5 leading-tight">
             Auto-labelled: 0x3C OLED · 0x27/0x3F LCD · 0x68 MPU6050 · 0x48 ADS1115 · 0x76 BME280
           </p>
         </div>

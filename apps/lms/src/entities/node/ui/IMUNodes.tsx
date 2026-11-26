@@ -11,7 +11,7 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { SensorIcon } from "./_shared";
+import { useFresh, SensorIcon } from "./_shared";
 import { useSensorStore } from "@/shared/lib/sensorStore";
 import { ONBOARD_IMU, PIR_SENSOR } from "@/entities/board";
 
@@ -94,7 +94,7 @@ function PIRRadarDisplay({ detected, live }: { detected: boolean; live: boolean 
         <div className="flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full inline-block"
             style={{ background: live ? "#22c55e" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-          <span className="text-[8px] text-[var(--k-dim)]">{live ? "Live" : "Connect to see data"}</span>
+          <span className="text-[11px] text-[var(--k-dim)]">{live ? "Live" : "Connect to see data"}</span>
         </div>
       </div>
     </div>
@@ -113,13 +113,13 @@ export function IMUSensorNode() {
         {/* Fixed I2C pin info */}
         <div className="mx-3 mb-2 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Onboard SoftI2C - fixed GPIO</span>
-            <span className="text-[9px] font-mono text-purple-400">locked</span>
+            <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Onboard SoftI2C - fixed GPIO</span>
+            <span className="text-[11px] font-mono text-purple-400">locked</span>
           </div>
           <div className="flex gap-4 mt-0.5">
-            <span className="text-[10px] text-[var(--k-muted)]">SCL <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">SDA <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">Addr <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.address}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">SCL <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.scl}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">SDA <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.sda}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">Addr <span className="text-[var(--k-text)] font-mono">{ONBOARD_IMU_PINS.address}</span></span>
           </div>
         </div>
       </AdvancedSection>
@@ -144,10 +144,10 @@ export function IMUSensorNode() {
 
       {/* Format hint */}
       <div className="mx-3 mb-2 px-2 py-1.5 rounded-lg border border-purple-500/20 bg-purple-500/5">
-        <p className="text-[9px] text-purple-400/80 font-mono">
+        <p className="text-[11px] text-purple-400/80 font-mono">
           IMU,ax,ay,az,gx,gy,gz,pitch,roll
         </p>
-        <p className="text-[8px] text-[var(--k-dim)] mt-0.5">→ open IMU Visualizer to see live onboard data</p>
+        <p className="text-[11px] text-[var(--k-dim)] mt-0.5">→ open IMU Visualizer to see live onboard data</p>
       </div>
     </BaseNode>
   );
@@ -163,7 +163,7 @@ export function PIRSensorNode() {
 
   // Live data from the serial store - keyed by the variable name the node outputs
   const reading  = useSensorStore(s => s.readings[varName]);
-  const live     = !!reading && (Date.now() - reading.ts) < STALE_MS;
+  const live     = useFresh(reading?.ts, STALE_MS) && !!reading;
   const detected = live && reading.value === 1;
 
   return (
@@ -181,7 +181,7 @@ export function PIRSensorNode() {
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-[var(--k-muted)] font-medium">Debounce</span>
-            <span className="text-[10px] font-mono text-green-400">{debounce} ms</span>
+            <span className="text-[11px] font-mono text-green-400">{debounce} ms</span>
           </div>
           <input
             type="range" min={0} max={500} step={10} value={debounce}
@@ -204,8 +204,8 @@ export function PIRSensorNode() {
       {/* Format hint */}
       {sendToViz && (
         <div className="mx-3 mb-2 px-2 py-1.5 rounded-lg border border-green-500/20 bg-green-500/5">
-          <p className="text-[9px] text-green-400/80 font-mono">SENSOR,digital,{varName},1</p>
-          <p className="text-[8px] text-[var(--k-dim)] mt-0.5">→ open Sensor Visualizer to see live</p>
+          <p className="text-[11px] text-green-400/80 font-mono">SENSOR,digital,{varName},1</p>
+          <p className="text-[11px] text-[var(--k-dim)] mt-0.5">→ open Sensor Visualizer to see live</p>
         </div>
       )}
     </BaseNode>

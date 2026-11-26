@@ -50,7 +50,7 @@ function PinInfo({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between px-3 py-0.5">
       <span className="text-xs text-[var(--k-muted)] font-medium">{label}</span>
-      <span className="text-[10px] font-mono text-[var(--k-muted)] bg-[var(--k-border)] border border-[var(--k-border)] px-1.5 py-0.5 rounded">
+      <span className="text-[11px] font-mono text-[var(--k-muted)] bg-[var(--k-border)] border border-[var(--k-border)] px-1.5 py-0.5 rounded">
         {value}
       </span>
     </div>
@@ -102,7 +102,7 @@ function CharEditor({ pixels, onChange }: { pixels: LCDCharPixels; onChange: (p:
             fill={on ? "#60a5fa" : "var(--k-base-200)"} rx="2" />
         )))}
       </svg>
-      <button onClick={() => onChange(makeBlankChar())} className="text-[10px] text-[var(--k-muted)] hover:text-red-400 transition-colors text-center">Clear</button>
+      <button onClick={() => onChange(makeBlankChar())} className="text-[11px] text-[var(--k-muted)] hover:text-red-400 transition-colors text-center">Clear</button>
     </div>
   );
 }
@@ -144,7 +144,7 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
 
   return (
     <div className="flex flex-col gap-3">
-      <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Character Grid - click any cell to type</span>
+      <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Character Grid - click any cell to type</span>
       <div className="inline-flex flex-col gap-px rounded-lg overflow-hidden border border-[var(--k-border)] bg-[#0a1a0a]">
         {[0, 1].map(row => (
           <div key={row} className="flex gap-px">
@@ -178,7 +178,7 @@ function LCD16x2Grid({ lines, onLinesChange }: { lines: [string, string]; onLine
       <div className="flex flex-col gap-1.5 mt-1">
         {([0, 1] as const).map(i => (
           <div key={i} className="flex items-center gap-2">
-            <span className="text-[9px] text-[var(--k-muted)] w-10">Line {i + 1}</span>
+            <span className="text-[11px] text-[var(--k-muted)] w-10">Line {i + 1}</span>
             <input value={lines[i]} maxLength={16}
               onChange={e => { const l: [string, string] = [...lines] as [string, string]; l[i] = e.target.value; onLinesChange(l); }}
               className="flex-1 bg-[var(--k-base-200)] border border-[var(--k-border)] rounded-lg px-2 py-1 text-xs font-mono text-green-300 outline-none focus:border-blue-500/60"
@@ -233,7 +233,7 @@ export function LCD16x2Node() {
                 {units.map((u, j) => (
                   <span key={j}
                     className={`leading-4 font-mono w-[9px] text-center overflow-hidden ${
-                      isLcdToken(u) ? "text-[6px] text-cyan-300 bg-cyan-500/15 rounded-[1px]" : "text-[10px] text-green-300"
+                      isLcdToken(u) ? "text-[6px] text-cyan-300 bg-cyan-500/15 rounded-[1px]" : "text-[11px] text-green-300"
                     }`}
                     title={isLcdToken(u) ? u : undefined}>
                     {isLcdToken(u) ? lcdTokenLabel(u).slice(0, 2) : u === " " ? " " : u}
@@ -279,7 +279,7 @@ export function LCD16x2Node() {
               placeholder="e.g. distance" />
           </NodeField>
           <div className="px-3 pb-1.5">
-            <p className="text-[9px] text-[var(--k-dim)] leading-relaxed">
+            <p className="text-[11px] text-[var(--k-dim)] leading-relaxed">
               In any line, <span className="font-mono text-[var(--k-muted)]">{"{v}"}</span> inserts the variable above.
               Use any other name like <span className="font-mono text-[var(--k-muted)]">{"{temp}"}</span> for additional variables,
               or <span className="font-mono text-[var(--k-muted)]">{"{c0}"}</span>…<span className="font-mono text-[var(--k-muted)]">{"{c7}"}</span> for custom characters. Each token = 1 column.
@@ -308,14 +308,14 @@ export function LCD16x2Node() {
         <Modal title="Custom Character Editor - 8 Slots (5×8 pixels each)" onClose={() => setShowCharEditor(false)} wide>
           <div className="flex gap-6">
             <div className="flex flex-col gap-2 w-28 flex-shrink-0">
-              <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Slots</span>
+              <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Slots</span>
               {customChars.map((ch, i) => (
                 <button key={i} onClick={() => setActiveChar(i)}
                   className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-all ${i === activeChar ? "border-purple-500 bg-purple-500/10" : "border-[var(--k-border)] hover:border-[var(--k-dim)] bg-[var(--k-base-300)]"}`}
                 >
                   <div className="w-3 h-3 rounded-sm border border-[var(--k-border)] flex-shrink-0"
                     style={{ background: ch.some(r => r.some(v => v)) ? COLORS.blue : "transparent" }} />
-                  <span className="text-[10px] text-[var(--k-muted)]">Char {i}</span>
+                  <span className="text-[11px] text-[var(--k-muted)]">Char {i}</span>
                 </button>
               ))}
             </div>
@@ -324,7 +324,7 @@ export function LCD16x2Node() {
               <CharEditor pixels={customChars[activeChar]}
                 onChange={px => setCustomChars(customChars.map((c, i) => i === activeChar ? px : c))} />
               <div className="flex flex-col gap-1">
-                <span className="text-[9px] text-[var(--k-muted)]">2× Preview</span>
+                <span className="text-[11px] text-[var(--k-muted)]">2× Preview</span>
                 <div className="inline-block bg-[#0a1a0a] p-2 rounded-lg border border-[#2a3a2a]">
                   <svg width={5 * 8} height={8 * 8} style={{ imageRendering: "pixelated" }}>
                     {customChars[activeChar].map((row, r) => row.map((on, c) => (
@@ -333,7 +333,7 @@ export function LCD16x2Node() {
                   </svg>
                 </div>
               </div>
-              <p className="text-[10px] text-[var(--k-dim)]">Loaded into CGRAM slot {activeChar} on startup.</p>
+              <p className="text-[11px] text-[var(--k-dim)]">Loaded into CGRAM slot {activeChar} on startup.</p>
             </div>
           </div>
         </Modal>

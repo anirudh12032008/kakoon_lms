@@ -1,5 +1,5 @@
 import { APP_NAME } from "@/shared/config/brand";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { generateStepsFromFlow, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
 import type { Node, Edge } from "@xyflow/react";
 
@@ -13,6 +13,10 @@ const NODE_TYPES = [
   "touch_sensor","variable","variable_state","sleep","print",
   "if_else","map_range","pwm","adc","gpio_pin","pin_write","pin_read",
   "buzzer_tone","multi_motor_controller",
+  // sensor-kit and board-agnostic blocks
+  "led","relay","gas_sensor","pir_motion","rain_sensor","water_level","sound_sensor","ldr_sensor",
+  "rfid_reader","rtc_time","bluetooth_serial","analog_sensor","dht11","button_digital_input",
+  "l298n_motor","seven_seg","timer_interval","for_loop","while_loop","repeat",
 ].sort();
 
 type Difficulty = "Easy" | "Medium" | "Hard";
@@ -431,6 +435,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export function AdminPage({ onBack }: { onBack: () => void }) {
   const [authed, setAuthed] = useState(false);
+  useEffect(() => {
+    const previous = document.title;
+    document.title = `Admin: tutorial builder | ${APP_NAME}`;
+    return () => { document.title = previous; };
+  }, []);
   if (!authed) return <LoginScreen onAuth={() => setAuthed(true)} />;
   return <TutorialBuilder onBack={onBack} />;
 }

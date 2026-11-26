@@ -10,9 +10,8 @@ import {
   AdvancedSection,
   COLORS,
 } from "./BaseNode";
-import { SensorIcon } from "./_shared";
+import { useFresh, SensorIcon } from "./_shared";
 import { useSensorStore } from "@/shared/lib/sensorStore";
-import { IR_SENSOR } from "@/entities/board";
 import { usePinDefaults } from "../lib/blockDefaults";
 
 const outHS = { ...makeHandleStyle(COLORS.green), top: "50%", transform: "translateY(-50%)" };
@@ -49,7 +48,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
               <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
               <div className="w-6 h-6 flex items-center justify-center rounded-full bg-red-500/20 border-2 border-red-500/60 flex-shrink-0 mx-1"
                 style={{ animation: "pulse 0.7s ease-in-out infinite" }}>
-                <span className="text-[10px]"></span>
+                <span className="text-[11px]"></span>
               </div>
               <div className="flex-1 h-0.5 bg-red-500 opacity-30 rounded-full" />
             </>
@@ -77,7 +76,7 @@ function IRBeamDisplay({ blocked, live }: { blocked: boolean; live: boolean }) {
           <span className="w-1.5 h-1.5 rounded-full"
             style={{ background: live ? beamColor : "var(--k-base-400)",
               animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-          <span className="text-[8px] text-[var(--k-dim)]">{live ? "Live" : "Connect to see data"}</span>
+          <span className="text-[11px] text-[var(--k-dim)]">{live ? "Live" : "Connect to see data"}</span>
         </div>
       </div>
     </div>
@@ -91,7 +90,7 @@ export function IRSensorNode() {
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
 
   const reading = useSensorStore(s => s.readings[varName]);
-  const live    = !!reading && (Date.now() - reading.ts) < IR_STALE_MS;
+  const live    = useFresh(reading?.ts, IR_STALE_MS) && !!reading;
   // IR obstacle sensors: 0 = blocked by default; invert flips this
   const blocked = live && (invert ? reading.value === 1 : reading.value === 0);
 
@@ -126,11 +125,11 @@ function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
     <div className="mx-3 mb-1 px-3 py-2 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-100)]">
       {/* Code display */}
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[8px] uppercase tracking-wider text-[var(--k-dim)] font-bold">Last Code</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-dim)] font-bold">Last Code</span>
         <div className="flex items-center gap-1">
           <span className="w-1 h-1 rounded-full"
             style={{ background: live ? "#f97316" : "var(--k-base-400)", animation: live ? "pulse 2s ease-in-out infinite" : "none" }} />
-          <span className="text-[8px] text-[var(--k-dim)] font-mono">{live ? "LIVE" : "no signal"}</span>
+          <span className="text-[11px] text-[var(--k-dim)] font-mono">{live ? "LIVE" : "no signal"}</span>
         </div>
       </div>
 
@@ -141,18 +140,18 @@ function IRCodeDisplay({ code, live }: { code: number | null; live: boolean }) {
         </span>
       </div>
 
-      <p className="text-[8px] text-[var(--k-dim)] mt-1.5 text-center">Point your remote at the receiver!</p>
+      <p className="text-[11px] text-[var(--k-dim)] mt-1.5 text-center">Point your remote at the receiver!</p>
     </div>
   );
 }
 
 export function IRReceiverNode() {
-  const [pin, setPin]             = useNodeField<number>("pin", IR_SENSOR.pin);
+  const [pin, setPin]             = useNodeField<number>("pin", usePinDefaults().ir);
   const [varName, setVarName]     = useNodeField<string>("varName", "ir_cmd");
   const [sendToViz, setSendToViz] = useNodeField<boolean>("sendToViz", true);
 
   const reading = useSensorStore(s => s.readings[varName]);
-  const live    = !!reading && (Date.now() - reading.ts) < IR_STALE_MS;
+  const live    = useFresh(reading?.ts, IR_STALE_MS) && !!reading;
   const code    = live ? reading.value : null;
 
   return (

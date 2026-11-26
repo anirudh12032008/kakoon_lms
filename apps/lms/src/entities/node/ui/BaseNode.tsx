@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, createContext, useCallback, useContext, useMemo, useState } from "react";
 import { Handle, Position, useNodeId, useReactFlow, useStore, useUpdateNodeInternals } from "@xyflow/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useModal } from "@/shared/context/ModalContext";
@@ -60,6 +60,7 @@ export function NodeToggleButton({
     <button
       type="button"
       title={value ? "Enable node" : "Disable node"}
+      aria-label={value ? "Enable node" : "Disable node"}
       aria-pressed={value}
       onClick={(e) => {
         e.stopPropagation();
@@ -202,12 +203,13 @@ export function NodeAdvancedFooter() {
     <button
       type="button"
       title={isAdvanced ? "Hide advanced fields" : "Show advanced fields"}
+      aria-expanded={isAdvanced}
       onClick={(e) => {
         e.stopPropagation();
         if (!globalAdvanced) setNodeAdvanced(!nodeAdvanced);
       }}
       style={{ borderRadius: "0 0 11px 11px" }}
-      className={`nodrag flex w-full items-center justify-center gap-1.5 border-t px-3 py-1.5 text-[9px] font-bold uppercase tracking-wider transition-all ${
+      className={`nodrag flex w-full items-center justify-center gap-1.5 border-t px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
         isAdvanced
           ? globalAdvanced
             ? "border-violet-500/30 bg-violet-500/10 text-violet-400"
@@ -254,11 +256,16 @@ export function makeHandleStyle(color: string) {
   };
 }
 
+// The visible label of the surrounding NodeField, so every shared input below gets
+// an accessible name without each block having to pass one.
+const FieldLabelContext = createContext<string | undefined>(undefined);
+const FOCUS_RING = "focus-visible:ring-2 focus-visible:ring-[var(--k-primary)]";
+
 export function NodeField({ label, children }: { label?: string; children: ReactNode }) {
   return (
     <div className="relative flex items-center gap-2 px-3 py-1">
       {label && <span className="w-[72px] flex-shrink-0 text-xs text-[var(--k-muted)] font-medium">{label}</span>}
-      {children}
+      <FieldLabelContext.Provider value={label}>{children}</FieldLabelContext.Provider>
     </div>
   );
 }
@@ -272,6 +279,7 @@ export function TextInput({
   className?: string; green?: boolean; wide?: boolean; style?: React.CSSProperties;
 }) {
   const [isFocused, setIsFocused] = useState(false);
+  const fieldLabel = useContext(FieldLabelContext);
   // Snapshot nodes only while focused - subscribing via useNodes() would
   // re-render every input on the canvas during node drags.
   const { getNodes } = useReactFlow();
@@ -303,13 +311,13 @@ export function TextInput({
 
   if (green) {
     return (
-      <div className={`relative flex items-center bg-[var(--k-base-300)] border border-[#22c55e] rounded-md h-7 overflow-visible flex-1 w-0 -mr-3 ${className ?? ""}`} style={style}>
-        <input
+      <div className={`relative flex items-center bg-[var(--k-base-300)] border border-[#22c55e] rounded-md h-7 overflow-visible flex-1 w-0 -mr-3 focus-within:ring-2 focus-within:ring-[#22c55e]/60 ${className ?? ""}`} style={style}>
+        <input aria-label={fieldLabel ? `${fieldLabel} (variable name)` : "Variable name"}
           className="bg-transparent px-2.5 py-1 text-xs font-mono outline-none text-[var(--k-text)] nodrag flex-1 min-w-0"
           value={value} onChange={(e) => onChange(e.target.value)}
           onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
         />
-        <div className="flex items-center justify-center bg-[#22c55e] text-[var(--k-base-200)] font-black font-sans text-[10px] w-5 h-[calc(100%+2px)] -my-[1px] rounded-r-[5px] select-none uppercase">o</div>
+        <div className="flex items-center justify-center bg-[#22c55e] text-[var(--k-base-200)] font-black font-sans text-[11px] w-5 h-[calc(100%+2px)] -my-[1px] rounded-r-[5px] select-none uppercase">o</div>
         {dropdown}
       </div>
     );
@@ -318,8 +326,8 @@ export function TextInput({
   return (
     <div className="relative flex flex-col flex-1 min-w-0 overflow-visible">
       <input
-        style={style}
-        className={`rounded-md px-2 py-1 text-xs font-mono outline-none nodrag bg-[var(--k-base-300)] border border-[var(--k-border)] text-[var(--k-text)] ${wide ? "w-full" : "w-[90px]"} ${className ?? ""}`}
+        style={style} aria-label={fieldLabel}
+        className={`rounded-md px-2 py-1 text-xs font-mono outline-none ${FOCUS_RING} nodrag bg-[var(--k-base-300)] border border-[var(--k-border)] text-[var(--k-text)] ${wide ? "w-full" : "w-[90px]"} ${className ?? ""}`}
         value={value} onChange={(e) => onChange(e.target.value)}
         onFocus={() => setIsFocused(true)} onBlur={() => setIsFocused(false)}
       />
@@ -331,9 +339,10 @@ export function TextInput({
 export function NumberInput({ value, onChange, className, style }: {
   value: number; onChange: (v: number) => void; className?: string; style?: React.CSSProperties;
 }) {
+  const fieldLabel = useContext(FieldLabelContext);
   return (
-    <input type="number" style={style}
-      className={`rounded-md px-2 py-1 text-xs text-[#60a5fa] font-mono bg-[var(--k-base-300)] border border-[var(--k-border)] outline-none nodrag w-[70px] ${className ?? ""}`}
+    <input type="number" style={style} aria-label={fieldLabel}
+      className={`rounded-md px-2 py-1 text-xs text-[#60a5fa] font-mono bg-[var(--k-base-300)] border border-[var(--k-border)] outline-none ${FOCUS_RING} nodrag w-[70px] ${className ?? ""}`}
       value={value} onChange={(e) => onChange(Number(e.target.value))}
     />
   );
@@ -344,9 +353,10 @@ export function SelectInput({ value, onChange, options, className, compact, styl
   options: { label: string; value: string }[];
   className?: string; compact?: boolean; style?: React.CSSProperties;
 }) {
+  const fieldLabel = useContext(FieldLabelContext);
   return (
-    <select style={style}
-      className={`rounded-md px-2 py-1 text-xs text-[var(--k-muted)] bg-[var(--k-base-300)] border border-[var(--k-border)] outline-none nodrag ${compact ? "w-[90px]" : "flex-1 w-full"} ${className ?? ""}`}
+    <select style={style} aria-label={fieldLabel}
+      className={`rounded-md px-2 py-1 text-xs text-[var(--k-muted)] bg-[var(--k-base-300)] border border-[var(--k-border)] outline-none ${FOCUS_RING} nodrag ${compact ? "w-[90px]" : "flex-1 w-full"} ${className ?? ""}`}
       value={value} onChange={(e) => onChange(e.target.value)}
     >
       {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -357,11 +367,14 @@ export function SelectInput({ value, onChange, options, className, compact, styl
 export function ToggleInput({ value, onChange, leftLabel, rightLabel }: {
   value: boolean; onChange: (v: boolean) => void; leftLabel?: string; rightLabel?: string;
 }) {
+  const fieldLabel = useContext(FieldLabelContext);
   return (
     <div className="flex items-center gap-1.5 nodrag">
       {leftLabel && <span className="text-xs text-[var(--k-muted)]">{leftLabel}</span>}
       <button type="button" onClick={() => onChange(!value)}
-        className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full transition-colors ${value ? "bg-[var(--k-primary)]" : "bg-[var(--k-base-400)]"}`}
+        role="switch" aria-checked={value}
+        aria-label={fieldLabel ?? ([leftLabel, rightLabel].filter(Boolean).join(" / ") || "Toggle")}
+        className={`relative inline-flex h-4 w-7 flex-shrink-0 items-center rounded-full outline-none ${FOCUS_RING} transition-colors ${value ? "bg-[var(--k-primary)]" : "bg-[var(--k-base-400)]"}`}
       >
         <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${value ? "translate-x-3.5" : "translate-x-0.5"}`} />
       </button>

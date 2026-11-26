@@ -6,6 +6,20 @@ import { SENSOR_PORTS } from "@/entities/board";
 // ─── Re-alias board constants ─────────────────────────────────────────────────
 const SENSOR_PORT_PINS = SENSOR_PORTS;
 
+// ─── useFresh - "is this live reading still recent?" ─────────────────────────
+// Reading the clock during render only re-checked when something else happened
+// to re-render the block, so a "live" badge stayed on after the board stopped
+// sending. This re-renders once, exactly when the reading goes stale.
+export function useFresh(ts: number | undefined, staleMs: number): boolean {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (ts == null) return;
+    const id = setTimeout(() => setNow(Date.now()), Math.max(0, ts + staleMs - Date.now()) + 1);
+    return () => clearTimeout(id);
+  }, [ts, staleMs]);
+  return ts != null && now - ts < staleMs;
+}
+
 // ─── Shared Icon Components ───────────────────────────────────────────────────
 
 export function ChipIcon() {
@@ -71,19 +85,19 @@ export function PortPinBadge({ port, mode }: { port: string; mode: "i2c" | "ultr
   return (
     <div className="mx-3 mb-1 px-2.5 py-1.5 rounded-lg border border-[var(--k-border)] bg-[var(--k-base-200)]">
       <div className="flex items-center justify-between">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Fixed GPIO - Port {port}</span>
-        <span className="text-[9px] font-mono text-[var(--k-primary)]">locked</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Fixed GPIO - Port {port}</span>
+        <span className="text-[11px] font-mono text-[var(--k-primary)]">locked</span>
       </div>
       <div className="flex gap-3 mt-0.5">
         {mode === "i2c" ? (
           <>
-            <span className="text-[10px] text-[var(--k-muted)]">SCL <span className="text-[var(--k-text)] font-mono">{p.scl}</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">SDA <span className="text-[var(--k-text)] font-mono">{p.sda}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">SCL <span className="text-[var(--k-text)] font-mono">{p.scl}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">SDA <span className="text-[var(--k-text)] font-mono">{p.sda}</span></span>
           </>
         ) : (
           <>
-            <span className="text-[10px] text-[var(--k-muted)]">TRIG <span className="text-[var(--k-text)] font-mono">{p.trig}</span></span>
-            <span className="text-[10px] text-[var(--k-muted)]">ECHO <span className="text-[var(--k-text)] font-mono">{p.echo}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">TRIG <span className="text-[var(--k-text)] font-mono">{p.trig}</span></span>
+            <span className="text-[11px] text-[var(--k-muted)]">ECHO <span className="text-[var(--k-text)] font-mono">{p.echo}</span></span>
           </>
         )}
       </div>
@@ -141,7 +155,16 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
 
   return (
     <div className="nodrag flex flex-col items-center gap-1 py-1">
+      {/* Keyboard: arrow keys change the angle (Shift = 10 steps). "nokey" stops React Flow moving the block instead. */}
       <svg ref={svgRef} width={88} height={88} style={{ cursor: "crosshair", userSelect: "none", touchAction: "none" }}
+        tabIndex={0} role="slider" aria-label="Angle in degrees" aria-valuemin={min} aria-valuemax={max} aria-valuenow={angle}
+        className="nokey rounded-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--k-primary)]"
+        onKeyDown={e => {
+          const dir = e.key === "ArrowRight" || e.key === "ArrowUp" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowDown" ? -1 : 0;
+          if (!dir) return;
+          e.preventDefault();
+          onChange(Math.max(min, Math.min(max, angle + dir * (e.shiftKey ? 10 : 1))));
+        }}
         onMouseDown={e => { e.stopPropagation(); e.preventDefault(); dragging.current = true; polarToValue(e.clientX, e.clientY); }}
       >
         {arcPath(0, 1, "var(--k-border)", 5)}
@@ -152,8 +175,8 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
         <text x={CX} y={CY + 9} textAnchor="middle" fill="var(--k-muted)" fontSize={8}>degrees</text>
       </svg>
       <div className="flex justify-between w-[88px] px-1">
-        <span className="text-[8px] text-[var(--k-dim)]">{min}°</span>
-        <span className="text-[8px] text-[var(--k-dim)]">{max}°</span>
+        <span className="text-[11px] text-[var(--k-dim)]">{min}°</span>
+        <span className="text-[11px] text-[var(--k-dim)]">{max}°</span>
       </div>
     </div>
   );
@@ -166,10 +189,10 @@ export function AngleDial({ angle, onChange, min = 0, max = 180, color = COLORS.
 // in-progress value so callers can render a live label without committing.
 export function SmoothSlider({
   value, onChange, onLiveChange, min = 0, max = 100, step = 1,
-  color = COLORS.orange, disabled = false, className = "",
+  color = COLORS.orange, disabled = false, className = "", label,
 }: {
   value: number; onChange: (v: number) => void; onLiveChange?: (v: number) => void;
-  min?: number; max?: number; step?: number; color?: string; disabled?: boolean; className?: string;
+  min?: number; max?: number; step?: number; color?: string; disabled?: boolean; className?: string; label?: string;
 }) {
   const [local, setLocal] = useState(value);
   const latest = useRef(value);
@@ -187,7 +210,7 @@ export function SmoothSlider({
 
   return (
     <input
-      type="range" min={min} max={max} step={step} value={local} disabled={disabled}
+      type="range" min={min} max={max} step={step} value={local} disabled={disabled} aria-label={label}
       onPointerDown={() => { dragging.current = true; }}
       onChange={(e) => { const v = Number(e.target.value); latest.current = v; setLocal(v); onLiveChange?.(v); }}
       onPointerUp={commit} onPointerCancel={commit} onLostPointerCapture={commit}
@@ -205,13 +228,14 @@ export function SpeedVarInput({ value, onChange }: { value: string; onChange: (v
   const active = value.trim().length > 0;
   return (
     <div className="flex items-center gap-1.5 mt-1.5">
-      <span className={`text-[8px] uppercase tracking-wider font-bold shrink-0 ${active ? "text-cyan-400" : "text-[var(--k-dim)]"}`}>var</span>
+      <span className={`text-[11px] uppercase tracking-wider font-bold shrink-0 ${active ? "text-cyan-400" : "text-[var(--k-dim)]"}`}>var</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="optional - bind to variable"
+        aria-label="Speed variable (optional)"
         spellCheck={false}
-        className={`nodrag flex-1 min-w-0 rounded px-1.5 py-0.5 text-[10px] font-mono bg-[var(--k-base-300)] border outline-none transition-colors ${
+        className={`nodrag flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-mono bg-[var(--k-base-300)] border outline-none transition-colors ${
           active ? "border-cyan-700 text-cyan-400" : "border-[var(--k-border)] text-[var(--k-muted)] focus:border-cyan-800"
         }`}
       />
@@ -243,13 +267,13 @@ export function SpeedControl({
     <div className="px-3 pt-1.5">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-[var(--k-muted)] font-medium">{label}</span>
-        <span className="text-[10px] font-mono" style={{ color: usingVar ? "#22d3ee" : color }}>
+        <span className="text-[11px] font-mono" style={{ color: usingVar ? "#22d3ee" : color }}>
           {usingVar ? varName.trim() : readout}
         </span>
       </div>
       <SmoothSlider
         value={value} onChange={onChange} onLiveChange={setDisp}
-        min={min} max={max} step={step} color={color} disabled={usingVar}
+        min={min} max={max} step={step} color={color} disabled={usingVar} label={label}
       />
       <SpeedVarInput value={varName} onChange={onVarChange} />
     </div>

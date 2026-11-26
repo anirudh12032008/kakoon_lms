@@ -74,7 +74,7 @@ export function ForeverLoopNode() {
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
-              className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+              className="nodrag text-[11px] font-bold px-2 py-0.5 rounded transition-colors"
               style={{
                 background: sleepEnabled ? color + "33" : "var(--k-base-300)",
                 color: sleepEnabled ? color : "var(--k-text-muted)",
@@ -118,7 +118,7 @@ export function ForLoopNode() {
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
-            className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+            className="nodrag text-[11px] font-bold px-2 py-0.5 rounded transition-colors"
             style={{
               background: sleepEnabled ? color + "33" : "var(--k-base-300)",
               color: sleepEnabled ? color : "var(--k-text-muted)",
@@ -152,7 +152,7 @@ export function WhileLoopNode() {
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
-            className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+            className="nodrag text-[11px] font-bold px-2 py-0.5 rounded transition-colors"
             style={{
               background: sleepEnabled ? color + "33" : "var(--k-base-300)",
               color: sleepEnabled ? color : "var(--k-text-muted)",
@@ -186,7 +186,7 @@ export function RepeatNode() {
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setSleepEnabled(!sleepEnabled); }}
-            className="nodrag text-[10px] font-bold px-2 py-0.5 rounded transition-colors"
+            className="nodrag text-[11px] font-bold px-2 py-0.5 rounded transition-colors"
             style={{
               background: sleepEnabled ? color + "33" : "var(--k-base-300)",
               color: sleepEnabled ? color : "var(--k-text-muted)",

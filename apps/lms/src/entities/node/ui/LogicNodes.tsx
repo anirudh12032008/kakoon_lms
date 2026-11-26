@@ -82,9 +82,9 @@ export function TimerIntervalNode() {
 
       {/* freq readout */}
       <div className="mx-3 mb-1 flex items-center justify-between px-2.5 py-1 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
-        <span className="text-[9px] text-[var(--k-muted)]">Period</span>
+        <span className="text-[11px] text-[var(--k-muted)]">Period</span>
         <span className="text-[11px] font-mono font-bold text-cyan-400">{ms >= 1000 ? `${(ms/1000).toFixed(2)} s` : `${ms} ms`}</span>
-        <span className="text-[9px] text-[var(--k-muted)]">{hz} Hz</span>
+        <span className="text-[11px] text-[var(--k-muted)]">{hz} Hz</span>
       </div>
 
       <NodeField label="Auto-start"><ToggleInput value={autoStart} onChange={setAutoStart} leftLabel="Off" rightLabel="On" /></NodeField>
@@ -127,7 +127,7 @@ export function VariableStateNode() {
             { label: "Boolean", value: "bool" },
             { label: "String", value: "string" },
           ]} />
-        <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold font-mono uppercase"
+        <span className="ml-1 px-1.5 py-0.5 rounded text-[11px] font-bold font-mono uppercase"
           style={{ background: `${tc}22`, color: tc, border: `1px solid ${tc}55` }}>{type}</span>
       </NodeField>
       <NodeField label="Init value"><TextInput value={initVal} onChange={setInitVal} wide /></NodeField>
@@ -140,10 +140,10 @@ export function VariableStateNode() {
         <div className="flex items-center gap-1">
           <Handle type="target" position={Position.Left} id="write"
             style={{ ...makeHandleStyle(COLORS.orange), left: -6 }} />
-          <span className="text-[9px] text-[var(--k-muted)] font-mono ml-4">WRITE IN</span>
+          <span className="text-[11px] text-[var(--k-muted)] font-mono ml-4">WRITE IN</span>
         </div>
         <div className="flex items-center gap-1">
-          <span className="text-[9px] text-[var(--k-muted)] font-mono mr-4">READ OUT</span>
+          <span className="text-[11px] text-[var(--k-muted)] font-mono mr-4">READ OUT</span>
           <Handle type="source" position={Position.Right} id="read"
             style={{ ...makeHandleStyle(tc), right: -6 }} />
         </div>
@@ -151,7 +151,7 @@ export function VariableStateNode() {
 
       {/* live value pill */}
       <div className="mx-3 mb-2 flex items-center justify-center px-3 py-1.5 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
-        <span className="text-[9px] text-[var(--k-muted)] mr-2">Current value:</span>
+        <span className="text-[11px] text-[var(--k-muted)] mr-2">Current value:</span>
         <span className="text-xs font-mono font-bold" style={{ color: tc }}>{initVal}</span>
       </div>
     </BaseNode>
@@ -213,17 +213,17 @@ export function MathTransformNode() {
 
       {op === "map" && (<>
         <div className="mx-3 mt-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] p-2">
-          <div className="text-[9px] text-[var(--k-muted)] mb-1.5 uppercase tracking-wider font-bold">Input Range → Output Range</div>
+          <div className="text-[11px] text-[var(--k-muted)] mb-1.5 uppercase tracking-wider font-bold">Input Range → Output Range</div>
           <div className="flex items-center gap-1.5 mb-1">
-            <span className="text-[9px] text-[var(--k-muted)] w-6">in</span>
+            <span className="text-[11px] text-[var(--k-muted)] w-6">in</span>
             <NumberInput value={inMin} onChange={setInMin} style={{ width: 54 }} />
-            <span className="text-[9px] text-[var(--k-dim)]">to</span>
+            <span className="text-[11px] text-[var(--k-dim)]">to</span>
             <NumberInput value={inMax} onChange={setInMax} style={{ width: 54 }} />
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[9px] text-[var(--k-muted)] w-6">out</span>
+            <span className="text-[11px] text-[var(--k-muted)] w-6">out</span>
             <NumberInput value={outMin} onChange={setOutMin} style={{ width: 54 }} />
-            <span className="text-[9px] text-[var(--k-dim)]">to</span>
+            <span className="text-[11px] text-[var(--k-dim)]">to</span>
             <NumberInput value={outMax} onChange={setOutMax} style={{ width: 54 }} />
           </div>
         </div>
@@ -235,10 +235,10 @@ export function MathTransformNode() {
 
       {op === "clamp" && (
         <div className="mx-3 mt-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] p-2">
-          <div className="text-[9px] text-[var(--k-muted)] mb-1.5 uppercase tracking-wider font-bold">Clamp Range</div>
+          <div className="text-[11px] text-[var(--k-muted)] mb-1.5 uppercase tracking-wider font-bold">Clamp Range</div>
           <div className="flex items-center gap-1.5">
             <NumberInput value={clampMin} onChange={setClampMin} style={{ width: 60 }} />
-            <span className="text-[9px] text-[var(--k-dim)]">to</span>
+            <span className="text-[11px] text-[var(--k-dim)]">to</span>
             <NumberInput value={clampMax} onChange={setClampMax} style={{ width: 60 }} />
           </div>
         </div>
@@ -251,11 +251,11 @@ export function MathTransformNode() {
       {/* preview button */}
       <div className="px-3 py-1">
         <button onClick={handlePreview}
-          className="nodrag w-full py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 text-[10px] font-bold transition-all">
+          className="nodrag w-full py-1 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 text-[11px] font-bold transition-all">
           Test with x = 2048
         </button>
         {preview && (
-          <div className="mt-1 text-center text-[10px] font-mono font-bold text-cyan-400 bg-[var(--k-base-100)] rounded px-2 py-1 border border-[var(--k-base-300)]">
+          <div className="mt-1 text-center text-[11px] font-mono font-bold text-cyan-400 bg-[var(--k-base-100)] rounded px-2 py-1 border border-[var(--k-base-300)]">
             {preview}
           </div>
         )}

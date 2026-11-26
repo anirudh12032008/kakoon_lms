@@ -66,7 +66,7 @@ export function DHT11Node() {
         <Handle type="source" position={Position.Right} id="humidity" style={{ ...outHS, right: -6 }} />
       </NodeField>
       <AdvancedSection>
-        <p className="px-3 pb-2 text-[9px] text-[var(--k-dim)] leading-relaxed">
+        <p className="px-3 pb-2 text-[11px] text-[var(--k-dim)] leading-relaxed">
           DHT11 needs ~1–2 s between reads. Place this inside a loop with a Sleep ≥ 1 s.
           Requires the <span className="font-mono text-[var(--k-muted)]">dht</span> module (built-in on most ESP32 firmware).
         </p>
@@ -129,7 +129,7 @@ export function ButtonDigitalInputNode() {
         <div className="px-3 py-1">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs text-[var(--k-muted)] font-medium">Debounce</span>
-            <span className="text-[10px] font-mono text-blue-400">{debounce} ms</span>
+            <span className="text-[11px] font-mono text-blue-400">{debounce} ms</span>
           </div>
           <input type="range" min={0} max={200} step={5} value={debounce}
             onChange={e => setDebounce(Number(e.target.value))}
@@ -137,8 +137,8 @@ export function ButtonDigitalInputNode() {
             style={{ accentColor: COLORS.blue }}
           />
           <div className="flex justify-between mt-0.5">
-            <span className="text-[8px] text-[var(--k-dim)]">0 ms</span>
-            <span className="text-[8px] text-[var(--k-dim)]">200 ms</span>
+            <span className="text-[11px] text-[var(--k-dim)]">0 ms</span>
+            <span className="text-[11px] text-[var(--k-dim)]">200 ms</span>
           </div>
         </div>
         <NodeField label="Hold (ms)"><NumberInput value={holdDuration} onChange={setHoldDuration} /></NodeField>
@@ -146,7 +146,7 @@ export function ButtonDigitalInputNode() {
 
       {/* Three output events */}
       <div className="px-3 pt-1 pb-0.5">
-        <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Output Events</span>
+        <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">Output Events</span>
       </div>
       <NodeField label="Press">
         <TextInput value={pressVar} onChange={setPressVar} green />

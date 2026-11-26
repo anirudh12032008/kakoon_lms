@@ -82,7 +82,7 @@ export function DeepSleepNode() {
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={mc} strokeWidth="2.5">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <span className="text-[9px]" style={{ color: mc }}>
+        <span className="text-[11px]" style={{ color: mc }}>
           {sleepMode === "deep" ? "CPU + RAM off. Wake restarts from setup()." :
            sleepMode === "light" ? "CPU paused. RAM retained. Fast wake." :
            "WiFi modem off. CPU running. Low-power."}
@@ -108,7 +108,7 @@ export function DeepSleepNode() {
       </>)}
       {useTouch && (
         <div className="px-3 py-1">
-          <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] px-2.5 py-1.5 text-[9px] text-[var(--k-muted)]">
+          <div className="rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] px-2.5 py-1.5 text-[11px] text-[var(--k-muted)]">
             Touch pad wake uses capacitive touch pins (T0–T9). Configure touch threshold in code.
           </div>
         </div>
@@ -127,7 +127,7 @@ export function DeepSleepNode() {
       )}
 
       <div className="px-3 pb-2 pt-1">
-        <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5 text-[9px] text-red-400 font-medium">
+        <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-2.5 py-1.5 text-[11px] text-red-400 font-medium">
           Place at end of flow. No code runs after sleep in deep mode.
         </div>
       </div>
@@ -165,7 +165,7 @@ export function OTAUpdateNode() {
           <path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M5 12.55a11 11 0 0 1 14.08 0"/>
           <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/>
         </svg>
-        <span className="text-[9px] text-cyan-400">Requires WiFi Node to be connected</span>
+        <span className="text-[11px] text-cyan-400">Requires WiFi Node to be connected</span>
       </div>
 
       <NodeField label="Hostname"><TextInput value={hostname} onChange={setHostname} wide /></NodeField>
@@ -198,12 +198,12 @@ export function OTAUpdateNode() {
       {/* progress sim */}
       <div className="px-3 pb-2 pt-1">
         <button onClick={handleSim}
-          className="nodrag w-full py-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-[10px] font-bold transition-all">
+          className="nodrag w-full py-1 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 text-[11px] font-bold transition-all">
           Simulate OTA flash
         </button>
         {simProgress !== null && (
           <div className="mt-1.5">
-            <div className="flex justify-between text-[9px] font-mono mb-0.5">
+            <div className="flex justify-between text-[11px] font-mono mb-0.5">
               <span className="text-[var(--k-muted)]">Flashing firmware…</span>
               <span className="text-cyan-400 font-bold">{simProgress}%</span>
             </div>
@@ -211,7 +211,7 @@ export function OTAUpdateNode() {
               <div className="h-full bg-cyan-500 rounded-full transition-all duration-200" style={{ width: `${simProgress}%` }} />
             </div>
             {simProgress === 100 && (
-              <div className="mt-1 text-center text-[9px] text-green-400 font-bold">Flash complete! Rebooting…</div>
+              <div className="mt-1 text-center text-[11px] text-green-400 font-bold">Flash complete! Rebooting…</div>
             )}
           </div>
         )}
@@ -251,7 +251,7 @@ export function SDCardNode() {
       </NodeField>
       <NodeField label="Filename"><TextInput value={filename} onChange={setFilename} wide /></NodeField>
       <div className="px-3">
-        <div className="text-[8px] text-[var(--k-dim)] mb-1">Tokens: {"{yyyy}"} {"{mm}"} {"{dd}"} {"{hh}"} {"{min}"} {"{ss}"}</div>
+        <div className="text-[11px] text-[var(--k-dim)] mb-1">Tokens: {"{yyyy}"} {"{mm}"} {"{dd}"} {"{hh}"} {"{min}"} {"{ss}"}</div>
       </div>
 
       {(mode === "write" || mode === "rw") && (<>
@@ -261,34 +261,34 @@ export function SDCardNode() {
         </NodeField>
         <NodeField label="Flush every">
           <NumberInput value={flushMs} onChange={setFlushMs} style={{ width: 70 }} />
-          <span className="text-[10px] text-[var(--k-muted)] ml-1">ms</span>
+          <span className="text-[11px] text-[var(--k-muted)] ml-1">ms</span>
         </NodeField>
 
         {/* CSV column mapper */}
         <div className="mx-3 mt-1 mb-0.5 rounded-lg border border-[var(--k-base-300)] bg-[var(--k-base-100)] overflow-hidden">
           <div className="flex items-center justify-between px-2.5 py-1.5 border-b border-[var(--k-base-300)]">
-            <span className="text-[9px] uppercase tracking-wider text-[var(--k-muted)] font-bold">CSV Columns</span>
+            <span className="text-[11px] uppercase tracking-wider text-[var(--k-muted)] font-bold">CSV Columns</span>
             <button onClick={addCol}
-              className="nodrag text-[9px] px-1.5 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold transition-all">
+              className="nodrag text-[11px] px-1.5 py-0.5 rounded border border-green-500/30 bg-green-500/10 text-green-400 hover:bg-green-500/20 font-bold transition-all">
               + Add
             </button>
           </div>
-          <div className="flex px-2.5 py-1 text-[8px] text-[var(--k-dim)] uppercase tracking-wider gap-2">
+          <div className="flex px-2.5 py-1 text-[11px] text-[var(--k-dim)] uppercase tracking-wider gap-2">
             <span className="w-[80px]">Header</span>
             <span className="flex-1">Variable</span>
           </div>
           {csvCols.map((col, i) => (
             <div key={i} className="flex items-center gap-1.5 px-2 py-1 border-t border-[var(--k-base-200)]">
               <input value={col.label} onChange={(e) => updateCol(i, "label", e.target.value)}
-                className="nodrag w-[72px] text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-[var(--k-text)] outline-none" />
+                className="nodrag w-[72px] text-[11px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-[var(--k-text)] outline-none" />
               <input value={col.varName} onChange={(e) => updateCol(i, "varName", e.target.value)}
-                className="nodrag flex-1 text-[10px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
+                className="nodrag flex-1 text-[11px] font-mono bg-[var(--k-base-200)] border border-[var(--k-border)] rounded px-1.5 py-0.5 text-cyan-400 outline-none" />
               <button onClick={() => removeCol(i)}
-                className="nodrag text-[var(--k-dim)] hover:text-red-400 transition-colors text-[10px] px-1">×</button>
+                className="nodrag text-[var(--k-dim)] hover:text-red-400 transition-colors text-[11px] px-1">×</button>
             </div>
           ))}
           {csvCols.length === 0 && (
-            <div className="px-3 py-2 text-center text-[9px] text-[var(--k-dim)]">No columns defined</div>
+            <div className="px-3 py-2 text-center text-[11px] text-[var(--k-dim)]">No columns defined</div>
           )}
         </div>
       </>)}
@@ -296,7 +296,7 @@ export function SDCardNode() {
       {/* SPI pins collapsible */}
       <div className="px-3 mt-0.5 mb-1">
         <button onClick={() => setShowPins(!showPins)}
-          className="nodrag w-full flex items-center justify-between py-1 text-[9px] text-[var(--k-muted)] hover:text-[var(--k-text)] transition-colors">
+          className="nodrag w-full flex items-center justify-between py-1 text-[11px] text-[var(--k-muted)] hover:text-[var(--k-text)] transition-colors">
           <span>SPI Pins (CS/MOSI/MISO/CLK)</span>
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
             style={{ transform: showPins ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }}>
@@ -307,7 +307,7 @@ export function SDCardNode() {
           <div className="grid grid-cols-2 gap-1.5 mt-1">
             {[["CS", spiCs, setSpiCs], ["MOSI", spiMosi, setSpiMosi], ["MISO", spiMiso, setSpiMiso], ["CLK", spiClk, setSpiClk]].map(([lbl, val, fn]) => (
               <div key={lbl as string} className="flex items-center gap-1">
-                <span className="text-[9px] text-[var(--k-muted)] w-9">{lbl as string}</span>
+                <span className="text-[11px] text-[var(--k-muted)] w-9">{lbl as string}</span>
                 <NumberInput value={val as number} onChange={fn as (v: number) => void} style={{ width: 52 }} />
               </div>
             ))}
@@ -318,10 +318,10 @@ export function SDCardNode() {
       {/* status output */}
       <div className="px-3 pb-2">
         <div className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[var(--k-base-100)] border border-[var(--k-base-300)]">
-          <span className="text-[9px] text-[var(--k-muted)]">Write status →</span>
+          <span className="text-[11px] text-[var(--k-muted)]">Write status →</span>
           <Handle type="source" position={Position.Right} id="status"
             style={{ ...outHS(COLORS.green), right: -22 }} />
-          <span className="text-[9px] text-[var(--k-dim)] mr-2">ok/err</span>
+          <span className="text-[11px] text-[var(--k-dim)] mr-2">ok/err</span>
         </div>
       </div>
     </BaseNode>
