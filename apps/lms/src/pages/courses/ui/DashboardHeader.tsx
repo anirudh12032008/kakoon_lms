@@ -1,7 +1,7 @@
 import { APP_NAME } from "@/shared/config/brand";
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { BookOpen, FolderOpen, LogOut } from "lucide-react";
+import { BookOpen, Cpu, FolderOpen, LogOut } from "lucide-react";
 import { useAuth } from "@/shared/auth/AuthContext";
 import { ThemeSwitcher } from "@/shared/theme/ThemeSwitcher";
 import { BrandMark } from "@/shared/ui/BrandMark";
@@ -35,8 +35,11 @@ export function DashboardHeader() {
             aria-label="Main"
             className="order-last -mx-4 flex w-[calc(100%+2rem)] border-t border-subtle sm:order-none sm:mx-0 sm:w-auto sm:self-stretch sm:border-t-0"
           >
-            <NavLink to="/courses" className={navItem}>
+            <NavLink to="/learn" className={navItem}>
               <BookOpen className="h-4 w-4" aria-hidden="true" /> Learn
+            </NavLink>
+            <NavLink to="/courses" className={navItem}>
+              <Cpu className="h-4 w-4" aria-hidden="true" /> Projects
             </NavLink>
             <NavLink to="/projects" className={navItem}>
               <FolderOpen className="h-4 w-4" aria-hidden="true" /> My projects

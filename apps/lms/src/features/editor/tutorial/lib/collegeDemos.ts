@@ -122,7 +122,7 @@ export function collegeDemos(boardId: BoardId): Tutorial[] {
       flow("plant", 1000, [["soil_moisture", { varName: "moisture" }], when("moisture", ">", t.dryAbove, [relay(true)], [relay(false)])])),
 
     demo("demo_gas_leak", "Smart Gas Leakage Monitoring",
-      "An MQ-2 gas sensor sniffs the air. When the reading goes above the safe level, an active buzzer and a warning LED switch on until the air is clear.",
+      "An MQ-2 gas sensor sniffs the air. When the reading goes above the threshold you chose, a buzzer module and a warning LED switch on until the air is clear.",
       "Easy", ["gas_sensor", "if_else", "gpio_pin", "pin_write", "led"],
       flow("gas", 500, [["gas_sensor"], when("gas", ">", t.gasAbove, [buzzer(true), led(true)], [buzzer(false), led(false)])], buzzerPin)),
 
@@ -132,13 +132,13 @@ export function collegeDemos(boardId: BoardId): Tutorial[] {
       flow("pir", 200, [["pir_motion"], when("motion", "==", 1, [relay(true)], [relay(false)])])),
 
     demo("demo_rain_detector", "Smart Rain Detector",
-      "A rain sensor board reads lower when water drops land on it. When it rains, an active buzzer sounds and \"Rain detected!\" is printed in the console.",
+      "A rain sensor board reads lower when water drops land on it. When it rains, a buzzer module sounds and \"Rain detected!\" is printed in the console.",
       "Easy", ["rain_sensor", "if_else", "gpio_pin", "pin_write", "print"],
       flow("rain", 500, [["rain_sensor"],
         when("rain", "<", t.wetBelow, [buzzer(true), ["print", { text: "'Rain detected!'" }]], [buzzer(false)])], buzzerPin)),
 
     demo("demo_water_level", "Water Level Monitoring",
-      "A water level sensor in the tank shows its reading on a 16x2 I2C LCD. When the tank is nearly full, an active buzzer warns you to stop the pump.",
+      "A water level sensor in the tank shows its reading on a 16x2 I2C LCD. When the tank is nearly full, a buzzer module warns you to stop the pump.",
       "Medium", ["water_level", "lcd_16x2", "if_else", "gpio_pin", "pin_write"],
       flow("water", 1000, [["water_level"], ["lcd_16x2", { line1: "Water level", line2: "{water_level}" }],
         when("water_level", ">", t.waterAbove, [buzzer(true)], [buzzer(false)])], buzzerPin)),
@@ -171,7 +171,7 @@ export function collegeDemos(boardId: BoardId): Tutorial[] {
       ])),
 
     demo("demo_rfid_door_lock", "Smart Door Lock (RFID)",
-      "Tap an RFID card on the reader: the allowed card turns the servo to open the lock for 3 seconds, any other card sounds an active buzzer. Each card's ID is printed in the console so you can put your own card in the If block.",
+      "Tap an RFID card on the reader: the allowed card turns the servo to open the lock for 3 seconds, any other card sounds a buzzer module. Each card's ID is printed in the console so you can put your own card in the If block.",
       "Hard", ["rfid_reader", "if_else", "servo_motor", "gpio_pin", "pin_write", "print", "sleep"],
       // The If/Else value box only takes numbers, so the text comparisons sit in
       // the left box in brackets: (a == "b") is 1 when true in both languages.

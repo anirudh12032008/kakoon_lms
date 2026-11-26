@@ -20,6 +20,8 @@ import { ProjectsPage } from "@/pages/projects/ui/ProjectsPage";
 import { SharedProjectPage } from "@/pages/projects/ui/SharedProjectPage";
 
 const EditorPage = lazy(() => import("@/pages/editor/ui/EditorPage"));
+const LearnPage = lazy(() => import("@/pages/learn/ui/LearnPages").then((m) => ({ default: m.LearnPage })));
+const LessonPage = lazy(() => import("@/pages/learn/ui/LearnPages").then((m) => ({ default: m.LessonPage })));
 
 /** Keeps the gamification store pointed at the signed-in user's profile. */
 function GamificationBridge() {
@@ -97,6 +99,8 @@ export default function App() {
 
           {/* Authenticated */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/learn" element={<Suspense fallback={null}><LearnPage /></Suspense>} />
+            <Route path="/learn/:lessonId" element={<Suspense fallback={null}><LessonPage /></Suspense>} />
             <Route path="/courses" element={<CoursesPage />} />
             <Route path="/courses/:slug" element={<CourseDetailPage />} />
             <Route path="/projects" element={<ProjectsPage />} />

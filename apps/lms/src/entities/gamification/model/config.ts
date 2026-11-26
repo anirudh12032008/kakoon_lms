@@ -8,6 +8,7 @@ export const XP_REWARDS = {
   levelComplete: 50, // finishing a build level in a course
   challengeComplete: 30, // finishing an optional challenge
   courseComplete: 200, // one-time bonus when a course hits 100%
+  lessonComplete: 40, // finishing a study plan lesson (quiz passed)
   runCode: 10, // running code on the robot (daily-capped)
   uploadCode: 15, // saving code onto the ESP32 (daily-capped)
 } as const;

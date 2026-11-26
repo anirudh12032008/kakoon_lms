@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { Node, Edge } from "@xyflow/react";
 import { builtinTutorials, type Tutorial } from "@/features/editor/tutorial/lib/tutorials";
 import { useBoardStore } from "@/entities/board";
+import { useModal } from "@/shared/context/ModalContext";
 import type { NodeCanvasRef } from "@/widgets/node-canvas/ui/NodeCanvas";
 import type { RefObject } from "react";
 
@@ -12,6 +13,7 @@ interface UseTutorialOptions {
 }
 
 export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOptions) {
+  const { confirm } = useModal();
   const [showTutorialsCatalog, setShowTutorialsCatalog] = useState(false);
   const [activeTutorial, setActiveTutorial] = useState<Tutorial | null>(null);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
@@ -49,7 +51,14 @@ export function useTutorial({ canvasRef, addLog, isLoadingDraft }: UseTutorialOp
     if (!id) return;
     sessionStorage.removeItem("codelab-open-demo");
     const demo = builtinTutorials(useBoardStore.getState().boardId).find((t) => t.id === id);
-    if (demo) canvasRef.current?.setWorkspace({ nodes: demo.nodes, edges: demo.edges });
+    if (!demo) return;
+    const open = () => canvasRef.current?.setWorkspace({ nodes: demo.nodes, edges: demo.edges });
+    // The sandbox keeps the last draft: ask before replacing blocks the student built.
+    const current = canvasRef.current?.getWorkspace().nodes ?? [];
+    const sameProject = current.length > 0 && current.every((n) => demo.nodes.some((d) => d.id === n.id));
+    if (current.length === 0 || sameProject) open();
+    else void confirm(`Open "${demo.title}"? This replaces the blocks currently on your canvas.`).then((ok) => { if (ok) open(); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- runs once when the draft has loaded
   }, [isLoadingDraft, canvasRef]);
 
   // Load tutorial state from localStorage on mount
