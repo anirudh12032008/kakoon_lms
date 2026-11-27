@@ -36,6 +36,12 @@ const lessons: ModuleContent = {
       ] },
       { t: "p", text: "Voltage is always measured **between two points**, just as the height of a tank only means something compared with the ground. When a board pin is described as 5 V, that means 5 V higher than the board's **GND** pin, which is the agreed zero." },
       { t: "p", text: "The currents in this course are small, so you will mostly see **milliamps**. One milliamp (mA) is a thousandth of an amp, so 20 mA is 0.020 A. Resistances are often large, so you will see **kilohms**: 1 kΩ is 1000 Ω." },
+      { t: "deep", title: "What current really is: charge on the move", blocks: [
+        { t: "p", text: "Current is the flow of electric charge. Charge is measured in **coulombs**, and one ampere means one coulomb passing a point every second. A single electron carries a tiny charge, so 1 A is about 6.24 × 10¹⁸ electrons per second (6 followed by 18 zeros)." },
+        { t: "formula", text: "1 A = 1 coulomb per second ≈ 6.24 × 10¹⁸ electrons per second" },
+        { t: "p", text: "The electrons themselves crawl. In a copper wire with a cross-section of 1 mm² carrying 1 A, they drift along at well under a tenth of a millimetre per second. A light still turns on instantly because the wire is already full of electrons: pushing at one end moves them all at once, like water in a full pipe." },
+        { t: "note", kind: "tip", text: "Circuit diagrams draw current flowing from + to -. Electrons actually move from - to +. The + to - convention, called **conventional current**, was fixed before electrons were discovered and is still used everywhere. It gives the same answers in every calculation." },
+      ] },
 
       { t: "h", text: "Current needs a complete loop" },
       { t: "p", text: "Water from the tank ends up on the ground. Charge is different: it has to travel all the way round and back to where it started. Current flows only when there is an unbroken path from the supply, through the parts, and back to the supply. That path is a **circuit**, and the return side is the wire to GND." },
@@ -50,6 +56,11 @@ const lessons: ModuleContent = {
         "**Almost no resistance**: a very large current. This is a short circuit, and it is dangerous.",
       ] },
       { t: "p", text: "An example with the two boards. Take one resistor and connect it first across a 5 V supply and then across a 3.3 V supply. The resistor has not changed, but the push is smaller the second time, so the current is smaller too: about two thirds of what it was, because 3.3 is about two thirds of 5. The next lesson turns this reasoning into a formula." },
+      { t: "deep", title: "Where resistance comes from", blocks: [
+        { t: "p", text: "A wire's resistance depends on three things: the material, its length and its thickness. A longer wire is more obstacle course to cross, and a thicker wire gives the charge more room." },
+        { t: "formula", text: "R = ρ × length / area", caption: "ρ (rho) is the resistivity of the material. Copper is about 1.7 × 10⁻⁸ Ω·m." },
+        { t: "p", text: "A worked example: 1 m of copper wire with a cross-section of 0.5 mm² (0.5 × 10⁻⁶ m²). R = 1.7 × 10⁻⁸ × 1 / 0.5 × 10⁻⁶ ≈ **0.034 Ω**. That is why jumper wires can usually be treated as having no resistance, while a resistor deliberately made from a poorer conductor can have thousands of ohms in a few millimetres." },
+      ] },
 
       { t: "h", text: "Voltage is offered, current is drawn" },
       { t: "p", text: "A phone charger marked 5 V and 2 A does not force 2 A into whatever is connected. The 5 V is the push it provides. The 2 A is the **most** it can supply. The connected device decides how much current it actually takes, according to its resistance." },
@@ -143,11 +154,23 @@ const lessons: ModuleContent = {
       { t: "p", text: "That voltage is called the **forward voltage**. It depends on the colour. Typical figures are around 2 V for red and yellow, a little more for green, and around 3 V for blue and white. These are typical values, not exact ones: individual LEDs differ." },
       { t: "p", text: "Now the danger. Connect a red LED straight across 5 V. The LED takes about 2 V and conducts freely, so nothing is left to limit the current except the supply itself. The current rises far above what the LED can stand. It overheats and is destroyed, sometimes with a brief bright flash, and it can damage the board pin feeding it." },
       { t: "note", kind: "safety", text: "Every LED gets a resistor in series, every time. A value of 220 Ω to 330 Ω is the standard starting point on both boards." },
+      { t: "deep", title: "Why an LED's voltage depends on its colour", blocks: [
+        { t: "p", text: "Light comes in small packets of energy called **photons**, and each colour has its own photon energy: blue photons carry more energy than red ones. An LED makes light when an electron drops across a gap in the semiconductor and gives its energy away as one photon. The voltage across the LED has to be at least large enough to give each electron that much energy." },
+        { t: "formula", text: String.raw`photon energy (in electron-volts) ≈ 1240 / wavelength (in nm)
+red,   about 625 nm:  1240 / 625 ≈ 1.98 eV  →  LED needs about 2 V
+green, about 525 nm:  1240 / 525 ≈ 2.36 eV
+blue,  about 470 nm:  1240 / 470 ≈ 2.64 eV  →  LED needs about 3 V` },
+        { t: "p", text: "One electron-volt of energy per electron corresponds to one volt, so the photon energy is a floor for the forward voltage. Real blue, white and bright green LEDs need a little more than that floor, about 3 V, because of losses inside the chip. This is why a blue LED that glows on a 5 V board may be very dim or dark on 3.3 V: after its 3 V there is almost nothing left for the resistor." },
+      ] },
 
       { t: "h", text: "The resistor takes up the difference" },
       { t: "p", text: "Put a resistor in the same line as the LED, one after the other. This is called **in series**, and the same current flows through both. The LED keeps its forward voltage. The resistor takes whatever voltage is left over, and Ohm's law applied to the resistor sets the current." },
       { t: "formula", text: "R = (Vsupply - Vled) / I", caption: "`Vsupply` is the supply voltage, `Vled` is the LED's forward voltage, and `I` is the current you want, in amps." },
       { t: "p", text: "A typical small LED is clearly visible at 5 mA to 10 mA. More current than about 20 mA is rarely useful, and about 20 mA is also the most you should plan to take from one board pin (a typical working limit). Aim for about 10 mA or less." },
+      { t: "deep", title: "Why an LED needs a resistor and a bulb does not", blocks: [
+        { t: "p", text: "A filament bulb behaves roughly like a resistor: double the voltage and the current roughly doubles, so it limits itself. An LED does not. Below its forward voltage almost no current flows. Just above it, the current rises steeply, so that an extra tenth of a volt can multiply the current several times." },
+        { t: "p", text: "Connected straight to a pin, the LED would try to pull far more current than the pin or the LED can survive, and the pin voltage would sag until something gave way. The series resistor turns that steep curve into a gentle one: if the current tries to grow, the voltage across the resistor grows with it and leaves less for the LED. The LED settles at a current set almost entirely by the resistor." },
+      ] },
 
       { t: "h", text: "Worked example on 5 V" },
       { t: "list", ordered: true, items: [
@@ -258,6 +281,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "Two legs in the same row of five are connected. Two legs in neighbouring rows are not. So to join two parts, put one leg of each in the **same row**. To keep two legs apart, put them in **different rows**." },
       { t: "p", text: "That second point catches every beginner once. If both legs of an LED or a resistor are pushed into the same row, the breadboard joins them together and the current goes round the part instead of through it. A part must always **bridge two different rows**." },
       { t: "note", kind: "warn", text: "On many longer breadboards each power rail is split into two halves at the middle of the board. If parts on one half have no power, look for a break in the red and blue lines and bridge it with a short jumper." },
+      { t: "deep", title: "Inside a breadboard: the metal clips", blocks: [
+        { t: "p", text: "Under each row of five holes is a single strip of springy metal folded into five clips. A wire or a component leg pushed into a hole is gripped by one clip, and the strip connects it to the other four. The holes are 2.54 mm apart (one tenth of an inch), the same spacing as the legs of most chips and the pins of the boards in this course, which is why a module can plug straight in." },
+        { t: "p", text: "The clips wear out. Thick legs, such as those of large diodes or bent resistor leads, spread them open, and afterwards a thin jumper wire in that hole may only touch now and then. A connection that works when you press on it and fails when you let go is very often a tired clip. Move the part to a fresh row." },
+        { t: "note", kind: "tip", text: "On some long breadboards each power rail is split in the middle, often shown by a gap in the printed red or blue line. If the far half of a rail seems dead, bridge the gap with a short wire." },
+      ] },
 
       { t: "h", text: "Power rails and the board's power pins" },
       { t: "p", text: "Your board gets 5 V from the USB cable. It offers power to your circuit through labelled pins:" },
@@ -277,6 +305,10 @@ const lessons: ModuleContent = {
       { t: "p", text: "A **short circuit** is a path from supply to ground with almost no resistance in it. Ohm's law says what follows: a tiny `R` gives a huge `I`. Wires get hot, the board may switch off or reset, the computer may shut down its USB port, and parts can be damaged." },
       { t: "p", text: "On a breadboard a short usually comes from one of three slips: a jumper placed straight between the two power rails, both legs of a part in one row that also touches supply and ground, or bare component legs bent until they touch each other." },
       { t: "note", kind: "safety", text: "Never join a 5 V or 3.3 V pin directly to GND. Unplug the USB cable before you add, move or remove any wire, and look over the whole circuit once more before plugging it back in." },
+      { t: "deep", title: "How much current flows in a short circuit", blocks: [
+        { t: "p", text: "Ohm's law answers it. A short is a path of almost no resistance. A jumper wire from 5 V to GND might be 0.05 Ω, and 5 / 0.05 = 100 A. No USB port can supply that, so what really happens is that the supply hits its own limit: its voltage collapses, protection trips, or something heats up until it fails." },
+        { t: "p", text: "Many boards include a protective part. The Arduino Uno has a **resettable fuse** on its USB supply, rated around 500 mA: when too much current flows it heats up, its resistance shoots up, and it cuts the current until it cools down again. Computers also limit the current of their USB ports. These are safety nets, not permission. A short through a thin wire can still burn the wire's insulation or a breadboard strip, and a short on a battery or bench supply may have no limit at all." },
+      ] },
 
       { t: "h", text: "Building the LED circuit" },
       { t: "p", text: "This circuit uses no program. It simply lights an LED from the board's supply pin, so you can practise the breadboard itself. With USB unplugged:" },
@@ -406,6 +438,10 @@ const lessons: ModuleContent = {
       ], caption: "Example figures. Your readings will differ a little with the LED, the resistor and the board." },
       { t: "p", text: "Two things can be read from this. First, 3.1 + 1.9 = 5.0: the voltages across the parts of a series loop **add up to the supply**. If yours do not, a probe was in the wrong place. Second, Ohm's law on the resistor gives the current without ever measuring current: 3.1 / 330 is about 0.0094 A, so about 9 mA. The LED carries the same current, because it is in the same loop." },
       { t: "note", kind: "tip", text: "This is the standard way to find a current safely: measure the voltage across a known resistor and divide. It needs no change to the circuit." },
+      { t: "deep", title: "Why a voltmeter does not upset the circuit it measures", blocks: [
+        { t: "p", text: "To read a voltage the meter must let a little current through itself. A good digital multimeter has an **input resistance** of about 10 MΩ on its voltage ranges, so the current it takes is tiny." },
+        { t: "p", text: "Check it with a parallel resistance. Put the meter across a 10 kΩ resistor: 10 kΩ in parallel with 10 MΩ is 10,000 × 10,000,000 / 10,010,000 ≈ **9,990 Ω**. The circuit changes by about 0.1 %, far less than the tolerance of the resistor itself. Only in circuits with resistors of several megohms does the meter start to pull the reading down noticeably." },
+      ] },
 
       { t: "h", text: "Continuity: is it really connected" },
       { t: "p", text: "On the continuity setting the meter beeps when its two probes are joined by a path of very low resistance. Touch the probes together to hear it. Use it, with the circuit **unpowered**, to answer questions such as:" },
@@ -420,6 +456,10 @@ const lessons: ModuleContent = {
       { t: "list", items: [
         "**Never use the current (A or mA) setting or sockets across a supply.** In that mode the meter is almost a plain wire. Probes placed from supply to ground would be a short circuit through the meter.",
         "**Never use continuity or resistance on a powered circuit.** The reading is meaningless and the meter can be harmed. Unplug the USB cable first.",
+      ] },
+      { t: "deep", title: "Why measuring current is a different job", blocks: [
+        { t: "p", text: "Current is measured **through** a part, not across it. You open the circuit and make the current flow through the meter, which contains a very small resistance called a **shunt**, perhaps a fraction of an ohm. The meter measures the tiny voltage across the shunt and works out the current with Ohm's law." },
+        { t: "p", text: "That small resistance is exactly why current mode is risky. With the leads in the current sockets, the meter is almost a plain wire. Touch them across a supply, as you would for a voltage, and you have made a short circuit through the meter. The internal fuse blows, and on a cheap meter without a proper fuse the meter itself can be damaged. Return the red lead to the voltage socket as soon as you finish a current measurement." },
       ] },
     ],
     mistakes: [

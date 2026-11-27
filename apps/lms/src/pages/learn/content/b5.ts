@@ -30,6 +30,21 @@ const lessons: ModuleContent = {
         ["Arduino Uno", "10 bits", "1024", "0 to 1023", "5 V"],
         ["ESP32", "12 bits", "4096", "0 to 4095", "about 3.3 V"],
       ], caption: "On the ESP32 these are the numbers given by this site's analog blocks. One block is an exception: the Soil Moisture Sensor block reports 0 to 65535 on the ESP32. The range depends on the block, so always look at the live chart to see what yours gives." },
+      { t: "deep", title: "How the ADC finds the number: successive approximation", blocks: [
+        { t: "p", text: "Both boards use a **successive approximation** converter. It plays a guessing game with a comparator. First it captures the input on a tiny capacitor so it holds still. Then it asks: is the voltage above half the reference? The answer fixes the top bit. Next it tries the half-way point of the remaining range, and so on, one bit per step. A 10-bit result takes 10 comparisons, a 12-bit one takes 12." },
+        { t: "formula", text: String.raw`Uno, input 1.65 V, reference 5 V (each step: try a bit, keep it if not too high)
+try 512  →  2.500 V  too high  →  drop
+try 256  →  1.250 V  below     →  keep   (256)
+try 384  →  1.875 V  too high  →  drop
+try 320  →  1.563 V  below     →  keep   (320)
+try 352  →  1.719 V  too high  →  drop
+try 336  →  1.641 V  below     →  keep   (336)
+try 344, 340, 338    all too high  →  drop each
+try 337  →  1.646 V  below     →  keep   (337)
+result 337 after 10 comparisons` },
+        { t: "p", text: "Check: 1.65 × 1024 / 5 = 337.9, and the converter rounds down, so 337. The lesson's \"about 338\" is the same answer within one step. On the Uno one conversion takes about 0.1 ms, so roughly 10,000 readings a second are possible." },
+        { t: "note", kind: "tip", text: "The capturing capacitor has to charge through whatever is driving the pin. The ATmega328P datasheet recommends that the source be 10 kΩ or less. Sensors with a much higher output resistance can give readings that lag or that are pulled towards the previous pin read." },
+      ] },
 
       { t: "h", text: "How big is one step?" },
       { t: "p", text: "Divide the length of the ruler by the number of marks:" },
@@ -43,6 +58,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "Two worked examples. An Arduino Uno reads 512: 512 × 5 / 1024 = **2.5 V**, half the reference, which makes sense because 512 is half of 1024. An ESP32 reads 1024: 1024 × 3.3 / 4096 = **0.825 V**, a quarter of its reference." },
       { t: "p", text: "Now turn it round. Put the same 1.65 V on both boards. The Uno reports about 338 and the ESP32 about 2048. The voltage is identical. The numbers differ because the rulers differ. This is why a number that works in a program for one board cannot simply be copied to the other." },
       { t: "note", kind: "warn", text: "Real readings are never perfectly steady. Expect the last digit or two to jitter even when nothing changes. The ESP32's converter is also less accurate near the very bottom and very top of its range. Treat a reading as a good estimate, not an exact measurement." },
+      { t: "deep", title: "Why the ESP32's readings bend near the ends", blocks: [
+        { t: "p", text: "The ESP32's converter natively measures only about 1 V. To reach 3.3 V, an **attenuator** in front of it scales the input down, and that scaling is not perfectly straight. Plot a known voltage against the reading and the line bends near the bottom and top: very small voltages often read as 0, and the last few hundred millivolts below 3.3 V bunch up near the maximum." },
+        { t: "p", text: "The Uno's 10-bit converter is far straighter but coarser, and it measures against its 5 V supply, so if the USB voltage is really 4.8 V every reading shifts by 4 %. Two practical habits follow for both boards: keep the signal you care about away from the extreme ends of the range, and when accuracy matters, check a reading against a multimeter at two or three points." },
+        { t: "note", kind: "warn", text: "On the ESP32, one of its two converters, called ADC2, is used by the Wi-Fi radio. Pins attached to ADC2 cannot be read while Wi-Fi is on. That matters from the IoT modules onward, and is one reason the lessons give you specific pins." },
+      ] },
 
       { t: "h", text: "Which pins, and how much voltage" },
       { t: "p", text: "Only some pins are connected to the ADC. On the Arduino Uno they are the pins in the group labelled as analog inputs. On the ESP32 several pins can do it, and some of those are input-only. You do not need to memorise them: use the pin shown on the block or in a lesson's wiring table." },
@@ -128,6 +148,16 @@ const lessons: ModuleContent = {
       { t: "formula", text: "Vout = Vin × R2 / (R1 + R2)", caption: "`R1` is the resistor connected to the supply, `R2` the one connected to ground, and `Vout` is measured at the point where they meet." },
       { t: "p", text: "Check it with easy numbers. If `R1` and `R2` are equal, the fraction is one half, so `Vout` is half of `Vin`. If `R2` is much larger than `R1`, the fraction is close to one and `Vout` is close to `Vin`. If `R2` is much smaller, `Vout` is close to zero." },
       { t: "note", kind: "tip", text: "You do not need to memorise which way round it goes. Ask one question: which resistor is bigger? The bigger resistor takes the bigger share of the voltage." },
+      { t: "deep", title: "Deriving the voltage divider formula", blocks: [
+        { t: "p", text: "The same current flows through both resistors, because there is nowhere else for it to go. That one fact gives the whole formula." },
+        { t: "formula", text: String.raw`current through both:   I = Vin / (R1 + R2)
+voltage across R2:      Vout = I × R2
+so                      Vout = Vin × R2 / (R1 + R2)
+
+check: Vin = 5 V, R1 = R2 = 10 kΩ
+I = 5 / 20,000 = 0.25 mA,  Vout = 0.00025 × 10,000 = 2.5 V` },
+        { t: "p", text: "The formula assumes nothing else draws current from the middle point. An ADC pin takes almost none, so it is safe to measure. A real load is different: hang a 1 kΩ resistor from the middle of that 10 kΩ divider and it forms a parallel pair with R2 of about 909 Ω, and the output falls from 2.5 V to about 0.42 V. A divider is a way of **measuring**, never a way of powering something." },
+      ] },
 
       { t: "h", text: "Making one resistor the sensor" },
       { t: "p", text: "Now replace one of the two resistors with the LDR and keep the other as an ordinary fixed resistor. As the light changes, the LDR's share of the voltage changes, and `Vout` moves up and down. That moving voltage is what the analog pin reads." },
@@ -141,6 +171,15 @@ const lessons: ModuleContent = {
       { t: "h", text: "Choosing the fixed resistor" },
       { t: "p", text: "The divider gives the biggest swing in voltage when the fixed resistor is roughly in the middle of the LDR's range. A common starting value is **10 kΩ**. If your readings barely change between light and dark, the fixed resistor is too far from the LDR's working range, so try a larger or smaller one." },
       { t: "note", kind: "warn", text: "LDRs vary a lot from part to part, and so does the lighting in your room. The resistances quoted here are typical values, not a specification. Always look at your own readings before choosing a threshold. The next lesson shows how." },
+      { t: "deep", title: "The best fixed resistor for an LDR", blocks: [
+        { t: "p", text: "An LDR might be about 1 kΩ in bright light and 100 kΩ in the dark (measure your own, they vary widely). The fixed resistor that gives the biggest change in voltage between those two conditions is the **geometric mean** of the two resistances:" },
+        { t: "formula", text: String.raw`best fixed R = √(R_bright × R_dark) = √(1,000 × 100,000) = 10 kΩ
+
+with 10 kΩ at 5 V:  bright 5 × 10 / 11  = 4.55 V,  dark 5 × 10 / 110 = 0.45 V,  swing 4.1 V
+with 1 kΩ:          bright 2.50 V,                dark 0.05 V,                swing 2.45 V
+with 100 kΩ:        bright 4.95 V,                dark 2.50 V,                swing 2.45 V` },
+        { t: "p", text: "Either side of 10 kΩ the swing shrinks, so 10 kΩ wastes the least of the ADC's range. The voltages above are for the fixed resistor in the lower position; swap the two and the voltages flip, but the size of the swing stays the same. On a 3.3 V board every voltage is scaled by 3.3 / 5, and the best resistor is still 10 kΩ." },
+      ] },
 
       { t: "h", text: "Wiring it" },
       { t: "list", ordered: true, items: [
@@ -258,9 +297,18 @@ const lessons: ModuleContent = {
 
       { t: "h", text: "Step 5: test, then test again later" },
       { t: "p", text: "Put your number in, run the project and try both conditions several times. Then try the awkward cases: a half-covered sensor, a cloudy window, a phone torch. Conditions drift, too. Daylight changes through the day and some sensors change as they warm up. A threshold chosen at noon may need another look at five o'clock. Re-measuring is part of the job, not a sign that you did it wrong." },
+      { t: "deep", title: "Taming noise by averaging", blocks: [
+        { t: "p", text: "Readings jitter because of random electrical noise. Random noise has a useful property: when you average several readings, the noise partly cancels while the true value stays put. The noise shrinks with the square root of the number of readings." },
+        { t: "formula", text: "noise after averaging N readings ≈ noise of one reading / √N    16 readings → 4 times smaller" },
+        { t: "p", text: "Averaging costs time and makes the reading respond more slowly, so it suits slow quantities like light level or water level. It does not cure a reading that flips across a threshold because the quantity itself is wobbling there; that needs hysteresis, described next." },
+      ] },
 
       { t: "h", text: "Flicker and hysteresis" },
       { t: "p", text: "When the real reading sits right on the threshold, the wobble carries it back and forth across the line and the output chatters on and off. The cure is **hysteresis**: use two thresholds instead of one. Switch on only when the reading passes the first, and switch off only when it has come back past a second one some distance away. In the example you might switch the lamp on below 430 and off only above 530. Inside that band the output simply keeps whatever state it had, so noise smaller than the band cannot flip it. A room thermostat works the same way." },
+      { t: "deep", title: "Hysteresis inside the chip: the Schmitt trigger", blocks: [
+        { t: "p", text: "Hysteresis is so useful that chip designers build it into hardware. A **Schmitt trigger** is an input circuit with two thresholds instead of one: the input must rise above the upper one to switch to 1 and fall below the lower one to switch back to 0. The digital input pins of both boards include this, which is why a slowly rising voltage gives one clean change instead of a burst." },
+        { t: "p", text: "The sensor modules in the next lesson often do the same in their comparator circuit. Your two-threshold program is the software version of exactly the same idea, with the advantage that you choose the gap." },
+      ] },
     ],
     mistakes: [
       "**Using the number that came with the project.** It was chosen so the demo would do something on a typical bench. Measure your own.",
@@ -345,6 +393,10 @@ const lessons: ModuleContent = {
       ], caption: "Directions are for the common modules used with the built-in projects. Confirm yours on the live chart: some modules are built the other way round." },
       { t: "p", text: "The direction decides the comparison. Gas and water level trigger when the reading goes **above** the threshold. Rain triggers when it goes **below**. You find the threshold itself with the method from the previous lesson: record the reading in each condition and put the line in the gap. The numbers filled in when you open these projects are starting guesses only." },
       { t: "note", kind: "tip", text: "Soil moisture has its own block and its own project in module b7. On the ESP32 that block reports a larger range (0 to 65535) than the other analog blocks (0 to 4095). The range depends on the block, so read the chart before choosing any number." },
+      { t: "deep", title: "What the comparator on a module does", blocks: [
+        { t: "p", text: "Most analog sensor modules have two outputs. **AO** is the sensor's voltage, passed straight through. **DO** comes from a **comparator** chip, commonly the LM393, which compares the sensor voltage with a reference set by the small potentiometer and outputs a clean HIGH or LOW. A small LED on the module usually shows the DO state." },
+        { t: "p", text: "So the potentiometer is a hardware threshold. DO is handy when you only need yes or no, and it frees you from choosing a threshold in code, but you lose the actual level. AO lets your program see the whole range and apply its own threshold and hysteresis, which is why the lessons read AO." },
+      ] },
 
       { t: "h", text: "Powering a module safely" },
       { t: "p", text: "A module's analog output can swing up to its supply voltage. That one fact decides how you power it:" },
@@ -387,6 +439,10 @@ const lessons: ModuleContent = {
       { t: "p", text: "The program reads the strip into the variable `water_level` and sounds the buzzer when the reading is **above** the threshold, because deeper water gives a higher number. Find your threshold as before: record the range with the strip dry, and the range with water at the height you call full." },
       { t: "p", text: "The table also lists the pins of an LCD, and the program has lines that write the reading to it. Displays have their own lessons in module b8, including how to power one safely on an ESP32, so build the complete project when you reach that module. Do not connect an LCD before then. On an ESP32 the unchanged project stops with an error in the Terminal when no LCD is connected, so to try the sensor and buzzer now, delete the LCD block from your copy first and join the Water Level Sensor block to the If-Else block again. Only the lower, striped part of the strip goes in the water. Keep its connector, the breadboard and the board dry." },
       { t: "note", kind: "warn", text: "The rain board, the water strip and the cheap two-leg soil probe all pass a small current through water. Left powered and wet for days, their tracks corrode. Dry them after use. Their readings also depend on how clean the water is, so treat them as \"wetter or drier\", not as a measurement in millimetres." },
+      { t: "deep", title: "Why resistive water probes corrode, and how to slow it", blocks: [
+        { t: "p", text: "A resistive rain or soil probe measures how well current flows between two metal tracks through water. Direct current through wet metal causes **electrolysis**: metal is slowly eaten from one track and deposits or gas form on the other. A probe left powered all the time can be visibly damaged within days or weeks, and its readings drift as it wears." },
+        { t: "list", items: ["Power the probe from an output pin, or switch its supply, and turn it on only for the moment of a reading, perhaps once a minute.", "Read, then switch off. Corrosion depends on how long current flows, so a 1 % duty cycle makes the probe last far longer.", "For long-term soil monitoring, a **capacitive** probe senses moisture through an insulating coating, so no current flows through the soil and nothing corrodes."] },
+      ] },
     ],
     mistakes: [
       "**Wrong direction of comparison.** The rain buzzer sounds when the board is dry and stops when it is wet. Watch the chart to see which way your module moves, then choose below or above to match.",

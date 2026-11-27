@@ -22,6 +22,10 @@ const lessons: ModuleContent = {
 
       { t: "h", text: "How much can a pin give?" },
       { t: "p", text: "A pin on either board is built to supply a small current, enough for an LED with its resistor. As a working rule, plan for no more than about **20 mA** from one pin, and less is better. The chip also has a limit on the total from all its pins together. These are typical working figures, not a promise: the real limits are in each chip's datasheet." },
+      { t: "deep", title: "The limits of a whole chip, not just a pin", blocks: [
+        { t: "p", text: "A pin's limit is only part of the story. All the pins share the chip's supply and ground connections, which have limits of their own. On the ATmega328P the datasheet gives about 40 mA as the absolute maximum for one pin, recommends staying near 20 mA, and limits the whole chip to about 200 mA in total. Ten LEDs at 20 mA each would already reach the total." },
+        { t: "p", text: "**Absolute maximum** in a datasheet does not mean \"safe up to here\". It means damage may begin beyond this point. Designers keep well inside it, which is why this course plans around 20 mA per pin and a handful of pins at a time. The ESP32's datasheet uses different figures (its pins default to a drive strength of about 20 mA, and groups of pins share a power domain with its own budget), so check its own numbers rather than reusing the Uno's." },
+      ] },
 
       { t: "h", text: "How much does a load need?" },
       { t: "table", head: ["Part", "Typical current", "From a pin?"], rows: [
@@ -46,6 +50,13 @@ const lessons: ModuleContent = {
       { t: "h", text: "Two more reasons: voltage and kick-back" },
       { t: "p", text: "Current is not the only mismatch. Many loads need a **different voltage** from the board, for example a 12 V fan. A pin can only output the board's own logic voltage." },
       { t: "p", text: "Motors, pumps and relay coils also contain coils of wire. A coil stores energy while current flows. When the current is cut, that energy has to go somewhere, and it appears as a short, sharp voltage spike, far higher than the supply. A spike like that can destroy a pin. The next lesson shows the small part that absorbs it." },
+      { t: "deep", title: "Why a coil kicks back", blocks: [
+        { t: "p", text: "A coil stores energy in its magnetic field, and it resists any change in its current. The voltage it produces depends on how fast the current changes:" },
+        { t: "formula", text: String.raw`V = L × (change in current) / (time taken)
+relay coil: L ≈ 0.1 H, current 70 mA, switched off in 10 µs
+V ≈ 0.1 × 0.070 / 0.000010 = 700 V` },
+        { t: "p", text: "These are round illustrative figures, but the result is real: cutting a coil's current suddenly produces a spike of hundreds of volts, far above anything a transistor or pin is built to withstand. The faster the switch, the bigger the spike. The cure is to give the current a path to die away slowly instead of stopping it dead, which is the flyback diode in the next lesson." },
+      ] },
 
       { t: "h", text: "The answer: let the pin control a switch" },
       { t: "p", text: "The fix is always the same shape. The load gets its power from a supply that can provide it. In that power path sits an electrically controlled switch. The pin only operates the switch, which takes a tiny current." },
@@ -147,11 +158,25 @@ const lessons: ModuleContent = {
         ["**NO**", "Normally open", "the relay is **on**"],
         ["**NC**", "Normally closed", "the relay is **off**"],
       ], caption: "\"Normally\" means with the coil unpowered. For a load that should be off until the program switches it on, use COM and NO." },
+      { t: "deep", title: "Inside a relay: coil current and why the flyback diode is needed", blocks: [
+        { t: "p", text: "A common blue 5 V relay module uses a relay whose coil measures about 70 Ω. Ohm's law gives the coil current: 5 / 70 ≈ **71 mA**, more than three times a pin's working limit. The coil is wound from hundreds of turns of thin wire around an iron core, so it is also a strong inductor, and the last lesson showed what an inductor does when its current is cut." },
+        { t: "p", text: "With a diode across the coil, at switch-off the coil current flows round the loop through the diode and fades out in a few milliseconds, while the voltage at the transistor rises only about 0.7 V above the supply. The price is that the relay releases slightly more slowly, which does not matter for a pump or a lamp." },
+        { t: "p", text: "The contact side is rated separately and printed on the relay's case, often 10 A at 250 V AC and 10 A at 30 V DC. That rating is for the contacts only. The tracks and screw terminals of a cheap module may not safely carry anything like it." },
+        { t: "note", kind: "safety", text: "Mains voltage on a relay module's screw terminals is exposed and can kill. In this course switch only low-voltage DC loads. Mains switching needs enclosed, certified hardware and supervision." },
+      ] },
 
       { t: "h", text: "Active low modules" },
       { t: "p", text: "Some relay modules switch on when their input pin is HIGH. Many common ones do the opposite: they switch on when the input is **LOW**. These are called **active low**. Nothing is broken; the module simply reads the signal upside down." },
       { t: "p", text: "The editor's **Relay** block has an **Active low** option. Leave it at No for an active high module. Set it to Yes for an active low module, and the block sends the opposite level so that \"on\" in your program still means the relay is on." },
       { t: "note", kind: "warn", text: "Many 5 V relay modules, especially active low ones, do not switch reliably from the 3.3 V signal of an ESP32: the relay may stay on, or never click. Before you connect one to an ESP32, power the module and measure with a multimeter, on its DC voltage range, from GND to its **IN** pin while IN is connected to nothing. If the reading is above 3.3 V, do not connect it to the ESP32. Then test with the load disconnected. If the module fails either check, use one sold for 3.3 V logic." },
+      { t: "deep", title: "Making sure the transistor switches fully on", blocks: [
+        { t: "p", text: "A bipolar transistor multiplies the current into its control leg (the **base**) by its **gain**, often written hFE. A small switching transistor might have a gain of 100 or more, so a base current of 1 mA could allow 100 mA through the load. To switch hard, so the transistor drops almost no voltage and stays cool, designers give it several times the base current it strictly needs." },
+        { t: "formula", text: String.raw`base current = (pin voltage - 0.7 V) / base resistor
+Uno, 1 kΩ:    (5 - 0.7)   / 1000 ≈ 4.3 mA
+ESP32, 1 kΩ:  (3.3 - 0.7) / 1000 ≈ 2.6 mA
+relay coil 71 mA, gain 100  →  needs at least 0.71 mA. Both are well above it.` },
+        { t: "p", text: "For heavier loads, such as a pump drawing an ampere or more, designers switch to a **MOSFET**, which is controlled by voltage instead of current. Choose a **logic-level** MOSFET, one whose datasheet shows it fully on at the pin's voltage. Many popular MOSFETs need about 10 V on the gate and only half switch on from a 3.3 V ESP32 pin, getting hot as a result." },
+      ] },
 
       { t: "h", text: "Wiring the plant watering project" },
       { t: "list", ordered: true, items: [
@@ -253,6 +278,13 @@ const lessons: ModuleContent = {
       { t: "formula", text: "50 + 2 + 75 + 200 = 327 mA", caption: "On paper this fits inside 500 mA. Now add a margin." },
       { t: "p", text: "Motors draw extra at start-up, and parts vary. A sensible rule is to choose a supply rated for at least **one and a half times** the total. Here that is about 490 mA: right at the edge of a USB port, with a motor's start-up surge still to come. The decision is clear: the fan gets its own supply, and USB keeps the remaining 127 mA, which it handles easily." },
       { t: "note", kind: "tip", text: "A quick shortcut: anything with a motor in it (fan, pump, servo) gets its own supply unless your budget proves otherwise. The only exception is a brief test of one very small, unloaded servo from the board's 5 V pin, never from a GPIO pin." },
+      { t: "deep", title: "Why a supply's voltage drops under load", blocks: [
+        { t: "p", text: "No supply is perfect. Each has some internal resistance, from its circuit, its cable and its connectors. When current flows, some voltage is lost across that resistance before it reaches your project." },
+        { t: "formula", text: String.raw`voltage at the board = supply voltage - current × resistance of supply and cable
+thin USB cable, 0.5 Ω round trip, 400 mA:  5 - 0.4 × 0.5 = 4.8 V
+same cable, 900 mA motor start:            5 - 0.9 × 0.5 = 4.55 V` },
+        { t: "p", text: "This is why a long, thin USB cable can make a project misbehave only when the motor starts. The standard limits help with planning too: a USB 2.0 port promises 500 mA and a USB 3 port 900 mA, while a phone charger may give more but sags in its own way." },
+      ] },
 
       { t: "h", text: "Choosing the second supply" },
       { t: "list", items: [
@@ -266,6 +298,14 @@ const lessons: ModuleContent = {
       { t: "h", text: "Common ground" },
       { t: "p", text: "A voltage is always measured between two points. When a board sends a signal to a transistor, a servo or a module with its own supply, the receiver can only make sense of that signal if both sides agree on what zero is. That shared zero is **ground**. With two supplies, join their negative sides: one wire from the board's **GND** to the negative terminal of the second supply. Only the grounds are joined, never the positive sides." },
       { t: "p", text: "A relay's contacts are the one exception. COM, NO and NC are isolated from the board, so the load circuit that passes through them needs no ground link. The relay module's own GND pin still goes to the board's GND." },
+      { t: "deep", title: "Why linear regulators get hot", blocks: [
+        { t: "p", text: "Boards make their lower voltages with a **linear regulator**, which works like a self-adjusting resistor: it drops whatever voltage is in excess and turns it into heat. The power it wastes is the voltage it drops times the current through it." },
+        { t: "formula", text: String.raw`heat in regulator = (input voltage - output voltage) × current
+9 V adapter into an Uno's barrel jack, 300 mA from the 5 V pin:
+(9 - 5) × 0.3 = 1.2 W   (too hot to touch for a small regulator)
+12 V adapter, same load:  (12 - 5) × 0.3 = 2.1 W` },
+        { t: "p", text: "A small regulator on a board can only shed perhaps a watt before it overheats and shuts down or fails. That is why a board's regulator is a poor place to power motors from, and why a higher adapter voltage is not \"more power\" but more heat. A **switching** regulator (a buck converter) converts voltage with little waste and is the right tool when large currents are needed." },
+      ] },
 
       { t: "h", text: "Signs of a weak supply" },
       { t: "list", items: [
@@ -288,6 +328,14 @@ const lessons: ModuleContent = {
       { t: "code", demo: "demo_fan_control" },
       { t: "p", text: "The DHT11 is explained properly in the next module. For now, treat it as the source of a number called `temperature`, in degrees Celsius. The program reads it, switches the relay on if it is above 30, switches it off otherwise, and waits two seconds." },
       { t: "p", text: "One weakness is worth noticing. When the room sits right at the threshold, the reading can step back and forth and the relay clicks on and off every couple of seconds. Real controllers use two thresholds, one to switch on and a lower one to switch off. You could build that with a second If-Else as an extension." },
+      { t: "deep", title: "Why ground must be shared, in one picture", blocks: [
+        { t: "p", text: "A voltage is always measured between two points. When the board says HIGH, it means its pin is 5 V or 3.3 V above **its own** ground. A module powered from a separate supply judges that signal against **its** ground. If the two grounds are not joined, there is no fixed relationship between them, and the signal can mean anything." },
+        { t: "diagram", text: String.raw`board pin ──── signal ────► module input
+board GND ──┐               ┌── module GND
+            └───── joined ──┘        (without this wire the signal has no reference)
+board supply: USB 5 V          module supply: its own adapter` },
+        { t: "p", text: "Only the grounds are joined, never the two positive supplies. Connecting two different supply voltages together lets them fight, with large currents flowing between them." },
+      ] },
     ],
     mistakes: [
       "**No common ground.** A servo or transistor-switched load on its own supply behaves at random until the board's GND and the supply's negative are joined.",

@@ -33,6 +33,14 @@ const lessons: ModuleContent = {
       { t: "p", text: "Add power and ground and an I2C device has four connections: **VCC**, **GND**, **SDA** and **SCL**. A second device connects to the same four points. Each board has particular pins for SDA and SCL, shown in the wiring table below." },
       { t: "wiring", demo: "demo_room_climate" },
       { t: "p", text: "That table is for the room climate project you will build later in this module. For now, look only at the two rows marked SDA and SCL." },
+      { t: "deep", title: "What an I2C message looks like on the wires", blocks: [
+        { t: "p", text: "Every I2C exchange follows the same pattern. The controller starts it with a **start condition**: SDA falls while SCL is high, which never happens in the middle of data. Then it sends 7 address bits and one more bit saying read or write. The device with that address answers by pulling SDA low for one clock tick, the **acknowledge** (ACK). Data follows in 8-bit bytes, each acknowledged by the receiver, and a **stop condition** (SDA rises while SCL is high) ends it." },
+        { t: "diagram", text: String.raw`START | address, 7 bits | R/W | ACK | data, 8 bits | ACK | STOP
+      | 0100111 = 0x27 |  0  |  0  |   ........   |  0  |
+                        write  device pulls SDA low to say I am here` },
+        { t: "p", text: "A scan is simply this sequence repeated for every address: the controller sends each address and notes which ones are acknowledged. Seven bits give 128 possible addresses, a few of which are reserved, so one bus can in principle hold over a hundred devices. Common speeds are 100 kHz (standard mode) and 400 kHz (fast mode)." },
+        { t: "formula", text: "0x27 = 2 × 16 + 7 = 39 = binary 010 0111" },
+      ] },
 
       { t: "h", text: "Addresses and the 0x in front" },
       { t: "p", text: "I2C addresses are small numbers, usually written in **hexadecimal**, which is counting in sixteens. The `0x` in front only means \"this number is in hexadecimal\". You do not need to convert it. Treat `0x27` as a label, like a room number." },
@@ -41,6 +49,10 @@ const lessons: ModuleContent = {
       { t: "h", text: "Pull-up resistors and voltage" },
       { t: "p", text: "The two I2C lines rest at HIGH because a resistor on each line, called a **pull-up**, connects it to the supply. A device sends a 0 by pulling the line down to ground and sends a 1 by letting go. Most modules carry these resistors already, so you rarely add your own." },
       { t: "note", kind: "safety", text: "The pull-ups connect SDA and SCL to whatever voltage the module is powered from. A module powered from 5 V pulls both lines up to 5 V, and an ESP32 pin must never see more than 3.3 V. On an ESP32, use a module that works at 3.3 V, or put a level shifter between the board and a 5 V module. If you have neither, power the module from the **3.3 V** pin, never from 5 V: the next lesson explains what to expect." },
+      { t: "deep", title: "Why the pull-up value matters", blocks: [
+        { t: "p", text: "A device can only pull an I2C line **down**. Getting it back up is the pull-up resistor's job, and the wire and pins have a small capacitance that the resistor must charge. That makes each rising edge an RC curve: larger resistance, slower rise. With too large a pull-up the line has not finished rising when the next bit is read, and data is garbled, especially with long wires." },
+        { t: "p", text: "Too small a pull-up has the opposite problem: when a device pulls the line low, it must sink the current through the resistor, and the I2C standard expects a device to sink about 3 mA. A 4.7 kΩ pull-up at 5 V gives 5 / 4,700 ≈ 1.1 mA, comfortably inside that, which is why 4.7 kΩ and 10 kΩ are the usual values. Several modules on one bus each add their own pull-ups in parallel, which lowers the total resistance; with many modules attached it can become too strong." },
+      ] },
 
       { t: "h", text: "Finding out who is on the bus" },
       { t: "p", text: "The editor has an **I2C Scanner** block. It calls every possible address in turn and notes which ones answer. The result appears in the serial terminal as a line starting `I2C devices found:` followed by the addresses." },
@@ -134,6 +146,11 @@ const lessons: ModuleContent = {
       { t: "wiring", demo: "demo_water_level" },
       { t: "p", text: "The table is for the water level project from the analog module, now with a screen. The buzzer in that project is on a plain output pin, which you can see set up at the top of the program further down. The buzzer rule from the analog module still applies: a buzzer module, or a small active buzzer known to draw less than about 20 mA, never a larger one straight on a pin." },
       { t: "note", kind: "safety", text: "Most LCD backpacks are 5 V parts with pull-up resistors to their supply. Powered from 5 V, they put 5 V on SDA and SCL, which an ESP32 pin must not receive. On an ESP32 the safe choices are an LCD module made for 3.3 V, or a level shifter between the board and a 5 V module. If your kit has neither, connect the backpack's VCC to the **3.3 V** pin. That keeps SDA and SCL at 3.3 V and is safe for the board, but the text is typically faint and on some displays stays invisible even with the contrast screw at its end. Never power the backpack from 5 V with SDA and SCL wired straight to an ESP32." },
+      { t: "deep", title: "How two wires drive a parallel display: the backpack", blocks: [
+        { t: "p", text: "The LCD itself is built around a controller compatible with the old **HD44780** design. It expects data on parallel wires: a register select line (command or character), an enable line that tells it to read, and four or eight data lines. That is too many pins to spare, so the small board soldered on the back, the **backpack**, carries a **PCF8574** I/O expander." },
+        { t: "p", text: "The PCF8574 is an I2C device with eight output pins. The library sends it a byte over I2C, and its eight pins copy the byte's eight bits, driving the LCD's register select, enable, four data lines and the backlight. Each character takes several I2C bytes, because the LCD is fed in two halves of four bits and the enable line must be pulsed for each half. The address choice of 0x27 or 0x3F comes from the two versions of this chip, the PCF8574 and the PCF8574A." },
+        { t: "note", kind: "tip", text: "Each character is drawn from a grid of 5 × 8 dots stored in the controller's built-in font. The controller also has room for eight characters of your own design, which is how projects show symbols such as a degree sign or a battery." },
+      ] },
 
       { t: "h", text: "The two settings that cause most blank screens" },
       { t: "p", text: "**Contrast.** On the back of the backpack is a small blue box with a cross-shaped screw. It sets how dark the characters are. Turned too far one way the text is invisible; too far the other way every box is a solid block. If the backlight is on and the screen looks empty, turn this screw slowly with a small screwdriver while the program runs. This is the usual cause of a blank screen." },
@@ -159,6 +176,10 @@ const lessons: ModuleContent = {
         "**Wait.** The loop pauses for a second.",
       ] },
       { t: "p", text: "The screen is cleared and redrawn on every pass. That is simple and reliable, but if the loop ran many times a second the display would flicker, because an LCD is slow to change. Once or twice a second is comfortable to read." },
+      { t: "deep", title: "Why the contrast knob matters so much", blocks: [
+        { t: "p", text: "A liquid crystal does not make light. Each dot twists the light passing through it, and a voltage across the dot untwists it so it looks dark against the backlight. The contrast potentiometer sets the voltage on the controller's contrast pin, which shifts how strongly every dot is driven." },
+        { t: "p", text: "Too little and nothing appears to be written; too much and every position shows a solid block, whether text was sent or not. The right setting depends on the supply voltage, which is why a display adjusted on 5 V usually needs re-adjusting on 3.3 V, and many 5 V displays never show clear text at 3.3 V at all." },
+      ] },
     ],
     mistakes: [
       "**Backlight on, no text.** Turn the contrast screw before changing anything else.",
@@ -246,6 +267,11 @@ const lessons: ModuleContent = {
       ] },
       { t: "p", text: "Work one example. The fan project switches on above 30. If two DHT11 sensors sit side by side, one may say 29 and the other 31. Both are within their accuracy, yet one fan runs and the other does not. A DHT11 is good for \"is the room warm?\" and poor for \"is it exactly 30.0 degrees?\"" },
       { t: "note", kind: "tip", text: "On the Arduino Uno the screen and the Terminal show the temperature and humidity with two digits after the decimal point, such as `27.00`. Those digits come from how the number is stored and printed, not from the sensor. The DHT11 still only resolves whole degrees. The two lines of this project are 13 characters long that way, so they still fit." },
+      { t: "deep", title: "How the DHT11 sends its numbers on one wire", blocks: [
+        { t: "p", text: "The DHT11 uses its own one-wire protocol, not I2C. The board pulls the data line low for at least 18 ms to wake the sensor, then lets go. The sensor answers with 80 µs low and 80 µs high, then sends **40 bits**. Every bit starts with about 50 µs low; then a high of about 26 to 28 µs means 0 and about 70 µs means 1. The library measures each high pulse to decide." },
+        { t: "table", head: ["Byte", "Meaning", "Example"], rows: [["1", "humidity, whole part", "55"], ["2", "humidity, decimal part (0 on the DHT11)", "0"], ["3", "temperature, whole part", "28"], ["4", "temperature, decimal part", "0"], ["5", "checksum: the sum of bytes 1 to 4, keeping the last 8 bits", "83"]], caption: "Check: 55 + 0 + 28 + 0 = 83, so this reading is accepted: 55 % RH and 28 °C." },
+        { t: "p", text: "If even one bit is misread, the checksum almost never matches, and the library reports a failed reading instead of a wrong number. The timings are tight, measured in microseconds, which is why long wires or a missing pull-up show up as failed reads rather than slightly wrong values." },
+      ] },
 
       { t: "h", text: "Wiring" },
       { t: "p", text: "Buy and use the DHT11 as a **module**: the blue sensor on a small board with three pins. The module includes the pull-up resistor that the data line needs. A bare four-legged sensor needs that resistor added, about 10 kΩ from the data leg to the supply." },
@@ -275,6 +301,10 @@ const lessons: ModuleContent = {
         "Keep it away from your hand, a laptop vent, a relay or direct sun: it measures the air touching it.",
         "To test it, breathe gently on it. Humidity should climb within a few seconds and fall back slowly.",
         "If a reading fails, the Arduino Uno shows `nan` (\"not a number\"), and the ESP32 program stops with an error in the terminal. Both mean the board did not hear a valid reply: check the three wires.",
+      ] },
+      { t: "deep", title: "What is inside the DHT11, and why it is slow", blocks: [
+        { t: "p", text: "Inside the blue case are two sensing parts and a tiny microcontroller. Humidity is measured by an element whose electrical resistance changes as it absorbs water vapour from the air. Temperature comes from an **NTC thermistor**, a resistor whose resistance falls as it warms. The internal chip measures both, applies its factory calibration, and sends the result." },
+        { t: "p", text: "The humidity element has to soak up or give off moisture before its reading settles, which takes seconds. The datasheet asks for at least a second between readings, and many libraries enforce about two. Reading faster only returns the old value or fails. For slow quantities like room climate, one reading every few seconds is all you need anyway." },
       ] },
     ],
     mistakes: [
@@ -376,6 +406,14 @@ const lessons: ModuleContent = {
         "**Logic.** The If-Else asks for more than 30. The reading peaked at 29. The program is doing exactly what it was told.",
       ] },
       { t: "p", text: "Nothing was broken. The test was too gentle for the threshold. Lower the threshold to 28 for testing and the fan starts. Without the reading in front of you, you might have rewired a perfectly good relay." },
+      { t: "deep", title: "Halving the chain: the fastest way to find a fault", blocks: [
+        { t: "p", text: "When a chain of stages fails somewhere, checking stage by stage from the start can take a long time. A faster method is to test the **middle** first. If the signal is correct there, the fault lies after it; if not, before it. Each test throws away half of the remaining suspects." },
+        { t: "formula", text: String.raw`stages to search  →  tests needed (halving each time)
+       4          →  2
+       8          →  3
+      16          →  4` },
+        { t: "p", text: "For a light sensor project the middle might be the Terminal: print the raw reading. A sensible changing number proves the sensor, wiring and reading code are fine, so the fault is in the decision or the output. A frozen or impossible number points back towards the sensor and wiring. Professionals use the same idea in software with `git bisect`, halving through hundreds of saved versions to find the one that broke a program." },
+      ] },
 
       { t: "h", text: "Symptoms and first checks" },
       { t: "table", head: ["Symptom", "Likely stage", "First check"], rows: [
@@ -394,6 +432,10 @@ const lessons: ModuleContent = {
         "**Believe the measurement, not your memory.** \"I am sure that wire is right\" is not a test. A multimeter reading is.",
         "**Write down what you tried.** Three lines in a notebook stop you repeating the same test.",
         "**Disconnect USB before moving wires**, even when you are in a hurry.",
+      ] },
+      { t: "deep", title: "How printing can change what you are watching", blocks: [
+        { t: "p", text: "Printing is not free. Over a serial link at 9600 baud, each character takes about 10 bits on the wire, so about 960 characters fit in a second, a little over 1 ms each. A 20-character line costs roughly 21 ms. Once the board's small output buffer is full, the program waits for it to drain." },
+        { t: "p", text: "Add many prints inside a fast loop and the loop slows down, which can hide or create a timing problem: a debounce suddenly works, a sensor read is suddenly too slow. If a bug disappears when you add prints, or appears when you add them, suspect timing. Print less often, for example once every few hundred milliseconds, or use a faster speed when the Terminal allows it." },
       ] },
     ],
     mistakes: [

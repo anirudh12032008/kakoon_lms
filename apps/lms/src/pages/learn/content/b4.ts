@@ -23,6 +23,10 @@ const lessons: ModuleContent = {
       { t: "p", text: "A push button is just two pieces of metal that touch when you press. Suppose you connect one side to the supply and the other side to an input pin. Pressed, the pin is joined to the supply and reads `1`. That part works." },
       { t: "p", text: "Now let go. The pin is connected to nothing at all. It is not at ground, it is simply left hanging, and an input pin is so sensitive that it picks up stray electrical noise from your hand, nearby wires and the room. The reading flips between `0` and `1` at random. This is a **floating input**, and it is the most common reason a first button circuit seems haunted." },
       { t: "note", kind: "tip", text: "Think of a see-saw with nobody on it on a windy day. It tips whichever way the wind pushes. A pull resistor is a light weight resting on one end: it decides the position whenever nobody is pushing harder." },
+      { t: "deep", title: "Why a floating pin picks up noise", blocks: [
+        { t: "p", text: "An input pin draws almost no current: the ATmega328P datasheet allows only about one microamp of leakage. By Ohm's law that makes it behave like a resistance of millions of ohms. Anything that can push even a minute charge onto the pin will move its voltage: your finger nearby, the signal in the next wire, and above all the mains wiring in the walls, which fills a room with a weak 50 Hz electric field." },
+        { t: "p", text: "A pull resistor fixes this by giving the pin a firm path to one level. Compare a 10 kΩ pull-up with a stray coupling worth millions of ohms: the resistor wins by a factor of hundreds, so the pin stays where it is put. When the button is pressed, the current through a 10 kΩ pull-up at 5 V is 5 / 10,000 = **0.5 mA**, and at 3.3 V about 0.33 mA: small enough to waste almost nothing." },
+      ] },
 
       { t: "h", text: "Pull-down and pull-up resistors" },
       { t: "p", text: "The cure is to give the pin a weak, permanent connection to a known level through a resistor. A typical value is **10 kΩ**. The button then makes a strong connection to the opposite level when it is pressed, and the strong connection wins." },
@@ -38,6 +42,10 @@ const lessons: ModuleContent = {
       { t: "p", text: "Pull-ups are needed so often that both the Arduino Uno and the ESP32 have one built into most pins. It is typically a few tens of kilohms and the program can switch it on. With it, a button needs no external resistor at all: one side of the button goes to the pin and the other side goes to **GND**." },
       { t: "p", text: "In the editor, the **Push Button** block does exactly this. It turns on the internal pull-up and also flips the reading for you, so its variable `value` is `1` while the button is pressed and `0` when it is released. The **Button / Digital Input** block gives you the raw level instead, so with its pull-up on, pressed reads `0`." },
       { t: "note", kind: "warn", text: "A few ESP32 pins are input-only and have no internal pull resistors. A button on one of those floats unless you add your own resistor. Use the pin the block shows for your board." },
+      { t: "deep", title: "Choosing the value of a pull resistor", blocks: [
+        { t: "p", text: "Too small a resistor wastes current every time the button is held: 100 Ω at 5 V would draw 50 mA. Too large a resistor is weak: with several megohms, the stray coupling from the last section can win again, and the pin also returns to its resting level slowly because it has to charge the pin's small capacitance through a big resistance." },
+        { t: "p", text: "Between those extremes there is a wide, comfortable band. Values from about 4.7 kΩ to 47 kΩ all work for buttons, which is why the internal pull-ups of a few tens of kilohms are good enough for most jobs. Choose a smaller external resistor, such as 4.7 kΩ or 10 kΩ, when the wires are long or the room is electrically noisy." },
+      ] },
 
       { t: "h", text: "Wiring a button on a breadboard" },
       { t: "list", ordered: true, items: [
@@ -136,6 +144,10 @@ const lessons: ModuleContent = {
       { t: "p", text: "Here is a real example: the program for the motion light you will build in the next lesson, generated for your board. Do not worry about the sensor yet. Look for the shape of the decision." },
       { t: "code", demo: "demo_pir_light" },
       { t: "p", text: "Find the line that starts with `if`. The comparison is `motion == 1`. The line or lines directly under it are the true branch, and the lines under `else` are the false branch. Arduino C++ wraps each branch in curly braces. MicroPython marks a branch with a colon and by indenting its lines. The idea is identical in both." },
+      { t: "deep", title: "How a chip makes a decision", blocks: [
+        { t: "p", text: "Deep down an `if` is two machine instructions. The first **compares** two numbers and records the result in a few single-bit flags inside the processor, such as \"the result was zero\" or \"the first was smaller\". The second is a **branch**: it looks at a flag and either carries on with the next instruction or jumps to a different place in the program. The `else` part is simply the place the branch jumps to." },
+        { t: "p", text: "In C++, a comparison produces a number: 1 for true and 0 for false. And an `if` treats any non-zero value as true. That is why `if (value)` works as a test for \"value is not zero\", and why writing `=` instead of `==` is so dangerous: `if (x = 5)` stores 5 in `x` and then tests 5, which is non-zero, so the condition is always true." },
+      ] },
 
       { t: "h", text: "Why the else matters" },
       { t: "p", text: "An output pin has a kind of memory. Once the program sets it HIGH it stays HIGH until the program sets it LOW. It does not fall back by itself when the condition stops being true." },
@@ -235,6 +247,12 @@ const lessons: ModuleContent = {
         "**Passive** means it sends nothing out. It only receives.",
         "It detects **change**, not presence. Someone sitting perfectly still becomes invisible to it after a while.",
         "It reacts to warm things that move, including pets, sunlight sweeping across a wall and warm air from a heater.",
+      ] },
+      { t: "deep", title: "How a PIR sensor sees body heat", blocks: [
+        { t: "p", text: "Every warm object gives off infrared light. The warmer it is, the shorter the wavelength where it glows most strongly. For a body at about 37 °C (310 K), Wien's law puts the peak near 9.3 µm, far beyond what eyes can see." },
+        { t: "formula", text: "peak wavelength ≈ 2898 / temperature in kelvin  µm  →  2898 / 310 ≈ 9.3 µm" },
+        { t: "p", text: "Inside the PIR is a **pyroelectric** crystal, a material that produces a small voltage when its temperature **changes**. It is split into two halves wired against each other. A still, warm room heats both halves equally and the voltages cancel. A person walking past warms one half first and then the other, so the difference swings one way and then the other, and the module's circuit turns that swing into a HIGH output. The white dome is a **Fresnel lens** that divides the view into many zones, so even small movements cross from one zone into the next." },
+        { t: "note", kind: "tip", text: "This explains two behaviours. A person who stands perfectly still eventually stops being detected, because nothing is changing. And the module needs up to a minute after power-on to settle, because the crystal has to reach a steady state first." },
       ] },
 
       { t: "h", text: "The module and its adjusters" },
@@ -343,6 +361,14 @@ const lessons: ModuleContent = {
       { t: "h", text: "Switch bounce" },
       { t: "p", text: "When two metal contacts close they do not meet cleanly. They hit, spring apart and hit again several times before settling, like a dropped ball. This is **bounce**. It lasts only a few thousandths of a second, typically 1 ms to 20 ms, and you could never see it." },
       { t: "p", text: "The board can. Its loop runs thousands of times a second, so in the time one press takes to settle the program may read 1, 0, 1, 0, 1. A program that toggles on every 1 would flip the lamp several times, and whether it ends up on or off is luck. A sound is even messier: one clap is a burst of vibration that makes a sound sensor's output flicker many times." },
+      { t: "deep", title: "What bounce looks like, and fixing it with a capacitor", blocks: [
+        { t: "p", text: "Seen on an oscilloscope, a press is a ragged burst of edges before the level settles. The diagram shows a pin with a pull-up being pressed:" },
+        { t: "diagram", text: String.raw`released  ────────┐ ┌┐ ┌─┐  ┌┐
+(HIGH)            │ ││ │ │  ││
+pressed           └─┘└─┘ └──┘└──────────────
+(LOW)             |<- 1 to 20 ms ->|  settled` },
+        { t: "p", text: "Software waits work, but bounce can also be removed in hardware. A capacitor of about 100 nF across the button, together with a 10 kΩ pull-up, makes an RC filter. Its time constant is R × C = 10,000 × 0.0000001 = 0.001 s, **1 ms**, so the pin voltage can only change gradually and the short bounces are smoothed into one clean edge. Many digital inputs also have a small built-in **hysteresis** (a Schmitt trigger), which stops a slowly changing voltage from being read as a flurry of 0s and 1s." },
+      ] },
 
       { t: "h", text: "Debouncing: count it once" },
       { t: "p", text: "The simplest cure is patience. As soon as the program sees the first 1 it acts, then **waits** long enough for the bouncing or the clap to be completely over before it looks again. For a button, about 50 ms is plenty. For a clap a longer wait is needed because the sound takes longer to die away." },
@@ -376,6 +402,10 @@ const lessons: ModuleContent = {
         "**Wait.** The program pauses for a fraction of a second so the rest of the same clap is ignored. Then a very short pause ends each pass of the loop.",
       ] },
       { t: "p", text: "One limit to know about: the program asks \"is there sound **now**?\", not \"did a sound just **start**?\". A long continuous noise is still there after the wait, so the lamp flips again and again for as long as the noise lasts. Reacting only to the moment a signal changes is called edge detection, and you will meet it in the intermediate tier." },
+      { t: "deep", title: "Inside a sound sensor module: microphone and comparator", blocks: [
+        { t: "p", text: "The common sound module has two main parts. An **electret microphone** turns pressure waves into a tiny changing voltage, a few millivolts. A **comparator** chip, very often the LM393, compares that voltage with a level set by the small blue potentiometer. Above the level its output switches one way, below it switches the other way." },
+        { t: "p", text: "The comparator has no memory and no notion of a clap. It switches every time the vibrating signal crosses the line, hundreds of times during a single clap. That is why the program needs a long ignore-period after the first edge, and why turning the potentiometer changes how loud a sound must be: you are moving the comparator's line up or down." },
+      ] },
     ],
     mistakes: [
       "**No wait after the toggle.** The lamp ends up on or off at random after each clap, because one clap is counted many times.",

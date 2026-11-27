@@ -54,6 +54,13 @@ const lessons: ModuleContent = {
       { t: "formula", text: "USB side: 50 + 20 + 30 + 75 = 175 mA", caption: "Comfortably inside a typical 500 mA USB port. The pump's 250 mA never passes through the board." },
       { t: "p", text: "For each part also note its **voltage**. This is where you catch a 5 V module that would put 5 V on an ESP32 pin, or a 12 V fan that needs an adapter you do not have yet." },
       { t: "note", kind: "safety", text: "Your power plan must show that no motor, pump, fan, relay coil or servo is powered from a GPIO pin, that anything too hungry for USB has its own low-voltage DC supply with grounds joined where needed, and that nothing connects to mains." },
+      { t: "deep", title: "Estimating battery life from the current budget", blocks: [
+        { t: "p", text: "A battery or power bank is rated in milliamp-hours (mAh): how many milliamps it can supply for how many hours. Divide the capacity by the project's average current and you have a first estimate of running time." },
+        { t: "formula", text: String.raw`running time ≈ capacity / average current × derating
+2000 mAh power bank, project averages 120 mA:
+2000 / 120 ≈ 16.7 h,  × 0.7 for conversion losses and ageing ≈ 11.7 h` },
+        { t: "p", text: "The average matters, not the peak: a pump that runs 10 seconds an hour adds very little. That is also how battery projects last months: the board sleeps most of the time, drawing microamps, and wakes briefly to work. Some power banks also switch themselves off when the current is very small, so test that a low-power project keeps the bank awake." },
+      ] },
 
       { t: "h", text: "Step 5: build and test in stages" },
       { t: "p", text: "Decide the order of building now. Add one part, prove it works with the smallest possible program, and only then add the next." },
@@ -149,6 +156,10 @@ const lessons: ModuleContent = {
       { t: "p", text: "An RFID card has no battery. Inside the plastic is a coil of wire and a tiny chip. The reader sends out a weak radio field. When the card comes within a few centimetres (typical for this reader), the field powers the chip, and the chip answers with its **ID**: a number fixed when the card was made. The reader passes that number to your program." },
       { t: "p", text: "In this project the ID arrives as text in a variable called `card_uid`, typically eight characters made of the digits 0 to 9 and the letters A to F. When no card is present the variable is empty." },
       { t: "note", kind: "warn", text: "A card's ID is not a secret. It can be read by any reader and copied onto another card. This project teaches identification and decision-making. It is not a real security system and should not guard anything valuable." },
+      { t: "deep", title: "How a card with no battery powers itself", blocks: [
+        { t: "p", text: "The RC522 reader drives a coil, the antenna on its board, with a radio-frequency signal at **13.56 MHz**. A card contains a coil of its own and a tiny chip. When the card is close, the changing magnetic field from the reader induces a voltage in the card's coil, just as a transformer passes power between its windings. That is enough to run the chip for as long as the card stays in the field, which is why the range is only a few centimetres." },
+        { t: "p", text: "The card answers by switching a small load on and off across its coil. The reader detects the slight change in its own field and decodes the bits. The common blue cards and key fobs are **MIFARE Classic 1K** cards, which store 1 KB of data and a **UID**, usually 4 bytes, that is written at the factory." },
+      ] },
 
       { t: "h", text: "The plan: sentence and three-part table" },
       { t: "p", text: "\"When the allowed card is tapped, open the lock for three seconds; for any other card, sound a buzzer.\"" },
@@ -163,6 +174,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "On the Arduino Uno the SPI bus lives on fixed pins, and the reader's reset line sits next to them. The board's first servo port happens to be one of those same pins. One pin cannot carry two signals, so this is a **pin conflict**. The project resolves it the way your own plan should: the reader cannot move, so the servo moves to a different servo port. On the ESP32 the SPI pins are elsewhere and there is no clash. The wiring table shows which servo port your board uses." },
       { t: "wiring", demo: "demo_rfid_door_lock" },
       { t: "p", text: "The table lists the reader's five signal lines, the buzzer's pin (the row called \"Output on a plain pin\") and the servo's port. The reader's connections are also written in a comment near the top of the program below, next to the line that creates the reader. On the reader module, the pin labelled **SDA** is the SPI select line, sometimes written SS. It has nothing to do with I2C." },
+      { t: "deep", title: "SPI: the other common bus", blocks: [
+        { t: "p", text: "The RC522 uses **SPI**, not I2C. SPI uses separate wires for each direction plus a clock: **SCK** (clock), **MOSI** (data from the controller to the device), **MISO** (data back) and one **chip select** line per device, which the controller pulls low to say \"I am talking to you\". There are no addresses, so each extra device costs one more chip select pin." },
+        { t: "table", head: ["", "I2C", "SPI"], rows: [["Signal wires", "2, shared by all devices", "3 shared, plus 1 chip select per device"], ["How a device is chosen", "by its address in the message", "by its own chip select line"], ["Typical speed", "100 or 400 kHz", "several MHz"], ["Used for", "sensors, small displays, clocks", "card readers, SD cards, fast displays"]] },
+        { t: "note", kind: "safety", text: "The RC522 is a 3.3 V device. Power it from the 3.3 V pin on both boards. On the Uno its signal lines receive 5 V signals; many students get away with it, but a level shifter is the correct way." },
+      ] },
 
       { t: "h", text: "The power plan" },
       { t: "table", head: ["Part", "Supply", "Typical current", "Note"], rows: [
@@ -193,6 +209,10 @@ const lessons: ModuleContent = {
         "**Pause.** A short wait, then the loop repeats.",
       ] },
       { t: "p", text: "The two If-Else blocks look unusual: the comparison is written inside brackets in the left box and tested against 1. The value box of an If-Else accepts only numbers, and an ID is text, so the text comparison is done in the brackets. It gives 1 when true and 0 when false, in both languages." },
+      { t: "deep", title: "Why a UID alone is weak security", blocks: [
+        { t: "p", text: "Reading a UID needs no secret: any reader, including many phones, can see it. And so-called magic cards, whose UID can be rewritten, are cheap and widely sold. Anyone who briefly reads your card can therefore make a copy that this door lock will accept." },
+        { t: "p", text: "Real access systems go further. Cards store data protected by secret keys, and the reader and card run a challenge and response so that the key never crosses the air. Even the MIFARE Classic's own protection has been broken for years, so modern systems use newer card families with stronger cryptography. For a classroom project a UID check is fine; just describe it honestly in your report as a demonstration, not a secure lock." },
+      ] },
 
       { t: "h", text: "Making it your card" },
       { t: "list", ordered: true, items: [
@@ -296,6 +316,10 @@ const lessons: ModuleContent = {
         ["Second card tapped while lock is open", "Buzzer", "Ignored", "No"],
       ] },
       { t: "p", text: "Repeat each test several times and give the count. A project that works 7 times out of 10 is a different thing from one that works 10 out of 10, and the reader deserves to know which you have." },
+      { t: "deep", title: "Making a test someone else can repeat", blocks: [
+        { t: "p", text: "A useful test result answers four questions: what was done, under what conditions, what was expected, and what was measured. \"Sensor works\" answers none of them. \"With the LDR covered by a hand in a lit lab, the reading was 120 to 140; expected below 300; pass\" answers all four, and another student could check it tomorrow." },
+        { t: "list", items: ["**Write the pass rule before testing**, so the result cannot be bent to fit.", "**Record conditions** that change the outcome: lighting, supply (USB or adapter), distance, temperature.", "**Repeat a few times** and give the range, not the single best result.", "**Keep a copy of the exact code** that was tested, with a date, so a later change cannot be blamed on the wrong version."] },
+      ] },
 
       { t: "h", text: "Reporting what did not work" },
       { t: "p", text: "Look at the last row of that table. It is a failure, and it is the most interesting line in the report. It shows the student tested beyond the easy case, understood why it happened (the program is paused while the lock is open), and can suggest a fix." },

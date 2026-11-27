@@ -39,6 +39,16 @@ const lessons: ModuleContent = {
         ["50 %", "half", "fairly bright"],
         ["100 %", "all of it", "full brightness"],
       ], caption: "Eyes do not judge brightness evenly: 50 % looks much more than half as bright. Most of the visible change happens at low duty cycles." },
+      { t: "deep", title: "How duty is counted: resolution", blocks: [
+        { t: "p", text: "Inside the chip, PWM is a hardware counter that counts up from 0 to a top value and starts again. The pin is HIGH while the count is below a compare number and LOW after it. The duty cycle is the compare number divided by the number of counts in each period." },
+        { t: "p", text: "The Uno's `analogWrite` uses 8 bits, values 0 to 255, so 25 % is about 64 (64 / 256 = 25 %). MicroPython on the ESP32 accepts duty as a 16-bit number, 0 to 65535, so 25 % is about 16384. This is why the generated code shows a different number from the percentage you typed: the block multiplies your percentage by each board's full scale." },
+        { t: "formula", text: "compare value ≈ duty % / 100 × full scale    Uno: 0.25 × 256 = 64    ESP32: 0.25 × 65536 = 16384" },
+      ] },
+      { t: "deep", title: "Why the eye sees steady light: flicker fusion", blocks: [
+        { t: "p", text: "Your eye and brain blend light that flickers faster than about 50 to 90 times a second into a steady glow. This is called **flicker fusion**. Below it you see flashing; above it you see a dimmer, steady light whose brightness follows the average." },
+        { t: "p", text: "PWM on the boards runs much faster than that. The Uno's built-in PWM runs at about 490 Hz on most of its PWM pins and about 980 Hz on two of them. The ESP32 has a dedicated LED-control peripheral whose frequency the code chooses, typically somewhere from hundreds of hertz to a few kilohertz. At these rates the period is around 1 to 2 ms, far quicker than the eye can follow." },
+        { t: "note", kind: "tip", text: "You can still catch PWM in action. Wave a PWM-dimmed LED quickly in front of you in a dark room, or film it with a phone camera: you will see a dotted trail or dark bands, which a steady LED does not produce." },
+      ] },
 
       { t: "h", text: "PWM in the editor" },
       { t: "p", text: "The **PWM Output** block takes a duty cycle as a percentage and keeps the pin pulsing at that setting until another block changes it. If you look at the generated code you will see a different number from the one you typed. Each board counts duty on its own scale, and the editor converts your percentage for you." },
@@ -53,6 +63,10 @@ const lessons: ModuleContent = {
       ], caption: "They look almost the same. An active buzzer usually has a sealed underside and often a sticker on top. To tell them apart, unplug USB, connect the longer leg to the 3.3 V pin and the shorter leg to GND, then plug USB in for a second or two only: the one that beeps is active." },
       { t: "p", text: "The built-in projects use an **active** buzzer because a plain pin set HIGH is enough. For a passive buzzer use the **Buzzer Tone** block, which sends a signal at a chosen frequency. A tone setting of 1 gives 440 Hz, the note musicians tune to, and larger settings give multiples of it. A passive buzzer is wired from the pin shown on the block to **GND**, with a resistor of about **100 Ω** in series: many passive buzzers are a coil of only a few tens of ohms, which would otherwise draw more than a pin should give." },
       { t: "note", kind: "warn", text: "A small active buzzer typically draws 20 mA to 30 mA, which is at or above the most a pin should supply. So use a **buzzer module** (three pins, with its own transistor), or a small active buzzer you know draws less than about 20 mA. Anything larger, or unknown, goes through a transistor: module b7 shows how. Many buzzer modules sound when their signal is LOW, and on an ESP32 a module is powered from 3.3 V." },
+      { t: "deep", title: "How a buzzer turns a frequency into a note", blocks: [
+        { t: "p", text: "A **passive** buzzer is a small disc that bends a little each time the voltage changes. Driven with a square wave, it flexes back and forth at that frequency and pushes the air into sound waves of the same frequency. The note's pitch is the frequency: the A above middle C is 440 Hz, a period of 1 / 440 ≈ 2.27 ms. Each octave up doubles the frequency." },
+        { t: "p", text: "An **active** buzzer contains its own oscillator and sounds at one fixed pitch whenever it gets power, so a plain HIGH makes it beep and frequency control does nothing. If your buzzer beeps with a plain digital output, it is active; if it only clicks, it is passive and needs a tone. Both draw current from the pin while sounding, so keep within the pin's limit." },
+      ] },
     ],
     mistakes: [
       "**Using a pin that cannot do PWM on an Arduino Uno.** The LED is simply off at low settings and fully on at high ones, with nothing in between. Move to a pin with the wave mark, or use the pin the block shows.",
@@ -134,6 +148,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "Angles in between are in proportion:" },
       { t: "formula", text: "pulse width = shortest pulse + (longest pulse - shortest pulse) × angle / 180", caption: "With the nominal 1 ms and 2 ms, an angle of 45° needs 1 + (2 - 1) × 45 / 180 = 1.25 ms." },
       { t: "p", text: "You will not type pulse widths. The **Servo Motor** block takes an angle and the generated code produces the pulses. Knowing what is underneath explains why a servo sometimes stops short of 0° or 180°: its real limits are a little different from the nominal ones." },
+      { t: "deep", title: "What is inside a servo", blocks: [
+        { t: "p", text: "A hobby servo is four parts in one box: a small **DC motor**, a **gearbox** that trades speed for force (often over 100 to 1), a **potentiometer** fixed to the output shaft so that its voltage reports the shaft's angle, and a **control circuit**." },
+        { t: "p", text: "The control circuit measures each incoming pulse, turns its width into a target angle, compares it with the potentiometer, and drives the motor towards the target. The bigger the error, the harder it drives. When they match, the motor stops. This loop of measure, compare and correct is called **closed-loop control**, and it is the idea behind the motor control and robotics modules later in the course." },
+        { t: "note", kind: "tip", text: "The loop explains a buzzing servo. If something holds the arm away from its target, or the pulses jitter, the control circuit keeps fighting, drawing high current and warming up. Do not leave a servo straining against a stop." },
+      ] },
 
       { t: "h", text: "Three wires" },
       { t: "table", head: ["Wire colour (typical)", "Purpose", "Connect to"], rows: [
@@ -152,6 +171,10 @@ const lessons: ModuleContent = {
       ] },
       { t: "p", text: "Even a USB port has limits. If the board restarts, the USB connection drops or the servo twitches each time it moves, the servo is pulling the supply voltage down. The cure is a **separate supply** for the servo, for example a battery pack of four AA cells (small servos typically accept about 4.8 V to 6 V), with its negative terminal joined to the board's GND. Without that shared ground the signal has nothing to be measured against and the servo behaves randomly." },
       { t: "note", kind: "safety", text: "Unplug USB before connecting or moving the servo plug: it fits either way round, and reversed power can destroy the servo. Never connect the servo's red wire to a GPIO pin. Do not force the arm round by hand, because that strips the small gears. Keep fingers, hair and cables clear of the arm when the program starts." },
+      { t: "deep", title: "Why a servo's current spikes", blocks: [
+        { t: "p", text: "A DC motor that is standing still has only the resistance of its windings to limit the current. Once it spins, it generates a voltage that opposes the supply, and the current falls. So the current is highest at the instant a servo starts moving, and also whenever it is blocked from moving (called a **stall**)." },
+        { t: "p", text: "A small servo that idles at a few milliamps can pull several hundred milliamps for a fraction of a second each time it moves. Drawn from the board's 5 V pin, that surge can dip the supply for every other part, which is why boards reset or sensors misread when the servo moves. A separate supply for the servo, with its ground joined to the board's ground, removes the problem, and a large capacitor (a few hundred microfarads) across the servo's supply helps soak up the surges." },
+      ] },
     ],
     mistakes: [
       "**Servo powered from the 3.3 V pin or from a GPIO pin.** It hums, moves weakly or resets the board. Power it from 5 V.",
@@ -243,6 +266,13 @@ const lessons: ModuleContent = {
       { t: "formula", text: "distance = speed of sound × echo time / 2", caption: "Halved because the sound went there and back, and you want the one-way distance." },
       { t: "p", text: "A worked example. The echo pulse lasts 1000 µs. The sound travelled 1000 × 0.0343 = 34.3 cm in total. Half of that is the distance to the object: **17.15 cm**. A second check in everyday units: an echo time of 2 ms is 0.002 s, and 343 × 0.002 = 0.686 m there and back, so the object is 0.343 m away." },
       { t: "note", kind: "tip", text: "A handy figure to remember: about 58 µs of echo time for every centimetre of distance. An object 10 cm away gives an echo of roughly 580 µs." },
+      { t: "deep", title: "Where 343 m/s comes from, and how temperature changes it", blocks: [
+        { t: "p", text: "Sound is a pressure wave passed from molecule to molecule. Warmer air has faster-moving molecules, so the wave travels faster. Near room temperature a simple formula is accurate enough:" },
+        { t: "formula", text: String.raw`speed of sound ≈ 331.3 + 0.606 × T      (T in °C, result in m/s)
+T = 20 °C:  331.3 + 12.1 = 343.4 m/s
+T = 35 °C:  331.3 + 21.2 = 352.5 m/s` },
+        { t: "p", text: "What does that do to a measurement? Suppose the code assumes 343 m/s but it is 35 °C. A wall exactly 1 m away returns its echo sooner than the code expects, and the code reports 343 / 352.5 × 1 m ≈ **0.973 m**, about 2.7 cm short. For a dustbin lid that is nothing. For a precise measuring tool you would read the temperature, for example with the DHT11 from module b8, and correct the speed in the code." },
+      ] },
 
       { t: "h", text: "What it can and cannot see" },
       { t: "list", items: [
@@ -252,6 +282,10 @@ const lessons: ModuleContent = {
         "**Accuracy.** Expect a centimetre or so of error. The speed of sound also rises slightly in warm air.",
       ] },
       { t: "p", text: "If no echo comes back within the waiting time, the generated program does not stop or report zero. It reports **400**, meaning \"nothing within range\". Treat 400 as \"no object\", not as a real measurement." },
+      { t: "deep", title: "Why the sensor misses some objects", blocks: [
+        { t: "p", text: "The HC-SR04 sends a short burst of eight cycles at **40 kHz**, above human hearing. Its wavelength is 343 / 40,000 ≈ 8.6 mm. Sound reflects well from hard, flat surfaces larger than a few wavelengths and facing the sensor, much as light reflects from a mirror." },
+        { t: "list", items: ["**Angled surfaces** reflect the sound away, like a mirror tilted away from you, so no echo returns and the reading jumps to a very large value or times out.", "**Soft materials** such as cloth, foam and fur absorb much of the sound.", "**Thin or small objects**, such as a pen or a chair leg, return only a weak echo, and the sensor's wide cone of roughly 15° may pick a nearer object instead.", "**Very close objects**, inside about 2 cm, are too close: the echo returns while the sensor is still recovering from sending."] },
+      ] },
 
       { t: "h", text: "Wiring it" },
       { t: "list", ordered: true, items: [
@@ -381,6 +415,10 @@ const lessons: ModuleContent = {
       ] },
       { t: "p", text: "In the Arduino C++ version the trigger, timing and conversion steps are written once as a small helper near the top of the program, and the loop calls that helper by name. In the MicroPython version the same steps sit inside the loop. The steps themselves are identical." },
       { t: "p", text: "Follow the 400 through the decision. When nothing is in range the sensor reports 400, which is not less than the limit, so the lid stays closed. A design where \"no information\" leads to the safe, quiet state is a good habit to copy." },
+      { t: "deep", title: "When the servo resets the board", blocks: [
+        { t: "p", text: "Every chip watches its own supply. If the voltage falls below a safe level, a circuit called the **brown-out detector** resets the chip so that it cannot run in a half-powered, unpredictable state. The ATmega328P on the Uno and the ESP32 both have one, and on the ESP32 the Terminal shows a message saying that the brownout detector was triggered." },
+        { t: "p", text: "The smart dustbin is a classic trigger: when the lid starts to move, the servo's start-up surge drags the supply down, the chip resets, and the program begins again from the top, often with the lid half open. If the board restarts every time the lid moves, suspect power before code: give the servo its own supply with a shared ground, and use a short, thick USB cable or a better adapter." },
+      ] },
 
       { t: "h", text: "Tuning the limit and the angles" },
       { t: "p", text: "The project opens with a limit already filled in. As with the thresholds in module b5 it is a starting guess. Distance has real units, which makes the choice easier, but the right value still depends on your bin. Watch the chart with nothing nearby and note the reading: it may be the far wall, the table or 400. Then note the reading with a hand where a person would naturally hold it. Put the limit between the two, with a margin." },
@@ -398,6 +436,10 @@ const lessons: ModuleContent = {
         "**With the lid attached.** Only now fix the arm to the lid, and adjust the angles.",
       ] },
       { t: "p", text: "If stage 3 fails although stages 1 and 2 passed, the fault is in the decision or in the power, and you have very few places left to look." },
+      { t: "deep", title: "How often to measure", blocks: [
+        { t: "p", text: "Each measurement needs time for the echo to come back and for stray echoes from the far walls to die away. The sensor's makers suggest leaving at least 60 ms between triggers. A reading every 100 ms or so, ten times a second, is plenty for a dustbin." },
+        { t: "p", text: "Taking a few readings and acting only when, say, three in a row agree is a cheap way to ignore the odd wild value from a soft or angled surface. It is the same idea as debouncing a button: do not react to one sample when a pattern of samples is more trustworthy." },
+      ] },
     ],
     mistakes: [
       "**Sensor looking at the lid or the bin's own rim.** The reading is always small, so the lid opens and never closes. Mount the sensor so its cone points clear of the lid in every position.",

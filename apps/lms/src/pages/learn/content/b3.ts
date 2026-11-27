@@ -50,6 +50,11 @@ const lessons: ModuleContent = {
         ["ESP32", "3.3 V", "3.3 - 2 = 1.3 V", "1.3 / 220, about 6 mA"],
       ], caption: "Typical figures. The same parts give a dimmer LED on the ESP32 because its HIGH is a lower voltage." },
       { t: "p", text: "Both currents are fine for a pin. If you want less current on the Uno, use 330 Ω." },
+      { t: "deep", title: "Why a pin's HIGH voltage sags under load", blocks: [
+        { t: "p", text: "An output pin is not a perfect source. Inside it, a transistor connects the pin to the chip's supply, and that transistor has some resistance. The more current you draw, the more voltage is lost inside it, so the HIGH level drops." },
+        { t: "p", text: "The ATmega328P datasheet gives a figure you can check: with the chip at 5 V and 20 mA flowing out of a pin, the pin is guaranteed to stay above 4.2 V. A drop of up to 0.8 V at 20 mA means the pin acts like a source with roughly 40 Ω of resistance inside it (0.8 / 0.020 = 40). For an LED drawing 14 mA this hardly matters. It matters a lot when you try to draw large currents: the voltage falls, the chip warms, and the whole chip has a total current limit too (about 200 mA for all pins together on the ATmega328P)." },
+        { t: "note", kind: "tip", text: "The ESP32 lets software choose an output's **drive strength**, which sets how much current a pin will push before its voltage sags. The default suits LEDs with resistors." },
+      ] },
 
       { t: "h", text: "The limit of a pin" },
       { t: "p", text: "A pin is a signal source, not a power supply. Plan on no more than about 20 mA from one pin (a typical working limit): enough for an LED with a resistor, never for a motor. A small motor, a pump or a strip of many LEDs needs far more than that, and trying to draw it through a pin can destroy the pin or the whole chip." },
@@ -146,6 +151,13 @@ const lessons: ModuleContent = {
       ], caption: "After step 3 the signal starts again from step 1." },
       { t: "formula", text: "time for one cycle = 5 + 5 + 2 = 12 seconds", caption: "The cycle time is the sum of every delay in the sequence. In one minute the signal completes 60 / 12 = 5 full cycles." },
       { t: "p", text: "Each row of the plan becomes three blocks: an **LED** block set to On, a **Sleep** block for the time, and an **LED** block set to Off for the same pin. Switching each light off before the next goes on is what guarantees that only one colour shows at a time." },
+      { t: "deep", title: "How long a real traffic light stays amber", blocks: [
+        { t: "p", text: "Real signal timings come from simple physics. The amber phase must give a driver who sees it change enough time to either stop comfortably or clear the junction. Traffic engineers work it out from a reaction time and a comfortable braking rate." },
+        { t: "formula", text: String.raw`amber time ≈ reaction time + speed / (2 × braking rate)
+speed 50 km/h = 13.9 m/s, reaction 1 s, braking 3 m/s²
+amber ≈ 1 + 13.9 / 6 ≈ 1 + 2.3 ≈ 3.3 s` },
+        { t: "p", text: "That is why ambers on city roads are usually 3 to 4 seconds and longer on fast roads. Your model uses whatever delays you choose, but the same idea applies: each delay in a sequence should come from what the person watching needs, not from a round number." },
+      ] },
 
       { t: "h", text: "Wiring three LEDs" },
       { t: "p", text: "This is the single LED circuit from the last lesson, built three times side by side. Unplug the USB cable first." },
@@ -246,6 +258,10 @@ const lessons: ModuleContent = {
       ] },
       { t: "p", text: "In the editor, the **Forever Loop** block marks the dividing line. Blocks hanging from the handle on its **right side** are the loop body: they repeat. When the last block of the body finishes, the board jumps straight back to the first one. Blocks placed before the Forever Loop run once." },
       { t: "p", text: "Deciding where a step belongs is a real design choice. Ask: should this happen one time, or every time round? Setting a pin as an output is a once job. Switching a light is an every time job." },
+      { t: "deep", title: "What surrounds setup and loop", blocks: [
+        { t: "p", text: "Neither `setup()` nor `loop()` is where an Arduino program really starts. The Arduino core supplies a hidden `main()` function that runs first. It prepares the chip (for example starting the millisecond timer), calls your `setup()` once, and then calls `loop()` inside an endless loop of its own. When your `loop()` reaches its closing brace, it returns to that hidden loop, which simply calls it again." },
+        { t: "p", text: "MicroPython on the ESP32 has no hidden loop: the script runs from top to bottom, and if it reaches the end, it stops and returns to the interpreter's prompt. That is why ESP32 programs in this course put their repeating part inside `while True:`. Leave it out and the program runs once and finishes." },
+      ] },
 
       { t: "h", text: "Repeating a fixed number of times" },
       { t: "p", text: "Sometimes you want repetition with an end. A warning light that flashes three times before the signal changes is one example. The **Repeat** block does this. It has a **times** field, and the blocks hanging from its right side handle run that many times. Then the program carries on with whatever is joined below the Repeat block." },
@@ -274,6 +290,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "The **Print** block sends text over USB to the editor's Terminal. Type a variable's name into its **Text** field, without quotation marks, and it prints that variable's current value. With quotation marks it would print the letters themselves." },
       { t: "p", text: "Printing is the simplest way to find out what a program is really doing. When the behaviour surprises you, print the variable you are unsure about and compare it with what you expected." },
       { t: "note", kind: "tip", text: "Give variables names that say what they hold, such as `count` or `blinks`. Use letters, digits and underscores only, start with a letter, and avoid spaces." },
+      { t: "deep", title: "How big a number a variable can hold", blocks: [
+        { t: "p", text: "A variable is a few bytes of RAM. In Arduino C++ an `int` on the Uno is 2 bytes, 16 bits, so it can hold whole numbers from **-32768 to 32767**. On the ESP32's 32-bit chip an `int` in C++ is 4 bytes and reaches about 2.1 billion. MicroPython integers on the ESP32 simply grow larger as needed." },
+        { t: "p", text: "What happens past the top? On the Uno, adding 1 to 32767 in an `int` in practice wraps round to -32768, like a car's odometer rolling over. A counter that adds 1 every millisecond would wrap after about 33 seconds. This is why time values on the Uno are kept in `unsigned long`, 4 bytes from 0 to 4,294,967,295, which takes about 49.7 days of milliseconds to roll over." },
+        { t: "formula", text: "4,294,967,295 ms ÷ 1000 ÷ 3600 ÷ 24 ≈ 49.7 days" },
+      ] },
     ],
     mistakes: [
       "**Starting value set inside the loop.** The counter never gets past 1, because it is reset on every pass. Move the block that sets it to zero above the Forever Loop.",

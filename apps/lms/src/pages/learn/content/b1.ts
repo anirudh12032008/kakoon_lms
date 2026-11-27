@@ -51,6 +51,11 @@ const lessons: ModuleContent = {
         "**On-board LED.** A tiny light already wired to one pin, so you can test a program with no extra parts.",
       ] },
       { t: "p", text: "The two boards used in this course, the **Arduino Uno** and the **ESP32 DevKit**, both have all of these. The next lesson compares them." },
+      { t: "deep", title: "What is inside the microcontroller chip", blocks: [
+        { t: "p", text: "Under the black plastic a microcontroller holds the same parts as a full computer, shrunk onto one piece of silicon. A **processor core** carries out instructions. **Flash memory** stores your program and keeps it with the power off. **RAM** holds the variables while the program runs and is wiped at power-off. Around them sit the **peripherals**: blocks of hardware that drive pins, measure voltages, count time and talk to other chips, so the processor does not have to do every job by hand." },
+        { t: "table", head: ["", "Arduino Uno (ATmega328P)", "ESP32 DevKit (ESP32)"], rows: [["Processor", "one 8-bit core, 16 MHz", "two 32-bit cores, up to 240 MHz"], ["Program memory (flash)", "32 KB, of which a small part holds the bootloader", "a separate flash chip, commonly 4 MB"], ["Working memory (RAM)", "2 KB", "about 520 KB"], ["Built in radio", "none", "Wi-Fi and Bluetooth"]], caption: "Figures from the chip makers' datasheets. 1 KB is 1024 bytes, about one page of plain text." },
+        { t: "p", text: "2 KB of RAM sounds tiny, and it is: a single photo from a phone would not fit a thousand times over. Yet a street light controller needs only a few numbers in memory. Small memory is what keeps these chips cheap and frugal with power." },
+      ] },
 
       { t: "h", text: "What a program is here" },
       { t: "p", text: "A program is a list of instructions the chip follows in order, very fast and exactly as written. The chip does not guess what you meant. If the light stays off, it is because the instructions, the wiring, or both say so. That sounds strict, but it is good news: every problem has a cause you can find." },
@@ -147,6 +152,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "Think of two water tanks built for different pressures. Connect a pipe from the high pressure system into the low pressure tank and the tank is damaged. In the same way, a 5 V signal fed into an ESP32 pin pushes harder than the chip was built to stand." },
       { t: "note", kind: "safety", text: "Never connect 5 V to an ESP32 input or output pin. An ESP32 pin must never see more than 3.3 V. Power ESP32 sensors from the 3.3 V pin unless a lesson tells you otherwise." },
       { t: "p", text: "The other direction is gentler but still matters. A 3.3 V signal going into an Uno is safe, and the Uno will usually read it as on. Some parts designed for 5 V will be dim, weak or unreliable on 3.3 V." },
+      { t: "deep", title: "What counts as HIGH: logic thresholds on each board", blocks: [
+        { t: "p", text: "A digital input does not need exactly 5 V or exactly 3.3 V to read HIGH. The chip compares the voltage against two limits from its datasheet. Above the upper limit it is guaranteed to read 1, below the lower limit it is guaranteed to read 0, and in between the result is not guaranteed." },
+        { t: "table", head: ["", "Arduino Uno (powered at 5 V)", "ESP32 (powered at 3.3 V)"], rows: [["Reads 1 for certain above", "3.0 V (0.6 of the supply)", "about 2.5 V (0.75 of the supply)"], ["Reads 0 for certain below", "1.5 V (0.3 of the supply)", "about 0.8 V (0.25 of the supply)"], ["Highest safe voltage on a pin", "about 5.5 V", "about 3.6 V"]], caption: "From the ATmega328P and ESP32 datasheets. Both are fractions of the chip's own supply voltage." },
+        { t: "p", text: "This table explains a common surprise. An ESP32 output at 3.3 V is above the Uno's 3.0 V limit, so an Uno can usually read an ESP32 signal directly. The reverse is not true: a 5 V signal is far above the ESP32's 3.6 V maximum and can destroy the pin. That one-way danger is why the course keeps repeating the 3.3 V warning." },
+      ] },
 
       { t: "h", text: "Two languages, one set of blocks" },
       { t: "p", text: "In the editor you build programs from blocks. The editor then writes the text code for you: **Arduino C++** for the Uno and **MicroPython** for the ESP32. The blocks are the same; only the generated text differs." },
@@ -276,6 +286,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "One full blink is one on time plus one off time." },
       { t: "formula", text: "time for one blink = on time + off time", caption: "With 1 second on and 1 second off, one blink takes 2 seconds, so the LED blinks 30 times a minute." },
       { t: "p", text: "Change both Sleep blocks to `0.5` and one blink takes 1 second: twice as fast. Set the first to `0.1` and the second to `0.9` and the blink still takes 1 second, but now it is a short flash followed by a long pause. The two numbers control different things." },
+      { t: "deep", title: "What the chip is doing during a wait", blocks: [
+        { t: "p", text: "A wait is not a pause in the chip. The processor never stops: on the Uno the clock ticks 16 million times a second, so a one second wait is about 16,000,000 clock ticks spent checking the time and doing nothing useful. This is called a **busy wait**." },
+        { t: "p", text: "The chip knows the time because a hardware **timer** counts clock ticks in the background, independent of your program. On the Uno, the Arduino core sets a timer up before your program starts so that a millisecond counter is always running. MicroPython on the ESP32 relies on the chip's own timers in the same way, and during `time.sleep` it can let background jobs, such as the USB link, carry on." },
+        { t: "note", kind: "tip", text: "Because a busy wait blocks everything else, a program that must blink a light and also watch a button at the same time cannot simply wait. Later modules show how to check the clock instead of waiting on it." },
+      ] },
 
       { t: "h", text: "How it looks in each language" },
       { t: "p", text: "Open the Code view after you build it. The two boards show the same idea in different words." },
@@ -297,6 +312,11 @@ const lessons: ModuleContent = {
       { t: "p", text: "Choose your board's port when the browser asks for it. Within a few seconds the on-board LED should start blinking." },
       { t: "note", kind: "warn", text: "Some USB cables are made only for charging and carry no data. If the board lights up but never appears when you connect, try another cable before anything else. Connecting over USB needs the Chrome or Edge browser." },
       { t: "note", kind: "tip", text: "A few ESP32 DevKit boards have a power light but no LED that a program can switch. If the program runs without an error and nothing blinks, that is the likely reason. Carry on: in module b3 you will wire your own LED, with its resistor, to the same pin." },
+      { t: "deep", title: "What happens when you press Upload", blocks: [
+        { t: "p", text: "On the **Uno**, your C++ is first **compiled**: translated into the machine instructions the ATmega328P understands. The editor then resets the board through the USB link. For a moment after every reset a small program called the **bootloader**, kept in a protected corner of flash, listens on the serial line. It receives the new instructions, writes them into flash, and hands control to your program. If nothing arrives it simply starts the old program." },
+        { t: "p", text: "The **ESP32** works differently in this course. Its chip already holds **MicroPython**, an interpreter that reads Python text and carries it out line by line. **Run** sends your script's text to the interpreter, which runs it from RAM, so it disappears at power-off. **Upload** saves the script as a file in the board's flash storage, and MicroPython runs that file each time it starts." },
+        { t: "table", head: ["", "Uno", "ESP32 with MicroPython"], rows: [["What is sent", "machine code", "Python text"], ["Who receives it", "the bootloader", "the MicroPython interpreter"], ["When it is translated", "before sending, on your computer", "on the board, while it runs"]] },
+      ] },
     ],
     mistakes: [
       "**Only one Sleep block.** The LED looks always on, or always off. Each state needs its own wait.",
