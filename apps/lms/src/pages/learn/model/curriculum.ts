@@ -15,12 +15,24 @@ import type { BoardId } from "@/entities/board";
 // ADC ranges that differ between boards never go in prose: use a `wiring` or
 // `code` block, which is generated for whichever board the student selected.
 export type Block =
+  | FlatBlock
+  /**
+   * "Go deeper": derivations, edge cases and background a student can skip.
+   * Folded away in Normal mode and opened in Detailed mode.
+   */
+  | { t: "deep"; title: string; blocks: FlatBlock[] };
+
+export type FlatBlock =
   | { t: "p"; text: string }
   | { t: "h"; text: string }
   | { t: "list"; items: string[]; ordered?: boolean }
   | { t: "note"; kind: "tip" | "warn" | "safety"; text: string }
   | { t: "formula"; text: string; caption?: string }
   | { t: "table"; head: string[]; rows: string[][]; caption?: string }
+  /** Hand-written code, shown as is. Used from the intermediate tier on. */
+  | { t: "snippet"; lang: "c" | "cpp" | "python" | "bash" | "text" | "xml" | "yaml"; code: string; caption?: string }
+  /** A monospace drawing: circuit, timing diagram, block diagram or frame layout. */
+  | { t: "diagram"; text: string; caption?: string }
   /** Signal wiring for a built-in project, for the selected board. */
   | { t: "wiring"; demo: string }
   /** Generated program for a built-in project, for the selected board. */
@@ -239,7 +251,7 @@ export const CURRICULUM: Tier[] = [
     blurb: "Second and third year level. The circuit theory, device physics, firmware and networking behind the beginner projects, taught to the point where you can design, not just assemble.",
     how: "Concept first: theory, calculation and bench measurement, with text code in C/C++ and MicroPython. The block editor is only a quick prototyping aid from here on.",
     modules: [
-      {"id": "i1", "track": "Electronics", "weeks": 3, "title": "Circuit analysis for embedded work", "summary": "The circuit theory that every later module leans on, applied to circuits you can build.", "outcomes": ["Analyse a resistive network with Kirchhoff's laws", "Reduce a circuit to its Thevenin equivalent", "Predict an RC circuit's response in time and in frequency"], "needs": ["b9"], "topics": ["Kirchhoff's voltage and current laws, nodal analysis", "Thevenin and Norton equivalents, loading and source impedance", "Capacitors and inductors, RC and RL transients, time constants", "AC signals, phasors and impedance", "First-order low-pass and high-pass filters, cut-off frequency, Bode plots", "Using an oscilloscope and a function generator"], "exitProject": "Design, build and measure an RC filter and compare the measured response with the calculation"},
+      {"id": "i1", "track": "Electronics", "weeks": 3, "title": "Circuit analysis for embedded work", "summary": "The circuit theory that every later module leans on, applied to circuits you can build.", "outcomes": ["Analyse a resistive network with Kirchhoff's laws", "Reduce a circuit to its Thevenin equivalent", "Predict an RC circuit's response in time and in frequency"], "needs": ["b9"], "topics": ["Kirchhoff's voltage and current laws, nodal analysis", "Thevenin and Norton equivalents, loading and source impedance", "Capacitors and inductors, RC and RL transients, time constants", "AC signals, phasors and impedance", "First-order low-pass and high-pass filters, cut-off frequency, Bode plots", "Using an oscilloscope and a function generator"], "exitProject": "Design, build and measure an RC filter and compare the measured response with the calculation", "lessons": [{"id": "i1-kirchhoff-and-nodal-analysis", "title": "Kirchhoff's laws and nodal analysis", "minutes": 25}]},
       {"id": "i2", "track": "Electronics", "weeks": 4, "title": "Semiconductor devices and analog building blocks", "summary": "Diodes, transistors and op-amps as the parts that interface a microcontroller to the real world.", "outcomes": ["Design a BJT or MOSFET switch with correct base or gate drive", "Choose and bias an op-amp stage", "Condition a sensor signal for an ADC"], "needs": ["i1"], "topics": ["Diodes: rectifier, Zener, Schottky, LED, protection and clamping", "BJT as a switch and as an amplifier, saturation and gain", "MOSFETs: threshold, on-resistance, logic-level parts, gate charge", "Op-amp ideal model, comparator, buffer, inverting and non-inverting amplifiers", "Difference and instrumentation amplifiers, Wheatstone bridge", "Signal conditioning: scaling, offset, anti-alias filtering, protection", "Reading a datasheet: absolute maximum ratings versus operating conditions"], "exitProject": "Sensor front-end: amplify and filter a small signal (thermistor, load cell or microphone) to fill an ADC's range"},
       {"id": "i3", "track": "Electronics", "weeks": 3, "title": "Digital electronics", "summary": "Logic at the gate and flip-flop level, so you understand what the microcontroller's pins and peripherals really do.", "outcomes": ["Design small combinational and sequential circuits", "Interface parts with different logic levels safely", "Read a timing diagram"], "needs": ["i1"], "topics": ["Number systems, Boolean algebra, Karnaugh maps", "Logic families, voltage thresholds, fan-out, open-drain outputs", "Combinational blocks: multiplexers, decoders, adders", "Latches, flip-flops, counters, shift registers", "Timing: setup, hold, propagation delay, metastability", "Level shifting and bus transceivers", "Memory types: flash, EEPROM, SRAM"], "exitProject": "Expand outputs with a shift register and drive a multiplexed display, with a timing diagram"},
       {"id": "i4", "track": "Programming and embedded", "weeks": 4, "title": "Embedded C, C++ and MicroPython", "summary": "Leave blocks behind: write, structure and debug firmware in text.", "outcomes": ["Write modular firmware in C/C++ and MicroPython", "Use pointers, structs and bit operations correctly", "Explain what the compiler and linker produce"], "needs": ["b9"], "topics": ["From generated code to hand-written code", "Data types, integer width, overflow, fixed-point arithmetic", "Pointers, arrays, structs, enums", "Bitwise operations and bit fields", "Functions, scope, header files, modular design", "The build process: compile, link, flash; memory map, stack and heap", "Debugging: serial logging, assertions, a hardware debugger", "Version control with Git"], "exitProject": "Rewrite a beginner project as a clean multi-file firmware project under version control"},
@@ -302,6 +314,14 @@ export function findLesson(lessonId: string) {
 
 /** Every written lesson in study order, for previous / next links. */
 export const LESSON_ORDER: LessonMeta[] = CURRICULUM.flatMap((t) => t.modules.flatMap((m) => m.lessons ?? []));
+
+// ── Reading mode ────────────────────────────────────────────────────────────
+/** Normal folds the "Go deeper" sections away; Detailed opens them all. */
+export type ReadingMode = "normal" | "detailed";
+
+export const useReadingMode = create<{ mode: ReadingMode; setMode: (m: ReadingMode) => void }>()(
+  persist((set) => ({ mode: "normal", setMode: (mode) => set({ mode }) }), { name: "codelab-reading-mode" })
+);
 
 // ── Progress ────────────────────────────────────────────────────────────────
 // ponytail: kept in this browser only, keyed by user id because lab PCs are

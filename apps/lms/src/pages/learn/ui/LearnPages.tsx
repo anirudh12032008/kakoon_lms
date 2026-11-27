@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, CircleCheck, Clock, Cpu, Lightbulb, ShieldAlert, SquarePen, TriangleAlert, Wrench } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronRight, CircleCheck, Clock, Cpu, Lightbulb, ShieldAlert, SquarePen, TriangleAlert, Wrench } from "lucide-react";
 import { DashboardHeader } from "@/pages/courses/ui/DashboardHeader";
 import { APP_NAME } from "@/shared/config/brand";
 import { useAuth } from "@/shared/auth/AuthContext";
@@ -15,8 +15,8 @@ import { useLaunchStore } from "@/shared/launch/launchStore";
 import { useProjectStore } from "@/shared/launch/projectStore";
 import { useGamification } from "@/entities/gamification";
 import {
-  CURRICULUM, LESSON_ORDER, findLesson, useLearnProgress,
-  type Block, type Lesson, type ModuleContent, type ModuleMeta, type Practice, type QuizItem,
+  CURRICULUM, LESSON_ORDER, findLesson, useLearnProgress, useReadingMode,
+  type Block, type FlatBlock, type Lesson, type ModuleContent, type ModuleMeta, type Practice, type QuizItem,
 } from "../model/curriculum";
 
 // Lesson text is split per module so the Learn page stays light.
@@ -254,8 +254,60 @@ const NOTE = {
   safety: { icon: ShieldAlert, label: "Safety", cls: "border-[var(--k-error)] bg-error-tint" },
 } as const;
 
+const LANG_LABEL = { c: "C", cpp: "C++", python: "Python", bash: "Shell", text: "Text", xml: "XML", yaml: "YAML" } as const;
+
+/** Mode toggle: Normal folds the "Go deeper" sections, Detailed opens them. */
+function ModeToggle() {
+  const mode = useReadingMode((s) => s.mode);
+  const setMode = useReadingMode((s) => s.setMode);
+  return (
+    <div role="group" aria-label="Reading mode" className="inline-flex rounded-md border border-subtle p-0.5 text-sm font-semibold">
+      {(["normal", "detailed"] as const).map((m) => (
+        <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)}
+          className={`min-h-10 rounded px-3 ${mode === m ? "bg-raised text-body shadow-sm" : "text-sub hover:text-body"}`}>
+          {m === "normal" ? "Normal" : "Detailed"}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Deep({ title, blocks }: { title: string; blocks: FlatBlock[] }) {
+  const mode = useReadingMode((s) => s.mode);
+  const [open, setOpen] = useState(mode === "detailed");
+  useEffect(() => { setOpen(mode === "detailed"); }, [mode]);
+  return (
+    <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)} className="group rounded-md border border-[var(--k-border-strong)] bg-panel">
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-2 font-semibold text-body [&::-webkit-details-marker]:hidden">
+        <ChevronRight className="h-4 w-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden="true" />
+        <span className="text-[13px] uppercase tracking-wide text-sub">Go deeper</span>
+        <span>{title}</span>
+      </summary>
+      <div className="space-y-4 border-t border-subtle px-4 py-4">{blocks.map((b, i) => <BlockView key={i} block={b} />)}</div>
+    </details>
+  );
+}
+
 function BlockView({ block }: { block: Block }) {
   switch (block.t) {
+    case "deep": return <Deep title={block.title} blocks={block.blocks} />;
+    case "snippet":
+      return (
+        <figure>
+          <div className="overflow-hidden rounded-md border border-subtle">
+            <div className="border-b border-subtle bg-hover px-4 py-1 text-[12px] font-semibold text-sub">{LANG_LABEL[block.lang]}</div>
+            <pre tabIndex={0} className="overflow-x-auto bg-raised p-4 font-mono text-[13px] leading-relaxed text-body"><code>{block.code}</code></pre>
+          </div>
+          {block.caption && <figcaption className="mt-2 text-[13px] text-sub"><Rich text={block.caption} /></figcaption>}
+        </figure>
+      );
+    case "diagram":
+      return (
+        <figure>
+          <pre tabIndex={0} role="img" aria-label={block.caption ?? "Diagram"} className="overflow-x-auto rounded-md border border-subtle bg-raised p-4 font-mono text-[13px] leading-[1.15] text-body">{block.text}</pre>
+          {block.caption && <figcaption className="mt-2 text-[13px] text-sub"><Rich text={block.caption} /></figcaption>}
+        </figure>
+      );
     case "h": return <h2 className="pt-4 text-xl font-semibold text-body">{block.text}</h2>;
     case "p": return <p><Rich text={block.text} /></p>;
     case "list": {
@@ -278,7 +330,8 @@ function BlockView({ block }: { block: Block }) {
     case "formula":
       return (
         <figure className="rounded-md border border-subtle bg-raised px-4 py-3 text-center">
-          <p className="font-mono text-base font-semibold text-body">{block.text}</p>
+          {/* Multi-line derivations keep their line breaks and alignment. */}
+          <pre className="inline-block whitespace-pre-wrap text-left font-mono text-base font-semibold leading-relaxed text-body">{block.text}</pre>
           {block.caption && <figcaption className="mt-1 text-[13px] text-sub"><Rich text={block.caption} /></figcaption>}
         </figure>
       );
@@ -426,7 +479,10 @@ export function LessonPage() {
             <h1 className="mt-1 font-display text-3xl font-semibold text-body sm:text-4xl">{found.meta.title}</h1>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-b border-subtle pb-4">
               <span className="flex items-center gap-1.5 text-sm text-sub"><Clock className="h-4 w-4" aria-hidden="true" /> About {found.meta.minutes} minutes</span>
-              <BoardSelect />
+              <div className="flex flex-wrap items-center gap-3">
+                {lesson?.blocks.some((b) => b.t === "deep") && <ModeToggle />}
+                {lesson && (lesson.practice?.kind === "project" || /"t":"(wiring|code)"/.test(JSON.stringify(lesson.blocks))) && <BoardSelect />}
+              </div>
             </div>
 
             {lesson === null ? (
