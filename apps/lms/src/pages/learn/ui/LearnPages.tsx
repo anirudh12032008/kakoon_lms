@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useMemo, useState, type ReactNode } from "react";
+import { Fragment, Suspense, lazy, useEffect, useId, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, CircleCheck, Clock, Cpu, Lightbulb, ShieldAlert, SquarePen, TriangleAlert, Wrench } from "lucide-react";
 import { DashboardHeader } from "@/pages/courses/ui/DashboardHeader";
@@ -21,6 +21,11 @@ import {
 
 // Lesson text is split per module so the Learn page stays light.
 const CONTENT = import.meta.glob<{ default: ModuleContent }>("../content/*.ts");
+// Interactive widgets, one file each, loaded only when a lesson shows one.
+const WIDGETS = Object.fromEntries(
+  Object.entries(import.meta.glob<{ default: ComponentType }>(["../widgets/*.tsx", "!../widgets/kit.tsx"]))
+    .map(([path, load]) => [path.slice("../widgets/".length, -".tsx".length), lazy(load)])
+);
 
 const NODE_LABEL: Record<string, string> = Object.fromEntries(
   NODE_CATEGORIES.flatMap((c) => c.nodes.map((n) => [n.type, n.label]))
@@ -291,6 +296,11 @@ function Deep({ title, blocks }: { title: string; blocks: FlatBlock[] }) {
 function BlockView({ block }: { block: Block }) {
   switch (block.t) {
     case "deep": return <Deep title={block.title} blocks={block.blocks} />;
+    case "widget": {
+      const W = WIDGETS[block.id];
+      if (!W) return null;
+      return <Suspense fallback={<p role="status" className="text-sub">Loading interactive…</p>}><W /></Suspense>;
+    }
     case "snippet":
       return (
         <figure>

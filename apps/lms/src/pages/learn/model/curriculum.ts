@@ -31,6 +31,8 @@ export type FlatBlock =
   | { t: "table"; head: string[]; rows: string[][]; caption?: string }
   /** Hand-written code, shown as is. Used from the intermediate tier on. */
   | { t: "snippet"; lang: "c" | "cpp" | "python" | "bash" | "text" | "xml" | "yaml"; code: string; caption?: string }
+  /** An interactive widget: src/pages/learn/widgets/<id>.tsx (default export, no props). */
+  | { t: "widget"; id: string }
   /** A monospace drawing: circuit, timing diagram, block diagram or frame layout. */
   | { t: "diagram"; text: string; caption?: string }
   /** Signal wiring for a built-in project, for the selected board. */

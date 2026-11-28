@@ -55,6 +55,7 @@ for (const tier of CURRICULUM) for (const mod of tier.modules) {
     for (const b of flat) {
       if (b.t === "wiring" || b.t === "code") assert(hasDemo(b.demo), `${meta.id}: unknown project ${b.demo}`);
       if (b.t === "snippet") assert(b.code.trim(), `${meta.id}: empty code snippet`);
+      if (b.t === "widget") assert(existsSync(`src/pages/learn/widgets/${b.id}.tsx`) && b.id !== "kit", `${meta.id}: unknown widget ${b.id}`);
       if (b.t === "table") for (const row of b.rows) assert.equal(row.length, b.head.length, `${meta.id}: table row width differs from its header`);
     }
     if (concept) {

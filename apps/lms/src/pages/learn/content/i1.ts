@@ -328,6 +328,7 @@ Time to reach a voltage V while charging:  t = -τ · ln(1 - V/V_s)`, caption: "
         ["3 τ", "95.0%", "5.0%"],
         ["5 τ", "99.3%", "0.7%"],
       ], caption: "Memorise the first and last rows: 63% after one time constant, effectively finished after five." },
+      { t: "widget", id: "rc-charging" },
       { t: "diagram", text: String.raw`
  V_s ┤                     ......................
      │               ......
