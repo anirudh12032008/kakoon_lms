@@ -200,6 +200,7 @@ V_load = V_th × R_load / (R_th + R_load)`, caption: "The Thevenin equivalent, a
         ["100", "0.990", "1.0%"],
         ["1000", "0.999", "0.1%"],
       ], caption: "Loading error for a resistive load, from V_load / V_th = R_load / (R_th + R_load)." },
+      { t: "widget", id: "thevenin-loading" },
 
       { t: "h", text: "Norton: the same thing as a current source" },
       { t: "p", text: "The **Norton equivalent** is a current source I_N in parallel with a resistance R_N. It is the same network described differently: I_N = V_th / R_th (the short-circuit current) and R_N = R_th. For the divider, I_N = 1.65 V / 5 kΩ = 0.33 mA, which is exactly the current that would flow from the middle into a wire to ground. Use whichever form makes the next step easier: Thevenin when loads are in series, Norton when they are in parallel. A photodiode, which produces a current proportional to light, is naturally a Norton source." },
@@ -533,6 +534,7 @@ Phase = -arctan(f/f_c)`, caption: "First-order low-pass transfer function." },
         ["10 kHz", "0.099", "-20.1 dB", "-84.3°"],
       ], caption: "Calculated from |H| = 1/√(1 + (f/995)²) and phase = -arctan(f/995)." },
       { t: "p", text: "Check one row by hand. At 10 kHz, f/f_c = 10.05, so |H| = 1/√(1 + 101.1) = 1/10.10 = 0.099, and 20·log₁₀(0.099) = -20.1 dB. A 1 V peak sine at 10 kHz comes out at about 0.1 V and lags by 84°. These are the numbers you will measure with an oscilloscope in the next lesson." },
+      { t: "widget", id: "rc-filter-bode" },
       { t: "note", kind: "tip", text: "Remember the loading lesson. Whatever drives the filter adds its source resistance to R, and whatever reads the output is in parallel with C. Keep the source impedance well below R and the load impedance well above R, or buffer the filter with an op-amp (next module)." },
 
       { t: "h", text: "Choosing a filter for an embedded job" },

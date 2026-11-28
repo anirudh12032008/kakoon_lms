@@ -279,8 +279,10 @@ function ModeToggle() {
 
 function Deep({ title, blocks }: { title: string; blocks: FlatBlock[] }) {
   const mode = useReadingMode((s) => s.mode);
-  const [open, setOpen] = useState(mode === "detailed");
-  useEffect(() => { setOpen(mode === "detailed"); }, [mode]);
+  // Follow the reading mode until the student toggles this section themselves.
+  const [own, setOwn] = useState<{ mode: typeof mode; open: boolean } | null>(null);
+  const open = own && own.mode === mode ? own.open : mode === "detailed";
+  const setOpen = (o: boolean) => { if (o !== open) setOwn({ mode, open: o }); };
   return (
     <details open={open} onToggle={(e) => setOpen(e.currentTarget.open)} className="group rounded-md border border-[var(--k-border-strong)] bg-panel">
       <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-4 py-2 font-semibold text-body [&::-webkit-details-marker]:hidden">

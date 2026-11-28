@@ -61,6 +61,7 @@ v  = (0.390 + 0.325) / 2 = 0.3575 m/s
 ω  = (0.390 - 0.325) / 0.150 = 0.433 rad/s  (about 24.8 °/s)
 R  = 0.3575 / 0.433 = 0.825 m`, caption: "A gentle left curve." },
       { t: "p", text: "Check with the second form of the radius formula: (0.150 / 2) × (0.390 + 0.325) / (0.390 - 0.325) = 0.075 × 0.715 / 0.065 = 0.825 m. The two agree. A second sanity check: the right wheel is on the outside of the curve, so its radius should be R + L/2 = 0.900 m and it should travel 0.900 / 0.825 = 1.09 times as fast as the centre. Indeed 0.390 / 0.3575 = 1.09." },
+      { t: "widget", id: "diff-drive" },
 
       { t: "h", text: "Inverse kinematics: the form you actually command" },
       { t: "p", text: "A controller usually decides \"go forward at 0.3 m/s while turning at 0.5 rad/s\". You then need the wheel speeds. Solve the two forward equations for vR and vL:" },
@@ -382,6 +383,7 @@ in code, every dt seconds:
         ["Ki", "Slightly faster", "More", "Removed", "Slow overshoot, windup"],
         ["Kd", "Little change", "Less", "No effect", "Amplifies sensor noise"],
       ], caption: "Rules of thumb. They interact, so treat them as directions, not laws." },
+      { t: "widget", id: "pid-tuner" },
 
       { t: "h", text: "Tuning by experiment" },
       { t: "p", text: "Robots are rarely modelled well enough to calculate gains, so you tune on the real machine. A reliable manual procedure:" },

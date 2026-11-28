@@ -349,6 +349,7 @@ S4: ω = (0, -1, 0), through (0.24, 0, 0.10)`, caption: "Screw axes read straigh
         "**θ2 = -62.72°**: θ1 = 35.54° + 24.41° = **59.95°**. The elbow is above the line: **elbow up**.",
       ] },
       { t: "p", text: "Check one branch by FK: the previous lesson computed exactly this case, θ = (11.13°, 62.72°), and got (0.350, 0.250). For the other branch: θ1 + θ2 = -2.77°, x = 0.3 × cos 59.95° + 0.2 × cos(-2.77°) = 0.1502 + 0.1998 = 0.350 and y = 0.3 × 0.8656 + 0.2 × (-0.0483) = 0.2597 - 0.0097 = 0.250. Both reach the target. Which one to use is a design choice: elbow up usually keeps the forearm clear of the table and is what desktop arms prefer, but joint limits and obstacles decide in the end." },
+      { t: "widget", id: "two-link-arm" },
 
       { t: "h", text: "IK for the 4-servo arm: decouple the wrist" },
       { t: "p", text: "The 4-DOF desktop arm can set four things: tip x, y, z, and the gripper pitch φ (how steeply the gripper points down). It cannot set gripper roll or an arbitrary yaw separate from the base. The trick is **kinematic decoupling**: if you know the tip and the pitch, the wrist joint's position is fixed, a4 back along the gripper. That reduces the problem to a turntable plus a 2R arm." },

@@ -614,6 +614,7 @@ dI/dt   = Ki·e + Kaw·(u - u_unsat)        (back-calculation)
 
 clamping: if (u ≠ u_unsat) and (sign(e) = sign(u_unsat)), hold dI/dt = 0`, caption: "When not saturated, u = u_unsat and both reduce to ordinary integration." },
       { t: "p", text: "In the simulated motor loop above, a 150 rad/s step drives the output into the 6 V limit. Without anti-windup the speed overshoots to 154.7 rad/s; with back-calculation it peaks at 150.2 rad/s. On a position loop, where the saturated phase lasts much longer, the difference is dramatic: tens of percent of overshoot." },
+      { t: "widget", id: "pid-tuner" },
 
       { t: "h", text: "Derivative filtering" },
       { t: "p", text: "The pure derivative Kd·s has gain rising without limit at high frequency, so it amplifies encoder quantisation and noise. Every practical PID limits it with a first-order low-pass filter:" },

@@ -34,6 +34,7 @@ const lessons: ModuleContent = {
  Receiver: sees the falling edge, waits 1.5 bit times, then samples
  the middle of each following bit.`, caption: "One 8N1 character: 1 start bit, 8 data bits LSB first, no parity, 1 stop bit." },
       { t: "p", text: "Frame formats are written as data bits, parity, stop bits: **8N1** is 8 data bits, no parity, 1 stop bit, and it is what almost everything uses by default. **8E1** adds an even parity bit (common in Modbus RTU). **7E1** turns up on old meters. Both ends must agree, or every character is wrong." },
+      { t: "widget", id: "uart-frame" },
       { t: "h", text: "Baud rate and real throughput" },
       { t: "p", text: "The **baud rate** is the number of symbols per second on the line. For a UART every symbol is one bit, so 9600 baud means each bit lasts 1/9600 s ≈ 104.2 µs. The framing bits are overhead: an 8N1 character takes 10 bit times to carry 8 bits of data." },
       { t: "formula", text: String.raw`bit time        = 1 / baud
@@ -303,6 +304,7 @@ Choose 2.2 kΩ for 400 kHz:
 tr = 0.8473 × 2200 × 100e-12 = 186 ns   (≤ 300 ns, OK)
 IOL needed = (3.3 - 0.4) / 2200 = 1.3 mA  (≤ 3 mA, OK)`, caption: "Anything from about 1 kΩ to 3.5 kΩ works at 400 kHz on this bus." },
       { t: "p", text: "Check both limits with the chosen value, as above. Then repeat for the worst case you can imagine: if someone adds a 1 m cable (another 150 pF or so), Cb becomes about 250 pF and the fast-mode maximum falls to 300e-9 / (0.8473 × 250e-12) ≈ 1.4 kΩ. The 2.2 kΩ resistors would then give a 466 ns rise, too slow for 400 kHz; drop to 100 kHz or use 1.2 kΩ." },
+      { t: "widget", id: "i2c-pullup" },
       { t: "note", kind: "warn", text: "Breakout boards usually carry their own pull-ups, often 4.7 kΩ or 10 kΩ. Three boards with 4.7 kΩ each in parallel give about 1.57 kΩ, still above the 967 Ω minimum at 3.3 V. Five boards would give 940 Ω and break the minimum. Count them, and remove extras by desoldering or cutting the pull-up jumper." },
       { t: "p", text: "The internal pull-ups of the Uno (20 to 50 kΩ) and ESP32 (about 45 kΩ) are far too weak for anything but very short wires at 100 kHz. Always fit external ones. Pull up to the voltage of the lowest-voltage device: on a mixed 5 V and 3.3 V bus, pull up to 3.3 V only if the 5 V device reads 3.3 V as high (the Uno's ATmega328P needs 0.7 × 5 = 3.5 V for a guaranteed high on its I2C pins), otherwise use a level shifter such as the BSS138 two-MOSFET circuit found on cheap shifter boards." },
 

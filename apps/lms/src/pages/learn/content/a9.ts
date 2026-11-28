@@ -229,6 +229,7 @@ Step 3, z = 11.0
   update:   x̂ = 10.7916 + 0.3650·0.2084 = 10.8676
             P = 0.3650` },
       { t: "p", text: "Check (Python, same equations): x̂ = 10.9647, 10.7916, 10.8676 and P = 0.8039, 0.4748, 0.3650. In 1-D with H = 1, P after the update equals K·R, which is why P and K come out numerically equal when R = 1. Watch the pattern: the first reading is trusted heavily because the initial guess was poor, then the gain falls as the filter becomes confident. It does not fall to zero, because Q keeps adding uncertainty. Iterating to convergence gives the **steady-state** values P⁻ = 0.3702, K = 0.2702: from then on every new reading moves the estimate about 27% of the way." },
+      { t: "widget", id: "kalman-1d" },
       { t: "note", kind: "tip", text: "With constant F, H, Q and R the gain converges to a constant within a few dozen steps. On a small microcontroller you can precompute that steady-state gain and run a fixed-gain filter, which is just a well-chosen exponential average. You lose the fast start-up but save all the covariance arithmetic." },
 
       { t: "h", text: "Tuning Q and R" },

@@ -362,6 +362,7 @@ f_Nyquist = fs / 2`, caption: "The minimum sampling rate. In practice sample 5 t
                         ╱  ╲╱  ╲╱  ╲╱  ╲╱  ╲╱  ╲╱  ╲╱  ╲╱  ╲
  samples                ●         ●         ●         ●
  what the samples show  ●‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾●‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾●   a slow wave`, caption: "Sampling a fast wave slightly less than once per cycle produces a slow false wave." },
+      { t: "widget", id: "aliasing" },
       { t: "p", text: "The only cure is to remove frequencies above fs / 2 **before** sampling, with an analog **anti-aliasing filter**. A simple RC low-pass in front of the ADC pin is often enough for slow sensors. Many digital sensors (the MPU6050 in the next lesson, for example) have a configurable low-pass filter inside the chip for exactly this reason. A digital filter applied after sampling cannot remove an alias; by then it is indistinguishable from a real signal." },
 
       { t: "h", text: "Quantisation noise" },
@@ -396,6 +397,7 @@ fc = 5 Hz wanted:  α = 0.314 / 1.314 = 0.239`, caption: "Smaller α means heavi
         ["EMA, α", "1 value", "Cheap smoothing, tunable like an RC", "Long tail; a spike decays slowly"],
         ["Median, N", "N samples + sort", "Isolated spikes and outliers", "Distorts fast edges in small ways, more CPU"],
       ], caption: "Choosing a filter." },
+      { t: "widget", id: "digital-filters" },
       { t: "snippet", lang: "cpp", code: String.raw`// Three filters on one noisy ADC channel (A0 on the Uno), sampled at 100 Hz.
 // Open the Serial Plotter to compare raw, moving average, EMA and median.
 

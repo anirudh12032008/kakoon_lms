@@ -167,6 +167,7 @@ I = 5 / 20,000 = 0.25 mA,  Vout = 0.00025 × 10,000 = 2.5 V` },
         ["Fixed resistor to the supply, LDR to ground", "LDR is small, so `Vout` is **low**", "LDR is large, so `Vout` is **high**"],
       ], caption: "The street light project in this course uses the first arrangement: a darker room gives a lower reading." },
       { t: "p", text: "Neither is more correct. What matters is that you know which one you built, because it decides whether your program should switch the light on when the reading goes **below** a value or **above** it." },
+      { t: "widget", id: "divider-adc" },
 
       { t: "h", text: "Choosing the fixed resistor" },
       { t: "p", text: "The divider gives the biggest swing in voltage when the fixed resistor is roughly in the middle of the LDR's range. A common starting value is **10 kΩ**. If your readings barely change between light and dark, the fixed resistor is too far from the LDR's working range, so try a larger or smaller one." },

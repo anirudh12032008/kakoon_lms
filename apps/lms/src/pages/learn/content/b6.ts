@@ -39,6 +39,7 @@ const lessons: ModuleContent = {
         ["50 %", "half", "fairly bright"],
         ["100 %", "all of it", "full brightness"],
       ], caption: "Eyes do not judge brightness evenly: 50 % looks much more than half as bright. Most of the visible change happens at low duty cycles." },
+      { t: "widget", id: "pwm-duty" },
       { t: "deep", title: "How duty is counted: resolution", blocks: [
         { t: "p", text: "Inside the chip, PWM is a hardware counter that counts up from 0 to a top value and starts again. The pin is HIGH while the count is below a compare number and LOW after it. The duty cycle is the compare number divided by the number of counts in each period." },
         { t: "p", text: "The Uno's `analogWrite` uses 8 bits, values 0 to 255, so 25 % is about 64 (64 / 256 = 25 %). MicroPython on the ESP32 accepts duty as a 16-bit number, 0 to 65535, so 25 % is about 16384. This is why the generated code shows a different number from the percentage you typed: the block multiplies your percentage by each board's full scale." },

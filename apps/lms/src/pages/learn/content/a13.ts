@@ -444,6 +444,7 @@ if __name__ == "__main__":
     for r, row in enumerate(grid):
         print("".join("*" if (r, c) in path else ch for c, ch in enumerate(row)))`, caption: "Grid A* with octile heuristic and no corner cutting. Cells are (row, column)." },
       { t: "p", text: "The goal sits inside a pocket open only at the bottom, so the path must go down the left side, along the bottom row and up into the pocket. The run gives 11 cells and length 11.243. Check: the path has 3 diagonal steps and 7 straight steps, so 3 × 1.414 + 7 = 4.243 + 7 = 11.243. The heuristic at the start was octile((0,0), (4,5)) = 5 + 0.414 × 4 = 6.657, below the true 11.243, as admissibility requires." },
+      { t: "widget", id: "astar-grid" },
       { t: "note", kind: "tip", text: "Grid paths zigzag at 45° steps. Real planners smooth the result, or plan on a costmap where cost rises near obstacles so the path keeps to the middle of corridors." },
 
       { t: "h", text: "Sampling-based planners" },

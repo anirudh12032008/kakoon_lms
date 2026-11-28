@@ -383,6 +383,7 @@ Example: R_in = 10 kΩ, R_f = 100 kΩ  →  G = -10, input impedance = 10 kΩ`, 
         ["Supply current", "about 0.7 mA for both amplifiers", "about 100 µA per amplifier"],
       ], caption: "Typical figures from the TI LM358 and Microchip MCP6002 datasheets; the LM358's limits worsen with temperature." },
       { t: "p", text: "An LM358 on 3.3 V can only accept inputs up to about 1.8 V and drive its output up to about 1.8 V, wasting half of the ESP32's ADC range. It is a good, cheap part from a 5 V or 12 V supply. The **MCP6002** is rail-to-rail on input and output and runs from 3.3 V directly, so it is the default choice for ESP32 work. But its absolute maximum supply is 7 V, so never run it from 9 V or 12 V." },
+      { t: "widget", id: "opamp-stage" },
       { t: "p", text: "The **gain-bandwidth product** (GBW) limits gain at high frequency. A non-inverting stage of gain G has a bandwidth of about GBW / G. With the MCP6002 at a gain of 21, that is 1 MHz / 21 ≈ 48 kHz: plenty for a temperature sensor, tight for ultrasound." },
       { t: "note", kind: "tip", text: "Every op-amp needs a 100 nF decoupling capacitor from its supply pin to ground, placed right beside the chip. Unused amplifiers in a dual package should be tied as followers to a mid-rail voltage, not left floating." },
 

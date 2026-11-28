@@ -33,7 +33,7 @@ export function Slider({ label, value, min, max, step = 1, onChange, format = St
       </div>
       <input id={id} type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="range range-sm mt-1 w-full" />
+        className="range range-xs range-primary mt-2 w-full" />
     </div>
   );
 }
@@ -143,6 +143,7 @@ function niceStep(raw: number) {
 }
 
 /** Engineering-style number: 4.7k, 220, 0.015, 1.2M. */
+// eslint-disable-next-line react-refresh/only-export-components -- tiny formatting helper shared by widgets
 export function fmt(v: number, digits = 3): string {
   if (v === 0) return "0";
   const a = Math.abs(v);
@@ -152,6 +153,7 @@ export function fmt(v: number, digits = 3): string {
 }
 
 /** Value with a unit and SI prefix: si(0.0047, "F") is "4.7 mF". */
+// eslint-disable-next-line react-refresh/only-export-components -- tiny formatting helper shared by widgets
 export function si(v: number, unit: string, digits = 3): string {
   if (v === 0) return `0 ${unit}`;
   const prefixes: [number, string][] = [[1e9, "G"], [1e6, "M"], [1e3, "k"], [1, ""], [1e-3, "m"], [1e-6, "µ"], [1e-9, "n"], [1e-12, "p"]];

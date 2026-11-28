@@ -70,6 +70,7 @@ signed:   181 - 256 = -75`, caption: "The same eight bits mean 181 or -75 depend
       { t: "p", text: "There are two groups of four. The middle square (minterms 5, 7, 13, 15) has B = 1 and D = 1 throughout while A and C change, so it gives **BD**. The four corners (0, 2, 8, 10) have B = 0 and D = 0, giving **B'D'**. So F = BD + B'D', which is 1 when B equals D: an XNOR of B and D. Eight minterms of four literals each collapsed to one gate." },
       { t: "p", text: "Check: minterm 7 is 0111, B = 1 and D = 1, so F = 1. Minterm 6 is 0110, B = 1 and D = 0, so F = 0. Both match the map." },
       { t: "note", kind: "tip", text: "Cells for input combinations that can never occur are \"don't cares\", marked X. Include them in a group when that makes the group bigger, ignore them otherwise. A BCD to 7-segment decoder has six don't cares (inputs 10 to 15), which simplifies it a lot." },
+      { t: "widget", id: "kmap-solver" },
 
       { t: "h", text: "Combinational building blocks" },
       { t: "p", text: "A **combinational** circuit's output depends only on its present inputs; it has no memory. Three blocks appear in every chip." },
