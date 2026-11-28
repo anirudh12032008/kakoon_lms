@@ -392,6 +392,14 @@ function PracticeCard({ practice }: { practice: Practice }) {
   );
 }
 
+/** Display order for a question's options: a rotation keyed on the question text. */
+function rotation(it: QuizItem): number[] {
+  let h = 0;
+  for (const ch of it.q) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const n = it.options.length;
+  return it.options.map((_, k) => (k + h) % n);
+}
+
 function Quiz({ items, onAllCorrect }: { items: QuizItem[]; onAllCorrect: () => void }) {
   const uid = useId();
   const [picked, setPicked] = useState<Record<number, number>>({});
@@ -407,12 +415,14 @@ function Quiz({ items, onAllCorrect }: { items: QuizItem[]; onAllCorrect: () => 
             <fieldset>
               <legend className="font-semibold text-body">{i + 1}. <Rich text={it.q} /></legend>
               <div className="mt-2 space-y-1.5">
-                {it.options.map((opt, j) => (
+                {/* Rotate options by a stable hash of the question so the right answer
+                    is not always in the same place, whatever order the author wrote. */}
+                {rotation(it).map((j) => { const opt = it.options[j]; return (
                   <label key={j} className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3 py-2 text-sm text-body ${choice === j ? "border-[var(--k-primary-text)] bg-raised" : "border-subtle hover:bg-hover"}`}>
                     <input type="radio" name={`${uid}-${i}`} checked={choice === j} onChange={() => setPicked((p) => ({ ...p, [i]: j }))} className="radio radio-sm" />
                     <span><Rich text={opt} /></span>
                   </label>
-                ))}
+                ); })}
               </div>
               <p role="status" className="mt-2 min-h-5 text-sm">
                 {choice !== undefined && (right
